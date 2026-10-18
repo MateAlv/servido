@@ -52,11 +52,11 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 ### Edge Cases
 
-- **Email ya registrado** al crear la cuenta: el backlog no lo define para el comensal. [NEEDS CLARIFICATION: se propone informar que ya existe una cuenta asociada y no crear un duplicado, sin revelar más datos.]
+- **Email ya registrado** al crear la cuenta *(decisión del equipo, 18/10)*: el sistema informa que ya existe una cuenta asociada a ese email y no crea un duplicado, sin revelar más datos.
 
-- **Requisitos de contraseña**: no están definidos. [NEEDS CLARIFICATION: se propone mínimo 8 caracteres con al menos una letra y un número.]
+- **Requisitos de contraseña** *(decisión del equipo, 18/10, según OWASP ASVS 5.0)*: entre 8 y 128 caracteres; se acepta cualquier carácter, incluidos espacios y acentos; no se exigen combinaciones de mayúsculas, números o símbolos; se rechazan las contraseñas más comunes (por ejemplo "12345678" o "password") y la que es igual al email. NIST SP 800-63B-4 pide 15 caracteres cuando la contraseña es el único factor; para el MVP se adopta el mínimo de 8 de OWASP.
 
-- **"Usuario" en el ingreso**: US-3 pide "email y nombre de usuario", pero el registro (US-1) solo captura email y contraseña. [NEEDS CLARIFICATION: se asume que el usuario es el email.]
+- **"Usuario" en el ingreso** *(decisión del equipo, 18/10)*: US-3 pide "email y nombre de usuario", pero el registro (US-1) solo captura email y contraseña, así que el usuario es el email.
 
 - Email con mayúsculas/minúsculas o espacios laterales: se normaliza antes de validar y comparar.
 
@@ -78,7 +78,7 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 - **FR-004**  *(US-1)*: Si los datos son válidos, el sistema MUST permitir continuar con la creación de la cuenta y MUST crearla una única vez.
 
-- **FR-005**  *(US-1)*: El sistema MUST NOT crear una cuenta cuando el email ya está asociado a otra cuenta de comensal [NEEDS CLARIFICATION: ver Edge Cases].
+- **FR-005**  *(US-1)*: El sistema MUST NOT crear una cuenta cuando el email ya está asociado a otra cuenta de comensal.
 
 - **FR-006**  *(US-3)*: El sistema MUST solicitar las credenciales de acceso (email y contraseña).
 
@@ -91,6 +91,8 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 - **FR-010**  *(US-3)*: El campo de contraseña MUST ocultar el texto ingresado.
 
 - **FR-011**: La contraseña MUST almacenarse de forma no reversible y MUST NOT aparecer en logs ni respuestas.
+
+- **FR-012**  *(US-1)*: La contraseña MUST tener entre 8 y 128 caracteres y aceptar cualquier carácter. El sistema MUST NOT exigir combinaciones de tipos de caracteres, MUST rechazar contraseñas comunes o iguales al email indicando el motivo, y el formulario MUST mostrar los requisitos antes de enviarlo.
 
 ### Key Entities
 

@@ -50,6 +50,8 @@ Como **Responsable del restaurante**, quiero Ingresar a Servido! utilizando mi u
 - **FR-003** *(US-4)*: El login MUST rechazar accesos incorrectos con un mensaje genérico por seguridad.
 - **FR-004** *(US-4)*: El sistema MUST manejar control de acceso asegurando que la cuenta de restaurante solo dé acceso a funcionalidades de su rol.
 
+- **FR-005** *(US-2, US-4; decisión del equipo, 18/10)*: El registro MUST pedir también la contraseña con la que se ingresa en US-4, con las mismas reglas que la del comensal (spec 001, FR-012).
+
 ### Key Entities
 
 - **Restaurante**: id (UUID), mail (unique), CUIT (unique, 11 dígitos), telefono, auth_provider, password_hash.

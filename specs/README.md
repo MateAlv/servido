@@ -31,14 +31,20 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las del Sprint 1 bloq
 
 | Spec | Duda | Propuesta actual |
 | --- | --- | --- |
-| 001 | Requisitos de la contraseña | Mínimo 8 caracteres, con al menos una letra y un número |
-| 001 | US-3 pide "email y nombre de usuario", pero el registro solo pide email | El usuario es el email |
-| 001 | Email ya registrado (no lo define el backlog para el comensal) | Informar que ya existe una cuenta y no crear otra |
-| 002 | Criterio del filtro de precio: el backlog ahora calcula $–$$$$ con el gasto promedio de al menos 5 reseñas, pero las reseñas llegan en los Sprints 4–6 | Sin reseñas, usar un criterio provisorio (la spec propone un monto máximo; otra opción es el rango de precios que declara el restaurante en US-6) |
 | 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba |
 | 002 | Ubicación denegada | Mapa centrado en una zona por defecto, sin distancias |
-| 003 | Contraseña: US-2 pide mail, CUIT y teléfono, pero la spec guarda `password_hash` sin decir dónde se elige | Pedir contraseña en el registro, con las mismas reglas que el comensal |
 | 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Ver Edge Cases de la spec |
+
+## Decisiones del equipo
+
+Dudas que no hacía falta llevar a la PO. Ya están incorporadas en cada spec.
+
+| Fecha | Spec | Decisión |
+| --- | --- | --- |
+| 18/10 | 001, 003 | Contraseñas según OWASP ASVS 5.0: de 8 a 128 caracteres, cualquier carácter, sin combinaciones obligatorias, rechazando las más comunes y la igual al email. Aplica a comensales y restaurantes; el registro del restaurante también pide contraseña |
+| 18/10 | 001 | El usuario para ingresar es el email |
+| 18/10 | 001 | Un email ya registrado no crea otra cuenta; se informa sin revelar más datos |
+| 18/10 | 002 | Filtro de precio provisorio: nivel $–$$$$ cargado en los datos de prueba de cada restaurante, hasta que existan reseñas con gasto (US-50) |
 
 ## Notas de formato
 
