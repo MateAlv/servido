@@ -19,6 +19,12 @@ variable "github_repository" {
   default     = "MateAlv/servido"
 }
 
+variable "github_oidc_subject_prefix" {
+  description = "Subject prefix of the repository's GitHub OIDC tokens when it uses immutable subjects, with the owner and repository IDs. `gh api repos/OWNER/REPO/actions/oidc/customization/sub` prints it."
+  type        = string
+  default     = "repo:MateAlv@92270678/servido@1424448711"
+}
+
 variable "alert_emails" {
   description = "Emails that receive budget alerts."
   type        = list(string)
