@@ -25,6 +25,8 @@ How the team works on Servido!. The rules agents follow are in [AGENTS.md](AGENT
 4. Commit often with conventional commits that name the US: `feat(US-5): show restaurants on the map`.
 5. Run `make lint test`, push and open a pull request. Fill the template, including **AI usage**.
 
+Commits and PRs carry no AI attribution (no AI co-author trailers or "Generated with" footers); see [AGENTS.md](AGENTS.md#git-and-pull-requests). If your AI tool adds them by default, turn that off in its settings. Claude Code is already configured in the repo.
+
 ## Reviewing a pull request
 
 - You must understand the change well enough to explain it in the defense. If you don't, ask.

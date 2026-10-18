@@ -168,6 +168,7 @@ Commit spec, plan and tasks together with the code. Their history is the evidenc
 - Branch per US from `main`: `<spec-number>-us<N>-<short-name>`, for example `002-us5-map`.
 - Conventional commits in English with the US: `feat(US-5): show restaurants on the map`, `fix(US-7): keep the price filter after opening a detail`, `docs(specs): clarify password rules in 001`.
 - One US per PR when possible. Fill every section of the PR template, including **AI usage**: tool and model, the key prompts, and what the human changed after reviewing.
+- **No AI attribution.** Never add a `Co-Authored-By` trailer naming an AI tool or bot, a "Generated with …" footer, or an AI as commit author, even if your tool does it by default. The commit author is the team member. AI use is disclosed only in the PR's **AI usage** section. Human co-authors are fine. Claude Code is already configured for this in `.claude/settings.json`, and CI rejects pull requests that break the rule.
 
 ## Definition of Done
 
