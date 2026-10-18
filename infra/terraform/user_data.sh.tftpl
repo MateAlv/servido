@@ -1,0 +1,36 @@
+#!/bin/bash
+# First boot of the API instance: Docker, swap, the repository and the first deploy.
+set -euxo pipefail
+
+retry() {
+  for attempt in 1 2 3 4 5; do
+    "$@" && return 0
+    sleep 10
+  done
+  return 1
+}
+
+retry dnf install -y docker git
+systemctl enable --now docker
+
+mkdir -p /usr/local/lib/docker/cli-plugins
+retry curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose "${compose_url}"
+retry curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-buildx "${buildx_url}"
+chmod +x /usr/local/lib/docker/cli-plugins/*
+
+# 1 GB of swap so image builds fit in a micro instance's memory.
+if [ ! -f /swapfile ]; then
+  dd if=/dev/zero of=/swapfile bs=1M count=1024
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
+cat > /etc/servido.env <<'ENV'
+AWS_REGION=${region}
+PARAMETER_PREFIX=${parameter_prefix}
+ENV
+
+retry git clone "${repository_url}" /opt/servido
+/opt/servido/infra/ec2/deploy.sh main
