@@ -111,7 +111,7 @@ Run from the repository root. `make` wraps everything; the raw commands are in t
 | New migration after changing models | `make migration m="add reservations"` |
 | Regenerate API contract and TS types after any API change | `make api-types` |
 
-Run `make lint test` before considering a task done.
+Run `make format lint test` before considering a task done.
 
 ## Backend conventions
 
@@ -144,12 +144,14 @@ Spec Kit 1.2.1 is installed for several agents. The steps are the same; the invo
 | Codex | `$speckit-plan` |
 | Gemini CLI | `/speckit.plan` |
 
+Spec Kit generates `spec.md`, `plan.md` and `tasks.md` from the project templates in `.specify/templates/overrides/` (the team's Spanish spec format, this stack and these paths), not from its generic defaults.
+
 Per feature:
 
-1. **Spec** (`spec.md`, Spanish). New feature: `/speckit-specify`. Existing spec: point Spec Kit at it by writing `.specify/feature.json` with `{"feature_directory": "specs/NNN-name"}` (local file, not committed). The PO validates the spec before planning.
-2. **Clarify** (`/speckit-clarify`) when there are `[NEEDS CLARIFICATION]` markers. Answers come from the PO, not from the agent; record them in the spec.
-3. **Plan** (`/speckit-plan`): `plan.md`, `research.md`, `data-model.md`, `contracts/`, in English. Must pass the constitution check.
-4. **Tasks** (`/speckit-tasks`), then optionally `/speckit-analyze` to check consistency.
+1. **Spec** (`spec.md`, Spanish). New feature: `/speckit-specify` with the US numbers from the backlog. Existing spec: point Spec Kit at it by writing `.specify/feature.json` with `{"feature_directory": "specs/NNN-name"}` (local file, not committed). The PO validates the spec before planning.
+2. **Clarify** (`/speckit-clarify`) when there are `[NEEDS CLARIFICATION]` markers. Answers come from the PO, not from the agent; record them in the spec and in [specs/README.md](specs/README.md).
+3. **Plan** (`/speckit-plan`): `plan.md`, `research.md`, `data-model.md`, `contracts/`, in English. Must pass the constitution check and map every acceptance scenario to a test.
+4. **Tasks** (`/speckit-tasks`). Tests are always requested in this project, even though Spec Kit treats them as optional by default. Optionally run `/speckit-analyze` to check consistency.
 5. **Implement** (`/speckit-implement`), then `/speckit-converge` until it reports converged.
 
 Commit spec, plan and tasks together with the code. Their history is the evidence the course asks for in every sprint defense.
@@ -157,7 +159,8 @@ Commit spec, plan and tasks together with the code. Their history is the evidenc
 ## Tests
 
 - **Backend acceptance tests** go in `backend/tests/test_<feature>.py`, one test per acceptance scenario, named `test_us<N>_s<M>_<behavior>`, where `N` is the US number and `M` the scenario number in the spec. Edge cases: `test_us<N>_edge_<behavior>`. Use the `client` fixture (real Postgres, rolled back after each test).
-- **Frontend**: Vitest + Testing Library for components with logic, next to the component (`Component.test.tsx`). Mock `src/api/client`.
+- **Frontend acceptance tests** cover scenarios that only the UI can prove (for example, the password is hidden while typing). They are Vitest + Testing Library tests next to the component (`Page.test.tsx`), with names that start with the US and scenario: `it('US-3 S5 hides the password while typing')`. Mock `src/api/client`.
+- Other frontend tests are only for components with real logic; do not test markup for its own sake.
 - A bug fix comes with a test that fails without the fix.
 
 ## Git and pull requests
@@ -173,6 +176,9 @@ Commit spec, plan and tasks together with the code. Their history is the evidenc
 - Another team member reviewed and understood the change.
 - UI text is in Spanish and the screens work on a phone.
 
-## Current state
+## Where things stand
 
-Repository bootstrapped on 2026-10-18 in the middle of Sprint 1 (demo on 2026-10-21). Specs 001–006 exist without plans. Open questions for the PO are listed in [specs/README.md](specs/README.md#pendientes-de-aclarar-con-la-po). Hosting beyond the RDS database ([ADR 0006](docs/decisions/0006-database-on-rds.md)) is not decided yet.
+- Which sprint we are in and what it must demo: [docs/product/plan.md](docs/product/plan.md).
+- Which specs exist and how far each one got: [specs/README.md](specs/README.md).
+- Open questions for the PO: [specs/README.md](specs/README.md#pendientes-de-aclarar-con-la-po). Do not resolve them yourself.
+- Hosting beyond the RDS database ([ADR 0006](docs/decisions/0006-database-on-rds.md)) is not decided. Do not add deployment configuration without a new ADR.
