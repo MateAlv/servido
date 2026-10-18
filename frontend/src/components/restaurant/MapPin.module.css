@@ -1,0 +1,110 @@
+.pin {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 11px 3px 4px;
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-pill);
+  background: #ffffff;
+  color: var(--color-ink);
+  font: 800 var(--text-xs) / 1.2 var(--font-body);
+  white-space: nowrap;
+  box-shadow: var(--shadow-pin);
+  transform-origin: 50% 100%;
+  transition:
+    transform var(--duration-base) var(--ease-spring),
+    background-color var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out);
+  animation: drop 620ms var(--ease-out) backwards;
+  animation-delay: calc(var(--i) * 70ms);
+}
+
+/* Small tail pointing at the exact location. */
+.pin::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--color-ink);
+  border-bottom: 2px solid var(--color-ink);
+  background: inherit;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.pin:hover,
+.selected {
+  background: var(--color-ink);
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.selected::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  width: 26px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  transform: translateX(-50%);
+  animation: ripple 1.6s var(--ease-out) infinite;
+}
+
+.icon {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.available {
+  background: #1f7a3d;
+}
+
+.few {
+  background: #c48a00;
+}
+
+.full {
+  background: #b3261e;
+}
+
+@keyframes drop {
+  0% {
+    transform: translateY(-36px);
+    opacity: 0;
+  }
+
+  55% {
+    transform: translateY(0) scale(1.06, 0.9);
+    opacity: 1;
+  }
+
+  75% {
+    transform: translateY(-5px) scale(0.98, 1.04);
+  }
+
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: translateX(-50%) scale(0.6);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translateX(-50%) scale(2.4);
+    opacity: 0;
+  }
+}

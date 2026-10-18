@@ -14,7 +14,7 @@
 
 **Language/Version**: Python 3.12 (backend) · TypeScript (frontend)
 
-**Primary Dependencies**: FastAPI, SQLAlchemy 2, Alembic, Pydantic · React, Vite, React Router, TanStack Query, openapi-fetch
+**Primary Dependencies**: FastAPI, SQLAlchemy 2, Alembic, Pydantic · React, Vite, React Router, TanStack Query, openapi-fetch, the design system in `frontend/src/components/` (see `docs/design/README.md`)
 
 **Storage**: PostgreSQL 17 (Amazon RDS in production, Docker locally and in CI)
 

@@ -1,0 +1,78 @@
+/* Consumers set the height; the width follows the viewBox. */
+.svg {
+  display: block;
+  width: auto;
+  overflow: visible;
+}
+
+.shadow,
+.body,
+.pin,
+.face,
+.plate,
+.lid,
+.ray,
+.orbitTrack,
+.orbitComet {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.shadow {
+  fill: #1b0d08;
+  opacity: 0.2;
+}
+
+.body {
+  transform-origin: 50% 100%;
+}
+
+.pin {
+  fill: var(--color-primary);
+}
+
+.face {
+  fill: var(--color-cream);
+}
+
+.plate,
+.dome,
+.knob {
+  fill: var(--color-ink);
+}
+
+.lid {
+  transform-origin: 18% 100%;
+}
+
+.highlight {
+  fill: none;
+  stroke: var(--color-cream);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+.ray {
+  stroke: var(--color-primary);
+  stroke-width: 3.6;
+  stroke-linecap: round;
+  stroke-dasharray: 8;
+}
+
+.orbitTrack,
+.orbitComet {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-linecap: round;
+}
+
+.orbitTrack {
+  stroke-width: 2;
+  stroke-dasharray: 2.5 5.5;
+  opacity: 0.4;
+}
+
+.orbitComet {
+  stroke-width: 3.2;
+}

@@ -1,0 +1,111 @@
+.dialog {
+  width: min(100% - 32px, 480px);
+  max-height: min(92vh, 760px);
+  padding: 0;
+  border: 0;
+  border-radius: 28px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 30px 80px #00000066;
+}
+
+.dialog::backdrop {
+  background: #3b1f18a8;
+  backdrop-filter: blur(2px);
+}
+
+.dialog[open] {
+  animation: rise var(--duration-slow) var(--ease-spring);
+}
+
+.dialog[open]::backdrop {
+  animation: fade-in var(--duration-base) var(--ease-out);
+}
+
+.dialog[data-closing] {
+  animation: sink var(--duration-base) var(--ease-in) forwards;
+}
+
+.dialog[data-closing]::backdrop {
+  animation: fade-out var(--duration-base) var(--ease-in) forwards;
+}
+
+.inner {
+  display: grid;
+  gap: var(--space-4);
+  padding: 26px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.title {
+  font-size: 30px;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* On phones the modal becomes a bottom sheet. */
+@media (max-width: 560px) {
+  .dialog {
+    width: 100%;
+    max-width: 100%;
+    margin: auto 0 0;
+    border-radius: 28px 28px 0 0;
+  }
+
+  .dialog[open] {
+    animation-name: slide-up;
+  }
+
+  .dialog[data-closing] {
+    animation-name: slide-down;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(24px) scale(0.96);
+    opacity: 0;
+  }
+}
+
+@keyframes sink {
+  to {
+    transform: translateY(16px) scale(0.97);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes slide-down {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}

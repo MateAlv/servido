@@ -1,0 +1,47 @@
+.root {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.burst {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  top: -0.5em;
+  left: -0.5em;
+  font-size: var(--sparkle-size, 14px);
+  color: var(--color-primary);
+  opacity: 0;
+  animation: fly 760ms var(--ease-out) both;
+  animation-delay: calc(var(--burst-delay, 0ms) + var(--i) * 18ms);
+}
+
+.sparkle:nth-child(3n + 2) {
+  color: var(--color-accent);
+}
+
+.sparkle:nth-child(3n) {
+  color: #f1b72f;
+}
+
+@keyframes fly {
+  0% {
+    transform: rotate(var(--angle)) translateY(0) scale(0);
+    opacity: 1;
+  }
+
+  55% {
+    transform: rotate(var(--angle)) translateY(calc(var(--distance) * -1)) scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: rotate(var(--angle)) translateY(calc(var(--distance) * -1.15)) scale(0);
+    opacity: 0;
+  }
+}

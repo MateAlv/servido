@@ -1,0 +1,38 @@
+.steam {
+  width: var(--steam-size, 28px);
+  height: var(--steam-size, 28px);
+  overflow: visible;
+  color: var(--color-text-muted);
+}
+
+.wisp {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  opacity: 0;
+  animation: rise 2s var(--ease-in-out) infinite;
+  animation-delay: calc(var(--i) * 420ms);
+}
+
+@keyframes rise {
+  0% {
+    transform: translateY(5px) scaleY(0.8);
+    opacity: 0;
+  }
+
+  40% {
+    opacity: 0.75;
+  }
+
+  100% {
+    transform: translateY(-7px) scaleY(1.05);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wisp {
+    opacity: 0.6;
+  }
+}

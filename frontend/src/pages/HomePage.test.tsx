@@ -1,40 +1,26 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { api } from '../api/client'
+import { renderWithProviders } from '../test/renderWithProviders'
 import { HomePage } from './HomePage'
 
-vi.mock('../api/client', () => ({ api: { GET: vi.fn() } }))
-
-function renderPage() {
-  const queryClient = new QueryClient()
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <HomePage />
-    </QueryClientProvider>,
-  )
-}
+vi.mock('../api/client', () => ({ api: { GET: vi.fn().mockResolvedValue({ data: {} }) } }))
 
 describe('HomePage', () => {
-  it('shows the tagline and that the server is reachable', async () => {
-    vi.mocked(api.GET).mockResolvedValue({
-      data: { status: 'ok', database: 'ok' },
-      error: undefined,
-      response: new Response(),
-    })
+  it('shows the promise of the product', () => {
+    renderWithProviders(<HomePage />)
 
-    renderPage()
-
-    expect(screen.getByText('Reservá. Pedí. Disfrutá.')).toBeInTheDocument()
-    expect(await screen.findByText('● Servidor conectado')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+      'Llegá y que la mesa ya esté servida',
+    )
   })
 
-  it('tells the user when the server is unreachable', async () => {
-    vi.mocked(api.GET).mockRejectedValue(new Error('network'))
+  it('changes its calls to action for restaurants', () => {
+    renderWithProviders(<HomePage />)
 
-    renderPage()
+    fireEvent.click(screen.getByRole('radio', { name: 'Soy restaurante' }))
 
-    expect(await screen.findByText('■ Sin conexión con el servidor')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sumar mi local' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Buscar mesa' })).not.toBeInTheDocument()
   })
 })

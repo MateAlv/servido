@@ -1,0 +1,30 @@
+.card {
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: var(--space-5);
+}
+
+.compact {
+  padding: var(--space-3);
+  border-radius: 22px;
+}
+
+.interactive {
+  cursor: pointer;
+  transition:
+    transform var(--duration-base) var(--ease-spring),
+    border-color var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+.interactive:hover,
+.selected {
+  border-color: var(--color-primary);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card);
+}
+
+.interactive:active {
+  transform: translateY(-1px) scale(0.99);
+}

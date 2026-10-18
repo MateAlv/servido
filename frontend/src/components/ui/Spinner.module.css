@@ -1,0 +1,42 @@
+.spinner {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  flex: none;
+  animation: spin 800ms linear infinite;
+}
+
+.track,
+.arc {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+}
+
+.track {
+  opacity: 0.25;
+}
+
+.arc {
+  stroke-linecap: round;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-name: breathe !important;
+    animation-duration: 1.4s !important;
+    animation-iteration-count: infinite !important;
+  }
+}

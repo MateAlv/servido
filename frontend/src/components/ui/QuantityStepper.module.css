@@ -1,0 +1,21 @@
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+}
+
+.button {
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+}
+
+.count {
+  min-width: 2ch;
+  font: 800 var(--text-lg) / 1 var(--font-display);
+  text-align: center;
+}

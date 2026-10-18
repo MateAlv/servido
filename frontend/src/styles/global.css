@@ -6,12 +6,18 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background: var(--color-bg);
   color: var(--color-text);
-  font: 17px/1.5 var(--font-body);
+  font: var(--text-base) / 1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
@@ -22,10 +28,18 @@ h3 {
   line-height: 1.05;
 }
 
+p {
+  margin: 0;
+}
+
 button {
   font: inherit;
   color: inherit;
   cursor: pointer;
+}
+
+a {
+  color: inherit;
 }
 
 :focus-visible {
@@ -33,9 +47,41 @@ button {
   outline-offset: 3px;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/*
+ * Safety net for reduced motion: animations jump to their end state and
+ * transitions are instant. A component that needs a gentler alternative
+ * (for example a loading pulse) declares it with !important in its own
+ * reduced-motion block, which wins over this rule.
+ */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-    animation: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
   }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/*
+ * While the brand splash covers the page, entrance animations underneath wait,
+ * so they play when the page is revealed instead of behind the splash.
+ */
+:root[data-splash] [data-entrance]:not([data-splash-root] *),
+:root[data-splash] [data-entrance]:not([data-splash-root] *) * {
+  animation-play-state: paused !important;
 }

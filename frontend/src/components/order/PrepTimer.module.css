@@ -1,0 +1,84 @@
+.timer {
+  --timer-size: 148px;
+
+  position: relative;
+  display: inline-grid;
+  width: var(--timer-size);
+  height: var(--timer-size);
+  place-items: center;
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.track,
+.progress {
+  fill: none;
+  stroke-width: 10;
+}
+
+.track {
+  stroke: var(--color-line);
+}
+
+.progress {
+  stroke: var(--color-primary);
+  stroke-linecap: round;
+  transition:
+    stroke-dashoffset 900ms var(--ease-out),
+    stroke var(--duration-slow) var(--ease-out);
+  animation: ring-in 1100ms var(--ease-out) both;
+}
+
+.done .progress {
+  stroke: var(--color-ok);
+}
+
+.center {
+  display: grid;
+  justify-items: center;
+  line-height: 1;
+}
+
+.minutes {
+  font: 800 calc(var(--timer-size) * 0.3) / 0.9 var(--font-display);
+}
+
+.unit {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.steam {
+  margin-bottom: -4px;
+}
+
+.ready {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  color: var(--color-ok);
+  font: 800 var(--text-lg) / 1 var(--font-display);
+  animation: pop 480ms var(--ease-spring) both;
+}
+
+.ready svg {
+  font-size: 34px;
+}
+
+@keyframes ring-in {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}

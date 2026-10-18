@@ -8,7 +8,7 @@ Servido! is a course MVP: build exactly what the backlog and its specs require, 
 
 ### II. Spec Before Code
 
-No implementation without a spec in `specs/` that the Product Owner has validated. Every task, commit and pull request traces to a spec and to US numbers. Open `[NEEDS CLARIFICATION]` items that affect the work MUST be resolved with the PO or recorded as an explicit, reviewable assumption; agents MUST NOT invent product behavior. When behavior changes, the spec changes first.
+No implementation without a spec in `specs/` that the Product Owner has validated. Every task, commit and pull request traces to a spec and to US numbers. Enabler work that serves many US at once (repository tooling, infrastructure, the design system) traces instead to an ADR in `docs/decisions/` or to `docs/design/`, and still follows principles III to V. Open `[NEEDS CLARIFICATION]` items that affect the work MUST be resolved with the PO or recorded as an explicit, reviewable assumption; agents MUST NOT invent product behavior. When behavior changes, the spec changes first.
 
 ### III. Every Acceptance Scenario Is Tested (NON-NEGOTIABLE)
 
@@ -25,7 +25,7 @@ One FastAPI backend, one PostgreSQL database and one static React frontend, host
 ## Technical Constraints
 
 - **Backend**: Python 3.12, FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 17 (Amazon RDS in production), uv, ruff, pytest.
-- **Frontend**: React, TypeScript and Vite (single-page app), React Router, TanStack Query, a typed client generated from the backend OpenAPI document, CSS Modules with the design tokens, Leaflet with OpenStreetMap.
+- **Frontend**: React, TypeScript and Vite (single-page app), React Router, TanStack Query, a typed client generated from the backend OpenAPI document, CSS Modules with the design tokens and the components in `frontend/src/components/`, CSS animations, Leaflet with OpenStreetMap.
 - **API**: JSON under `/api`; 400 for invalid input, 401, 403, 404, 409 as described in `AGENTS.md`.
 - **Language**: code and technical documents in English; everything user-facing and every `spec.md` in Spanish (Argentina). Domain names follow the glossary in `AGENTS.md`.
 - **Data**: money as decimals, timezone-aware datetimes stored in UTC with business rules in `America/Argentina/Buenos_Aires`, passwords hashed with Argon2, no secrets in the repository.
@@ -42,4 +42,4 @@ One FastAPI backend, one PostgreSQL database and one static React frontend, host
 
 This constitution overrides other practices. Amendments are proposed in a pull request that explains the reason, are approved by the team, and bump the version (MAJOR for removed or redefined principles, MINOR for new principles or sections, PATCH for wording). `AGENTS.md` holds the day-to-day guidance and MUST stay consistent with this document. Plans that violate a principle MUST justify it in their Complexity Tracking section or be simplified.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-18 | **Last Amended**: 2026-10-18
+**Version**: 1.1.0 | **Ratified**: 2026-10-18 | **Last Amended**: 2026-10-18

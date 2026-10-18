@@ -1,0 +1,42 @@
+.skeleton {
+  display: block;
+  border-radius: var(--radius-small);
+  background: linear-gradient(
+      100deg,
+      transparent 20%,
+      color-mix(in srgb, var(--color-surface) 70%, transparent) 50%,
+      transparent 80%
+    )
+    var(--color-line);
+  background-size: 220% 100%;
+  animation: shimmer 1.4s var(--ease-in-out) infinite;
+}
+
+.text {
+  display: grid;
+  gap: 8px;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 120% 0;
+  }
+
+  to {
+    background-position: -120% 0;
+  }
+}
+
+@keyframes breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation-name: breathe !important;
+    animation-duration: 1.6s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
