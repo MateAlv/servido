@@ -129,7 +129,7 @@ export function HomePage() {
             </Reveal>
             <Reveal delay={60}>
               <h1 className={styles.title}>
-                Llegá y que la mesa ya esté <Highlight delay={700}>servida</Highlight>
+                Llegá y que tu plato ya esté <Highlight delay={700}>Servido!</Highlight>
               </h1>
             </Reveal>
             <Reveal delay={120}>

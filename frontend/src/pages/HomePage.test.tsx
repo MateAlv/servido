@@ -11,7 +11,7 @@ describe('HomePage', () => {
     renderWithProviders(<HomePage />)
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
-      'Llegá y que la mesa ya esté servida',
+      'Llegá y que tu plato ya esté Servido!',
     )
   })
 

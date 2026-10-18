@@ -121,6 +121,7 @@ The new instance mounts the restored volume and deploys `main`, as on the first 
 | `EntityAlreadyExists` for the GitHub OIDC provider | Someone created it already: `terraform import aws_iam_openid_connect_provider.github <arn>` |
 | Health check fails after apply | The first boot takes about 10 minutes. Then check `/var/log/cloud-init-output.log` and `sudo docker compose ps` *(shell)*. |
 | Disk full on the instance | `sudo docker system prune` *(shell)*. The database is on its own volume and is not affected. |
+| Deploy fails with `Not authorized to perform sts:AssumeRoleWithWebIdentity` | The repository's OIDC subject changed. Compare `gh api repos/MateAlv/servido/actions/oidc/customization/sub` with `github_oidc_subject_prefix` and apply. |
 | The Deploy workflow cannot find the instance | The instance was replaced (for example by a change in `user_data.sh.tftpl`): run step 5 of the first setup again. |
 
 ## At the end of the course
