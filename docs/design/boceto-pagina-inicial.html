@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es-AR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Servido! — Reservá. Pedí. Disfrutá.</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--p:#D2441C;--pd:#b3361440;--t:#3B1F18;--tm:#6b4a40;--bg:#FDF9EE;--c:#fff;--l:#eadfca;--ok:#1f7a3d;--okb:#dcf2e2;--wa:#8a5a00;--wab:#fff0c9;--er:#b3261e;--erb:#fbdcd9;--map:#f1e8d3;--blk:#e9dec5}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--t:#fbeee0;--tm:#cdb5a6;--bg:#1d110d;--c:#2a1914;--l:#4a3027;--map:#33221b;--blk:#3d2a21;--okb:#17381f;--ok:#7fd69a;--wab:#40300a;--wa:#f1c35a;--erb:#4a1b17;--er:#ff9b92}}
+:root[data-theme=dark]{--t:#fbeee0;--tm:#cdb5a6;--bg:#1d110d;--c:#2a1914;--l:#4a3027;--map:#33221b;--blk:#3d2a21;--okb:#17381f;--ok:#7fd69a;--wab:#40300a;--wa:#f1c35a;--erb:#4a1b17;--er:#ff9b92}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--t);font:17px/1.5 Nunito,system-ui,sans-serif;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);overflow-x:hidden}
+h1,h2,h3,.f{font-family:'Baloo 2',Nunito,sans-serif;line-height:1.02;margin:0}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:3px solid var(--p);outline-offset:3px}
+.w{max-width:1180px;margin:0 auto;padding:0 24px}
+nav{display:flex;align-items:center;gap:22px;padding:18px 0}
+nav .links{display:flex;gap:22px;margin-left:30px;font-weight:700}
+nav a{color:inherit;text-decoration:none}nav .links a:hover{color:var(--p)}
+.logo{display:flex;align-items:center;gap:8px;font:800 28px 'Baloo 2';letter-spacing:-.5px}.logo b{color:var(--p)}
+.sp{margin-left:auto;display:flex;gap:10px;align-items:center}
+.btn{border:2px solid var(--t);background:transparent;border-radius:999px;padding:9px 20px;font-weight:800;text-decoration:none;color:var(--t);display:inline-block}
+.btn.pr{background:var(--p);border-color:var(--p);color:#fff;box-shadow:0 4px 0 #8f2d10}
+.btn.pr:active{transform:translateY(3px);box-shadow:0 1px 0 #8f2d10}
+/* hero */
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center;padding:30px 0 50px}
+.eye{display:inline-flex;gap:8px;align-items:center;font-weight:800;color:var(--p);letter-spacing:.04em;text-transform:uppercase;font-size:14px}
+h1{font-size:clamp(46px,7vw,92px);font-weight:800;margin:14px 0 16px;letter-spacing:-2px}
+h1 em{font-style:normal;color:var(--p);position:relative;white-space:nowrap}
+h1 em svg{position:absolute;left:0;bottom:-8px;width:100%;height:14px}
+.lead{max-width:520px;color:var(--tm);font-size:19px;margin:0 0 24px}
+.seg{display:inline-flex;background:var(--l);border-radius:999px;padding:4px;margin-bottom:12px}
+.seg button{border:0;background:transparent;border-radius:999px;padding:8px 20px;font-weight:800}
+.seg button[aria-selected=true]{background:var(--t);color:var(--bg)}
+.sbox{background:var(--c);border:2px solid var(--l);border-radius:28px;padding:8px;display:flex;gap:2px;flex-wrap:wrap;box-shadow:0 14px 40px #3b1f1818;max-width:640px}
+.fld{flex:1 1 130px;padding:8px 18px;border-radius:20px;display:flex;flex-direction:column;position:relative}
+.fld:hover{background:var(--bg)}.fld label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--tm)}
+.fld input,.fld select{border:0;background:transparent;font:700 16px Nunito;color:var(--t);padding:2px 0;width:100%;outline-offset:6px}
+.fld+.fld:before{content:"";position:absolute;left:0;top:14px;bottom:14px;border-left:2px solid var(--l)}
+.sbox .btn{align-self:stretch;margin:2px;font-size:18px;border-radius:22px;padding:0 26px}
+.ctas{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+.ticketwrap{position:relative;display:grid;place-items:center;min-height:420px}
+.tk{background:var(--c);width:min(100%,340px);border-radius:26px;padding:22px;transform:rotate(3deg);box-shadow:0 20px 50px #3b1f1826;border:2px solid var(--l);position:relative}
+.tk:before,.tk:after{content:"";position:absolute;top:150px;width:26px;height:26px;border-radius:50%;background:var(--bg);border:2px solid var(--l)}
+.tk:before{left:-15px}.tk:after{right:-15px}
+.tk hr{border:0;border-top:3px dotted var(--l);margin:22px -6px}
+.step{display:flex;gap:12px;align-items:flex-start;margin:10px 0}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--p);margin-top:7px;flex:none;box-shadow:0 0 0 5px var(--pd)}
+.dot.g{background:var(--ok);box-shadow:0 0 0 5px var(--okb)}
+.sticker{position:absolute;right:-6px;top:14px;background:var(--ok);color:#fff;font:800 15px 'Baloo 2';padding:6px 14px;border-radius:999px;transform:rotate(-8deg)}
+.pill{display:inline-flex;gap:6px;align-items:center;font-weight:800;font-size:13px;border-radius:999px;padding:3px 10px}
+.hi{background:var(--okb);color:var(--ok)}.me{background:var(--wab);color:var(--wa)}.lo{background:var(--erb);color:var(--er)}
+/* explorer */
+.exp{padding:30px 0 60px}.exp h2{font-size:clamp(34px,4.5vw,54px);letter-spacing:-1px}
+.chips{display:flex;gap:10px;margin:20px 0;overflow-x:auto;padding-bottom:6px}
+.chips button{flex:none;background:var(--c);border:2px solid var(--l);border-radius:999px;padding:8px 18px;font-weight:800}
+.chips button[aria-pressed=true]{background:var(--t);color:var(--bg);border-color:var(--t)}
+.layout{display:grid;grid-template-columns:420px 1fr;gap:22px;align-items:start}
+.list{display:flex;flex-direction:column;gap:12px;max-height:560px;overflow:auto;padding:4px}
+.r{display:flex;gap:14px;background:var(--c);border:2px solid var(--l);border-radius:22px;padding:10px;text-align:left;width:100%;transition:.15s}
+.r:hover,.r.on{border-color:var(--p);transform:translateX(4px)}
+.ph{width:92px;height:92px;border-radius:16px;flex:none;display:grid;place-items:center}
+.r h3{font-size:21px}.r small{color:var(--tm);font-weight:600}
+.mapw{position:relative;border-radius:30px;overflow:hidden;border:2px solid var(--l);background:var(--map);aspect-ratio:1.18}
+.mapw svg{width:100%;height:100%;display:block}
+.pin{position:absolute;transform:translate(-50%,-100%);background:var(--c);border:2px solid var(--t);border-radius:999px;padding:3px 11px 3px 4px;display:flex;align-items:center;gap:6px;font:800 13px Nunito;box-shadow:0 4px 0 #3b1f1830;white-space:nowrap}
+.pin i{font-style:normal;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:12px}
+.pin:hover,.pin.on{background:var(--t);color:var(--bg);z-index:3;transform:translate(-50%,-100%) scale(1.08)}
+.me-pin{position:absolute;width:18px;height:18px;border-radius:50%;background:#2a6fdb;border:3px solid #fff;box-shadow:0 0 0 8px #2a6fdb33;transform:translate(-50%,-50%)}
+.zone{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--c);border-radius:999px;padding:7px 18px;font-weight:800;border:2px solid var(--l)}
+.legend{position:absolute;left:14px;bottom:14px;background:var(--c);border-radius:16px;padding:8px 12px;font-size:13px;font-weight:700;display:flex;gap:10px;flex-wrap:wrap;border:2px solid var(--l)}
+.how{background:var(--t);color:#fdf9ee;padding:70px 0;border-radius:44px 44px 0 0}
+.how h2{font-size:clamp(36px,5vw,62px);margin-bottom:34px}.how h2 span{color:#ff8d66}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.g3>div{border:2px solid #fdf9ee33;border-radius:26px;padding:24px}.g3 .n{font:800 70px 'Baloo 2';color:#ff8d66;line-height:.9}
+.g3 h3{font-size:30px;margin:8px 0}.g3 p{margin:0;color:#e9d8c8}
+.biz{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center;padding:60px 0}
+.biz h2{font-size:clamp(34px,4.5vw,56px)}.biz ul{padding:0;list-style:none;color:var(--tm)}.biz li{padding:6px 0 6px 30px;position:relative}.biz li:before{content:"✓";position:absolute;left:0;color:var(--p);font-weight:800}
+.panel{background:var(--c);border:2px solid var(--l);border-radius:26px;padding:20px}
+.bar{height:12px;border-radius:9px;background:var(--l);overflow:hidden;margin:6px 0 14px}.bar b{display:block;height:100%;background:var(--p);border-radius:9px}
+footer{background:var(--t);color:#e9d8c8;padding:26px 0 40px;font-size:14px}
+footer .w{display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between}
+@media(max-width:900px){.hero,.layout,.biz,.g3{grid-template-columns:1fr}.ticketwrap{min-height:0;padding:20px 0}nav .links{display:none}.list{max-height:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* v2 */
+h1{line-height:1.08}
+h1 em{display:inline-block;z-index:0}
+h1 em svg{left:-3%;width:106%;bottom:.04em;height:.3em;z-index:-1}
+h1 em svg path{stroke:#D2441C;stroke-opacity:.2;stroke-width:12}
+.sbox{display:grid;grid-template-columns:1.2fr 1fr .9fr auto;align-items:center;gap:0;padding:8px;border-radius:999px;max-width:680px;flex-wrap:nowrap}
+.sbox.two{grid-template-columns:1fr 1fr auto}
+.fld{padding:6px 20px;justify-content:center;min-width:0;flex:none}
+.fld input,.fld select{text-overflow:ellipsis}
+.sbox .go{height:58px;border-radius:999px;padding:0 28px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:18px;margin:0}
+.err{color:var(--er);font-weight:800;font-size:14px;margin:6px 0 0}
+@media(max-width:720px){.sbox,.sbox.two{grid-template-columns:1fr 1fr;border-radius:28px;gap:4px}.sbox .fld:first-child{grid-column:1/-1}.sbox .go{grid-column:1/-1}.sbox.two .fld{grid-column:1/-1}.fld+.fld:before{display:none}}
+.ticketwrap{min-height:500px;isolation:isolate}
+.blob{position:absolute;inset:0;margin:auto;width:min(100%,440px);z-index:-1}
+.tk2{position:absolute;width:min(86%,300px);height:360px;background:var(--l);border-radius:26px;transform:rotate(-7deg) translate(-26px,10px);z-index:-1;opacity:.8}
+.fl{position:absolute;background:var(--c);border:2px solid var(--l);border-radius:18px;padding:8px 14px;box-shadow:0 10px 26px #3b1f1820;font-weight:800;font-size:14px;line-height:1.25;animation:fl 5s ease-in-out infinite}
+.fl small{display:block;color:var(--tm);font-weight:600}
+.fl.a{left:-4px;top:40px}.fl.b{right:-2px;bottom:56px;animation-delay:-2s;display:flex;gap:8px;align-items:center}.fl.c{left:6px;bottom:20px;animation-delay:-3.5s;padding:6px 12px}
+.spk{position:absolute;animation:fl 6s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-8px)}}
+@media(prefers-reduced-motion:reduce){.fl,.spk{animation:none}}
+@media(max-width:900px){.fl.a{left:0}.ticketwrap{min-height:480px}}
+/* explorer v2 */
+.bar2{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:22px 0 10px}
+.srch{flex:1 1 220px;display:flex;align-items:center;gap:8px;background:var(--c);border:2px solid var(--l);border-radius:999px;padding:0 16px;height:48px}
+.srch input{border:0;background:transparent;font:700 16px Nunito;color:var(--t);width:100%;outline:0}.srch:focus-within{border-color:var(--p)}
+.tg,.fb{height:48px;border-radius:999px;border:2px solid var(--l);background:var(--c);padding:0 20px;font-weight:800;display:flex;align-items:center;gap:8px}
+.tg[aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:#fff}
+.fb .bd{background:var(--p);color:#fff;border-radius:999px;min-width:22px;height:22px;display:grid;place-items:center;font-size:13px;padding:0 6px}
+.sum{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--tm);font-weight:700;margin:0 0 14px}
+.r{position:relative;cursor:pointer}.r:focus-visible{outline:3px solid var(--p)}
+.mini{margin-left:auto;align-self:flex-end;border:2px solid var(--p);background:var(--p);color:#fff;border-radius:999px;padding:4px 14px;font-weight:800;font-size:14px}
+.list{max-height:600px}
+.mapw{aspect-ratio:auto;height:600px;touch-action:none;cursor:grab;background:#f2f0ea;user-select:none}.mapw:active{cursor:grabbing}
+#mv{position:absolute;left:0;top:0;width:1000px;height:760px;transform-origin:0 0}#mv.anim{transition:transform .45s ease}
+#mv svg{width:1000px;height:760px}
+.pin{left:0;top:0;transform-origin:50% 100%;transform:translate(-50%,-100%) scale(calc(1/var(--z,1)));color:#3B1F18;background:#fff;border:2px solid #3B1F18}
+.pin:hover,.pin.on{background:#3B1F18;color:#fff;transform:translate(-50%,-100%) scale(calc(1.1/var(--z,1)))}
+.me-pin{transform:translate(-50%,-50%) scale(calc(1/var(--z,1)))}
+.ctl{position:absolute;right:14px;display:flex;flex-direction:column;background:#fff;border-radius:12px;box-shadow:0 2px 8px #0003;overflow:hidden}
+.ctl button{width:42px;height:42px;border:0;background:#fff;font-size:22px;color:#444}.ctl button+button{border-top:1px solid #e0e0e0}.ctl button:hover{background:#f1f1f1}
+.zone{border:0;box-shadow:0 2px 8px #0003;color:#3B1F18;font-size:15px;background:#fff;cursor:pointer}
+.legend{left:14px;top:64px;bottom:auto;background:#fff;color:#3B1F18;border:0;box-shadow:0 2px 8px #0003}
+.mc{position:absolute;left:14px;right:70px;bottom:14px;background:#fff;color:#3B1F18;border-radius:18px;padding:12px 14px;box-shadow:0 4px 18px #0004;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.attr{position:absolute;right:6px;bottom:2px;font-size:10px;color:#666;background:#fffc;padding:0 4px;border-radius:4px;z-index:1}
+/* modal */
+.mbg{position:fixed;inset:0;background:#3b1f18a8;display:grid;place-items:center;z-index:50;padding:16px;animation:fi .15s}
+.mb{background:var(--c);color:var(--t);border-radius:28px;padding:26px;width:min(100%,480px);max-height:92vh;overflow:auto;box-shadow:0 30px 80px #0006;animation:up .2s}
+.mb h2{font-size:32px;margin-bottom:10px}.mb .mut{color:var(--tm)}.mb input,.mb select{width:100%}
+@keyframes fi{from{opacity:0}}@keyframes up{from{transform:translateY(20px);opacity:0}}
+.mh{display:flex;justify-content:space-between;align-items:center}.x{border:0;background:var(--l);width:38px;height:38px;border-radius:50%;font-size:20px}
+.fg{margin:18px 0}.fg h3{font-size:20px;margin-bottom:8px}
+.cs{display:flex;flex-wrap:wrap;gap:8px}.cs button,.sl{border:2px solid var(--l);background:var(--c);border-radius:999px;padding:7px 16px;font-weight:800}
+.cs button[aria-pressed=true],.sl.on{background:var(--t);color:var(--bg);border-color:var(--t)}
+.sl{border-radius:16px;display:flex;flex-direction:column;align-items:center;line-height:1.2}.sl small{font-weight:600;font-size:12px}.sl:disabled{opacity:.4;cursor:not-allowed;text-decoration:line-through}
+.slots{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}
+input[type=range]{accent-color:var(--p);padding:0;border:0}
+.in{border:2px solid var(--l);border-radius:14px;padding:11px 14px;background:var(--bg);font:700 16px Nunito;color:var(--t)}
+.mf{display:flex;gap:10px;justify-content:space-between;margin-top:14px;flex-wrap:wrap}
+.big{width:100%;height:110px;border-radius:20px;display:grid;place-items:center;margin-bottom:14px}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--t);color:var(--bg);padding:12px 22px;border-radius:999px;font-weight:800;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:92vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.th{border:2px solid var(--l);background:var(--c);width:42px;height:42px;border-radius:50%}
+</style></head><body>
+<div class="w">
+<nav aria-label="Principal"><a class="logo" href="#"><svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 38C10 26 5 21 5 14a15 15 0 0130 0c0 7-5 12-15 24z" fill="#D2441C"/><circle cx="20" cy="14" r="9" fill="#FDF9EE"/><path d="M13 17h14a7 6 0 00-14 0z" fill="#3B1F18"/><rect x="12" y="18" width="16" height="2" fill="#3B1F18"/></svg>Servido<b>!</b></a>
+<div class="links"><a href="#explorar">Explorar</a><a href="#como">Cómo funciona</a><a href="#locales">Para restaurantes</a></div>
+<div class="sp"><button class="th" onclick="theme()" aria-label="Cambiar tema claro/oscuro">◐</button><button class="btn" id="navL" onclick="U?logout():loginM('d')">Ingresar</button><button class="btn pr" onclick="toRest()">Sumá tu local</button></div></nav>
+
+<section class="hero">
+<div>
+<span class="eye"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="4" fill="#D2441C"/><circle cx="10" cy="10" r="9" fill="none" stroke="#D2441C" stroke-width="2" stroke-dasharray="3 3"/></svg>Reservá. Pedí. Disfrutá.</span>
+<h1>Llegá y que la mesa ya esté <em>servida<svg viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true"><path d="M2 9C40 2 80 12 120 6S180 4 198 8" fill="none" stroke="#D2441C" stroke-width="5" stroke-linecap="round"/></svg></em></h1>
+<p class="lead">Reservá tu mesa y elegí tu comida antes de salir. El restaurante la prepara para cuando llegues, así no esperás.</p>
+<div class="seg" role="tablist" aria-label="Soy"><button role="tab" id="t1" aria-selected="true" onclick="role('d')">Soy comensal</button><button role="tab" id="t2" aria-selected="false" onclick="role('r')">Soy restaurante</button></div>
+<div id="box"></div>
+<p style="font-size:14px;color:var(--tm);margin:14px 0 0">🔒 Prototipo: los datos son de ejemplo y no se guarda nada.</p>
+</div>
+<div class="ticketwrap" aria-label="Ejemplo de una reserva con pedido">
+<svg class="blob" viewBox="0 0 400 400" aria-hidden="true"><circle cx="200" cy="200" r="170" fill="#D2441C" opacity=".12"/><circle cx="200" cy="200" r="190" fill="none" stroke="#D2441C" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 10"/><path d="M40 330c40-30 60 20 100-10" fill="none" stroke="#D2441C" stroke-opacity=".3" stroke-width="3" stroke-linecap="round"/></svg>
+<div class="tk2"></div>
+<svg class="spk" style="right:18px;top:30px" width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.5 8.5L23 12l-8.5 2.5L12 23l-2.5-8.5L1 12l8.5-2.5z" fill="#D2441C"/></svg>
+<svg class="spk" style="left:24px;top:150px;animation-delay:-2s" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.5 8.5L23 12l-8.5 2.5L12 23l-2.5-8.5L1 12l8.5-2.5z" fill="#3B1F18" opacity=".6"/></svg>
+<div class="fl a"><span class="pill hi">● En vivo</span><small>Tu pedido se está preparando</small></div>
+<div class="fl b"><svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 38C10 26 5 21 5 14a15 15 0 0130 0c0 7-5 12-15 24z" fill="#D2441C"/><circle cx="20" cy="14" r="6" fill="#FDF9EE"/></svg><span>0,4 km<small>caminando 6 min</small></span></div>
+<div class="fl c">★ 4,7 <small style="display:inline">· 128 reseñas</small></div>
+<div class="tk"><span class="sticker">Sin espera</span>
+<div class="f" style="font-size:26px">La Esquina de Palermo</div><small style="color:var(--tm);font-weight:700">Vie 24 · 21:00 h · 2 personas · Mesa 4</small>
+<hr>
+<div class="step"><span class="dot g"></span><div><b>20:10</b> Reservaste y elegiste<br><small style="color:var(--tm)">1× Bife de chorizo · 1× Ñoquis veganos</small></div></div>
+<div class="step"><span class="dot"></span><div><b>20:32</b> La cocina empieza a prepararlo<br><small style="color:var(--tm)">⏱ 28 min estimados</small></div></div>
+<div class="step"><span class="dot g"></span><div><b>21:00</b> Llegás. Tu comida también.</div></div>
+</div></div>
+</section>
+</div>
+
+<section class="exp" id="explorar"><div class="w">
+<h2>¿Dónde hay mesa <span style="color:var(--p)">ahora cerca tuyo?</span></h2>
+<div class="bar2"><label class="srch"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><input id="qn" placeholder="Buscá un restaurante o tipo de comida" oninput="Q.name=this.value;draw()" aria-label="Buscar restaurante"></label>
+<button class="tg" id="tg" aria-pressed="false" onclick="Q.avail=!Q.avail;draw()">● Disponibles ahora</button>
+<button class="fb" onclick="fModal()"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="7" r="2.5" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="8" cy="17" r="2.5" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>Filtros <span class="bd" id="bd" hidden>0</span></button></div>
+<p class="sum" id="sum" aria-live="polite"></p>
+<div class="layout"><div class="list" id="list" aria-live="polite"></div>
+<div class="mapw" id="mp" aria-label="Mapa simulado de restaurantes"><div id="mv"></div>
+<button class="zone" onclick="zoneS()">↻ Buscar en esta zona</button>
+<div class="legend"><span class="pill hi">● Hay mesa</span><span class="pill me">▲ Pocas</span><span class="pill lo">■ Completo</span></div>
+<div class="ctl" style="bottom:128px"><button onclick="center(500,380,1)" aria-label="Mi ubicación">⌖</button></div>
+<div class="ctl" style="bottom:66px"><button onclick="zoom(.2)" aria-label="Acercar">+</button><button onclick="zoom(-.2)" aria-label="Alejar">−</button></div>
+<div class="mc" id="mc" hidden></div><span class="attr">Mapa ilustrativo (simulado)</span></div></div>
+</div></section>
+
+<section class="how" id="como"><div class="w"><h2>Tres pasos. <span>Cero esperas.</span></h2>
+<div class="g3"><div><div class="n">1</div><h3>Reservá</h3><p>Elegí cuántos son, cuándo y en qué mesa. Ves solo lo que realmente está libre.</p></div>
+<div><div class="n">2</div><h3>Pedí</h3><p>Armá tu pedido con el menú actualizado y los tiempos de cocina a la vista.</p></div>
+<div><div class="n">3</div><h3>Disfrutá</h3><p>Llegás a tu hora y tu comida sale cuando vos entrás. Pagás con tarjeta o en el local.</p></div></div></div></section>
+
+<div style="background:var(--t)"><div style="background:var(--bg);border-radius:44px 44px 0 0"><div class="w">
+<section class="biz" id="locales"><div><span class="eye">Para restaurantes</span><h2 style="margin:10px 0 14px">Cocinás con tiempo, no con apuro.</h2>
+<ul><li>Recibí reservas y pedidos en un solo lugar</li><li>Sabé a qué hora empezar a preparar cada plato</li><li>Configurá turnos, mesas y seña a tu manera</li></ul>
+<button class="btn pr" onclick="toRest()">Registrar mi restaurante</button> <button class="btn" onclick="loginM('r')">Ya tengo cuenta</button></div>
+<div class="panel"><div class="row f" style="font-size:22px;margin-bottom:10px">Turno de esta noche</div>
+<small style="font-weight:800">Mesas ocupadas · 34 / 60</small><div class="bar"><b style="width:57%"></b></div>
+<div class="step"><span class="dot"></span><div><b>20:32</b> Empezar: 2× Bife de chorizo <span class="pill me">▲ En 5 min</span></div></div>
+<div class="step"><span class="dot g"></span><div><b>20:50</b> Mesa 6 · Pago confirmado <span class="pill hi">✔ Pagado</span></div></div></div></section>
+</div></div></div>
+<footer><div class="w"><span>© 2026 Servido! · Reservá. Pedí. Disfrutá.</span><span><a href="#" onclick="info('Términos');return false" style="color:inherit">Términos</a> · <a href="#" onclick="info('Privacidad');return false" style="color:inherit">Privacidad</a> · <a href="#" onclick="info('Ayuda');return false" style="color:inherit">Ayuda</a></span></div></footer>
+
+<div id="mod"></div><div id="toast" role="status"></div>
+<script>
+const $=s=>document.querySelector(s);
+const R=[
+{id:0,n:'La Esquina de Palermo',k:'Parrilla',p:3,r:4.6,d:.4,e:25,m:6,x:440,y:300,c:'#f6c9a8',g:['ter'],cap:8,t:'Parrilla clásica con terraza.'},
+{id:1,n:'Bodegón Estudiantil',k:'Minutas',p:1,r:4.1,d:.7,e:8,m:2,x:330,y:470,c:'#f2d98d',g:['eco','veg'],cap:6,t:'Platos rápidos y abundantes a buen precio.'},
+{id:2,n:'Verde Que Te Quiero',k:'Vegetariana',p:2,r:4.7,d:.9,e:15,m:9,x:640,y:250,c:'#cfe3b4',g:['veg','tacc'],cap:6,t:'Cocina vegetariana con muchas opciones veganas.'},
+{id:3,n:'Celi Cocina',k:'Sin TACC',p:2,r:4.5,d:1.1,e:18,m:5,x:700,y:470,c:'#d9c4ec',g:['tacc'],cap:4,t:'100% sin TACC y sin contaminación cruzada.'},
+{id:4,n:'Terraza del Río',k:'Internacional',p:3,r:4.4,d:1.4,e:30,m:0,x:560,y:610,c:'#b9dbe8',g:['ter'],cap:8,t:'Terraza con vista. Seña obligatoria.'},
+{id:5,n:'Café Cocina',k:'Café',p:1,r:4.2,d:1.6,e:6,m:3,x:230,y:300,c:'#f0b9b0',g:['eco','veg'],cap:4,t:'Desayunos, almuerzos y meriendas.'},
+{id:6,n:'Don Pepe',k:'Pizzería',p:2,r:4.0,d:2.1,e:20,m:4,x:790,y:330,c:'#f5cf9b',g:['veg'],cap:8,t:'Pizzas y pastas de barrio.'},
+{id:7,n:'Sushi Nori',k:'Japonesa',p:3,r:4.3,d:2.4,e:22,m:1,x:400,y:140,c:'#e4d0b4',g:[],cap:4,t:'Sushi de autor. Seña obligatoria.'}];
+const TG={veg:'Vegetariano',tacc:'Sin TACC',ter:'Terraza',eco:'Económico'},TIMES=['20:30','21:00','21:30','22:00'],SH={'20:30':1,'21:00':0,'21:30':-1,'22:00':-2};
+const free=(r,t)=>Math.max(0,r.m+(Q.day==='Hoy'?SH[t]||0:0)),stt=n=>n===0?'lo':n<=2?'me':'hi';
+const LB={hi:'Hay mesa',me:'Quedan pocas',lo:'Completo'},IC={hi:'●',me:'▲',lo:'■'},CL={hi:'#1f7a3d',me:'#c48a00',lo:'#b3261e'};
+const FOODS=[...new Set(R.map(r=>r.k))];
+let Q={name:'',avail:false,price:[],food:[],dist:3,rate:0,people:2,day:'Hoy',time:'21:00'},sel=null,U=null,pend=null;
+const fl=()=>R.filter(r=>(!Q.name||(r.n+r.k).toLowerCase().includes(Q.name.toLowerCase()))&&(!Q.avail||free(r,Q.time)>0)&&(!Q.price.length||Q.price.includes(r.p))&&(!Q.food.length||Q.food.includes(r.k))&&r.d<=Q.dist&&r.r>=Q.rate&&r.cap>=Q.people).sort((a,b)=>a.d-b.d);
+const nf=()=>Q.price.length+Q.food.length+(Q.dist<3?1:0)+(Q.rate>0?1:0);
+const dot=r=>`<svg width="44" height="44" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 28h28a14 12 0 00-28 0z" fill="#3B1F18"/><rect x="4" y="29" width="32" height="4" rx="2" fill="#3B1F18"/><circle cx="20" cy="12" r="3" fill="#3B1F18"/></svg>`;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2800)}
+function modal(h){$('#mod').innerHTML=`<div class="mbg" onclick="if(event.target===this)closeM()"><div class="mb" role="dialog" aria-modal="true" tabindex="-1">${h}</div></div>`;$('#mod .mb').focus()}
+function closeM(){$('#mod').innerHTML=''}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM()});
+function theme(){const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'light':'dark'}
+/* mapa */
+function mapSVG(){let s='<rect width="1000" height="760" fill="#f2f0ea"/>';
+ s+='<path d="M1000 600C910 590 860 690 780 760H1000Z" fill="#aad3f2"/><path d="M0 700C70 690 110 740 150 760H0Z" fill="#aad3f2"/>';
+ [[150,410,120,100],[590,110,130,90],[800,510,120,110],[40,90,100,80]].forEach(a=>s+=`<rect x="${a[0]}" y="${a[1]}" width="${a[2]}" height="${a[3]}" rx="16" fill="#cdeab4"/>`);
+ const H=[60,130,200,270,410,480,620,690],V=[60,140,220,300,380,540,620,700,860,940],MH=[340,550],MV=[460,780];
+ const ln=(x1,y1,x2,y2,w,c,k)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${k}" stroke-width="${w+3}" stroke-linecap="round"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+ H.forEach(y=>s+=ln(0,y,1000,y,9,'#fff','#e0dcd2'));V.forEach(x=>s+=ln(x,0,x,760,9,'#fff','#e0dcd2'));
+ MH.forEach(y=>s+=ln(0,y,1000,y,16,'#fde293','#f0b84a'));MV.forEach(x=>s+=ln(x,0,x,760,16,'#fde293','#f0b84a'));
+ s+=ln(0,640,700,0,12,'#fff','#e0dcd2');
+ const T=(x,y,t,o='')=>`<text x="${x}" y="${y}" font-size="11" font-weight="700" fill="#70757a" font-family="Nunito,sans-serif" ${o}>${t}</text>`;
+ s+=T(80,336,'Av. Santa Fe')+T(80,546,'Av. Corrientes')+T(452,640,'Av. Scalabrini Ortiz','transform="rotate(-90 452 640)"')+T(772,300,'Av. Córdoba','transform="rotate(-90 772 300)"')
+  +`<text x="610" y="400" font-size="22" font-weight="800" letter-spacing="8" fill="#b5b0a4" font-family="Nunito,sans-serif">PALERMO</text>`
+  +T(160,470,'Plaza Italia','fill="#3d8b4d"')+T(600,160,'Parque','fill="#3d8b4d"')+T(812,570,'Parque Sur','fill="#3d8b4d"')+T(830,700,'Río','fill="#3b7fb5"');
+ return `<svg viewBox="0 0 1000 760" aria-hidden="true">${s}</svg><div class="me-pin" style="left:500px;top:380px;position:absolute;width:18px;height:18px;border-radius:50%;background:#2a6fdb;border:3px solid #fff;box-shadow:0 0 0 9px #2a6fdb33"></div><div id="pins"></div>`}
+let Z=1,TX=0,TY=0;
+function apply(){const m=$('#mv');m.style.transform=`translate(${TX}px,${TY}px) scale(${Z})`;m.style.setProperty('--z',Z)}
+function clamp(){const b=$('#mp').getBoundingClientRect();TX=Math.min(0,Math.max(b.width-1000*Z,TX));TY=Math.min(0,Math.max(b.height-760*Z,TY))}
+function center(x,y,z){const b=$('#mp').getBoundingClientRect();if(z)Z=z;TX=b.width/2-x*Z;TY=b.height/2-y*Z;clamp();$('#mv').classList.add('anim');apply();setTimeout(()=>$('#mv').classList.remove('anim'),500)}
+function zoom(d){const b=$('#mp').getBoundingClientRect(),zm=Math.max(b.width/1000,b.height/760),cx=(b.width/2-TX)/Z,cy=(b.height/2-TY)/Z;Z=Math.min(2,Math.max(zm,Z+d));TX=b.width/2-cx*Z;TY=b.height/2-cy*Z;clamp();$('#mv').classList.add('anim');apply();setTimeout(()=>$('#mv').classList.remove('anim'),500)}
+(()=>{const mp=$('#mp');let dr=null;
+ mp.onpointerdown=e=>{if(e.target.closest('.pin,.ctl,.zone,.mc'))return;dr={x:e.clientX-TX,y:e.clientY-TY};mp.setPointerCapture(e.pointerId)};
+ mp.onpointermove=e=>{if(!dr)return;TX=e.clientX-dr.x;TY=e.clientY-dr.y;clamp();apply()};
+ mp.onpointerup=()=>dr=null})();
+function zoneS(){toast('Actualizamos los restaurantes de esta zona (simulado)');draw()}
+/* lista y pines */
+function pick(id){sel=id;draw();center(R[id].x,R[id].y)}
+function draw(){const L=fl(),t=Q.time;
+ $('#tg').setAttribute('aria-pressed',Q.avail);const bd=$('#bd');bd.hidden=!nf();bd.textContent=nf();
+ $('#sum').innerHTML=`<span class="pill hi">${Q.day} · ${t} h · ${Q.people} ${Q.people>1?'personas':'persona'}</span> ${L.length} ${L.length===1?'restaurante':'restaurantes'}`;
+ $('#list').innerHTML=L.length?L.map(r=>{const f=free(r,t),s=stt(f);return `<div class="r ${sel===r.id?'on':''}" tabindex="0" onclick="pick(${r.id})" onkeydown="if(event.key=='Enter')pick(${r.id})"><div class="ph" style="background:${r.c}">${dot()}</div><div style="flex:1"><h3>${r.n}</h3><small>${r.k} · ${'$'.repeat(r.p)} · ★ ${r.r} · ${String(r.d).replace('.',',')} km</small><br><span class="pill ${s}">${IC[s]} ${LB[s]}${f?' · '+f+' mesas':''}</span> <small>⏱ ${r.e} min</small><br><button class="mini" onclick="event.stopPropagation();openR(${r.id})">Ver y reservar</button></div></div>`}).join(''):`<div class="r" style="display:block;cursor:default"><h3>Sin resultados</h3><small>Probá quitar algún filtro.</small><br><button class="mini" style="margin:8px 0 0" onclick="Object.assign(Q,{name:'',avail:false,price:[],food:[],dist:3,rate:0});$('#qn').value='';draw()">Limpiar todo</button></div>`;
+ $('#pins').innerHTML=L.map(r=>{const f=free(r,t),s=stt(f);return `<button class="pin ${sel===r.id?'on':''}" style="left:${r.x}px;top:${r.y}px" aria-label="${r.n}: ${LB[s]}" onclick="pick(${r.id})"><i style="background:${CL[s]}">${IC[s]}</i>${f?f+' mesas':'Completo'}</button>`}).join('');
+ const mc=$('#mc'),r=R[sel];if(r&&L.includes(r)){const s=stt(free(r,t));mc.hidden=false;mc.innerHTML=`<div style="flex:1;min-width:150px"><b class="f" style="font-size:20px">${r.n}</b><br><small>${r.k} · ${'$'.repeat(r.p)} · ${String(r.d).replace('.',',')} km</small><br><span class="pill ${s}">${IC[s]} ${LB[s]}</span></div><button class="mini" style="align-self:center;padding:8px 18px" onclick="openR(${r.id})">Reservar</button>`}else mc.hidden=true}
+/* filtros */
+function tog(k,v){const a=Q[k],i=a.indexOf(v);i<0?a.push(v):a.splice(i,1);fModal();draw()}
+function fModal(){modal(`<div class="mh"><h2>Filtros</h2><button class="x" onclick="closeM()" aria-label="Cerrar">×</button></div>
+<div class="fg"><h3>Precio</h3><div class="cs">${[1,2,3].map(n=>`<button aria-pressed="${Q.price.includes(n)}" onclick="tog('price',${n})">${'$'.repeat(n)}</button>`).join('')}</div></div>
+<div class="fg"><h3>Tipo de comida</h3><div class="cs">${FOODS.map(f=>`<button aria-pressed="${Q.food.includes(f)}" onclick="tog('food','${f}')">${f}</button>`).join('')}</div></div>
+<div class="fg"><h3>Distancia máxima: <span id="dv">${Q.dist>=3?'3+ km':String(Q.dist).replace('.',',')+' km'}</span></h3><input type="range" min=".5" max="3" step=".5" value="${Q.dist}" aria-label="Distancia máxima" oninput="Q.dist=+this.value;$('#dv').textContent=Q.dist>=3?'3+ km':String(Q.dist).replace('.',',')+' km';draw();$('#fc').textContent='Ver '+fl().length+' resultados'"></div>
+<div class="fg"><h3>Rating mínimo</h3><div class="cs">${[0,4,4.5].map(n=>`<button aria-pressed="${Q.rate===n}" onclick="Q.rate=${n};fModal();draw()">${n?'★ '+n+'+':'Todos'}</button>`).join('')}</div></div>
+<div class="mf"><button class="btn" onclick="Object.assign(Q,{price:[],food:[],dist:3,rate:0});fModal();draw()">Limpiar</button><button class="btn pr" id="fc" onclick="closeM()">Ver ${fl().length} resultados</button></div>`)}
+/* detalle y reserva */
+function openR(id){const r=R[id];sel=id;draw();const f=free(r,Q.time);
+ modal(`<div class="mh"><span></span><button class="x" onclick="closeM()" aria-label="Cerrar">×</button></div><div class="big" style="background:${r.c}">${dot()}</div><h2>${r.n}</h2><p class="mut">${r.k} · ${'$'.repeat(r.p)} · ★ ${r.r} · ${String(r.d).replace('.',',')} km · ⏱ ${r.e} min</p><p>${r.t}</p><p>${r.g.map(g=>`<span class="pill me" style="background:var(--l);color:var(--t)">${TG[g]}</span>`).join(' ')}</p>
+<h3 style="font-size:20px">Horarios · ${Q.day}</h3><div class="slots">${TIMES.map(t=>{const n=free(r,t);return `<button class="sl ${t===Q.time?'on':''}" ${n?'':'disabled'} onclick="Q.time='${t}';draw();openR(${id})">${t}<small>${n?n+' mesas':'Completo'}</small></button>`}).join('')}</div>
+<div class="mf"><button class="btn" onclick="closeM()">Cerrar</button><button class="btn pr" ${f?'':'disabled'} onclick="book(${id})">Reservar mesa</button></div>`)}
+function book(id){if(!U||U.role!=='d'){pend=()=>book(id);return loginM('d','Ingresá para reservar tu mesa.')}
+ const r=R[id];modal(`<h2>Revisá tu reserva</h2><p><b>${r.n}</b><br>${Q.day} · ${Q.time} h<br>${Q.people} ${Q.people>1?'personas':'persona'}</p><p class="mut">Después podés armar tu pedido anticipado o solo reservar.</p><div class="mf"><button class="btn" onclick="openR(${id})">Volver</button><button class="btn pr" onclick="done(${id})">Confirmar reserva</button></div>`)}
+function done(id){const r=R[id];r.m=Math.max(0,r.m-1);draw();modal(`<h2>¡Reserva confirmada! ✅</h2><p>${r.n} · ${Q.day} ${Q.time} h · ${Q.people} pers.</p><div class="mf"><button class="btn" onclick="closeM()">Solo reservar</button><button class="btn pr" onclick="closeM();toast('El menú del restaurante llega en la próxima pantalla')">Armar mi pedido ahora</button></div>`)}
+/* sesión */
+function navUpd(){$('#navL').textContent=U?'Salir ('+(U.role==='d'?'comensal':'restaurante')+')':'Ingresar'}
+function logout(){U=null;navUpd();toast('Sesión cerrada')}
+function loginM(role,msg){const r=role==='r';modal(`<div class="mh"><h2>Ingresá a Servido<span style="color:var(--p)">!</span></h2><button class="x" onclick="closeM()" aria-label="Cerrar">×</button></div>
+<div class="seg"><button aria-selected="${!r}" onclick="loginM('d')">Comensal</button><button aria-selected="${r}" onclick="loginM('r')">Restaurante</button></div>
+${msg?`<p class="note" style="background:var(--wab);border-radius:12px;padding:8px 12px;font-weight:700">${msg}</p>`:''}
+<p><label>Email<br><input class="in" id="le" type="email" value="${r?'restaurante':'comensal'}@demo.com"></label></p>
+<p><label>Contraseña<br><input class="in" id="lp" type="password" value="Demo1234"></label></p><p class="err" id="lerr" role="alert"></p>
+<div class="mf"><button class="btn" onclick="gl('${role}')">Continuar con Google (simulado)</button><button class="btn pr" onclick="doL('${role}')">Ingresar</button></div>
+<p class="mut" style="font-size:14px">Cuentas demo: comensal@demo.com / restaurante@demo.com · Demo1234</p>`)}
+function ok(role){U={role};navUpd();closeM();toast(role==='d'?'¡Hola! Ingresaste como comensal (demo)':'Ingresaste como restaurante (demo): acá iría tu panel');if(pend){const f=pend;pend=null;f()}}
+function doL(role){const e=$('#le').value.trim(),p=$('#lp').value;if(p==='Demo1234'&&e===(role==='r'?'restaurante':'comensal')+'@demo.com')ok(role);else $('#lerr').textContent='No pudimos iniciar sesión. Revisá tus datos e intentá de nuevo.'}
+function gl(role){toast('Selector de cuenta de Google (simulado)…');setTimeout(()=>ok(role),600)}
+function info(t){modal(`<div class="mh"><h2>${t}</h2><button class="x" onclick="closeM()" aria-label="Cerrar">×</button></div><p class="mut">Texto de ${t.toLowerCase()} de ejemplo del prototipo. Acá iría el contenido legal o de ayuda real.</p>`)}
+/* hero */
+function toRest(){role('r');$('.hero').scrollIntoView({behavior:'smooth'})}
+function role(r){$('#t1').setAttribute('aria-selected',r==='d');$('#t2').setAttribute('aria-selected',r==='r');
+ $('#box').innerHTML=r==='d'?`<div class="sbox"><div class="fld"><label for="a">¿Dónde?</label><input id="a" placeholder="Barrio o dirección" value="Palermo, CABA"></div><div class="fld"><label for="b">¿Cuándo?</label><select id="b"><option value="Hoy|20:30">Hoy · 20:30</option><option value="Hoy|21:00" selected>Hoy · 21:00</option><option value="Hoy|21:30">Hoy · 21:30</option><option value="Hoy|22:00">Hoy · 22:00</option><option value="Mañana|21:00">Mañana · 21:00</option></select></div><div class="fld"><label for="c">¿Cuántos?</label><select id="c">${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${n===2?'selected':''}>${n} ${n>1?'personas':'persona'}</option>`).join('')}</select></div><button class="btn pr go" onclick="buscar()"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="#fff" stroke-width="2.8"/><path d="M15 15l6 6" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/></svg>Buscar mesa</button></div><div class="ctas"><button class="btn pr" onclick="loginM('d')">Ingresar como comensal</button><button class="btn" onclick="role('r')">Soy restaurante →</button></div>`
+ :`<div class="sbox two"><div class="fld"><label for="n">Nombre del local</label><input id="n" placeholder="Ej: Don Pepe"></div><div class="fld"><label for="m">Mail</label><input id="m" type="email" placeholder="hola@mirestaurante.com"></div><button class="btn pr go" onclick="sumar()">Sumar mi local</button></div><p class="err" id="rerr" role="alert"></p><div class="ctas"><button class="btn" onclick="loginM('r')">Ya tengo cuenta</button><button class="btn" onclick="role('d')">← Soy comensal</button></div>`}
+function buscar(){const [d,t]=$('#b').value.split('|');Object.assign(Q,{day:d,time:t,people:+$('#c').value});sel=null;draw();$('#explorar').scrollIntoView({behavior:'smooth'});center(500,380,1);toast('Buscando cerca de '+($('#a').value||'tu ubicación')+' (simulado)')}
+function sumar(){const n=$('#n').value.trim(),m=$('#m').value.trim();if(!n)return $('#rerr').textContent='Ingresá el nombre de tu local.';if(!/\S+@\S+\.\S+/.test(m))return $('#rerr').textContent='Ingresá un mail válido.';
+ modal(`<h2>¡Gracias, ${n}! 🎉</h2><p>Te enviamos un mail a <b>${m}</b> para verificar tu cuenta (simulado). Hasta verificarla, tu local no será visible para los comensales.</p><div class="mf"><button class="btn pr" onclick="closeM()">Entendido</button></div>`)}
+$('#mv').innerHTML=mapSVG();
+role('d');draw();
+const b0=$('#mp').getBoundingClientRect();Z=Math.max(1,b0.width/1000);center(500,380);
+addEventListener('resize',()=>{clamp();apply()});
+</script></body></html>
