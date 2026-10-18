@@ -1,0 +1,44 @@
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-splash);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 46%, var(--color-primary-soft) 0, transparent 34vmax),
+    var(--color-bg);
+}
+
+.halo {
+  position: absolute;
+  width: min(70vmin, 420px);
+  aspect-ratio: 1;
+  border: 2px dashed var(--color-primary);
+  border-radius: 50%;
+  opacity: 0.25;
+  animation: halo-spin 14s linear infinite;
+}
+
+/* The whole screen lifts like a cloche lid, revealing the page underneath. */
+.lift {
+  animation: lift 700ms var(--ease-in-out) both;
+}
+
+@keyframes halo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lift {
+  from {
+    transform: none;
+    border-radius: 0;
+  }
+
+  to {
+    transform: translateY(-104%);
+    border-radius: 0 0 50% 50% / 0 0 14vh 14vh;
+  }
+}

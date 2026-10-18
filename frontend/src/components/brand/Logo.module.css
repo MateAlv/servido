@@ -1,0 +1,428 @@
+.logo {
+  --logo-size: 44px;
+  --wordmark-size: calc(var(--logo-size) * 0.8);
+
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--logo-size) * 0.14);
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.sm {
+  --logo-size: 36px;
+}
+
+.md {
+  --logo-size: 44px;
+}
+
+.lg {
+  --logo-size: 76px;
+}
+
+.xl {
+  --logo-size: 128px;
+}
+
+.stacked {
+  --wordmark-size: calc(var(--logo-size) * 0.56);
+
+  flex-direction: column;
+  gap: calc(var(--logo-size) * 0.08);
+}
+
+.mark {
+  height: var(--logo-size);
+  flex: none;
+}
+
+.text {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--wordmark-size) * 0.18);
+}
+
+.wordmark {
+  display: inline-flex;
+  font: 800 var(--wordmark-size) / 1 var(--font-display);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.letter,
+.bang {
+  display: inline-block;
+}
+
+.bang {
+  color: var(--color-primary);
+  transform-origin: 50% 90%;
+}
+
+.tagline {
+  color: var(--color-text-muted);
+  font: 700 calc(var(--wordmark-size) * 0.28) / 1 var(--font-body);
+  letter-spacing: 0.04em;
+}
+
+/* Hover: the lid peeks and the rays perk up. */
+.lid,
+.ray {
+  transition: transform var(--duration-base) var(--ease-spring);
+}
+
+.logo:hover .lid {
+  transform: translateY(-16%) rotate(-12deg);
+}
+
+.logo:hover .ray {
+  transform: scale(1.18);
+}
+
+/* Intro: the pin drops, squashes on landing, the cloche pops and the rays draw. */
+.intro {
+  animation: intro-timeline 1450ms linear both;
+}
+
+.intro .shadow {
+  animation: shadow-in 560ms var(--ease-out) both;
+}
+
+.intro .body {
+  animation: pin-drop 780ms var(--ease-out) both;
+}
+
+.intro .face {
+  animation: pop-in 420ms var(--ease-spring) 260ms both;
+}
+
+.intro .plate {
+  animation: plate-in 320ms var(--ease-out) 430ms both;
+}
+
+.intro .lid {
+  animation: lid-in 540ms var(--ease-spring) 520ms both;
+}
+
+.intro .ray {
+  animation: ray-draw 280ms var(--ease-out) both;
+  animation-delay: calc(860ms + var(--i) * 80ms);
+}
+
+.intro .letter {
+  animation: letter-in 460ms var(--ease-spring) both;
+  animation-delay: calc(380ms + var(--i) * 45ms);
+}
+
+.intro .bang {
+  animation: bang-in 680ms var(--ease-out) 760ms both;
+}
+
+.intro .tagline {
+  animation: fade-up 480ms var(--ease-out) 960ms both;
+}
+
+/* Outro: the lid comes off ("¡servido!"), letters drop and the pin dives into its tip. */
+.outro {
+  animation: outro-timeline 720ms linear both;
+}
+
+.outro .ray {
+  animation: ray-out 180ms var(--ease-in) both;
+  animation-delay: calc(var(--i) * 40ms);
+}
+
+.outro .lid {
+  animation: lid-off 360ms var(--ease-in) both;
+}
+
+.outro .letter {
+  animation: letter-out 280ms var(--ease-in) both;
+  animation-delay: calc((6 - var(--i)) * 28ms);
+}
+
+.outro .bang {
+  animation: letter-out 240ms var(--ease-in) both;
+}
+
+.outro .tagline {
+  animation: letter-out 240ms var(--ease-in) both;
+}
+
+.outro .body {
+  animation: pin-out 500ms var(--ease-in) 180ms both;
+}
+
+.outro .shadow {
+  animation: shadow-out 460ms var(--ease-in) 240ms both;
+}
+
+/* Idle: a living logo for loading waits and hero spots. */
+.idle .ray {
+  animation: ray-shimmer 2.8s var(--ease-in-out) infinite;
+  animation-delay: calc(var(--i) * 140ms);
+}
+
+.idle .lid {
+  animation: lid-peek 4.2s var(--ease-in-out) infinite;
+}
+
+@keyframes intro-timeline {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes outro-timeline {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shadow-in {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.2);
+    opacity: 0.2;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+}
+
+@keyframes pin-drop {
+  0% {
+    transform: translateY(-70%) scale(0.85);
+    opacity: 0;
+  }
+
+  40% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  52% {
+    transform: scale(1.14, 0.84);
+  }
+
+  68% {
+    transform: scale(0.95, 1.06);
+  }
+
+  84% {
+    transform: scale(1.02, 0.98);
+  }
+
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    transform: scale(0);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes plate-in {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes lid-in {
+  0% {
+    transform: translateY(-60%) scale(0.4);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes ray-draw {
+  from {
+    stroke-dashoffset: 8;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes letter-in {
+  from {
+    transform: translateY(55%);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes bang-in {
+  0% {
+    transform: translateY(-90%) rotate(-24deg);
+    opacity: 0;
+  }
+
+  45% {
+    transform: translateY(0) rotate(10deg);
+    opacity: 1;
+  }
+
+  65% {
+    transform: rotate(-7deg);
+  }
+
+  82% {
+    transform: rotate(3deg);
+  }
+
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    transform: translateY(40%);
+    opacity: 0;
+  }
+
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes ray-out {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+
+@keyframes lid-off {
+  0% {
+    transform: none;
+  }
+
+  35% {
+    transform: translate(4%, -30%) rotate(-12deg);
+  }
+
+  100% {
+    transform: translate(18%, -130%) rotate(-28deg);
+    opacity: 0;
+  }
+}
+
+@keyframes letter-out {
+  to {
+    transform: translateY(45%);
+    opacity: 0;
+  }
+}
+
+@keyframes pin-out {
+  0% {
+    transform: none;
+  }
+
+  30% {
+    transform: scale(1.08, 0.9);
+  }
+
+  100% {
+    transform: translateY(6%) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes shadow-out {
+  to {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes ray-shimmer {
+  0%,
+  58%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+
+  68% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+
+  78% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes lid-peek {
+  0%,
+  70%,
+  100% {
+    transform: none;
+  }
+
+  76% {
+    transform: translateY(-16%) rotate(-12deg);
+  }
+
+  83% {
+    transform: none;
+  }
+
+  87% {
+    transform: translateY(-6%) rotate(-4deg);
+  }
+
+  91% {
+    transform: none;
+  }
+}

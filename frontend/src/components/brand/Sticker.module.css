@@ -1,0 +1,41 @@
+.sticker {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font: 800 var(--text-sm) / 1.2 var(--font-display);
+  transform: rotate(var(--tilt));
+  box-shadow: 0 6px 14px #3b1f1826;
+}
+
+/* Fixed brand greens (not theme tokens) keep white text readable in both themes. */
+.ok {
+  background: #1f7a3d;
+  color: var(--color-on-primary);
+}
+
+.primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.slap {
+  animation: slap 620ms var(--ease-spring) both;
+  animation-delay: var(--sticker-delay, 0ms);
+}
+
+@keyframes slap {
+  0% {
+    transform: scale(1.9) rotate(calc(var(--tilt) - 20deg));
+    opacity: 0;
+  }
+
+  55% {
+    transform: scale(0.92) rotate(var(--tilt));
+    opacity: 1;
+  }
+
+  100% {
+    transform: rotate(var(--tilt));
+    opacity: 1;
+  }
+}
