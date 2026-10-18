@@ -1,6 +1,6 @@
 # Copy to terraform.tfvars (ignored by git) and fill in.
 alert_email = "alguien@example.com"
 
-# monthly_budget_usd       = 15
-# environment              = "prod"
-# db_backup_retention_days = 1   # use 0 if the apply fails with FreeTierRestrictionError
+# monthly_budget_usd = 15
+# environment        = "prod"
+# instance_type      = "t4g.small"

@@ -84,3 +84,5 @@ jobs:
             terraform -chdir="$dir" validate
           done
       - run: bash -n ec2/deploy.sh
+      - name: Production compose file is valid
+        run: POSTGRES_PASSWORD=ci docker compose -f ec2/compose.yml config --quiet

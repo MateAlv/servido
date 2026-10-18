@@ -7,13 +7,9 @@ output "api_health_url" {
   value = "https://${aws_cloudfront_distribution.main.domain_name}/api/health"
 }
 
-output "api_instance_id" {
+output "instance_id" {
   description = "For `aws ssm start-session --target <id>`."
-  value       = aws_instance.api.id
-}
-
-output "database_endpoint" {
-  value = aws_db_instance.main.address
+  value       = aws_instance.app.id
 }
 
 output "github_variables" {
@@ -21,8 +17,6 @@ output "github_variables" {
   value       = <<-EOT
     gh variable set AWS_REGION --body "${var.region}"
     gh variable set AWS_DEPLOY_ROLE_ARN --body "${aws_iam_role.deploy.arn}"
-    gh variable set EC2_INSTANCE_ID --body "${aws_instance.api.id}"
-    gh variable set FRONTEND_BUCKET --body "${aws_s3_bucket.frontend.bucket}"
-    gh variable set CLOUDFRONT_DISTRIBUTION_ID --body "${aws_cloudfront_distribution.main.id}"
+    gh variable set EC2_INSTANCE_ID --body "${aws_instance.app.id}"
   EOT
 }

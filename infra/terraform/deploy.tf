@@ -36,28 +36,10 @@ resource "aws_iam_role" "deploy" {
 
 data "aws_iam_policy_document" "deploy" {
   statement {
-    sid       = "ListFrontendBucket"
-    actions   = ["s3:ListBucket"]
-    resources = [aws_s3_bucket.frontend.arn]
-  }
-
-  statement {
-    sid       = "UploadFrontend"
-    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
-    resources = ["${aws_s3_bucket.frontend.arn}/*"]
-  }
-
-  statement {
-    sid       = "RefreshCdn"
-    actions   = ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation"]
-    resources = [aws_cloudfront_distribution.main.arn]
-  }
-
-  statement {
-    sid     = "RunDeployOnApi"
+    sid     = "RunDeployOnInstance"
     actions = ["ssm:SendCommand"]
     resources = [
-      aws_instance.api.arn,
+      aws_instance.app.arn,
       "arn:aws:ssm:${var.region}::document/AWS-RunShellScript",
     ]
   }

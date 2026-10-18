@@ -1,6 +1,5 @@
 # Defaults are chosen to stay inside the AWS Free plan (accounts created on or after
-# 2025-07-15): only free-plan-eligible instance classes, 20 GB of database storage, and
-# short database backups. See infra/README.md before changing them.
+# 2025-07-15). See infra/README.md before changing them.
 
 variable "region" {
   description = "AWS region. us-east-1 is the cheapest."
@@ -31,46 +30,19 @@ variable "monthly_budget_usd" {
   default     = 15
 }
 
-variable "api_instance_type" {
-  description = "EC2 instance type for the API. The Free plan only launches the types listed in the validation."
+variable "instance_type" {
+  description = "EC2 instance type. t4g.small has a free trial of 750 hours a month until 2026-12-31; the Free plan only launches the types in the validation."
   type        = string
-  default     = "t4g.micro"
+  default     = "t4g.small"
 
   validation {
-    condition     = contains(["t4g.micro", "t4g.small", "t3.micro", "t3.small"], var.api_instance_type)
-    error_message = "Use a Free-plan-eligible type: t4g.micro, t4g.small, t3.micro or t3.small."
+    condition     = contains(["t4g.small", "t4g.micro", "t3.small", "t3.micro"], var.instance_type)
+    error_message = "Use a Free-plan-eligible type: t4g.small, t4g.micro, t3.small or t3.micro."
   }
 }
 
-variable "db_instance_class" {
-  description = "RDS instance class. The Free plan rejects anything bigger than micro."
+variable "data_snapshot_id" {
+  description = "Only to restore a backup, together with -replace=aws_ebs_volume.data (see infra/README.md)."
   type        = string
-  default     = "db.t4g.micro"
-
-  validation {
-    condition     = contains(["db.t4g.micro", "db.t3.micro"], var.db_instance_class)
-    error_message = "The Free plan only allows db.t4g.micro or db.t3.micro."
-  }
-}
-
-variable "db_allocated_storage_gb" {
-  description = "Database storage in GB (20 is the free-tier size and the minimum for gp2)."
-  type        = number
-  default     = 20
-
-  validation {
-    condition     = var.db_allocated_storage_gb == 20
-    error_message = "Keep 20 GB: it is the free-tier size and the minimum RDS allows."
-  }
-}
-
-variable "db_backup_retention_days" {
-  description = "Days of automated database backups. If the apply fails with FreeTierRestrictionError, set 0."
-  type        = number
-  default     = 1
-
-  validation {
-    condition     = var.db_backup_retention_days >= 0 && var.db_backup_retention_days <= 7
-    error_message = "Use between 0 and 7 days; the Free plan rejects long retention."
-  }
+  default     = null
 }
