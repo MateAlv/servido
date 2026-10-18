@@ -1,13 +1,29 @@
-/* Design tokens taken from docs/design/boceto-pagina-inicial.html. */
+/*
+ * Design tokens. Source of the visual identity: docs/design/README.md and the
+ * first style mock-up (docs/design/boceto-pagina-inicial.html).
+ * Components use these variables; never hard-code colors, durations or easings.
+ */
 :root {
+  /* Brand colors that do not change with the theme. */
   --color-primary: #d2441c;
   --color-primary-dark: #8f2d10;
-  --color-primary-soft: #b3361440;
+  --color-primary-soft: #d2441c26;
+  --color-accent: #ff8d66;
+  --color-ink: #3b1f18;
+  --color-cream: #fdf9ee;
+  --color-on-primary: #ffffff;
+  --color-location: #2a6fdb;
+
+  /* Theme colors (light). */
   --color-text: #3b1f18;
   --color-text-muted: #6b4a40;
   --color-bg: #fdf9ee;
   --color-surface: #ffffff;
+  --color-surface-sunken: #f4ecdc;
   --color-line: #eadfca;
+  --color-inverse-bg: #3b1f18;
+  --color-inverse-text: #fdf9ee;
+  --color-inverse-muted: #e9d8c8;
   --color-ok: #1f7a3d;
   --color-ok-bg: #dcf2e2;
   --color-warn: #8a5a00;
@@ -18,9 +34,53 @@
   --font-display: 'Baloo 2', Nunito, system-ui, sans-serif;
   --font-body: Nunito, system-ui, sans-serif;
 
+  --text-xs: 13px;
+  --text-sm: 15px;
+  --text-base: 17px;
+  --text-lg: 19px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-display: clamp(44px, 7vw, 88px);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+
   --radius-pill: 999px;
   --radius-card: 26px;
   --radius-field: 14px;
+  --radius-small: 10px;
+
+  --shadow-card: 0 14px 40px #3b1f1818;
+  --shadow-pop: 0 20px 50px #3b1f1826;
+  --shadow-press: 0 4px 0 var(--color-primary-dark);
+  --shadow-pin: 0 4px 0 #3b1f1830;
+
+  /*
+   * Motion. Short and springy: things pop in, never crawl.
+   * fast: hovers and presses · base: most UI · slow: entrances · brand: logo sequences.
+   */
+  --duration-fast: 150ms;
+  --duration-base: 240ms;
+  --duration-slow: 420ms;
+  --duration-brand: 900ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --stagger: 60ms;
+
+  --z-sticky: 10;
+  --z-overlay: 50;
+  --z-toast: 60;
+  --z-splash: 100;
+
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,13 +89,21 @@
     --color-text-muted: #cdb5a6;
     --color-bg: #1d110d;
     --color-surface: #2a1914;
+    --color-surface-sunken: #24150f;
     --color-line: #4a3027;
+    --color-inverse-bg: #120a07;
+    --color-inverse-text: #fbeee0;
+    --color-inverse-muted: #cdb5a6;
     --color-ok: #7fd69a;
     --color-ok-bg: #17381f;
     --color-warn: #f1c35a;
     --color-warn-bg: #40300a;
     --color-error: #ff9b92;
     --color-error-bg: #4a1b17;
+    --shadow-card: 0 14px 40px #00000040;
+    --shadow-pop: 0 20px 50px #00000059;
+
+    color-scheme: dark;
   }
 }
 
@@ -44,11 +112,19 @@
   --color-text-muted: #cdb5a6;
   --color-bg: #1d110d;
   --color-surface: #2a1914;
+  --color-surface-sunken: #24150f;
   --color-line: #4a3027;
+  --color-inverse-bg: #120a07;
+  --color-inverse-text: #fbeee0;
+  --color-inverse-muted: #cdb5a6;
   --color-ok: #7fd69a;
   --color-ok-bg: #17381f;
   --color-warn: #f1c35a;
   --color-warn-bg: #40300a;
   --color-error: #ff9b92;
   --color-error-bg: #4a1b17;
+  --shadow-card: 0 14px 40px #00000040;
+  --shadow-pop: 0 20px 50px #00000059;
+
+  color-scheme: dark;
 }

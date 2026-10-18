@@ -1,0 +1,44 @@
+.reveal {
+  opacity: 0;
+}
+
+.visible {
+  opacity: 1;
+  animation-duration: var(--duration-slow);
+  animation-timing-function: var(--ease-out);
+  animation-delay: var(--reveal-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+.visible.up {
+  animation-name: up;
+}
+
+.visible.fade {
+  animation-name: fade;
+}
+
+.visible.pop {
+  animation-name: pop;
+  animation-timing-function: var(--ease-spring);
+}
+
+@keyframes up {
+  from {
+    transform: translateY(28px);
+    opacity: 0;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.88);
+    opacity: 0;
+  }
+}

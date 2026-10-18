@@ -1,0 +1,36 @@
+.group {
+  position: relative;
+  display: inline-grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-line);
+}
+
+.thumb {
+  position: absolute;
+  inset: 4px auto 4px 4px;
+  width: calc((100% - 8px) / var(--count));
+  border-radius: var(--radius-pill);
+  background: var(--color-text);
+  transform: translateX(calc(var(--index) * 100%));
+  transition: transform var(--duration-slow) var(--ease-spring);
+}
+
+.option {
+  position: relative;
+  z-index: 1;
+  padding: 9px 20px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text);
+  font-weight: 800;
+  white-space: nowrap;
+  transition: color var(--duration-base) var(--ease-out);
+}
+
+.option[aria-checked='true'] {
+  color: var(--color-bg);
+}
