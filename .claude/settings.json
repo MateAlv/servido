@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make db)",
+      "Bash(make lint)",
+      "Bash(make test)",
+      "Bash(make test-backend)",
+      "Bash(make test-frontend)",
+      "Bash(make format)",
+      "Bash(make migrate)",
+      "Bash(make api-types)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run build)",
+      "Bash(npm run format:check)",
+      "Bash(npx vitest run:*)",
+      "Bash(python3 .specify/scripts/python/:*)"
+    ],
+    "deny": [
+      "Read(./**/.env)"
+    ]
+  }
+}
