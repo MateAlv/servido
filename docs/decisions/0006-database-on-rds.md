@@ -14,5 +14,5 @@ Production uses PostgreSQL on Amazon RDS (smallest free-tier eligible instance, 
 ## Consequences
 
 - The backend reads its connection string from `DATABASE_URL`; nothing in the code is RDS-specific.
-- The rest of the hosting (where the API and the static frontend run, domain, HTTPS, region) is still to be decided and will get its own ADR.
+- The rest of the hosting is decided in [0008](0008-aws-free-plan-hosting.md).
 - AWS accounts created after 2025-07-15 do not get 12 free months of RDS; usage is paid from the account's free-plan credits. Check the account type before provisioning.

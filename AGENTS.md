@@ -18,6 +18,7 @@ Before working on anything, know where the context lives:
 | Sprint plan, risks that constrain the code | [docs/product/plan.md](docs/product/plan.md) |
 | Course rules (grading, AI policy, sprint deliverables) | [docs/catedra/](docs/catedra/) |
 | Why the stack is what it is | [docs/decisions/](docs/decisions/) |
+| How the platform fits together (diagrams) and how it is hosted | [docs/architecture/](docs/architecture/) and [infra/README.md](infra/README.md) |
 | Visual identity, motion rules and the component catalog | [docs/design/README.md](docs/design/README.md), and `/diseno` in the running app |
 
 ## Ground rules
@@ -26,13 +27,13 @@ Before working on anything, know where the context lives:
 2. **No spec, no code.** Every change traces to a spec in `specs/` and to US numbers. If the spec is ambiguous, contradicts the backlog, or has an open `[NEEDS CLARIFICATION]` that affects your task, stop and ask. Do not invent product behavior. Enabler work that serves many US (tooling, infrastructure, the design system) traces to an ADR or to `docs/design/` instead.
 3. **Every acceptance scenario has an automated test**, named so it traces back to the spec (see [Tests](#tests)).
 4. **A human must understand everything you produce.** Course rule: the team cannot deliver code it cannot explain. Keep changes small, prefer obvious code over clever code, and explain non-obvious choices in the PR.
-5. **Cheap and simple infrastructure.** One AWS free-tier account. Do not add services, paid APIs or new dependencies without a reason in the PR (and an ADR if it changes the architecture).
+5. **Cheap and simple infrastructure.** One AWS account on the Free plan, defined only in `infra/terraform` ([ADR 0008](docs/decisions/0008-aws-free-plan-hosting.md)). Every resource must be Free-plan eligible (see [infra/README.md](infra/README.md#free-plan-rules)); never enable AWS Organizations, Control Tower or IAM Identity Center. Do not add services, paid APIs or new dependencies without a reason in the PR (and an ADR if it changes the architecture).
 6. **Never commit secrets** (`.env` files, keys, tokens). Configuration comes from environment variables.
 
 ## Language policy
 
 - **English**: code, identifiers, comments, commit messages, PRs, `plan.md` / `tasks.md` / data models / contracts, ADRs.
-- **Spanish (Argentina, with voseo: "Ingresá", "Reservá")**: everything a user sees (UI text, error messages shown in the UI, emails), `spec.md` files, `docs/product/` and `docs/catedra/`.
+- **Spanish (Argentina, with voseo: "Ingresá", "Reservá")**: everything a user sees (UI text, error messages shown in the UI, emails), `spec.md` files, `docs/product/`, `docs/catedra/`, `docs/design/` and `docs/architecture/`.
 
 ### Domain glossary
 
@@ -93,7 +94,9 @@ frontend/           React + TypeScript SPA (Vite)
   src/styles/       tokens.css (design tokens) and global.css
   src/test/         Test setup, polyfills and renderWithProviders
 specs/              Spec Kit features: NNN-name/spec.md, plan.md, tasks.md…
-docs/               catedra/, product/, decisions/, design/
+docs/               catedra/, product/, decisions/, design/, architecture/ (diagrams)
+infra/terraform/    AWS infrastructure (Terraform): CloudFront, S3, EC2, RDS, deploy role, budget
+infra/ec2/          What runs on the API instance: compose.yml and deploy.sh
 scripts/            export_backlog.py (backlog snapshot from the team workbook)
 .specify/           Spec Kit templates, scripts and constitution
 ```
@@ -188,4 +191,4 @@ Commit spec, plan and tasks together with the code. Their history is the evidenc
 - Which sprint we are in and what it must demo: [docs/product/plan.md](docs/product/plan.md).
 - Which specs exist and how far each one got: [specs/README.md](specs/README.md).
 - Open questions for the PO: [specs/README.md](specs/README.md#pendientes-de-aclarar-con-la-po). Do not resolve them yourself.
-- Hosting beyond the RDS database ([ADR 0006](docs/decisions/0006-database-on-rds.md)) is not decided. Do not add deployment configuration without a new ADR.
+- Hosting is defined in [ADR 0008](docs/decisions/0008-aws-free-plan-hosting.md) and `infra/`. Merges to `main` deploy automatically once the AWS account exists.
