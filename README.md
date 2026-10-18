@@ -25,6 +25,8 @@ To run the backend or frontend outside Docker, start only the database with `mak
 | [frontend/](frontend/) | React + TypeScript single-page app (Vite) |
 | [specs/](specs/) | Feature specs (Spec Kit) |
 | [docs/](docs/) | Course rules, product context, architecture decisions, design |
+| [docs/architecture/](docs/architecture/) | Diagrams: how the platform and the repository work |
+| [infra/](infra/) | AWS infrastructure (Terraform) and the deploy runbook |
 | [AGENTS.md](AGENTS.md) | Instructions for AI coding agents, and the best summary of the project's conventions |
 
 ## Team

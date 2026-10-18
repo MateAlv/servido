@@ -33,7 +33,7 @@ Before working on anything, know where the context lives:
 ## Language policy
 
 - **English**: code, identifiers, comments, commit messages, PRs, `plan.md` / `tasks.md` / data models / contracts, ADRs.
-- **Spanish (Argentina, with voseo: "Ingresá", "Reservá")**: everything a user sees (UI text, error messages shown in the UI, emails), `spec.md` files, `docs/product/` and `docs/catedra/`.
+- **Spanish (Argentina, with voseo: "Ingresá", "Reservá")**: everything a user sees (UI text, error messages shown in the UI, emails), `spec.md` files, `docs/product/`, `docs/catedra/`, `docs/design/` and `docs/architecture/`.
 
 ### Domain glossary
 
@@ -94,7 +94,7 @@ frontend/           React + TypeScript SPA (Vite)
   src/styles/       tokens.css (design tokens) and global.css
   src/test/         Test setup, polyfills and renderWithProviders
 specs/              Spec Kit features: NNN-name/spec.md, plan.md, tasks.md…
-docs/               catedra/, product/, decisions/, design/
+docs/               catedra/, product/, decisions/, design/, architecture/ (diagrams)
 infra/terraform/    AWS infrastructure (Terraform): CloudFront, S3, EC2, RDS, deploy role, budget
 infra/ec2/          What runs on the API instance: compose.yml and deploy.sh
 scripts/            export_backlog.py (backlog snapshot from the team workbook)
