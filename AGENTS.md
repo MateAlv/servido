@@ -18,12 +18,12 @@ Before working on anything, know where the context lives:
 | Sprint plan, risks that constrain the code | [docs/product/plan.md](docs/product/plan.md) |
 | Course rules (grading, AI policy, sprint deliverables) | [docs/catedra/](docs/catedra/) |
 | Why the stack is what it is | [docs/decisions/](docs/decisions/) |
-| Visual identity | [docs/design/](docs/design/) and `frontend/src/styles/tokens.css` |
+| Visual identity, motion rules and the component catalog | [docs/design/README.md](docs/design/README.md), and `/diseno` in the running app |
 
 ## Ground rules
 
 1. **Build only what the spec asks for.** This is a course MVP that will never have two concurrent users. No scaling, caching, queues, background workers, feature flags, generic frameworks or abstractions "for later". If a simpler solution satisfies the acceptance scenarios, use it.
-2. **No spec, no code.** Every change traces to a spec in `specs/` and to US numbers. If the spec is ambiguous, contradicts the backlog, or has an open `[NEEDS CLARIFICATION]` that affects your task, stop and ask. Do not invent product behavior.
+2. **No spec, no code.** Every change traces to a spec in `specs/` and to US numbers. If the spec is ambiguous, contradicts the backlog, or has an open `[NEEDS CLARIFICATION]` that affects your task, stop and ask. Do not invent product behavior. Enabler work that serves many US (tooling, infrastructure, the design system) traces to an ADR or to `docs/design/` instead.
 3. **Every acceptance scenario has an automated test**, named so it traces back to the spec (see [Tests](#tests)).
 4. **A human must understand everything you produce.** Course rule: the team cannot deliver code it cannot explain. Keep changes small, prefer obvious code over clever code, and explain non-obvious choices in the PR.
 5. **Cheap and simple infrastructure.** One AWS free-tier account. Do not add services, paid APIs or new dependencies without a reason in the PR (and an ADR if it changes the architecture).
@@ -85,9 +85,13 @@ backend/            FastAPI app (Python 3.12, uv)
   tests/            pytest; conftest.py gives a TestClient on a real Postgres, rolled back per test
 frontend/           React + TypeScript SPA (Vite)
   src/api/          openapi.json (contract), schema.d.ts (generated types), client.ts
-  src/pages/        One component per route; routes in src/router.tsx
-  src/components/   Shared components (create when first needed)
+  src/pages/        One component per route; routes in src/router.tsx, shell in src/AppLayout.tsx
+  src/components/   Design system, imported from each folder's index.ts:
+                    brand/ (logo, splash, spinner) · ui/ (buttons, fields, modal, toasts…)
+                    order/ · reservation/ · restaurant/ (animated domain pieces)
+  src/lib/          Small helpers: cx (class names), cssVars, reduced-motion detection
   src/styles/       tokens.css (design tokens) and global.css
+  src/test/         Test setup, polyfills and renderWithProviders
 specs/              Spec Kit features: NNN-name/spec.md, plan.md, tasks.md…
 docs/               catedra/, product/, decisions/, design/
 scripts/            export_backlog.py (backlog snapshot from the team workbook)
@@ -129,7 +133,9 @@ Run `make format lint test` before considering a task done.
 
 - Server state through **TanStack Query** and the typed client in `src/api/client.ts`. Never hand-write API types: after a backend change run `make api-types` and commit `openapi.json` and `schema.d.ts` (CI checks both).
 - **Routing** with React Router; one page component per route in `src/pages/`.
-- **Styling** with CSS Modules and the variables in `src/styles/tokens.css`. No hard-coded colors, no CSS framework. Follow the visual identity in [docs/design/](docs/design/).
+- **Build screens from the design system.** Check the catalog (`/diseno` in dev, and [docs/design/README.md](docs/design/README.md)) before writing UI; reuse or extend a component instead of styling a one-off. New components go in the matching `src/components/` folder, its `index.ts`, the `/diseno` page and the design guide.
+- **Styling** with CSS Modules and the variables in `src/styles/tokens.css`. No hard-coded colors, durations or easings, and no CSS framework.
+- **Animations** are CSS keyframes with the motion tokens, no animation library ([ADR 0007](docs/decisions/0007-css-animations.md)). Every animation must work with reduced motion (see the rules in the design guide); entrance animations set `data-entrance`.
 - **Mobile first**: personas book from their phones. Layouts must work at 360 px wide.
 - **Accessible**: labelled inputs, visible focus, buttons for actions, links for navigation.
 - **Maps**: Leaflet + OpenStreetMap ([ADR 0003](docs/decisions/0003-maps-leaflet-openstreetmap.md)).
