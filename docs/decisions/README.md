@@ -9,9 +9,9 @@ Short records of decisions that shape the codebase. The course asks teams to doc
 | [0003](0003-maps-leaflet-openstreetmap.md) | Maps with Leaflet + OpenStreetMap | Accepted |
 | [0004](0004-language-policy.md) | English code, Spanish product | Accepted |
 | [0005](0005-spec-kit-and-agents-md.md) | Spec Kit for SDD, `AGENTS.md` as the shared agent context | Accepted |
-| [0006](0006-database-on-rds.md) | Production database on Amazon RDS | Accepted |
+| [0006](0006-database-on-rds.md) | Production database on Amazon RDS | Superseded by 0008 |
 | [0007](0007-css-animations.md) | Animations with CSS, no animation library | Accepted |
-| [0008](0008-aws-free-plan-hosting.md) | Hosting on the AWS Free plan with Terraform | Accepted |
+| [0008](0008-aws-free-plan-hosting.md) | Hosting on the AWS Free plan: everything in Docker on one instance, Terraform | Accepted |
 
 ## Adding one
 

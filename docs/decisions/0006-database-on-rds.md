@@ -1,6 +1,6 @@
 # 0006 — Production database on Amazon RDS
 
-- **Status**: Accepted
+- **Status**: Superseded by [0008](0008-aws-free-plan-hosting.md): PostgreSQL runs in Docker on the app instance
 - **Date**: 2026-10-18
 
 ## Context

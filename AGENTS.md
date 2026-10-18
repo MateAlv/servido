@@ -95,8 +95,8 @@ frontend/           React + TypeScript SPA (Vite)
   src/test/         Test setup, polyfills and renderWithProviders
 specs/              Spec Kit features: NNN-name/spec.md, plan.md, tasks.md…
 docs/               catedra/, product/, decisions/, design/, architecture/ (diagrams)
-infra/terraform/    AWS infrastructure (Terraform): CloudFront, S3, EC2, RDS, deploy role, budget
-infra/ec2/          What runs on the API instance: compose.yml and deploy.sh
+infra/terraform/    AWS infrastructure (Terraform): CloudFront, one EC2 instance, backups, deploy role, budget
+infra/ec2/          What runs on the instance: compose.yml (db, api, web) and deploy.sh
 scripts/            export_backlog.py (backlog snapshot from the team workbook)
 .specify/           Spec Kit templates, scripts and constitution
 ```

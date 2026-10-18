@@ -16,7 +16,7 @@
 
 **Primary Dependencies**: FastAPI, SQLAlchemy 2, Alembic, Pydantic · React, Vite, React Router, TanStack Query, openapi-fetch, the design system in `frontend/src/components/` (see `docs/design/README.md`)
 
-**Storage**: PostgreSQL 17 (Amazon RDS in production, Docker locally and in CI)
+**Storage**: PostgreSQL 17 in Docker (locally, in CI and on the production instance)
 
 **Testing**: pytest against a real Postgres in `backend/tests/` · Vitest + Testing Library in `frontend/src/**/*.test.tsx`
 
