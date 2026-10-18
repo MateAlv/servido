@@ -1,0 +1,110 @@
+.stamp {
+  --stamp-color: var(--color-ok);
+
+  position: relative;
+  display: inline-grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 16px 26px 14px;
+  border: 3px solid var(--stamp-color);
+  border-radius: 20px;
+  color: var(--stamp-color);
+  box-shadow:
+    inset 0 0 0 3px var(--color-surface),
+    inset 0 0 0 5px var(--stamp-color);
+  transform: rotate(-8deg);
+  animation: stamp 620ms var(--ease-out) both;
+}
+
+.primary {
+  --stamp-color: var(--color-primary);
+}
+
+.ring {
+  position: absolute;
+  inset: -6px;
+  border: 3px solid var(--stamp-color);
+  border-radius: 26px;
+  opacity: 0;
+  pointer-events: none;
+  animation: ink-ring 560ms var(--ease-out) 300ms both;
+}
+
+.check {
+  width: 34px;
+  height: 34px;
+}
+
+.check circle,
+.check path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  animation: draw 420ms var(--ease-out) both;
+}
+
+.check circle {
+  animation-delay: 360ms;
+}
+
+.check path {
+  animation-delay: 560ms;
+}
+
+.label {
+  font: 800 26px / 1 var(--font-display);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.detail {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+@keyframes stamp {
+  0% {
+    transform: scale(2.4) rotate(-22deg);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(0.9) rotate(-8deg);
+    opacity: 1;
+  }
+
+  68% {
+    transform: scale(1.05) rotate(-8deg);
+  }
+
+  100% {
+    transform: rotate(-8deg);
+    opacity: 1;
+  }
+}
+
+@keyframes ink-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}

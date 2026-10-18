@@ -1,0 +1,62 @@
+.ticket {
+  position: relative;
+  width: min(100%, 340px);
+  padding: 22px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-pop);
+  transform: rotate(var(--tilt));
+}
+
+.printed {
+  animation: print 760ms var(--ease-spring) both;
+  animation-delay: var(--ticket-delay, 0ms);
+}
+
+.sticker {
+  position: absolute;
+  top: -16px;
+  right: -12px;
+}
+
+/* Dotted tear line with two half-circle notches cut into the ticket's edges. */
+.divider {
+  position: relative;
+  margin: 22px -22px;
+  border-top: 3px dotted var(--color-line);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  top: -15px;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--color-line);
+  border-radius: 50%;
+  background: var(--ticket-notch-color, var(--color-bg));
+}
+
+.divider::before {
+  left: -15px;
+  clip-path: inset(0 0 0 50%);
+}
+
+.divider::after {
+  right: -15px;
+  clip-path: inset(0 50% 0 0);
+}
+
+@keyframes print {
+  from {
+    transform: translateY(46px) rotate(calc(var(--tilt) - 7deg)) scale(0.92);
+    opacity: 0;
+  }
+
+  to {
+    transform: rotate(var(--tilt));
+    opacity: 1;
+  }
+}
