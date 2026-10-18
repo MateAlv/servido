@@ -1,0 +1,54 @@
+.page {
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  min-height: 100vh;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.logo {
+  width: 160px;
+  height: auto;
+}
+
+.title {
+  font-size: clamp(40px, 8vw, 72px);
+  letter-spacing: -1px;
+}
+
+.title b {
+  color: var(--color-primary);
+}
+
+.tagline {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.status {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.ok {
+  background: var(--color-ok-bg);
+  color: var(--color-ok);
+}
+
+.error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.pending {
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+}

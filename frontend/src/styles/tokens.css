@@ -1,0 +1,54 @@
+/* Design tokens taken from docs/design/boceto-pagina-inicial.html. */
+:root {
+  --color-primary: #d2441c;
+  --color-primary-dark: #8f2d10;
+  --color-primary-soft: #b3361440;
+  --color-text: #3b1f18;
+  --color-text-muted: #6b4a40;
+  --color-bg: #fdf9ee;
+  --color-surface: #ffffff;
+  --color-line: #eadfca;
+  --color-ok: #1f7a3d;
+  --color-ok-bg: #dcf2e2;
+  --color-warn: #8a5a00;
+  --color-warn-bg: #fff0c9;
+  --color-error: #b3261e;
+  --color-error-bg: #fbdcd9;
+
+  --font-display: 'Baloo 2', Nunito, system-ui, sans-serif;
+  --font-body: Nunito, system-ui, sans-serif;
+
+  --radius-pill: 999px;
+  --radius-card: 26px;
+  --radius-field: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-text: #fbeee0;
+    --color-text-muted: #cdb5a6;
+    --color-bg: #1d110d;
+    --color-surface: #2a1914;
+    --color-line: #4a3027;
+    --color-ok: #7fd69a;
+    --color-ok-bg: #17381f;
+    --color-warn: #f1c35a;
+    --color-warn-bg: #40300a;
+    --color-error: #ff9b92;
+    --color-error-bg: #4a1b17;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-text: #fbeee0;
+  --color-text-muted: #cdb5a6;
+  --color-bg: #1d110d;
+  --color-surface: #2a1914;
+  --color-line: #4a3027;
+  --color-ok: #7fd69a;
+  --color-ok-bg: #17381f;
+  --color-warn: #f1c35a;
+  --color-warn-bg: #40300a;
+  --color-error: #ff9b92;
+  --color-error-bg: #4a1b17;
+}
