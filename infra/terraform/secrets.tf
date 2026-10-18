@@ -1,7 +1,12 @@
-# SSM Parameter Store (standard tier) is free; the API reads this at deploy time.
-resource "aws_ssm_parameter" "database_url" {
-  name        = "/${local.name}/database-url"
-  description = "SQLAlchemy URL of the RDS database"
+# SSM Parameter Store (standard tier) is free; deploy.sh reads this on the instance.
+resource "random_password" "postgres" {
+  length  = 32
+  special = false
+}
+
+resource "aws_ssm_parameter" "postgres_password" {
+  name        = "/${local.name}/postgres-password"
+  description = "Password of the servido PostgreSQL user on the app instance"
   type        = "SecureString"
-  value       = "postgresql+psycopg://${aws_db_instance.main.username}:${random_password.db.result}@${aws_db_instance.main.endpoint}/${aws_db_instance.main.db_name}?sslmode=require"
+  value       = random_password.postgres.result
 }

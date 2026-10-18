@@ -78,61 +78,69 @@ class Diagram:
 
 
 # ---------------------------------------------------------------- 1. Vista física
-fisica = Diagram("fis", 1200, 670,
-                 "Vista física: los usuarios entran solo por CloudFront, que sirve la app desde S3 y "
-                 "manda /api a una instancia EC2; la base RDS es privada y GitHub despliega con un rol OIDC.")
+fisica = Diagram("fis", 1260, 680,
+                 "Vista física: los usuarios entran solo por CloudFront, que manda todo a una instancia EC2 "
+                 "donde Docker Compose corre la web, la API y PostgreSQL; los datos viven en un volumen aparte "
+                 "con snapshots cada noche y GitHub despliega con un rol OIDC.")
 d = fisica
-d.zone(252, 20, 928, 640, "AWS · us-east-1 · Free plan")
-d.zone(620, 112, 540, 218, "VPC por defecto · sin NAT")
+d.zone(252, 20, 984, 640, "AWS · us-east-1 · Free plan")
+d.zone(520, 100, 700, 220, "EC2 t4g.small · Docker Compose · solo acepta a CloudFront")
 d.node(24, 40, 190, 70, "OpenStreetMap", ["mapas y direcciones"], "ext")
 d.node(24, 150, 190, 64, "Comensal", ["celular o navegador"], "ext")
 d.node(24, 232, 190, 64, "Restaurante", ["navegador"], "ext")
-d.node(24, 452, 190, 84, "GitHub", ["repo público", "Actions: CI y deploy"], "ext")
-d.node(24, 580, 190, 70, "Equipo (6 personas)", ["docker compose local"], "ext")
-d.node(290, 150, 210, 146, "CloudFront", ["HTTPS · *.cloudfront.net", "función: rutas de la app",
+d.node(24, 400, 190, 84, "GitHub", ["repo público", "Actions: CI y deploy"], "ext")
+d.node(24, 560, 190, 70, "Equipo (6 personas)", ["docker compose local"], "ext")
+d.node(282, 150, 180, 146, "CloudFront", ["HTTPS · *.cloudfront.net", "cachea solo /assets",
                                           "≈ USD 0 · free tier"], "acc")
-d.node(640, 160, 220, 120, "EC2 · t4g.micro", ["API FastAPI en Docker", "entra solo :80 de CloudFront",
-                                                 "≈ USD 10,6 con IP fija"], "acc")
-d.node(930, 160, 210, 120, "RDS PostgreSQL 17", ["db.t4g.micro · 20 GB", "privada · :5432 solo la API",
-                                                   "≈ USD 14"], "acc")
-d.node(290, 380, 210, 84, "S3 · frontend", ["build de React, privado", "≈ USD 0"])
-d.node(640, 380, 220, 84, "IAM · rol de deploy", ["OIDC, sin claves guardadas", "solo la rama main"])
-d.node(930, 380, 210, 84, "SSM Parameter Store", ["DATABASE_URL cifrada", "USD 0"])
-d.node(930, 520, 210, 84, "AWS Budgets", ["alerta USD 15/mes", "por email al equipo"])
-d.edge([(214, 182), (288, 182)], "HTTPS", (251, 182), "acc")
-d.edge([(214, 264), (288, 264)], "HTTPS", (251, 264), "acc")
+d.node(540, 150, 180, 120, "web · nginx", ["la app de React", "manda /api a la API"], "acc")
+d.node(780, 150, 180, 120, "api · FastAPI", ["Python 3.12", "migra la base al iniciar"], "acc")
+d.node(1020, 150, 180, 120, "db · PostgreSQL 17", ["igual que en local", "sin puertos abiertos"], "acc")
+d.node(540, 400, 180, 84, "IAM · rol de deploy", ["OIDC, sin claves", "solo la rama main"])
+d.node(780, 400, 180, 84, "SSM Parameter Store", ["contraseña de la base", "cifrada · USD 0"])
+d.node(1020, 400, 180, 84, "EBS · datos", ["8 GB · cifrado", "sobrevive al reemplazo"])
+d.node(1020, 540, 180, 84, "Snapshots", ["Data Lifecycle Manager", "se guardan los últimos 7"])
+d.node(282, 540, 180, 84, "AWS Budgets", ["alerta USD 15/mes", "por email al equipo"])
+d.edge([(214, 182), (280, 182)], "HTTPS", (247, 182), "acc")
+d.edge([(214, 264), (280, 264)], "HTTPS", (247, 264), "acc")
 d.edge([(119, 150), (119, 112)], "mapa", (119, 131), "ext")
-d.edge([(500, 200), (638, 200)], "/api/* · HTTP :80", (569, 200), "acc")
-d.edge([(395, 296), (395, 378)], "/ · la app", (395, 338), "acc")
-d.edge([(860, 220), (928, 220)], "SQL · TLS", (894, 220), "acc")
-d.edge([(860, 262), (895, 262), (895, 422), (928, 422)], "lee secretos", (895, 352))
-d.edge([(214, 500), (750, 500), (750, 466)], "asume el rol (OIDC)", (480, 500), "dep")
-d.edge([(750, 380), (750, 282)], "deploy.sh por SSM", (750, 352), "dep")
-d.edge([(640, 422), (502, 422)], "sube el build", (571, 422), "dep")
-d.edge([(119, 580), (119, 538)], "push · PR", (119, 559))
+d.edge([(462, 210), (538, 210)], kind="acc")
+d.pill((500, 190), "HTTP :80", "acc")
+d.edge([(720, 210), (778, 210)], kind="acc")
+d.pill((749, 190), "/api/*", "acc")
+d.edge([(960, 210), (1018, 210)], kind="acc")
+d.pill((989, 190), "SQL", "acc")
+d.edge([(1110, 270), (1110, 398)], "guarda los datos", (1110, 360))
+d.edge([(1110, 484), (1110, 538)], "cada noche", (1110, 511))
+d.edge([(870, 322), (870, 398)], "lee la contraseña", (870, 360))
+d.edge([(214, 442), (538, 442)], "asume el rol (OIDC)", (376, 442), "dep")
+d.edge([(630, 400), (630, 322)], "deploy.sh por SSM", (630, 360), "dep")
+d.edge([(119, 560), (119, 486)], "push · PR", (119, 523))
 
 # ---------------------------------------------------------------- 2. Recorrido de una solicitud
-seq = Diagram("seq", 1000, 476,
-              "Recorrido de una solicitud: el navegador baja la app de S3 a través de CloudFront y "
-              "después pide datos a /api, que CloudFront reenvía sin cache a la API y esta a PostgreSQL.")
+seq = Diagram("seq", 1000, 588,
+              "Recorrido de una solicitud: CloudFront pide la página a nginx en la instancia y guarda los "
+              "archivos de /assets en el borde; los pedidos a /api pasan sin cache por nginx a la API y "
+              "esta consulta PostgreSQL.")
 d = seq
-actors = [("Navegador", "comensal", 100), ("CloudFront", "borde, HTTPS", 300), ("S3", "frontend", 480),
-          ("API", "EC2 · FastAPI", 680), ("PostgreSQL", "RDS", 880)]
-d.add('<rect class="dg-band" x="20" y="86" width="960" height="146" rx="14"/>')
+actors = [("Navegador", "comensal", 100), ("CloudFront", "borde, HTTPS", 300), ("web", "nginx", 480),
+          ("api", "FastAPI", 680), ("db", "PostgreSQL", 880)]
+d.add('<rect class="dg-band" x="20" y="86" width="960" height="202" rx="14"/>')
 d.add('<text class="dg-z" x="36" y="108">1 · Abre la app</text>')
-d.add('<rect class="dg-band" x="20" y="246" width="960" height="212" rx="14"/>')
-d.add('<text class="dg-z" x="36" y="268">2 · Busca restaurantes</text>')
+d.add('<rect class="dg-band" x="20" y="302" width="960" height="268" rx="14"/>')
+d.add('<text class="dg-z" x="36" y="324">2 · Busca restaurantes</text>')
 for name, sub, x in actors:
-    d.add(f'<line class="dg-life" x1="{x}" y1="70" x2="{x}" y2="458"/>')
+    d.add(f'<line class="dg-life" x1="{x}" y1="70" x2="{x}" y2="570"/>')
     d.add(f'<rect class="dg-node dg-node-acc" x="{x - 75}" y="18" width="150" height="52" rx="14"/>')
     d.add(f'<text class="dg-t" x="{x}" y="40" text-anchor="middle">{esc(name)}</text>')
     d.add(f'<text class="dg-s" x="{x}" y="58" text-anchor="middle">{esc(sub)}</text>')
 messages = [
-    (100, 300, 134, "GET /", "acc"), (300, 480, 162, "index.html, JS, CSS", "acc"),
-    (480, 300, 190, "archivos", "ret"), (300, 100, 218, "app (cacheada en el borde)", "ret"),
-    (100, 300, 296, "GET /api/restaurantes?precio=$$", "acc"), (300, 680, 324, "reenvía, sin cache", "acc"),
-    (680, 880, 352, "SELECT … (TLS)", "acc"), (880, 680, 380, "filas", "ret"),
-    (680, 300, 408, "JSON", "ret"), (300, 100, 436, "JSON → React dibuja el mapa", "ret"),
+    (100, 300, 134, "GET /", "acc"), (300, 480, 162, "reenvía, sin cache", "acc"),
+    (480, 300, 190, "index.html", "ret"), (300, 100, 218, "index.html", "ret"),
+    (100, 300, 246, "GET /assets/… (JS, CSS)", "acc"), (300, 100, 274, "desde la cache del borde", "ret"),
+    (100, 300, 352, "GET /api/restaurantes?precio=$$", "acc"), (300, 480, 380, "reenvía, sin cache", "acc"),
+    (480, 680, 408, "/api → api:8000", "acc"), (680, 880, 436, "SELECT …", "acc"),
+    (880, 680, 464, "filas", "ret"), (680, 480, 492, "JSON", "ret"), (480, 300, 520, "JSON", "ret"),
+    (300, 100, 548, "JSON → React dibuja el mapa", "ret"),
 ]
 for x1, x2, y, label, kind in messages:
     step = 6 if x2 > x1 else -6
@@ -157,7 +165,7 @@ d.node(784, 158, 252, 64, "Validación", ["app/schemas · Pydantic → 400"], mo
 d.node(784, 252, 252, 64, "Reglas de negocio", ["app/services"], mono=(0,))
 d.node(784, 346, 252, 64, "Modelos", ["app/models · SQLAlchemy 2"], mono=(0,))
 d.node(784, 446, 252, 64, "Migraciones", ["migrations · Alembic"], mono=(0,))
-d.node(1100, 300, 120, 84, "PostgreSQL", ["17 · RDS"], "acc")
+d.node(1100, 300, 120, 84, "PostgreSQL", ["17 · Docker"], "acc")
 d.edge([(230, 128), (130, 128), (130, 162)], "usa", (180, 128))
 d.edge([(330, 128), (330, 162)])
 d.pill((352, 146), "pide datos")
@@ -172,12 +180,13 @@ d.pill((731, 448), "genera", "dep")
 d.edge([(480, 470), (230, 470), (230, 350)], "tipa el cliente", (355, 470), "dep")
 
 # ---------------------------------------------------------------- 4. CI/CD
-cicd = Diagram("cic", 1200, 420,
+cicd = Diagram("cic", 1200, 380,
                "Del código a producción: cada US va en una rama y un PR con CI y revisión; al mergear a main, "
-               "GitHub Actions asume un rol temporal, actualiza la API por SSM y publica el frontend.")
+               "GitHub Actions asume un rol temporal y por SSM le pide a la instancia que baje el commit y "
+               "rearme sus contenedores.")
 d = cicd
 d.zone(10, 16, 1180, 150, "Cada cambio")
-d.zone(10, 186, 1180, 222, "Al mergear a main")
+d.zone(10, 186, 1180, 180, "Al mergear a main")
 row = [("Rama por US", ["002-us5-mapa"], ""), ("Pull request", ["plantilla + uso de IA"], ""),
        ("CI en GitHub", ["backend · frontend · infra", "sin atribución a IA"], "acc"),
        ("Revisión cruzada", ["otro integrante lo entiende"], ""), ("Merge a main", ["historial atómico"], "")]
@@ -187,15 +196,14 @@ for i, (title, lines, kind) in enumerate(row):
         d.edge([(30 + i * 232 - 30, 98), (30 + i * 232 - 2, 98)])
 d.node(958, 238, 200, 84, "Deploy", ["GitHub Actions"], "acc")
 d.node(706, 238, 200, 84, "Rol OIDC", ["credenciales temporales"])
-d.node(430, 210, 230, 84, "1 · API", ["SSM → deploy.sh", "git · migraciones · compose"])
-d.node(430, 314, 230, 84, "2 · Frontend", ["npm build → S3", "invalida CloudFront"])
-d.node(150, 262, 220, 84, "App en línea", ["https://….cloudfront.net"], "acc", mono=(0,))
+d.node(430, 224, 230, 112, "deploy.sh en la instancia", ["por SSM Run Command", "baja el commit de main",
+                                                         "rearma los contenedores"])
+d.node(150, 238, 220, 84, "App en línea", ["https://….cloudfront.net", "migraciones al iniciar"],
+       "acc", mono=(0,))
 d.edge([(1058, 144), (1058, 236)], "si cambió backend, frontend o infra/ec2", (1048, 176), "dep")
 d.edge([(958, 280), (908, 280)], kind="dep")
-d.edge([(706, 268), (684, 268), (684, 252), (662, 252)], kind="dep")
-d.edge([(706, 292), (684, 292), (684, 356), (662, 356)], kind="dep")
-d.edge([(430, 252), (400, 252), (400, 296), (372, 296)], kind="dep")
-d.edge([(430, 356), (400, 356), (400, 314), (372, 314)], kind="dep")
+d.edge([(706, 280), (662, 280)], kind="dep")
+d.edge([(430, 280), (372, 280)], kind="dep")
 
 # ---------------------------------------------------------------- 5. Flujo SDD
 sdd = Diagram("sdd", 1090, 350,
@@ -246,7 +254,7 @@ groups = [
                            (".github/skills/", "comandos para Copilot"), (".gemini/", "comandos para Gemini")]),
     (660, "Código", [("backend/", "FastAPI, modelos y tests"), ("frontend/", "React y sistema de diseño"),
                      ("docker-compose.yml", "entorno local completo"), ("Makefile", "make up · lint · test")]),
-    (980, "Infra y automatización", [("infra/terraform/", "todo lo de AWS"), ("infra/ec2/", "deploy en la instancia"),
+    (980, "Infra y automatización", [("infra/terraform/", "todo lo de AWS"), ("infra/ec2/", "compose de producción"),
                                      (".github/workflows/", "CI, deploy, atribución"),
                                      ("scripts/", "exporta el backlog")]),
 ]

@@ -1,5 +1,6 @@
 #!/bin/bash
-# First boot of the API instance: Docker, swap, the repository and the first deploy.
+# First boot of the app instance: Docker, swap, the database volume, the repository and the
+# first deploy. Output goes to /var/log/cloud-init-output.log.
 set -euxo pipefail
 
 retry() {
@@ -18,7 +19,7 @@ retry curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-compose "${compose_
 retry curl -fsSL -o /usr/local/lib/docker/cli-plugins/docker-buildx "${buildx_url}"
 chmod +x /usr/local/lib/docker/cli-plugins/*
 
-# 1 GB of swap so image builds fit in a micro instance's memory.
+# 1 GB of swap so image builds fit next to the running database.
 if [ ! -f /swapfile ]; then
   dd if=/dev/zero of=/swapfile bs=1M count=1024
   chmod 600 /swapfile
@@ -26,6 +27,30 @@ if [ ! -f /swapfile ]; then
   swapon /swapfile
   echo '/swapfile none swap sw 0 0' >> /etc/fstab
 fi
+
+# Terraform attaches the database volume a few seconds after the instance starts. It is only
+# formatted the first time; after an instance replacement it already holds the data.
+for _ in $(seq 1 60); do
+  [ -e "${data_device}" ] && break
+  sleep 5
+done
+test -e "${data_device}"
+fs_status=0
+blkid -p "${data_device}" > /dev/null || fs_status=$?
+# Exit code 2 means the disk has no filesystem yet; anything else must never be formatted.
+if [ "$fs_status" -eq 2 ]; then
+  mkfs.ext4 -L servido-data "${data_device}"
+  udevadm settle
+fi
+mkdir -p /var/lib/servido
+grep -q servido-data /etc/fstab || echo 'LABEL=servido-data /var/lib/servido ext4 defaults,nofail 0 2' >> /etc/fstab
+mount -a
+mountpoint /var/lib/servido
+
+# On every later boot Docker waits for the volume, so PostgreSQL never starts on an empty disk.
+mkdir -p /etc/systemd/system/docker.service.d
+printf '[Unit]\nRequiresMountsFor=/var/lib/servido\n' > /etc/systemd/system/docker.service.d/servido-data.conf
+systemctl daemon-reload
 
 cat > /etc/servido.env <<'ENV'
 AWS_REGION=${region}

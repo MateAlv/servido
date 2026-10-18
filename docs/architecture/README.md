@@ -14,19 +14,20 @@ Cómo está armada la plataforma, cómo viaja una solicitud de punta a punta y c
 
 ## 1. Vista física
 
-![Vista física: CloudFront es la única entrada pública; sirve la app desde S3 y manda /api a una instancia EC2, que usa una base RDS privada. GitHub despliega con un rol OIDC.](01-vista-fisica.svg)
+![Vista física: CloudFront es la única entrada pública y manda todo a una instancia EC2, donde Docker Compose corre la web, la API y PostgreSQL. Los datos viven en un volumen aparte con snapshots cada noche. GitHub despliega con un rol OIDC.](01-vista-fisica.svg)
 
-- Hay una sola puerta de entrada pública: CloudFront, con HTTPS en una dirección `*.cloudfront.net`. Sirve la app desde S3 y manda todo lo que empieza con `/api` a la instancia EC2.
-- La instancia solo acepta tráfico de CloudFront y la base solo acepta conexiones de la instancia. No hay SSH: se entra con AWS Systems Manager.
-- GitHub no guarda claves de AWS: en cada deploy pide un rol temporal (OIDC), sube el frontend y le pide a la instancia que se actualice.
-- Costo estimado: RDS ≈ USD 14, EC2 con su IP fija ≈ USD 10,6 y el resto ≈ 0, por mes. Dos meses de desarrollo usan la mitad de los USD 100 de crédito inicial del Free plan.
+- En producción corren los mismos tres contenedores que levanta `make up`: `web` (nginx con la app de React), `api` y `db` (PostgreSQL 17), en una sola instancia EC2 ([ADR 0008](../decisions/0008-aws-free-plan-hosting.md)).
+- Hay una sola puerta de entrada pública: CloudFront, con HTTPS en una dirección `*.cloudfront.net`. Le manda todo a nginx, que sirve la app y pasa `/api` a la API. La instancia solo acepta tráfico de CloudFront y no hay SSH: se entra con AWS Systems Manager.
+- La base guarda sus datos en un volumen EBS aparte, con un snapshot cada noche (se guardan los últimos 7). Si se reemplaza la instancia, el volumen sigue ahí; si hay que volver atrás, se restaura un snapshot.
+- GitHub no guarda claves de AWS: en cada deploy pide un rol temporal (OIDC) y le pide a la instancia que se actualice.
+- Costo estimado: ≈ USD 5,4 por mes (discos e IP fija; la instancia está en la prueba gratis de `t4g.small` hasta el 31/12/2026). Dos meses de desarrollo usan ≈ USD 11 de los USD 100 de crédito inicial del Free plan.
 
 ## 2. Recorrido de una solicitud
 
-![Recorrido de una solicitud: el navegador baja la app de S3 a través de CloudFront y después pide datos a /api, que CloudFront reenvía sin cache a la API y esta a PostgreSQL.](02-recorrido-solicitud.svg)
+![Recorrido de una solicitud: CloudFront pide la página a nginx en la instancia y guarda los archivos de /assets en el borde; los pedidos a /api pasan sin cache por nginx a la API, que consulta PostgreSQL.](02-recorrido-solicitud.svg)
 
-- Primero llega la app (HTML, JavaScript y estilos). Como no cambia entre usuarios, CloudFront la guarda cerca del comensal.
-- Después la app pide datos a `/api/…`. Esas respuestas nunca se cachean: siempre reflejan lo último de la base.
+- Primero llega la app. JavaScript y estilos llevan un hash en el nombre y nunca cambian, así que CloudFront los guarda cerca del comensal. `index.html` se pide siempre a la instancia, para que un deploy se vea enseguida.
+- Después la app pide datos a `/api/…`. Esas respuestas nunca se cachean: nginx las pasa a la API, que consulta la base, y siempre reflejan lo último.
 - La API valida el pedido; si algo está mal responde 400 con el detalle en español, como piden las specs.
 
 ## 3. Vista lógica
@@ -40,11 +41,11 @@ Cómo está armada la plataforma, cómo viaja una solicitud de punta a punta y c
 
 ## 4. Del código a producción
 
-![Del código a producción: cada US va en una rama y un PR con CI y revisión; al mergear a main, GitHub Actions asume un rol temporal, actualiza la API por SSM y publica el frontend.](04-ci-cd.svg)
+![Del código a producción: cada US va en una rama y un PR con CI y revisión; al mergear a main, GitHub Actions asume un rol temporal y por SSM le pide a la instancia que baje el commit y rearme sus contenedores.](04-ci-cd.svg)
 
 - CI corre lint, tests contra PostgreSQL real, chequeo de migraciones y del contrato, build del frontend y validación de Terraform.
 - Cada PR declara cómo se usó la IA (herramienta, prompts, qué cambió el humano): es la evidencia que pide la cátedra en cada defensa.
-- El deploy corre solo si el merge toca `backend/`, `frontend/` o `infra/ec2/`. GitHub Actions es gratis en repos públicos.
+- El deploy corre solo si el merge toca `backend/`, `frontend/` o `infra/ec2/`. La instancia baja el commit y rearma solo los contenedores que cambiaron: unos segundos sin servicio. GitHub Actions es gratis en repos públicos.
 
 ## 5. Cómo trabajamos con specs y agentes
 

@@ -92,4 +92,4 @@ Plan de costos presentado el 23/09 (precio fijo, 4 meses):
 | Markup (20 %) | 9.164,1 |
 | **Precio al cliente** | **54.984,6** |
 
-La infraestructura presupuestada eran dos entornos (EC2 t3.small, RDS db.t3.micro y S3 + CloudFront en cada uno), dominio y tres licencias de Claude Pro. El hosting real se define en [docs/decisions/](../decisions/) y la planilla se actualiza en la revisión de costos de cada sprint.
+La infraestructura presupuestada eran dos entornos (EC2 t3.small, RDS db.t3.micro y S3 + CloudFront en cada uno), dominio y tres licencias de Claude Pro. El hosting real se define en [docs/decisions/](../decisions/) y la planilla se actualiza en la revisión de costos de cada sprint. Desde el [ADR 0008](../decisions/0008-aws-free-plan-hosting.md) hay un solo entorno: base, API y web en Docker en una EC2 t4g.small detrás de CloudFront, por ≈ USD 5,4 por mes pagados con los créditos del Free plan.
