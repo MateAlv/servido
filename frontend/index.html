@@ -11,6 +11,12 @@
       rel="stylesheet"
     />
     <title>Servido! — Reservá. Pedí. Disfrutá.</title>
+    <script>
+      try {
+        var theme = localStorage.getItem('servido-theme')
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

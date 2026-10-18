@@ -1,0 +1,19 @@
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 800;
+}
+
+.ok {
+  color: #7fd69a;
+}
+
+.error {
+  color: #ff9b92;
+}
+
+.pending {
+  color: #f1c35a;
+}
