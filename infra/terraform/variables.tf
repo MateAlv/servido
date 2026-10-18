@@ -19,9 +19,9 @@ variable "github_repository" {
   default     = "MateAlv/servido"
 }
 
-variable "alert_email" {
-  description = "Email that receives budget alerts."
-  type        = string
+variable "alert_emails" {
+  description = "Emails that receive budget alerts."
+  type        = list(string)
 }
 
 variable "monthly_budget_usd" {
