@@ -21,5 +21,10 @@
     "deny": [
       "Read(./**/.env)"
     ]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
   }
 }
