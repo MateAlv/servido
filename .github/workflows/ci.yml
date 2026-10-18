@@ -65,3 +65,22 @@ jobs:
           git diff --exit-code -- src/api/schema.d.ts
       - run: npx vitest run
       - run: npm run build
+
+  infra:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.16.5
+      - run: terraform -chdir=terraform fmt -check -recursive
+      - name: Terraform configurations are valid
+        run: |
+          for dir in terraform terraform/bootstrap; do
+            terraform -chdir="$dir" init -backend=false -input=false > /dev/null
+            terraform -chdir="$dir" validate
+          done
+      - run: bash -n ec2/deploy.sh
