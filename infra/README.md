@@ -71,7 +71,7 @@ terraform output -raw backend_config > ../backend.hcl
 
 # 3. The environment
 cd ..
-cp terraform.tfvars.example terraform.tfvars   # set alert_email
+cp terraform.tfvars.example terraform.tfvars   # set alert_emails
 terraform init -backend-config=backend.hcl
 terraform plan                                 # read it: only the pieces in the table above
 terraform apply                                # a few minutes, CloudFront is the slowest
