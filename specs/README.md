@@ -31,8 +31,8 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las del Sprint 1 bloq
 
 | Spec | Duda | Propuesta actual |
 | --- | --- | --- |
-| 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba |
-| 002 | Ubicación denegada | Mapa centrado en una zona por defecto, sin distancias |
+| 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba; la demo refresca cada 30 s |
+| 002 | Ubicación denegada | Mapa centrado en una zona por defecto, sin distancias, con aviso y botón para reintentar |
 | 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Ver Edge Cases de la spec |
 
 ## Decisiones del equipo

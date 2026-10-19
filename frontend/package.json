@@ -16,9 +16,12 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.4",
+    "@types/leaflet": "^1.9.22",
+    "leaflet": "^1.9.4",
     "openapi-fetch": "^0.17.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-leaflet": "^5.0.0",
     "react-router": "^8.4.0"
   },
   "devDependencies": {
