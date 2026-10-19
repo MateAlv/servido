@@ -11,9 +11,18 @@ These tasks cover only independent US-7 frontend work, not the whole feature 002
 - [ ] T007 Preserve selection across US-9 detail navigation and test it.
 - [x] T008 Register PriceFilter in the design catalog with an interactive fictional-data demonstration in DesignSystemPage.tsx.
 
+- [x] T009 Derive provisional price tiers from numeric mock average spend in ARS; cover 15000, 25000 and 40000 boundaries and adjacent cents.
+- [x] T010 Update the catalog fixtures and US-7 documentation without changing selector/predicate behavior or integrating the map/backend.
+
 ## Validation results
 
-### Current frontend validation
+### Numeric average spend update (2026-10-19)
+
+- All 42 frontend tests across 14 files passed, including 12 conversion cases covering exact thresholds and adjacent cents.
+- `npm run lint`, `npm run typecheck`, `npm run format:check` and `git diff --check` passed.
+- No backend checks or visual browser checks were rerun for this frontend-only change.
+
+### Previous frontend validation
 
 - The user corrected `frontend/node_modules` permissions and ran `npm ci`. All 30 frontend tests across 14 files passed directly in WSL, including the run after catalog integration.
 - During catalog integration, ESLint and TypeScript passed directly in the project. Prettier checked the modified DesignSystemPage.tsx successfully; git diff --check also passed.

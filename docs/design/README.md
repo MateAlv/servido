@@ -131,6 +131,14 @@ página administra carga, errores, marcadores y persistencia de selección al vo
 del detalle.
 
 Ya podés probar el componente en `/diseno#filtro-precio`. La demostración usa
-restaurantes ficticios locales, muestra las coincidencias e incluye uno sin menú.
+restaurantes ficticios locales con `averageSpendPerPerson` numérico en pesos
+argentinos, muestra las coincidencias e incluye uno sin menú. La función pura
+`priceTierFromAverageSpend(averageSpendPerPerson)`, exportada desde
+`components/restaurant`, convierte un gasto promedio conocido en `PriceTier`:
+`$` si es menor a $15.000, `$$` desde $15.000 hasta menos de $25.000,
+`$$$` desde $25.000 hasta $40.000 inclusive y `$$$$` si supera $40.000.
+Son límites provisionales del equipo. Los promedios están mockeados: todavía no
+se calculan desde reseñas; eso queda para cuando existan al menos cinco reseñas
+con precio por persona.
 Seleccioná `$$$$` para ver cero coincidencias y «Quitar filtro de precio» para
 recuperar los cuatro ejemplos. No consulta la API ni utiliza el mapa.

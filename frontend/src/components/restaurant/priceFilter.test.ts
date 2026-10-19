@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { matchesPriceFilter, PRICE_TIERS, type PriceTier } from './priceFilter'
+import {
+  priceTierFromAverageSpend,
+  matchesPriceFilter,
+  PRICE_TIERS,
+  type PriceTier,
+} from './priceFilter'
 
 describe('matchesPriceFilter', () => {
   it('US-7 S1 matches each price tier and multiple selected tiers', () => {
@@ -36,5 +41,24 @@ describe('matchesPriceFilter', () => {
     expect(matchesPriceFilter(null, true, ['$'])).toBe(false)
     expect(matchesPriceFilter('$', false, [])).toBe(true)
     expect(matchesPriceFilter(null, false, [])).toBe(true)
+  })
+})
+
+describe('priceTierFromAverageSpend', () => {
+  it.each([
+    [0, '$'],
+    [12000, '$'],
+    [14999.99, '$'],
+    [15000, '$$'],
+    [15000.01, '$$'],
+    [24999.99, '$$'],
+    [25000, '$$$'],
+    [25000.01, '$$$'],
+    [39999.99, '$$$'],
+    [40000, '$$$'],
+    [40000.01, '$$$$'],
+    [50000, '$$$$'],
+  ] as const)('US-7 S1 converts an average spend of %s ARS to %s', (amount, tier) => {
+    expect(priceTierFromAverageSpend(amount)).toBe(tier)
   })
 })

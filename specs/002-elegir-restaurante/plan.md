@@ -5,7 +5,7 @@ Scope: spec 002, US-7 S1–S3 and price-related edge cases. US-5 and US-9 remain
 ## Design
 
 - Controlled `PriceFilter` receives `selectedTiers`, `onChange`, and an optional successful-query `resultCount`. Reuse Chip and Button. Emit changes immediately and clear only price selection.
-- Use four literal UI categories ($ through $$$$). These are not API response types or monetary thresholds.
+- Use four literal UI categories ($ through $$$$). These are UI types, not API response types. Derive them with the pure `priceTierFromAverageSpend(averageSpendPerPerson: number): PriceTier` helper from known numeric ARS amounts: below 15000 → $, below 25000 → $$, through 40000 inclusive → $$$, above 40000 → $$$$. Thresholds are provisional.
 - `matchesPriceFilter(tier, hasMenu, selectedTiers)` is a pure predicate. The map owner can use Array.filter after adapting the eventual generated API types. Empty selection permits every input; active selection excludes missing menus and unknown categories.
 - No restaurant response model exists. Do not invent one. No endpoint, database changes, API generation, new runtime dependencies, alternative map, routes, or temporary page.
 - Use CSS Modules, tokens, wrapping layout, native buttons and fieldset, aria-pressed and a live empty-state message.
@@ -25,12 +25,21 @@ Scope is backlog-bound, uses the existing stack, and adds no infrastructure or d
 
 Lourdes owns the map page, valid-location/account filtering and restaurant query. Agree on generated restaurant fields and conversion to UI PriceTier; derive menu presence from the actual contract. Filter the complete eligible source rather than previously filtered results. Keep selection in the containing page and preserve it when visiting details (URL state is a recommendation, not implemented). Pass resultCount only after successful loading. The predicate preserves order and has no side effects.
 
-PriceFilter is registered in `frontend/src/pages/DesignSystemPage.tsx`. Its interactive demonstration at `/diseno#filtro-precio` uses local fictional restaurants, including one without a menu and a selection with zero matches. The design guide and restaurant barrel document/export the component. Integration with the real map, API and detail navigation remains pending.
+PriceFilter is registered in `frontend/src/pages/DesignSystemPage.tsx`. Its interactive demonstration at `/diseno#filtro-precio` uses local fictional restaurants with numeric `averageSpendPerPerson` amounts and derived categories, including one without a menu and a selection with zero matches. The design guide and restaurant barrel document/export the component. Integration with the real map, API and detail navigation remains pending.
 
-## Validation
+## Validation for numeric average spend (2026-10-19)
+
+All 42 frontend tests across 14 files passed, including 12 conversion cases. ESLint, TypeScript (`tsc -b`), the full frontend Prettier check and `git diff --check` passed. Validation was limited to the frontend for this change; backend checks and visual browser checks were not rerun.
+
+## Previous validation
 
 Current frontend validation runs directly in WSL after the user corrected `frontend/node_modules` permissions and ran `npm ci`: all 30 tests across 14 files passed. ESLint, TypeScript and the Prettier check for the modified catalog page passed during catalog integration; `git diff --check` also passed.
 
 The user visually verified single and multiple selection, deselection, clearing, zero matches and responsive layout at 360 px in the catalog demonstration. These checks use fictional data and do not prove real map marker integration, detail navigation or live API/database behavior.
 
 Earlier temporary-copy frontend checks and backend results are historical; see tasks.md. The earlier root `make format lint test` attempt did not complete, and a successful full root run is not claimed. No checks were rerun for this documentation-only update.
+
+
+## Numeric average spend update (2026-10-19)
+
+The catalog stores mock average spend per person in ARS, displays the amount and derives categories using the exported helper. Boundary tests cover each threshold and adjacent cent values. PriceFilter and matchesPriceFilter retain their existing behavior. Computing averages from at least five reviews remains future work; no backend or US-5 integration is included.

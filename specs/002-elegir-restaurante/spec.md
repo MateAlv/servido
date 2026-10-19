@@ -71,7 +71,7 @@ Como **Comensal**, quiero ver en detalle el restaurante seleccionado, para decid
 
 - **Cálculo de la concurrencia**: [NEEDS CLARIFICATION: fuente del dato, umbrales de bajo/medio/alto y frecuencia de actualización. Mientras no exista otra fuente, se asume un valor por restaurante provisto por la fuente de datos.]
 
-- **Criterio del filtro de precio** *(decisión del equipo, 18/10)*: por ahora el filtro es provisorio. Cada restaurante tiene un nivel de precio ($, $$, $$$ o $$$$) cargado en los datos de prueba, y el filtro muestra los restaurantes de los niveles elegidos. Cuando existan reseñas con gasto por persona (US-50), el nivel pasa a calcularse como pide US-7: la media del gasto, con al menos 5 reseñas.
+- **Criterio del filtro de precio** *(decisión del equipo, actualizada el 19/10)*: por ahora el filtro es provisorio. Cada restaurante de la demo tiene un gasto promedio por persona numérico mockeado, expresado en pesos argentinos; su categoría se deriva de ese monto: `$` para menos de $15.000; `$$` desde $15.000 hasta menos de $25.000; `$$$` desde $25.000 hasta $40.000 inclusive; `$$$$` para más de $40.000. Estos límites resuelven provisionalmente las superposiciones de la propuesta original. El filtro muestra los restaurantes de las categorías elegidas. En el futuro, el promedio se calculará a partir de al menos 5 reseñas con precio por persona (US-50); ese cálculo todavía no está implementado ni forma parte de este cambio. La demo sigue sin integración con el mapa de US-5 ni con el backend.
 
 - Sin restaurantes para mostrar o ninguno cumple el filtro: estado vacío informativo con acción para quitar el filtro.
 

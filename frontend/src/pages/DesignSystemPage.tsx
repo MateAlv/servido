@@ -21,6 +21,7 @@ import { ConfirmationStamp, Ticket, TicketDivider, Timeline } from '../component
 import {
   MapPin,
   matchesPriceFilter,
+  priceTierFromAverageSpend,
   OccupancyMeter,
   PriceFilter,
   type OccupancyLevel,
@@ -221,23 +222,27 @@ function CelebrationDemo() {
 }
 
 // Local catalog fixtures, independent of the restaurant API contract.
-const PRICE_FILTER_EXAMPLES: { name: string; tier: PriceTier; hasMenu: boolean }[] = [
-  { name: 'Bodegón del Barrio', tier: '$', hasMenu: true },
-  { name: 'Cocina Verde', tier: '$$', hasMenu: true },
-  { name: 'Parrilla del Río', tier: '$$$', hasMenu: true },
-  { name: 'Café por Abrir', tier: '$', hasMenu: false },
+const PRICE_FILTER_EXAMPLES: { name: string; averageSpendPerPerson: number; hasMenu: boolean }[] = [
+  { name: 'Bodegón del Barrio', averageSpendPerPerson: 12000, hasMenu: true },
+  { name: 'Cocina Verde', averageSpendPerPerson: 20000, hasMenu: true },
+  { name: 'Parrilla del Río', averageSpendPerPerson: 32000, hasMenu: true },
+  { name: 'Café por Abrir', averageSpendPerPerson: 12000, hasMenu: false },
 ]
 
 function PriceFilterDemo() {
   const [selectedTiers, setSelectedTiers] = useState<PriceTier[]>([])
   const matches = PRICE_FILTER_EXAMPLES.filter((restaurant) =>
-    matchesPriceFilter(restaurant.tier, restaurant.hasMenu, selectedTiers),
+    matchesPriceFilter(
+      priceTierFromAverageSpend(restaurant.averageSpendPerPerson),
+      restaurant.hasMenu,
+      selectedTiers,
+    ),
   )
 
   return (
     <Demo
       title="Selección de precios"
-      note="Datos ficticios. Elegí $$$$ para ver el estado sin coincidencias. Café por Abrir no tiene menú: aparece solo cuando no hay filtro de precio."
+      note="Gastos promedio por persona ficticios en pesos argentinos. Elegí $$$$ para ver el estado sin coincidencias. Café por Abrir no tiene menú: aparece solo cuando no hay filtro de precio."
       wide
     >
       <PriceFilter
@@ -251,11 +256,24 @@ function PriceFilterDemo() {
           {matches.length === 1 ? 'restaurante coincide' : 'restaurantes coinciden'}
         </p>
         {matches.length > 0 && (
-          <ul>
+          <ul className={styles.column}>
             {matches.map((restaurant) => (
               <li key={restaurant.name}>
-                {restaurant.name} · {restaurant.tier}
-                {!restaurant.hasMenu && ' · Sin menú'}
+                <div className={styles.row}>
+                  <strong>{restaurant.name}</strong>
+                  <StatusPill tone="neutral">
+                    {priceTierFromAverageSpend(restaurant.averageSpendPerPerson)}
+                  </StatusPill>
+                </div>
+                <p className={styles.note}>
+                  Gasto promedio: $
+                  {restaurant.averageSpendPerPerson.toLocaleString('es-AR', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}{' '}
+                  por persona
+                </p>
+                {!restaurant.hasMenu && <p className={styles.note}>Sin menú</p>}
               </li>
             ))}
           </ul>
