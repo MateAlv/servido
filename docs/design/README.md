@@ -110,3 +110,27 @@ Animaciones que encajan con el backlog y todavía no están hechas:
 - **Reseña publicada** (US-27, US-50): las estrellas vuelan hacia el promedio del restaurante.
 - **Turno lleno** (US-30): la píldora de disponibilidad pasa a "Completo" con un pequeño temblor.
 - **Pedidos del turno para la cocina** (US-20): las tarjetas se reordenan con una transición cuando cambia la hora sugerida.
+
+### Filtro de precio (US-7)
+
+`PriceFilter`, exportado desde `components/restaurant`, compone `Chip` y `Button`.
+Recibe `selectedTiers` (arreglo de `PriceTier`: `$`, `$$`, `$$$`, `$$$$`),
+`onChange` (nueva selección completa) y `resultCount` opcional. La página conserva
+el estado: cada interacción notifica el cambio inmediatamente; quitar el filtro
+emite un arreglo vacío y no modifica otros criterios.
+
+`matchesPriceFilter(tier, hasMenu, selectedTiers)` permite filtrar los datos con
+`Array.filter`, conservando el orden y sin modificar el arreglo original. La página
+debe adaptar los campos reales del contrato generado a esos argumentos: todavía
+no existe un modelo de respuesta de restaurantes. Sin selección se incluyen todos;
+con selección se excluyen restaurantes sin menú o sin categoría conocida.
+
+Pasá `resultCount` solo después de una consulta exitosa: cero muestra el mensaje
+sin resultados, con la acción de quitar precio habilitada si hay selección. La
+página administra carga, errores, marcadores y persistencia de selección al volver
+del detalle.
+
+Ya podés probar el componente en `/diseno#filtro-precio`. La demostración usa
+restaurantes ficticios locales, muestra las coincidencias e incluye uno sin menú.
+Seleccioná `$$$$` para ver cero coincidencias y «Quitar filtro de precio» para
+recuperar los cuatro ejemplos. No consulta la API ni utiliza el mapa.

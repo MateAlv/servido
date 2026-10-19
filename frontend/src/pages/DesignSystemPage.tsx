@@ -18,7 +18,14 @@ import {
   Steam,
 } from '../components/order'
 import { ConfirmationStamp, Ticket, TicketDivider, Timeline } from '../components/reservation'
-import { MapPin, OccupancyMeter, type OccupancyLevel } from '../components/restaurant'
+import {
+  MapPin,
+  matchesPriceFilter,
+  OccupancyMeter,
+  PriceFilter,
+  type OccupancyLevel,
+  type PriceTier,
+} from '../components/restaurant'
 import {
   Button,
   Card,
@@ -48,6 +55,7 @@ const SECTIONS = [
   ['fundamentos', 'Fundamentos'],
   ['acciones', 'Acciones'],
   ['formularios', 'Formularios'],
+  ['filtro-precio', 'Filtro de precio'],
   ['estados', 'Estados y carga'],
   ['pedido', 'Pedido'],
   ['reserva', 'Reserva'],
@@ -208,6 +216,51 @@ function CelebrationDemo() {
       <Button size="sm" onClick={() => setBursts((n) => n + 1)}>
         Celebrar
       </Button>
+    </Demo>
+  )
+}
+
+// Local catalog fixtures, independent of the restaurant API contract.
+const PRICE_FILTER_EXAMPLES: { name: string; tier: PriceTier; hasMenu: boolean }[] = [
+  { name: 'Bodegón del Barrio', tier: '$', hasMenu: true },
+  { name: 'Cocina Verde', tier: '$$', hasMenu: true },
+  { name: 'Parrilla del Río', tier: '$$$', hasMenu: true },
+  { name: 'Café por Abrir', tier: '$', hasMenu: false },
+]
+
+function PriceFilterDemo() {
+  const [selectedTiers, setSelectedTiers] = useState<PriceTier[]>([])
+  const matches = PRICE_FILTER_EXAMPLES.filter((restaurant) =>
+    matchesPriceFilter(restaurant.tier, restaurant.hasMenu, selectedTiers),
+  )
+
+  return (
+    <Demo
+      title="Selección de precios"
+      note="Datos ficticios. Elegí $$$$ para ver el estado sin coincidencias. Café por Abrir no tiene menú: aparece solo cuando no hay filtro de precio."
+      wide
+    >
+      <PriceFilter
+        selectedTiers={selectedTiers}
+        onChange={setSelectedTiers}
+        resultCount={matches.length}
+      />
+      <div aria-live="polite" aria-atomic="true">
+        <p>
+          {matches.length}{' '}
+          {matches.length === 1 ? 'restaurante coincide' : 'restaurantes coinciden'}
+        </p>
+        {matches.length > 0 && (
+          <ul>
+            {matches.map((restaurant) => (
+              <li key={restaurant.name}>
+                {restaurant.name} · {restaurant.tier}
+                {!restaurant.hasMenu && ' · Sin menú'}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </Demo>
   )
 }
@@ -626,6 +679,14 @@ export function DesignSystemPage() {
 
       <Section id="formularios" title="Formularios" lead="Campos, filtros y selección.">
         <FormsDemo />
+      </Section>
+
+      <Section
+        id="filtro-precio"
+        title="Filtro de precio"
+        lead="Selección múltiple con actualización inmediata y limpieza exclusiva del precio (US-7)."
+      >
+        <PriceFilterDemo />
       </Section>
 
       <Section
