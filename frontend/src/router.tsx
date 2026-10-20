@@ -4,6 +4,7 @@ import { AppLayout } from './AppLayout'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { RestaurantRegisterPage } from './pages/RestaurantRegisterPage'
 
 export const router = createBrowserRouter([
   {
@@ -12,6 +13,7 @@ export const router = createBrowserRouter([
       { path: '/', element: <HomePage /> },
       { path: '/ingresar', element: <LoginPage /> },
       { path: '/registrarme', element: <RegisterPage /> },
+      { path: '/suma-tu-local', element: <RestaurantRegisterPage /> },
       {
         path: '/diseno',
         lazy: async () => ({

@@ -42,11 +42,12 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
-def create_access_token(comensal_id: str, email: str) -> str:
+def create_access_token(account_id: str, email: str, role: str) -> str:
     now = datetime.now(UTC)
     payload = {
-        "sub": comensal_id,
+        "sub": account_id,
         "email": email,
+        "rol": role,
         "iat": now,
         "exp": now + timedelta(hours=1),
     }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate } from 'react-router'
 
 import { Highlight, Logo, Sticker } from '../components/brand'
 import { ApiStatus } from '../components/dev/ApiStatus'
@@ -23,6 +24,8 @@ import {
   ThemeToggle,
   useToast,
 } from '../components/ui'
+import { signOut, useAccount } from '../api/session'
+import { AccessDialog, type AccountRole } from '../components/access'
 import { cx } from '../lib/cx'
 import styles from './HomePage.module.css'
 
@@ -78,10 +81,23 @@ const STEPS = [
 
 export function HomePage() {
   const toast = useToast()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { data: account } = useAccount()
   const [audience, setAudience] = useState<Audience>('diner')
+  const [login, setLogin] = useState({ open: false, role: 'diner' as AccountRole, session: 0 })
 
   function comingSoon() {
     toast('Muy pronto vas a poder hacerlo desde acá.')
+  }
+
+  /* A new session number remounts the dialog, so it opens empty every time. */
+  function openLogin(role: AccountRole) {
+    setLogin((current) => ({ open: true, role, session: current.session + 1 }))
+  }
+
+  function closeLogin() {
+    setLogin((current) => ({ ...current, open: false }))
   }
 
   return (
@@ -97,12 +113,36 @@ export function HomePage() {
           </div>
           <div className={styles.actions}>
             <ThemeToggle />
-            <Button variant="secondary" size="sm" onClick={comingSoon}>
-              Ingresar
-            </Button>
-            <Button size="sm" className={styles.navCta} onClick={comingSoon}>
-              Sumá tu local
-            </Button>
+            {account ? (
+              <>
+                <span className={styles.greeting}>
+                  Hola, <b>{account.nombre ?? account.email}</b>
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    signOut(queryClient)
+                    toast('Cerraste tu sesión.')
+                  }}
+                >
+                  Cerrar sesión
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="secondary" size="sm" onClick={() => openLogin(audience)}>
+                  Ingresar
+                </Button>
+                <Button
+                  size="sm"
+                  className={styles.navCta}
+                  onClick={() => navigate('/suma-tu-local')}
+                >
+                  Sumá tu local
+                </Button>
+              </>
+            )}
           </div>
         </nav>
       </header>
@@ -151,19 +191,23 @@ export function HomePage() {
                     <Button size="lg" icon={<IconSearch />} onClick={comingSoon}>
                       Buscar mesa
                     </Button>
-                    <Button size="lg" variant="secondary" onClick={comingSoon}>
-                      Ingresar como comensal
-                    </Button>
+                    {!account && (
+                      <Button size="lg" variant="secondary" onClick={() => openLogin('diner')}>
+                        Ingresar como comensal
+                      </Button>
+                    )}
                   </>
                 ) : (
-                  <>
-                    <Button size="lg" onClick={comingSoon}>
-                      Sumar mi local
-                    </Button>
-                    <Button size="lg" variant="secondary" onClick={comingSoon}>
-                      Ya tengo cuenta
-                    </Button>
-                  </>
+                  !account && (
+                    <>
+                      <Button size="lg" onClick={() => navigate('/suma-tu-local')}>
+                        Sumar mi local
+                      </Button>
+                      <Button size="lg" variant="secondary" onClick={() => openLogin('restaurant')}>
+                        Ya tengo cuenta
+                      </Button>
+                    </>
+                  )
                 )}
               </div>
             </Reveal>
@@ -242,12 +286,16 @@ export function HomePage() {
                     <IconCheck /> Configurá turnos, mesas y seña a tu manera
                   </li>
                 </ul>
-                <div className={styles.ctas}>
-                  <Button onClick={comingSoon}>Registrar mi restaurante</Button>
-                  <Button variant="secondary" onClick={comingSoon}>
-                    Ya tengo cuenta
-                  </Button>
-                </div>
+                {!account && (
+                  <div className={styles.ctas}>
+                    <Button onClick={() => navigate('/suma-tu-local')}>
+                      Registrar mi restaurante
+                    </Button>
+                    <Button variant="secondary" onClick={() => openLogin('restaurant')}>
+                      Ya tengo cuenta
+                    </Button>
+                  </div>
+                )}
               </Reveal>
               <Reveal delay={120}>
                 <Card>
@@ -295,6 +343,16 @@ export function HomePage() {
           )}
         </div>
       </footer>
+
+      <AccessDialog
+        key={login.session}
+        open={login.open}
+        initialRole={login.role}
+        onClose={closeLogin}
+        onSignedIn={(signedIn) =>
+          toast(`Bienvenido, ${signedIn.nombre ?? signedIn.email}.`, { tone: 'ok' })
+        }
+      />
     </>
   )
 }

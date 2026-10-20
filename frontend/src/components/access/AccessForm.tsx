@@ -1,0 +1,106 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { useState, type FormEvent } from 'react'
+
+import { api } from '../../api/client'
+import { getApiErrorMessage, getRequestErrorMessage } from '../../api/errors'
+import { signIn, type Account } from '../../api/session'
+import { Button, TextField } from '../ui'
+import type { AccountRole } from './roles'
+import styles from './Access.module.css'
+
+const INVALID_CREDENTIALS = 'Credenciales inválidas'
+
+async function requestSignIn(
+  role: AccountRole,
+  email: string,
+  password: string,
+): Promise<{ token: string; account: Account }> {
+  if (role === 'diner') {
+    const { data, error } = await api.POST('/api/auth/comensal', { body: { email, password } })
+    if (error || !data) throw new Error(getApiErrorMessage(error, INVALID_CREDENTIALS))
+    const { comensal } = data
+    return {
+      token: data.access_token,
+      account: {
+        rol: 'diner',
+        id: comensal.id,
+        nombre: comensal.nombre ?? null,
+        email: comensal.email,
+      },
+    }
+  }
+  const { data, error } = await api.POST('/api/auth/restaurante', { body: { email, password } })
+  if (error || !data) throw new Error(getApiErrorMessage(error, INVALID_CREDENTIALS))
+  const { restaurante } = data
+  return {
+    token: data.access_token,
+    account: {
+      rol: 'restaurant',
+      id: restaurante.id,
+      nombre: restaurante.nombre,
+      email: restaurante.email,
+    },
+  }
+}
+
+type AccessFormProps = {
+  role: AccountRole
+  onSignedIn: (account: Account) => void
+  onRegister: () => void
+}
+
+/** Email and password for one kind of account. Used by the login page and the login dialog. */
+export function AccessForm({ role, onSignedIn, onRegister }: AccessFormProps) {
+  const queryClient = useQueryClient()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const { token, account } = await requestSignIn(role, email, password)
+      signIn(queryClient, token, account)
+      onSignedIn(account)
+    } catch (requestError) {
+      setError(getRequestErrorMessage(requestError, INVALID_CREDENTIALS))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form className={styles.form} onSubmit={submit} noValidate>
+      <TextField
+        label="Email"
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        autoComplete="email"
+        required
+      />
+      <TextField
+        label="Contraseña"
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        autoComplete="current-password"
+        required
+      />
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
+      <Button type="submit" fullWidth loading={loading}>
+        Ingresar
+      </Button>
+      <Button variant="secondary" fullWidth onClick={onRegister}>
+        Registrarme
+      </Button>
+    </form>
+  )
+}

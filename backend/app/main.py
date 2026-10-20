@@ -33,7 +33,19 @@ def custom_openapi() -> dict:
 app.openapi = custom_openapi
 
 
+VALUE_ERROR_PREFIX = "Value error, "
+
+
+def _message_for_users(error: dict) -> dict:
+    """Pydantic prefixes our ValueError messages with 'Value error, '. The UI shows them as is."""
+    message = error.get("msg", "")
+    if message.startswith(VALUE_ERROR_PREFIX):
+        return {**error, "msg": message.removeprefix(VALUE_ERROR_PREFIX)}
+    return error
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
     # The specs require 400 Bad Request for invalid input, not FastAPI's default 422.
-    return JSONResponse(status_code=400, content={"detail": jsonable_encoder(exc.errors())})
+    errors = [_message_for_users(error) for error in exc.errors()]
+    return JSONResponse(status_code=400, content={"detail": jsonable_encoder(errors)})

@@ -4,19 +4,12 @@ import { Link, useNavigate } from 'react-router'
 
 import { Button, Card, TextField } from '../components/ui'
 import { api } from '../api/client'
+import { getApiErrorMessage, getRequestErrorMessage } from '../api/errors'
 import styles from './AuthPage.module.css'
-
-function getApiErrorMessage(error: unknown, fallback: string) {
-  if (typeof error === 'object' && error !== null && 'detail' in error) {
-    const detail = error.detail
-    if (typeof detail === 'string') return detail
-    if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') return detail[0].msg
-  }
-  return fallback
-}
 
 export function RegisterPage() {
   const navigate = useNavigate()
+  const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -28,12 +21,12 @@ export function RegisterPage() {
     setLoading(true)
     try {
       const { error } = await api.POST('/api/comensales', {
-        body: { email, password },
+        body: { nombre, email, password },
       })
       if (error) throw new Error(getApiErrorMessage(error, 'No pudimos crear tu cuenta.'))
       navigate('/ingresar')
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'No pudimos crear tu cuenta.')
+      setError(getRequestErrorMessage(requestError, 'No pudimos crear tu cuenta.'))
     } finally {
       setLoading(false)
     }
@@ -45,6 +38,13 @@ export function RegisterPage() {
         <h1>Creá tu cuenta</h1>
         <p>Ingresá tus datos para empezar a disfrutar Servido!.</p>
         <form onSubmit={submit} noValidate>
+          <TextField
+            label="Nombre *"
+            value={nombre}
+            onChange={(event) => setNombre(event.target.value)}
+            autoComplete="name"
+            required
+          />
           <TextField
             label="Email *"
             type="email"
