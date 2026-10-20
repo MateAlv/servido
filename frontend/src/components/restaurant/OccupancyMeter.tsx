@@ -1,11 +1,11 @@
 import { cx } from '../../lib/cx'
 import { cssVars } from '../../lib/cssVars'
+import { OCCUPANCY_LABELS } from '../../lib/occupancy'
 import styles from './OccupancyMeter.module.css'
 
 export type OccupancyLevel = 'low' | 'medium' | 'high'
 
 const FILLED: Record<OccupancyLevel, number> = { low: 1, medium: 2, high: 3 }
-const LABELS: Record<OccupancyLevel, string> = { low: 'Baja', medium: 'Media', high: 'Alta' }
 
 type OccupancyMeterProps = {
   level: OccupancyLevel
@@ -17,7 +17,7 @@ export function OccupancyMeter({ level, showLabel = true }: OccupancyMeterProps)
   return (
     <span
       role="img"
-      aria-label={`Concurrencia ${LABELS[level].toLowerCase()}`}
+      aria-label={`Concurrencia ${OCCUPANCY_LABELS[level].toLowerCase()}`}
       className={cx(styles.meter, styles[level])}
     >
       <span key={level} className={styles.bars} aria-hidden="true">
@@ -29,7 +29,7 @@ export function OccupancyMeter({ level, showLabel = true }: OccupancyMeterProps)
           />
         ))}
       </span>
-      {showLabel && <span aria-hidden="true">{LABELS[level]}</span>}
+      {showLabel && <span aria-hidden="true">{OCCUPANCY_LABELS[level]}</span>}
     </span>
   )
 }

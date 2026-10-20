@@ -9,6 +9,16 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <HomePage /> },
       {
+        path: '/mapa',
+        lazy: async () => ({ Component: (await import('./pages/MapPage')).MapPage }),
+      },
+      {
+        path: '/restaurantes/:id',
+        lazy: async () => ({
+          Component: (await import('./pages/RestaurantDetailPage')).RestaurantDetailPage,
+        }),
+      },
+      {
         path: '/diseno',
         lazy: async () => ({
           Component: (await import('./pages/DesignSystemPage')).DesignSystemPage,

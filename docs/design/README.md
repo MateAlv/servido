@@ -51,7 +51,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 
 | Componente | Para qué |
 | --- | --- |
-| `Button`, `IconButton` | Acciones. `Button` tiene variantes `primary` (hundido 3D), `secondary`, `ghost`, tamaños y estado `loading` |
+| `Button`, `IconButton` | Acciones. `Button` tiene variantes `primary` (hundido 3D), `secondary`, `ghost`, tamaños, estado `loading` y `to` para navegar con look de botón |
 | `TextField` | Campos de formulario con ayuda y error (el error tiembla y se anuncia) |
 | `Chip` | Filtros de selección múltiple (precio, restricciones) |
 | `SegmentedControl` | Una opción entre pocas, con indicador que se desliza |
@@ -90,6 +90,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | Componente | Para qué | US |
 | --- | --- | --- |
 | `MapPin` | Marcador del mapa: caen uno tras otro y el seleccionado late. Con Leaflet va dentro de un `divIcon` | 5 |
+| `RestaurantMap` | Mapa Leaflet + OpenStreetMap con la posición del comensal, los marcadores y el popup que lleva al detalle | 5 |
 | `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal | 5, 33 |
 
 ## Reglas para animaciones nuevas

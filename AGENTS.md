@@ -91,6 +91,7 @@ frontend/           React + TypeScript SPA (Vite)
                     brand/ (logo, splash, spinner) · ui/ (buttons, fields, modal, toasts…)
                     order/ · reservation/ · restaurant/ (animated domain pieces)
   src/lib/          Small helpers: cx (class names), cssVars, reduced-motion detection
+  src/data/         Temporary fixtures while the backend endpoint does not exist yet
   src/styles/       tokens.css (design tokens) and global.css
   src/test/         Test setup, polyfills and renderWithProviders
 specs/              Spec Kit features: NNN-name/spec.md, plan.md, tasks.md…
