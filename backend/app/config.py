@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql+psycopg://servido:servido@localhost:55432/servido"
+    jwt_secret: str = "development-only-change-me-please-use-a-real-secret"
 
 
 settings = Settings()
