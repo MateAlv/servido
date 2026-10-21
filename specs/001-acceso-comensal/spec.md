@@ -18,7 +18,7 @@ Como **Comensal**, quiero completar un formulario con mis datos, para crear una 
 
 **Acceptance Scenarios**:
 
-1. **Dado** que accedo al registro, **Cuando** se muestra el formulario, **Entonces** el email y la contraseña aparecen identificados como obligatorios.
+1. **Dado** que accedo al registro, **Cuando** se muestra el formulario, **Entonces** el nombre, el email y la contraseña aparecen identificados como obligatorios.
 
 2. **Dado** que dejé algún campo obligatorio vacío, **Cuando** intento continuar, **Entonces** el sistema no me deja avanzar y señala qué campo falta.
 
@@ -56,7 +56,9 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 - **Requisitos de contraseña** *(decisión del equipo, 19/10)*: entre 8 y 128 caracteres; debe contener al menos una letra y un número; se acepta cualquier otro carácter, incluidos espacios y acentos; no puede ser idéntica al email.
 
-- **"Usuario" en el ingreso** *(decisión del equipo, 18/10)*: US-3 pide "email y nombre de usuario", pero el registro (US-1) solo captura email y contraseña, así que el usuario es el email.
+- **"Usuario" en el ingreso** *(decisión del equipo, 18/10)*: US-3 pide "email y nombre de usuario"; el usuario para ingresar es el email.
+
+- **Nombre en el registro** *(decisión del equipo, 21/10)*: el registro también pide el nombre del comensal, para saludarlo y para que el restaurante sepa quién reservó. No se usa para ingresar.
 
 - Email con mayúsculas/minúsculas o espacios laterales: se normaliza antes de validar y comparar.
 
@@ -70,7 +72,7 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 ### Functional Requirements
 
-- **FR-001**  *(US-1)*: El formulario de registro MUST solicitar el email y la contraseña, identificándolos como obligatorios.
+- **FR-001**  *(US-1)*: El formulario de registro MUST solicitar el nombre, el email y la contraseña, identificándolos como obligatorios.
 
 - **FR-002**  *(US-1)*: El sistema MUST validar que los campos obligatorios estén completos y en estado válido antes de permitir continuar.
 
@@ -89,7 +91,7 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 - **FR-009**  *(US-3)*: Con credenciales incorrectas, el sistema MUST informar que no se pudo iniciar sesión sin indicar cuál dato es incorrecto; el mensaje MUST ser idéntico para email inexistente y contraseña errónea.
 
-- **FR-010**  *(US-3)*: El campo de contraseña MUST ocultar el texto ingresado.
+- **FR-010**  *(US-3)*: El campo de contraseña MUST ocultar el texto ingresado. Un botón con un ojo MAY mostrarlo a pedido del usuario y volver a ocultarlo.
 
 - **FR-011**: La contraseña MUST almacenarse de forma no reversible y MUST NOT aparecer en logs ni respuestas.
 
@@ -97,7 +99,7 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 ### Key Entities
 
-- **CuentaComensal**: email (único), credencial de acceso, fecha de creación.
+- **CuentaComensal**: nombre, email (único), credencial de acceso, fecha de creación.
 
 - La autenticación es stateless: no se persiste una entidad de sesión en la base
   de datos. El JWT contiene la identidad autenticada y su expiración.

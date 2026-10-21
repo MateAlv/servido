@@ -37,7 +37,7 @@ Before working on anything, know where the context lives:
 
 ### Domain glossary
 
-Use these English names in code. Add a row when a new domain concept appears.
+Use these English names in code. Add a row when a new domain concept appears. Exception (team decision, 21/10): the access API from specs 001 and 003 keeps its Spanish names (`/api/comensales`, `/api/restaurantes`, `nombre`, `id_comensal`…); do not rename it, and do not copy that style into new code.
 
 | Spanish (specs, UI) | English (code) | Notes |
 | --- | --- | --- |
@@ -89,7 +89,8 @@ frontend/           React + TypeScript SPA (Vite)
   src/pages/        One component per route; routes in src/router.tsx, shell in src/AppLayout.tsx
   src/components/   Design system, imported from each folder's index.ts:
                     brand/ (logo, splash, spinner) · ui/ (buttons, fields, modal, toasts…)
-                    order/ · reservation/ · restaurant/ (animated domain pieces)
+                    layout/ (header, footer) · access/ (login form)
+                    order/ · reservation/ · restaurant/ (animated domain pieces, explorer)
   src/lib/          Small helpers: cx (class names), cssVars, reduced-motion detection
   src/data/         Temporary fixtures while the backend endpoint does not exist yet
   src/styles/       tokens.css (design tokens) and global.css

@@ -12,8 +12,8 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 
 | Spec | Rol | US | SP | Sprint | spec | plan | tasks |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| [001-acceso-comensal](001-acceso-comensal/spec.md) | Comensal | 1, 3 | 4 | 1 | ✅ | — | — |
-| [002-elegir-restaurante](002-elegir-restaurante/spec.md) | Comensal | 5, 7, 9 | 8 | 1 | ✅ | — | — |
+| [001-acceso-comensal](001-acceso-comensal/spec.md) | Comensal | 1, 3 | 4 | 1 | ✅ | ✅ | ✅ |
+| [002-elegir-restaurante](002-elegir-restaurante/spec.md) | Comensal | 5, 7, 9 | 8 | 1 | ✅ | ✅ | ✅ |
 | [003-cuenta-restaurante](003-cuenta-restaurante/spec.md) | Restaurante | 2, 4 | 4 | 1 | ✅ | — | — |
 | [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | — | — |
 | [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | — | — |
@@ -45,6 +45,10 @@ Dudas que no hacía falta llevar a la PO. Ya están incorporadas en cada spec.
 | 18/10 | 001 | El usuario para ingresar es el email |
 | 18/10 | 001 | Un email ya registrado no crea otra cuenta; se informa sin revelar más datos |
 | 18/10 | 002 | Filtro de precio provisorio: nivel $–$$$$ cargado en los datos de prueba de cada restaurante, hasta que existan reseñas con gasto (US-50) |
+| 19/10 | 001, 003 | Reemplaza la del 18/10 sobre contraseñas: de 8 a 128 caracteres, con al menos una letra y un número, cualquier otro carácter permitido y distinta del email |
+| 21/10 | 001 | El registro del comensal también pide su nombre (para saludarlo y para que el restaurante sepa quién reservó) |
+| 21/10 | 001, 003 | La API de acceso conserva los nombres en español (`/api/comensales`, `/api/restaurantes`, `nombre`, `id_comensal`…), como excepción al glosario de `AGENTS.md`. Lo nuevo sigue el glosario en inglés |
+| 21/10 | 002 | Restaurantes de prueba con menú y precios cargados en el frontend (`frontend/src/data/restaurants.fixture.ts`) para la demo del Sprint 1, hasta que exista el endpoint de restaurantes (spec 004) |
 
 ## Notas de formato
 
