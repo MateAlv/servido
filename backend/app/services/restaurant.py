@@ -1,18 +1,24 @@
 import re
 
 CUIT_PATTERN = re.compile(r"^[0-9]{11}$")
+# Spaces, dots and every dash a keyboard or phone may type: - ‐ ‑ ‒ – —
+CUIT_SEPARATORS = re.compile(r"[\s.\-\u2010-\u2014]")
 CUIT_WEIGHTS = (5, 4, 3, 2, 7, 6, 5, 4, 3, 2)
 PHONE_PATTERN = re.compile(r"^\+?[0-9 ()\-]{6,30}$")
 
 
 def normalize_cuit(cuit: str) -> str:
-    """Accepts the usual written forms (20-30500010912 or 20 30500010912) and keeps the digits."""
-    return cuit.replace("-", "").replace(" ", "")
+    """Accepts the usual written forms (30-71234567-1, 30.71234567.1, 30 71234567 1)."""
+    return CUIT_SEPARATORS.sub("", cuit)
+
+
+def has_cuit_length(cuit: str) -> bool:
+    return CUIT_PATTERN.fullmatch(cuit) is not None
 
 
 def is_valid_cuit(cuit: str) -> bool:
     """Checks the 11 digits and the verifier digit (módulo 11), as AFIP computes it."""
-    if not CUIT_PATTERN.fullmatch(cuit):
+    if not has_cuit_length(cuit):
         return False
     total = sum(int(digit) * weight for digit, weight in zip(cuit[:10], CUIT_WEIGHTS, strict=True))
     verifier = 11 - total % 11

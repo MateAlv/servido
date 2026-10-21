@@ -3,7 +3,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from app.services.auth import normalize_email, validate_email, validate_password
-from app.services.restaurant import is_valid_cuit, is_valid_phone, normalize_cuit
+from app.services.restaurant import has_cuit_length, is_valid_cuit, is_valid_phone, normalize_cuit
 
 
 class RestaurantRegistrationRequest(BaseModel):
@@ -34,8 +34,10 @@ class RestaurantRegistrationRequest(BaseModel):
     @classmethod
     def cuit_must_be_valid(cls, value: str) -> str:
         normalized = normalize_cuit(value)
+        if not has_cuit_length(normalized):
+            raise ValueError("El CUIT tiene que tener 11 dígitos.")
         if not is_valid_cuit(normalized):
-            raise ValueError("Ingresá un CUIT válido de 11 dígitos.")
+            raise ValueError("El CUIT no es válido: revisá los números.")
         return normalized
 
     @field_validator("telefono")
