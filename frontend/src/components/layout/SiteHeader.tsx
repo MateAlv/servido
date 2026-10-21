@@ -34,7 +34,6 @@ export function SiteHeader() {
           <div className={styles.links}>
             <NavLink to="/mapa">Restaurantes</NavLink>
             <Link to="/#como">Cómo funciona</Link>
-            <Link to="/#restaurantes">Para restaurantes</Link>
           </div>
         )}
 

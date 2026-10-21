@@ -13,16 +13,17 @@ import {
   useMap,
 } from 'react-leaflet'
 
-import type { RestaurantPublic } from '../../data/restaurants.fixture'
+import { averageRating, type RestaurantPublic } from '../../data/restaurants.fixture'
 import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../lib/geo'
 import { OCCUPANCY_LABELS } from '../../lib/occupancy'
-import { Button } from '../ui'
+import { Button, IconStar } from '../ui'
 import { MapPin } from './MapPin'
 import { PIN_STATUS_BY_OCCUPANCY } from './pinStatus'
 import { OccupancyMeter } from './OccupancyMeter'
 import styles from './RestaurantMap.module.css'
 
 const DEFAULT_CENTER: GeoPoint = { lat: -34.6037, lng: -58.3816 } // Buenos Aires
+const POPUP_WIDTH = 280
 
 type RestaurantMapProps = {
   restaurants: RestaurantPublic[]
@@ -95,6 +96,7 @@ export function RestaurantMap({
       {restaurants.map((restaurant, index) => {
         const selected = restaurant.id === selectedId
         const distKm = isValidPoint(diner) ? distanceKm(diner, restaurant.location) : null
+        const rating = averageRating(restaurant)
         const statusLabel = `concurrencia ${OCCUPANCY_LABELS[restaurant.occupancy].toLowerCase()}`
         const icon = divIcon({
           className: styles.pinWrapper,
@@ -123,31 +125,60 @@ export function RestaurantMap({
             zIndexOffset={selected ? 1000 : 0}
             eventHandlers={{ click: () => onSelect(restaurant) }}
           >
-            <Popup className={styles.popup} maxWidth={280}>
-              <h3 className={styles.popupTitle}>{restaurant.name}</h3>
-              <div className={styles.popupMeta}>
-                <span>{restaurant.cuisine}</span> · <span>{restaurant.priceTier}</span>
-                <OccupancyMeter level={restaurant.occupancy} showLabel />
-              </div>
-              <div className={styles.popupRow}>
-                <span className={styles.popupLabel}>Barrio</span>
-                <span>{restaurant.location.neighborhood}</span>
-              </div>
-              <div className={styles.popupRow}>
-                <span className={styles.popupLabel}>Dirección</span>
-                <span>{restaurant.location.address}</span>
-              </div>
-              {distKm !== null && (
-                <div className={styles.popupRow}>
-                  <span className={styles.popupLabel}>Distancia</span>
-                  <span>{formatDistance(distKm)}</span>
+            <Popup
+              className={styles.popup}
+              minWidth={POPUP_WIDTH}
+              maxWidth={POPUP_WIDTH}
+              autoPanPaddingTopLeft={[56, 16]}
+              autoPanPaddingBottomRight={[16, 16]}
+            >
+              <article className={styles.card}>
+                <img
+                  className={styles.cover}
+                  src={restaurant.photo.cover}
+                  alt=""
+                  width={POPUP_WIDTH}
+                  height={120}
+                />
+                <div className={styles.cardBody}>
+                  <div className={styles.cardHead}>
+                    <h3 className={styles.popupTitle}>{restaurant.name}</h3>
+                    <span className={styles.tier} aria-label={`Precio ${restaurant.priceTier}`}>
+                      {restaurant.priceTier}
+                    </span>
+                  </div>
+                  <p className={styles.popupMeta}>
+                    {rating !== null && (
+                      <span className={styles.stars}>
+                        <IconStar className={styles.star} />
+                        {rating.toLocaleString('es-AR', { maximumFractionDigits: 1 })}
+                      </span>
+                    )}
+                    <span>{restaurant.cuisine}</span>
+                  </p>
+                  <OccupancyMeter level={restaurant.occupancy} showLabel />
+                  <dl className={styles.facts}>
+                    <dt>Barrio</dt>
+                    <dd>{restaurant.location.neighborhood}</dd>
+                    <dt>Dirección</dt>
+                    <dd>{restaurant.location.address}</dd>
+                    {distKm !== null && (
+                      <>
+                        <dt>Distancia</dt>
+                        <dd>{formatDistance(distKm)}</dd>
+                      </>
+                    )}
+                  </dl>
+                  <Button
+                    size="sm"
+                    fullWidth
+                    to={`/restaurantes/${restaurant.id}`}
+                    linkState={detailState}
+                  >
+                    Ver detalle
+                  </Button>
                 </div>
-              )}
-              <div className={styles.popupActions}>
-                <Button size="sm" to={`/restaurantes/${restaurant.id}`} linkState={detailState}>
-                  Ver detalle
-                </Button>
-              </div>
+              </article>
             </Popup>
           </Marker>
         )
