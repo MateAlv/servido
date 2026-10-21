@@ -1,7 +1,7 @@
 .rating {
   display: inline-flex;
   gap: 2px;
-  color: #f1b72f;
+  color: var(--color-star);
   font-size: var(--star-size, 28px);
   line-height: 0;
 }

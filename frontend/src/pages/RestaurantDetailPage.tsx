@@ -3,9 +3,19 @@ import { Link, useLocation, useParams } from 'react-router'
 
 import { LogoSpinner } from '../components/brand'
 import { OccupancyMeter } from '../components/restaurant'
-import { Button, Card, IconArrowRight, IconPin, Reveal, StatusPill } from '../components/ui'
-import { fetchRestaurant } from '../data/restaurants.fixture'
+import {
+  Button,
+  Card,
+  IconArrowRight,
+  IconPin,
+  Reveal,
+  StarRating,
+  StatusPill,
+} from '../components/ui'
+import { averageRating, fetchRestaurant } from '../data/restaurants.fixture'
 import styles from './RestaurantDetailPage.module.css'
+
+const DATE_FORMAT = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long' })
 
 const PRICE_FORMAT = new Intl.NumberFormat('es-AR', {
   style: 'currency',
@@ -52,9 +62,18 @@ export function RestaurantDetailPage() {
     )
   }
 
+  const rating = averageRating(restaurant)
+
   return (
     <main className={styles.container}>
       {back}
+      <img
+        className={styles.cover}
+        src={restaurant.photo.cover}
+        alt={`Foto de ${restaurant.name}`}
+        width={1200}
+        height={600}
+      />
       <div className={styles.layout}>
         <div className={styles.main}>
           <Reveal>
@@ -68,7 +87,20 @@ export function RestaurantDetailPage() {
               <li className={styles.fact}>
                 <span className={styles.factLabel}>Precio</span>
                 <span className={styles.tier}>{restaurant.priceTier}</span>
+                <span className={styles.factNote}>
+                  {PRICE_FORMAT.format(restaurant.averageSpendPerPerson)} por persona
+                </span>
               </li>
+              {rating !== null && (
+                <li className={styles.fact}>
+                  <span className={styles.factLabel}>Opiniones</span>
+                  <span className={styles.rating}>
+                    <StarRating value={rating} size={16} />
+                    {rating.toLocaleString('es-AR', { maximumFractionDigits: 1 })}
+                  </span>
+                  <span className={styles.factNote}>{restaurant.reviews.length} reseñas</span>
+                </li>
+              )}
               <li className={styles.fact}>
                 <span className={styles.factLabel}>Concurrencia ahora</span>
                 <OccupancyMeter level={restaurant.occupancy} />
@@ -118,6 +150,30 @@ export function RestaurantDetailPage() {
                     </ul>
                   </section>
                 ))
+              )}
+            </Card>
+          </Reveal>
+
+          <Reveal delay={180}>
+            <Card className={styles.reviews}>
+              <h2 className={styles.sectionTitle}>Opiniones</h2>
+              {restaurant.reviews.length === 0 ? (
+                <p className={styles.muted}>Todavía nadie dejó su opinión.</p>
+              ) : (
+                <ul className={styles.reviewList}>
+                  {restaurant.reviews.map((review) => (
+                    <li key={`${review.author}-${review.date}`} className={styles.review}>
+                      <div className={styles.reviewHead}>
+                        <span className={styles.reviewAuthor}>{review.author}</span>
+                        <StarRating value={review.rating} size={14} />
+                      </div>
+                      <p className={styles.reviewText}>{review.comment}</p>
+                      <span className={styles.factNote}>
+                        Visitó el {DATE_FORMAT.format(new Date(`${review.date}T12:00:00`))}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               )}
             </Card>
           </Reveal>

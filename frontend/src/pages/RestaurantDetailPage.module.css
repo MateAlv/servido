@@ -28,6 +28,18 @@
   transform: scaleX(-1);
 }
 
+.cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  max-height: 340px;
+  margin-bottom: 22px;
+  border-radius: var(--radius-card);
+  object-fit: cover;
+  background: var(--color-surface-sunken);
+}
+
 .layout {
   display: grid;
   grid-template-columns: 1fr 320px;
@@ -86,6 +98,12 @@
 .tier {
   font: 800 20px / 1 var(--font-display);
   letter-spacing: 0.06em;
+}
+
+.factNote {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
 }
 
 .tags {
@@ -176,6 +194,53 @@
   flex: none;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+.rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+}
+
+.reviews {
+  display: grid;
+  gap: 14px;
+}
+
+.reviewList {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--color-line);
+}
+
+.review:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.reviewHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reviewAuthor {
+  font-weight: 800;
+}
+
+.reviewText {
+  margin: 0;
 }
 
 .side {
