@@ -1,0 +1,33 @@
+.footer {
+  padding: 26px 0 40px;
+  background: var(--color-inverse-bg);
+  color: var(--color-inverse-muted);
+  font-size: 14px;
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.devTools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.devTools a {
+  font-weight: 800;
+}
+
+@media (max-width: 560px) {
+  .inner {
+    padding: 0 16px;
+  }
+}
