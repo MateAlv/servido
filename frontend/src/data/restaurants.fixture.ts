@@ -3,6 +3,18 @@ import type { GeoPoint } from '../lib/geo'
 
 export type RestaurantPriceTier = '$' | '$$' | '$$$' | '$$$$'
 
+export type MenuDish = {
+  name: string
+  /** Price in Argentine pesos. */
+  price: number
+  description?: string
+}
+
+export type MenuSection = {
+  category: string
+  dishes: MenuDish[]
+}
+
 export type RestaurantPublic = {
   id: string
   name: string
@@ -15,6 +27,8 @@ export type RestaurantPublic = {
   location: GeoPoint & { address: string; neighborhood: string }
   /** Concurrence indicator levels: low/medium/high (spec 002, FR-002). */
   occupancy: OccupancyLevel
+  /** Dishes with their current prices (US-9 S3). Empty until the restaurant loads its menu. */
+  menu: MenuSection[]
 }
 
 /**
@@ -36,6 +50,23 @@ export const RESTAURANTS_FIXTURE: RestaurantPublic[] = [
       neighborhood: 'Palermo',
     },
     occupancy: 'medium',
+    menu: [
+      {
+        category: 'Entradas',
+        dishes: [
+          { name: 'Provoleta a la parrilla', price: 9800 },
+          { name: 'Empanada de carne cortada a cuchillo', price: 3200 },
+        ],
+      },
+      {
+        category: 'Principales',
+        dishes: [
+          { name: 'Bife de chorizo con papas', price: 24500, description: '400 g, a punto' },
+          { name: 'Entraña con ensalada mixta', price: 21900 },
+        ],
+      },
+      { category: 'Postres', dishes: [{ name: 'Flan con dulce de leche', price: 6200 }] },
+    ],
   },
   {
     id: 'r-bodegon',
@@ -51,6 +82,16 @@ export const RESTAURANTS_FIXTURE: RestaurantPublic[] = [
       neighborhood: 'Almagro',
     },
     occupancy: 'low',
+    menu: [
+      {
+        category: 'Principales',
+        dishes: [
+          { name: 'Milanesa napolitana con puré', price: 12900 },
+          { name: 'Guiso de lentejas', price: 9500, description: 'Opción vegetariana' },
+        ],
+      },
+      { category: 'Postres', dishes: [{ name: 'Budín de pan', price: 4800 }] },
+    ],
   },
   {
     id: 'r-verde',
@@ -66,6 +107,16 @@ export const RESTAURANTS_FIXTURE: RestaurantPublic[] = [
       neighborhood: 'Palermo',
     },
     occupancy: 'medium',
+    menu: [
+      {
+        category: 'Principales',
+        dishes: [
+          { name: 'Bowl de quinoa y palta', price: 16800, description: 'Vegano' },
+          { name: 'Wrap de falafel', price: 14500 },
+        ],
+      },
+      { category: 'Bebidas', dishes: [{ name: 'Limonada con jengibre', price: 5200 }] },
+    ],
   },
   {
     id: 'r-terraza',
@@ -81,6 +132,19 @@ export const RESTAURANTS_FIXTURE: RestaurantPublic[] = [
       neighborhood: 'Puerto Madero',
     },
     occupancy: 'high',
+    menu: [
+      {
+        category: 'Entradas',
+        dishes: [{ name: 'Rabas con alioli', price: 21500 }],
+      },
+      {
+        category: 'Principales',
+        dishes: [
+          { name: 'Salmón grillado con vegetales', price: 46800 },
+          { name: 'Paella para dos', price: 79000 },
+        ],
+      },
+    ],
   },
   {
     id: 'r-cafe',
@@ -96,6 +160,66 @@ export const RESTAURANTS_FIXTURE: RestaurantPublic[] = [
       neighborhood: 'San Telmo',
     },
     occupancy: 'low',
+    menu: [
+      {
+        category: 'Brunch',
+        dishes: [
+          { name: 'Tostado de jamón y queso', price: 7900 },
+          { name: 'Huevos revueltos con palta', price: 11200 },
+        ],
+      },
+      { category: 'Bebidas', dishes: [{ name: 'Flat white', price: 4300 }] },
+    ],
+  },
+  {
+    id: 'r-canitas',
+    name: 'Sushi Cañitas',
+    description: 'Barra de sushi y cocina nikkei, con opciones sin TACC.',
+    cuisine: 'Japonesa',
+    priceTier: '$$$',
+    dietaryRestrictions: ['Sin TACC'],
+    location: {
+      lat: -34.5705,
+      lng: -58.4345,
+      address: 'Báez 280',
+      neighborhood: 'Las Cañitas',
+    },
+    occupancy: 'medium',
+    menu: [
+      {
+        category: 'Principales',
+        dishes: [
+          { name: 'Combinado de 15 piezas', price: 32500 },
+          { name: 'Ceviche nikkei', price: 27800 },
+        ],
+      },
+      { category: 'Postres', dishes: [{ name: 'Mochi de matcha', price: 8900 }] },
+    ],
+  },
+  {
+    id: 'r-obelisco',
+    name: 'Pizzería del Centro',
+    description: 'Pizza al molde y fainá, de las de siempre, a metros del Obelisco.',
+    cuisine: 'Pizzería',
+    priceTier: '$',
+    dietaryRestrictions: [],
+    location: {
+      lat: -34.6045,
+      lng: -58.3838,
+      address: 'Av. Corrientes 1150',
+      neighborhood: 'San Nicolás',
+    },
+    occupancy: 'high',
+    menu: [
+      {
+        category: 'Pizzas',
+        dishes: [
+          { name: 'Muzzarella grande', price: 13500 },
+          { name: 'Fugazzeta rellena', price: 14900 },
+        ],
+      },
+      { category: 'Bebidas', dishes: [{ name: 'Gaseosa 500 ml', price: 2900 }] },
+    ],
   },
 ]
 
@@ -105,4 +229,9 @@ export const RESTAURANTS_FIXTURE: RestaurantPublic[] = [
  */
 export async function fetchRestaurants(): Promise<RestaurantPublic[]> {
   return RESTAURANTS_FIXTURE
+}
+
+/** Simulates `GET /api/restaurants/{id}`; `undefined` when it does not exist. */
+export async function fetchRestaurant(id: string): Promise<RestaurantPublic | undefined> {
+  return RESTAURANTS_FIXTURE.find((restaurant) => restaurant.id === id)
 }

@@ -17,23 +17,20 @@ import type { RestaurantPublic } from '../../data/restaurants.fixture'
 import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../lib/geo'
 import { OCCUPANCY_LABELS } from '../../lib/occupancy'
 import { Button } from '../ui'
-import { MapPin, type PinStatus } from './MapPin'
-import { OccupancyMeter, type OccupancyLevel } from './OccupancyMeter'
+import { MapPin } from './MapPin'
+import { PIN_STATUS_BY_OCCUPANCY } from './pinStatus'
+import { OccupancyMeter } from './OccupancyMeter'
 import styles from './RestaurantMap.module.css'
 
 const DEFAULT_CENTER: GeoPoint = { lat: -34.6037, lng: -58.3816 } // Buenos Aires
-
-const PIN_STATUS: Record<OccupancyLevel, PinStatus> = {
-  low: 'available',
-  medium: 'few',
-  high: 'full',
-}
 
 type RestaurantMapProps = {
   restaurants: RestaurantPublic[]
   diner: GeoPoint | null
   onSelect: (restaurant: RestaurantPublic) => void
   selectedId?: string
+  /** Router state for the "Ver detalle" link, so the detail can send the diner back here. */
+  detailState?: unknown
 }
 
 function Recenter({ center }: { center: GeoPoint }) {
@@ -44,7 +41,23 @@ function Recenter({ center }: { center: GeoPoint }) {
   return null
 }
 
-export function RestaurantMap({ restaurants, diner, onSelect, selectedId }: RestaurantMapProps) {
+/** Brings the selected restaurant into view, e.g. after choosing it from the list. */
+function FocusSelected({ lat, lng }: { lat?: number; lng?: number }) {
+  const map = useMap()
+  useEffect(() => {
+    if (lat !== undefined && lng !== undefined) map.panTo([lat, lng])
+  }, [map, lat, lng])
+  return null
+}
+
+export function RestaurantMap({
+  restaurants,
+  diner,
+  onSelect,
+  selectedId,
+  detailState,
+}: RestaurantMapProps) {
+  const selectedPoint = restaurants.find((restaurant) => restaurant.id === selectedId)?.location
   const center = useMemo(() => (isValidPoint(diner) ? diner : DEFAULT_CENTER), [diner])
 
   return (
@@ -59,6 +72,7 @@ export function RestaurantMap({ restaurants, diner, onSelect, selectedId }: Rest
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <Recenter center={center} />
+      <FocusSelected lat={selectedPoint?.lat} lng={selectedPoint?.lng} />
 
       {isValidPoint(diner) && (
         <CircleMarker
@@ -71,7 +85,8 @@ export function RestaurantMap({ restaurants, diner, onSelect, selectedId }: Rest
             fillOpacity: 1,
           }}
         >
-          <Tooltip permanent direction="top" offset={[0, -8]}>
+          {/* Below the dot: restaurant pins grow upwards from their own point. */}
+          <Tooltip permanent direction="bottom" offset={[0, 8]}>
             Tu ubicación
           </Tooltip>
         </CircleMarker>
@@ -80,15 +95,17 @@ export function RestaurantMap({ restaurants, diner, onSelect, selectedId }: Rest
       {restaurants.map((restaurant, index) => {
         const selected = restaurant.id === selectedId
         const distKm = isValidPoint(diner) ? distanceKm(diner, restaurant.location) : null
+        const statusLabel = `concurrencia ${OCCUPANCY_LABELS[restaurant.occupancy].toLowerCase()}`
         const icon = divIcon({
           className: styles.pinWrapper,
           html: renderToStaticMarkup(
             <MapPin
               name={restaurant.name}
-              label={OCCUPANCY_LABELS[restaurant.occupancy]}
-              status={PIN_STATUS[restaurant.occupancy]}
+              status={PIN_STATUS_BY_OCCUPANCY[restaurant.occupancy]}
+              statusLabel={statusLabel}
               selected={selected}
               index={index}
+              interactive={false}
             />,
           ),
           iconSize: [0, 0],
@@ -100,8 +117,8 @@ export function RestaurantMap({ restaurants, diner, onSelect, selectedId }: Rest
             key={restaurant.id}
             position={[restaurant.location.lat, restaurant.location.lng]}
             icon={icon}
-            alt={`${restaurant.name}, ${restaurant.location.neighborhood}`}
-            title={restaurant.name}
+            alt={`${restaurant.name}, ${statusLabel}`}
+            title={`${restaurant.name}, ${statusLabel}`}
             riseOnHover
             zIndexOffset={selected ? 1000 : 0}
             eventHandlers={{ click: () => onSelect(restaurant) }}
@@ -127,7 +144,7 @@ export function RestaurantMap({ restaurants, diner, onSelect, selectedId }: Rest
                 </div>
               )}
               <div className={styles.popupActions}>
-                <Button size="sm" to={`/restaurantes/${restaurant.id}`}>
+                <Button size="sm" to={`/restaurantes/${restaurant.id}`} linkState={detailState}>
                   Ver detalle
                 </Button>
               </div>

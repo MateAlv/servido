@@ -62,6 +62,18 @@
   margin-top: 12px;
 }
 
+/* Leaflet paints every link in the map blue; the button keeps its own text color. */
+.popup .popupActions a {
+  color: var(--color-on-primary);
+}
+
+@media (max-width: 960px) {
+  .map {
+    height: 52vh;
+    min-height: 340px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .map :global(.leaflet-marker-icon) {
     transition: none !important;
