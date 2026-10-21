@@ -56,6 +56,12 @@ Como **Responsable del restaurante**, quiero Ingresar a Servido! utilizando mi u
 
 - **Restaurante**: id (UUID), mail (unique), CUIT (unique, 11 dígitos), telefono, auth_provider, password_hash.
 
+## Límites de alcance *(MVP Boundaries)*
+
+- **Dentro**: registro con nombre, mail, CUIT, teléfono y contraseña; ingreso con mail y contraseña.
+
+- **Fuera** *(decisión del equipo, 21/10)*: registro e ingreso con Google, aunque el backlog lo menciona en US-2: pasa a US-28 (Sprint 4). El escenario 3 de US-4 (HTTP 403 con el rol equivocado) se prueba cuando existan endpoints exclusivos de cada rol (Sprint 2, specs 004 y 006). Rate limiting y sanitización de los edge cases quedan para después del MVP.
+
 ## Success Criteria *(mandatory)*
 
 - **SC-001**: 0% de restaurantes duplicados por CUIT o Mail en la base de datos (garantizado por constraints de DB e integraciones BDD).
