@@ -42,6 +42,15 @@
   margin-left: auto;
 }
 
+.greeting {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.greeting b {
+  color: var(--color-primary-dark);
+}
+
 /* Hero */
 /* Clips the rotating decorations so they never cause horizontal scroll. */
 .hero {

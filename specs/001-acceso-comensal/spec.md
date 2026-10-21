@@ -54,7 +54,7 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 - **Email ya registrado** al crear la cuenta *(decisión del equipo, 18/10)*: el sistema informa que ya existe una cuenta asociada a ese email y no crea un duplicado, sin revelar más datos.
 
-- **Requisitos de contraseña** *(decisión del equipo, 18/10, según OWASP ASVS 5.0)*: entre 8 y 128 caracteres; se acepta cualquier carácter, incluidos espacios y acentos; no se exigen combinaciones de mayúsculas, números o símbolos; se rechazan las contraseñas más comunes (por ejemplo "12345678" o "password") y la que es igual al email. NIST SP 800-63B-4 pide 15 caracteres cuando la contraseña es el único factor; para el MVP se adopta el mínimo de 8 de OWASP.
+- **Requisitos de contraseña** *(decisión del equipo, 19/10)*: entre 8 y 128 caracteres; debe contener al menos una letra y un número; se acepta cualquier otro carácter, incluidos espacios y acentos; no puede ser idéntica al email.
 
 - **"Usuario" en el ingreso** *(decisión del equipo, 18/10)*: US-3 pide "email y nombre de usuario", pero el registro (US-1) solo captura email y contraseña, así que el usuario es el email.
 
@@ -85,6 +85,7 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 - **FR-007**  *(US-3)*: El sistema MUST exigir que los datos estén completos y en formato válido antes de intentar el ingreso.
 
 - **FR-008**  *(US-3)*: Con credenciales válidas, el sistema MUST dar acceso a la cuenta del comensal.
+- **FR-008a** *(US-3)*: El servidor MUST emitir un JWT en el JSON de respuesta, firmado con HS256 usando un secreto provisto por variable de entorno, con una expiración de 1 hora. No se usarán cookies ni se persistirán sesiones en la base de datos.
 
 - **FR-009**  *(US-3)*: Con credenciales incorrectas, el sistema MUST informar que no se pudo iniciar sesión sin indicar cuál dato es incorrecto; el mensaje MUST ser idéntico para email inexistente y contraseña errónea.
 
@@ -92,13 +93,14 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 - **FR-011**: La contraseña MUST almacenarse de forma no reversible y MUST NOT aparecer en logs ni respuestas.
 
-- **FR-012**  *(US-1)*: La contraseña MUST tener entre 8 y 128 caracteres y aceptar cualquier carácter. El sistema MUST NOT exigir combinaciones de tipos de caracteres, MUST rechazar contraseñas comunes o iguales al email indicando el motivo, y el formulario MUST mostrar los requisitos antes de enviarlo.
+- **FR-012**  *(US-1)*: La contraseña MUST tener entre 8 y 128 caracteres, MUST contener al menos una letra y un número, y MUST aceptar cualquier otro carácter. MUST NOT ser idéntica al email y el formulario MUST mostrar estos requisitos antes de enviarlo.
 
 ### Key Entities
 
 - **CuentaComensal**: email (único), credencial de acceso, fecha de creación.
 
-- **SesiónComensal**: cuenta autenticada, momento de inicio.
+- La autenticación es stateless: no se persiste una entidad de sesión en la base
+  de datos. El JWT contiene la identidad autenticada y su expiración.
 
 ## Límites de alcance *(MVP Boundaries)*
 
@@ -110,13 +112,15 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 ### Measurable Outcomes
 
-- **SC-001**: El 90% de los comensales completa el registro en menos de 2 minutos en el primer intento.
+- **SC-001**: El 0% de las cuentas creadas puede estar duplicada en la base de datos.
 
 - **SC-002**: 100% de los datos inválidos son detectados antes de crear la cuenta (0 cuentas con email o contraseña inválidos).
 
 - **SC-003**: 100% de los ingresos fallidos muestran un mensaje idéntico sin revelar qué dato falló.
 
 - **SC-004**: 0 apariciones de la contraseña en texto plano en pantalla, almacenamiento o logs.
+
+- **SC-005**: El 100% de los errores de formulario se informa al usuario sin refrescar la página.
 
 ## Assumptions
 

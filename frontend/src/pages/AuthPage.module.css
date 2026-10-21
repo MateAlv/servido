@@ -1,0 +1,37 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  background: var(--color-bg);
+}
+
+.card {
+  width: min(100%, 440px);
+  display: grid;
+  gap: var(--space-4);
+}
+
+.card h1,
+.card p {
+  margin: 0;
+}
+.card form {
+  display: grid;
+  gap: var(--space-4);
+}
+.error {
+  color: var(--color-error);
+}
+.footer {
+  text-align: center;
+  color: var(--color-text-muted);
+}
+.footer a {
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.selector {
+  width: 100%;
+}
