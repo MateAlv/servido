@@ -14,12 +14,18 @@ export function RegisterPage() {
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [confirmationError, setConfirmationError] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+    if (passwordConfirmation !== password) {
+      setConfirmationError('Las contraseñas no coinciden.')
+      return
+    }
     setLoading(true)
     try {
       const { error } = await api.POST('/api/comensales', {
@@ -65,6 +71,17 @@ export function RegisterPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               hint="Entre 8 y 128 caracteres, con al menos una letra y un número."
+              autoComplete="new-password"
+              required
+            />
+            <PasswordField
+              label="Confirmar contraseña *"
+              value={passwordConfirmation}
+              onChange={(event) => {
+                setPasswordConfirmation(event.target.value)
+                setConfirmationError('')
+              }}
+              error={confirmationError}
               autoComplete="new-password"
               required
             />

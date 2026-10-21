@@ -26,6 +26,8 @@ Como **Comensal**, quiero completar un formulario con mis datos, para crear una 
 
 4. **Dado** que todos los datos obligatorios están completos y son válidos, **Cuando** continúo, **Entonces** puedo seguir con el proceso de creación de la cuenta y esta queda creada.
 
+5. **Dado** que la confirmación de la contraseña no coincide con la contraseña, **Cuando** intento continuar, **Entonces** el sistema me avisa que las contraseñas no coinciden y no crea la cuenta.
+
 ---
 
 ### US-3 — Ingresar usuario y contraseña (Prioridad: -, Estimación: 1)
@@ -96,6 +98,8 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 - **FR-011**: La contraseña MUST almacenarse de forma no reversible y MUST NOT aparecer en logs ni respuestas.
 
 - **FR-012**  *(US-1)*: La contraseña MUST tener entre 8 y 128 caracteres, MUST contener al menos una letra y un número, y MUST aceptar cualquier otro carácter. MUST NOT ser idéntica al email y el formulario MUST mostrar estos requisitos antes de enviarlo.
+
+- **FR-013**  *(US-1; decisión del equipo, 21/10)*: El formulario de registro MUST pedir la contraseña dos veces ("Confirmar contraseña") y MUST NOT enviar el registro si no coinciden. Es un control del formulario: la API no recibe la confirmación.
 
 ### Key Entities
 

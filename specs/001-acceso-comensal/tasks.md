@@ -116,6 +116,7 @@ without persisted sessions or inconsistent credential errors.
 
 - [X] T037 [US1] Ask for the diner's `nombre` at registration: nullable `comensales.nombre` in revision `002_restaurant_names`, required `nombre` in `RegistrationRequest`, and a `Nombre *` field in `frontend/src/pages/RegisterPage.tsx`
 - [X] T038 [US3] Add `GET /api/me` in `backend/app/api/account.py` and keep the token in `sessionStorage` (`frontend/src/api/session.ts`) to show who is signed in; tested by `frontend/src/components/layout/SiteHeader.test.tsx` › `US-3 S3 shows who is signed in and their role` and `US-3 S5 cerrar sesión forgets the token and shows the way in again`, and `frontend/src/pages/HomePage.test.tsx` › `US-3 S3 a signed-in diner lands on choosing a restaurant`
+- [X] T039 [US1] Ask for the password twice at registration (FR-013), client-side only, in `RegisterPage.tsx` and `RestaurantRegisterPage.tsx` (spec 003, US-2 S4); tested by `frontend/src/pages/AuthPages.test.tsx` › `US-1 S5 …` and `US-2 S4 …`
 
 ---
 
