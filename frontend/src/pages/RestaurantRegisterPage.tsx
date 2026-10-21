@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router'
 
 import { api } from '../api/client'
 import { getApiErrorMessage, getRequestErrorMessage } from '../api/errors'
-import { Button, Card, TextField } from '../components/ui'
+import { Button, Card, PasswordField, TextField, useToast } from '../components/ui'
+import { RedirectIfSignedIn } from '../components/access'
 import styles from './AuthPage.module.css'
 
 const FALLBACK_ERROR = 'No pudimos crear la cuenta del restaurante.'
@@ -26,6 +27,7 @@ const EMPTY_FIELDS: RestaurantFields = {
 
 export function RestaurantRegisterPage() {
   const navigate = useNavigate()
+  const toast = useToast()
   const [fields, setFields] = useState(EMPTY_FIELDS)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -42,7 +44,8 @@ export function RestaurantRegisterPage() {
     try {
       const { error } = await api.POST('/api/restaurantes', { body: fields })
       if (error) throw new Error(getApiErrorMessage(error, FALLBACK_ERROR))
-      navigate('/ingresar?rol=restaurante')
+      toast('¡Listo! La cuenta del restaurante está creada. Ingresá para seguir.', { tone: 'ok' })
+      navigate('/ingresar?rol=restaurante', { state: { email: fields.email } })
     } catch (requestError) {
       setError(getRequestErrorMessage(requestError, FALLBACK_ERROR))
     } finally {
@@ -51,64 +54,71 @@ export function RestaurantRegisterPage() {
   }
 
   return (
-    <main className={styles.page}>
-      <Card className={styles.card}>
-        <h1>Sumá tu local</h1>
-        <p>Creá la cuenta de tu restaurante para recibir reservas en Servido!.</p>
-        <form onSubmit={submit} noValidate>
-          <TextField
-            label="Nombre del restaurante *"
-            value={fields.nombre}
-            onChange={fieldChange('nombre')}
-            autoComplete="organization"
-            required
-          />
-          <TextField
-            label="Email *"
-            type="email"
-            value={fields.email}
-            onChange={fieldChange('email')}
-            autoComplete="email"
-            required
-          />
-          <TextField
-            label="CUIT *"
-            inputMode="numeric"
-            value={fields.cuit}
-            onChange={fieldChange('cuit')}
-            hint="11 dígitos, con o sin guiones."
-            required
-          />
-          <TextField
-            label="Teléfono *"
-            type="tel"
-            value={fields.telefono}
-            onChange={fieldChange('telefono')}
-            autoComplete="tel"
-            required
-          />
-          <TextField
-            label="Contraseña *"
-            type="password"
-            value={fields.password}
-            onChange={fieldChange('password')}
-            hint="Entre 8 y 128 caracteres, con al menos una letra y un número."
-            autoComplete="new-password"
-            required
-          />
-          {error && (
-            <p className={styles.error} role="alert">
-              {error}
-            </p>
-          )}
-          <Button type="submit" fullWidth loading={loading}>
-            Crear cuenta del restaurante
-          </Button>
-        </form>
-        <p className={styles.footer}>
-          ¿Ya tenés cuenta? <Link to="/ingresar?rol=restaurante">Ingresá</Link>
-        </p>
-      </Card>
-    </main>
+    <RedirectIfSignedIn>
+      <main className={styles.page}>
+        <Card className={styles.card}>
+          <div className={styles.head}>
+            <p className={styles.eyebrow}>Cuenta de restaurante</p>
+            <h1 className={styles.title}>Sumá tu local</h1>
+            <p className={styles.lead}>Recibí reservas con el pedido ya elegido.</p>
+          </div>
+          <form onSubmit={submit} noValidate>
+            <TextField
+              label="Nombre del restaurante *"
+              value={fields.nombre}
+              onChange={fieldChange('nombre')}
+              autoComplete="organization"
+              required
+            />
+            <TextField
+              label="Email *"
+              type="email"
+              value={fields.email}
+              onChange={fieldChange('email')}
+              autoComplete="email"
+              required
+            />
+            <TextField
+              label="CUIT *"
+              inputMode="numeric"
+              value={fields.cuit}
+              onChange={fieldChange('cuit')}
+              hint="11 dígitos, con o sin guiones."
+              required
+            />
+            <TextField
+              label="Teléfono *"
+              type="tel"
+              value={fields.telefono}
+              onChange={fieldChange('telefono')}
+              autoComplete="tel"
+              required
+            />
+            <PasswordField
+              label="Contraseña *"
+              value={fields.password}
+              onChange={fieldChange('password')}
+              hint="Entre 8 y 128 caracteres, con al menos una letra y un número."
+              autoComplete="new-password"
+              required
+            />
+            {error && (
+              <p className={styles.error} role="alert">
+                {error}
+              </p>
+            )}
+            <Button type="submit" fullWidth loading={loading}>
+              Crear cuenta del restaurante
+            </Button>
+          </form>
+          <p className={styles.footer}>
+            ¿Ya tenés cuenta? <Link to="/ingresar?rol=restaurante">Ingresá</Link>
+          </p>
+          <p className={styles.footer}>
+            ¿Querés reservar? <Link to="/registrarme">Creá tu cuenta de comensal</Link>
+          </p>
+        </Card>
+      </main>
+    </RedirectIfSignedIn>
   )
 }

@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { api } from '../../api/client'
 import { getApiErrorMessage, getRequestErrorMessage } from '../../api/errors'
 import { signIn, type Account } from '../../api/session'
-import { Button, TextField } from '../ui'
+import { Button, PasswordField, TextField } from '../ui'
 import type { AccountRole } from './roles'
 import styles from './Access.module.css'
 
@@ -47,12 +47,14 @@ type AccessFormProps = {
   role: AccountRole
   onSignedIn: (account: Account) => void
   onRegister: () => void
+  /** Prefills the email, e.g. right after creating the account. */
+  initialEmail?: string
 }
 
-/** Email and password for one kind of account. Used by the login page and the login dialog. */
-export function AccessForm({ role, onSignedIn, onRegister }: AccessFormProps) {
+/** Email and password for one kind of account. */
+export function AccessForm({ role, onSignedIn, onRegister, initialEmail = '' }: AccessFormProps) {
   const queryClient = useQueryClient()
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -82,9 +84,8 @@ export function AccessForm({ role, onSignedIn, onRegister }: AccessFormProps) {
         autoComplete="email"
         required
       />
-      <TextField
+      <PasswordField
         label="Contraseña"
-        type="password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         autoComplete="current-password"
@@ -99,7 +100,7 @@ export function AccessForm({ role, onSignedIn, onRegister }: AccessFormProps) {
         Ingresar
       </Button>
       <Button variant="secondary" fullWidth onClick={onRegister}>
-        Registrarme
+        Crear una cuenta
       </Button>
     </form>
   )

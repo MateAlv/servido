@@ -5,52 +5,6 @@
   padding: 0 24px;
 }
 
-/* Header */
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  padding: 18px 0;
-}
-
-.brandLink {
-  display: inline-flex;
-  border-radius: var(--radius-small);
-  text-decoration: none;
-}
-
-.links {
-  display: flex;
-  gap: 22px;
-  margin-left: 30px;
-  font-weight: 800;
-}
-
-.links a {
-  text-decoration: none;
-  transition: color var(--duration-base) var(--ease-out);
-}
-
-.links a:hover {
-  color: var(--color-primary);
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-left: auto;
-}
-
-.greeting {
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.greeting b {
-  color: var(--color-primary-dark);
-}
-
 /* Hero */
 /* Clips the rotating decorations so they never cause horizontal scroll. */
 .hero {
@@ -92,6 +46,80 @@
   margin-bottom: 24px;
   color: var(--color-text-muted);
   font-size: var(--text-lg);
+}
+
+/* The way in for each role, right under the promise. */
+.access {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 660px;
+}
+
+.accessCard {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 18px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition:
+    border-color var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-spring);
+}
+
+.accessCard:hover {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.accessIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 22px;
+}
+
+.accessIconAlt {
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+}
+
+.accessTitle {
+  margin: 6px 0 0;
+  font: 800 22px / 1.1 var(--font-display);
+}
+
+.accessText {
+  margin: 0 0 8px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.accessActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  color: var(--color-primary-dark);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.explore:hover {
+  text-decoration: underline;
 }
 
 .ctas {
@@ -400,31 +428,6 @@
 }
 
 /* Footer */
-.footer {
-  padding: 26px 0 40px;
-  background: var(--color-inverse-bg);
-  color: var(--color-inverse-muted);
-  font-size: 14px;
-}
-
-.footerInner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px 20px;
-}
-
-.devTools {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.devTools a {
-  font-weight: 800;
-}
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -478,10 +481,6 @@
     grid-template-columns: 1fr;
   }
 
-  .links {
-    display: none;
-  }
-
   .art {
     min-height: 480px;
   }
@@ -492,8 +491,8 @@
     padding: 0 16px;
   }
 
-  .navCta {
-    display: none;
+  .access {
+    grid-template-columns: 1fr;
   }
 
   .art {

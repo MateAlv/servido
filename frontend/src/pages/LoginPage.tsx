@@ -1,42 +1,57 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 
 import {
   ACCOUNT_ROLE_OPTIONS,
   AccessForm,
+  RedirectIfSignedIn,
   registerPathFor,
   type AccountRole,
 } from '../components/access'
-import { Card, SegmentedControl } from '../components/ui'
+import { Card, SegmentedControl, useToast } from '../components/ui'
 import styles from './AuthPage.module.css'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const toast = useToast()
+  const { state } = useLocation()
   const [searchParams] = useSearchParams()
   // /ingresar?rol=restaurante opens the restaurant side, e.g. right after registering the restaurant.
   const [role, setRole] = useState<AccountRole>(
     searchParams.get('rol') === 'restaurante' ? 'restaurant' : 'diner',
   )
+  const createdEmail = (state as { email?: unknown } | null)?.email
 
   return (
-    <main className={styles.page}>
-      <Card className={styles.card}>
-        <h1>Ingresá a tu cuenta</h1>
-        <p>Usá tu email para continuar.</p>
-        <SegmentedControl
-          label="Tipo de cuenta"
-          options={ACCOUNT_ROLE_OPTIONS}
-          value={role}
-          onChange={setRole}
-          className={styles.selector}
-        />
-        <AccessForm
-          key={role}
-          role={role}
-          onSignedIn={() => navigate('/')}
-          onRegister={() => navigate(registerPathFor(role))}
-        />
-      </Card>
-    </main>
+    <RedirectIfSignedIn>
+      <main className={styles.page}>
+        <Card className={styles.card}>
+          <div className={styles.head}>
+            <h1 className={styles.title}>Ingresá a tu cuenta</h1>
+            <p className={styles.lead}>Elegí tu tipo de cuenta y usá tu email.</p>
+          </div>
+          <SegmentedControl
+            label="Tipo de cuenta"
+            options={ACCOUNT_ROLE_OPTIONS}
+            value={role}
+            onChange={setRole}
+            className={styles.selector}
+          />
+          <AccessForm
+            key={role}
+            role={role}
+            initialEmail={typeof createdEmail === 'string' ? createdEmail : ''}
+            onSignedIn={(account) => {
+              toast(`¡Hola, ${account.nombre ?? account.email}!`, { tone: 'ok' })
+              navigate('/')
+            }}
+            onRegister={() => navigate(registerPathFor(role))}
+          />
+          <p className={styles.footer}>
+            <Link to="/">Volver al inicio</Link>
+          </p>
+        </Card>
+      </main>
+    </RedirectIfSignedIn>
   )
 }

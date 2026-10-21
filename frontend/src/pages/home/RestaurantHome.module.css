@@ -1,0 +1,173 @@
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5vw, 54px);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.lead {
+  max-width: 620px;
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-lg);
+}
+
+.top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 34px;
+}
+
+.account,
+.preview {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  height: 100%;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cardTitle {
+  margin: 0;
+  font: 800 22px / 1.15 var(--font-display);
+}
+
+.cardText {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.preview a {
+  justify-self: start;
+}
+
+.data {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.data dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.data dd {
+  margin: 2px 0 0;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--color-ok);
+  font-weight: 800;
+}
+
+.sectionTitle {
+  margin: 0 0 14px;
+  font: 800 28px / 1.1 var(--font-display);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  height: 100%;
+  padding: 18px;
+  border: 2px dashed var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.stepHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stepIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 22px;
+}
+
+.stepTitle {
+  margin: 4px 0 0;
+  font: 800 19px / 1.2 var(--font-display);
+}
+
+.stepNumber {
+  color: var(--color-text-muted);
+}
+
+.stepText {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 960px) {
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .top,
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 18px 16px 40px;
+  }
+}
