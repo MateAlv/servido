@@ -166,6 +166,10 @@
   font: 800 var(--text-xl) / 1 var(--font-display);
 }
 
+.interactiveMap {
+  height: 420px;
+}
+
 .map {
   position: relative;
   display: flex;

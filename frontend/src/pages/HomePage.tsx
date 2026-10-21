@@ -93,6 +93,7 @@ export function HomePage() {
           </Link>
           <div className={styles.links}>
             <a href="#como">Cómo funciona</a>
+            <Link to="/mapa">Mapa de restaurantes</Link>
             <a href="#restaurantes">Para restaurantes</a>
           </div>
           <div className={styles.actions}>
@@ -148,8 +149,8 @@ export function HomePage() {
               <div className={styles.ctas}>
                 {audience === 'diner' ? (
                   <>
-                    <Button size="lg" icon={<IconSearch />} onClick={comingSoon}>
-                      Buscar mesa
+                    <Button size="lg" icon={<IconSearch />} to="/mapa">
+                      Ver mapa
                     </Button>
                     <Button size="lg" variant="secondary" onClick={comingSoon}>
                       Ingresar como comensal

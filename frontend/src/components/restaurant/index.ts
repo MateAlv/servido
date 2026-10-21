@@ -7,3 +7,4 @@ export {
   PRICE_TIERS,
   type PriceTier,
 } from './priceFilter'
+export { RestaurantMap } from './RestaurantMap'

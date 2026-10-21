@@ -24,6 +24,7 @@ import {
   priceTierFromAverageSpend,
   OccupancyMeter,
   PriceFilter,
+  RestaurantMap,
   type OccupancyLevel,
   type PriceTier,
 } from '../components/restaurant'
@@ -48,6 +49,7 @@ import {
   ThemeToggle,
   useToast,
 } from '../components/ui'
+import { RESTAURANTS_FIXTURE } from '../data/restaurants.fixture'
 import { cx } from '../lib/cx'
 import styles from './DesignSystemPage.module.css'
 
@@ -504,26 +506,41 @@ function MapDemo() {
     { name: 'Terraza del Río', label: 'Completo', status: 'full' as const },
   ]
   return (
-    <Demo
-      title="Marcadores"
-      wide
-      note="Caen uno detrás de otro; el seleccionado se invierte y late en el piso. Con Leaflet van dentro de un divIcon."
-    >
-      <div key={run} className={styles.map}>
-        {pins.map((pin, i) => (
-          <MapPin
-            key={pin.name}
-            {...pin}
-            index={i}
-            selected={selected === pin.name}
-            onClick={() => setSelected(pin.name)}
+    <>
+      <Demo
+        title="Marcadores"
+        wide
+        note="Caen uno detrás de otro; el seleccionado se invierte y late en el piso. Con Leaflet van dentro de un divIcon."
+      >
+        <div key={run} className={styles.map}>
+          {pins.map((pin, i) => (
+            <MapPin
+              key={pin.name}
+              {...pin}
+              index={i}
+              selected={selected === pin.name}
+              onClick={() => setSelected(pin.name)}
+            />
+          ))}
+        </div>
+        <Button size="sm" variant="secondary" onClick={() => setRun((n) => n + 1)}>
+          Soltar de nuevo
+        </Button>
+      </Demo>
+      <Demo
+        title="Mapa interactivo"
+        wide
+        note="RestaurantMap junta Leaflet + OpenStreetMap (ADR 0003): tu posición, los marcadores con concurrencia y el acceso al detalle."
+      >
+        <div className={styles.interactiveMap}>
+          <RestaurantMap
+            restaurants={RESTAURANTS_FIXTURE.slice(0, 3)}
+            diner={{ lat: -34.59, lng: -58.43 }}
+            onSelect={() => undefined}
           />
-        ))}
-      </div>
-      <Button size="sm" variant="secondary" onClick={() => setRun((n) => n + 1)}>
-        Soltar de nuevo
-      </Button>
-    </Demo>
+        </div>
+      </Demo>
+    </>
   )
 }
 

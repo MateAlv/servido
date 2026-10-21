@@ -6,11 +6,11 @@ import { MemoryRouter } from 'react-router'
 import { ToastProvider } from '../components/ui'
 
 /** Renders with the app's providers: router, React Query and toasts. */
-export function renderWithProviders(ui: ReactElement) {
+export function renderWithProviders(ui: ReactElement, { route = '/' }: { route?: string } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[route]}>
         <ToastProvider>{ui}</ToastProvider>
       </MemoryRouter>
     </QueryClientProvider>,
