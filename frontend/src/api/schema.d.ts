@@ -55,10 +55,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/restaurante": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login Restaurant */
+        post: operations["login_restaurant_api_auth_restaurante_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurantes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register Restaurant */
+        post: operations["register_restaurant_api_restaurantes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Account
+         * @description Who is signed in: the role, the name and the email of the account in the token.
+         */
+        get: operations["get_account_api_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountResponse
+         * @description The account behind the token, whatever its role. Used to show who is signed in.
+         */
+        AccountResponse: {
+            /**
+             * Rol
+             * @enum {string}
+             */
+            rol: "diner" | "restaurant";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nombre */
+            nombre: string | null;
+            /** Email */
+            email: string;
+        };
         /** Credentials */
         Credentials: {
             /** Email */
@@ -73,6 +147,8 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Nombre */
+            nombre?: string | null;
             /** Email */
             email: string;
             /** Fecha Registro */
@@ -107,6 +183,48 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+            /** Nombre */
+            nombre: string;
+        };
+        /** RestaurantLoginResponse */
+        RestaurantLoginResponse: {
+            restaurante: components["schemas"]["RestaurantResponse"];
+            /** Access Token */
+            access_token: string;
+            /**
+             * Token Type
+             * @default bearer
+             */
+            token_type: string;
+        };
+        /** RestaurantRegistrationRequest */
+        RestaurantRegistrationRequest: {
+            /** Nombre */
+            nombre: string;
+            /** Email */
+            email: string;
+            /** Cuit */
+            cuit: string;
+            /** Telefono */
+            telefono: string;
+            /** Password */
+            password: string;
+        };
+        /** RestaurantResponse */
+        RestaurantResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Email */
+            email: string;
+            /** Cuit */
+            cuit: string;
+            /** Telefono */
+            telefono: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -218,6 +336,109 @@ export interface operations {
                 content?: never;
             };
             /** @description Credenciales inválidas. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    login_restaurant_api_auth_restaurante_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Credentials"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantLoginResponse"];
+                };
+            };
+            /** @description Credenciales con formato inválido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Credenciales inválidas. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    register_restaurant_api_restaurantes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestaurantRegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantResponse"];
+                };
+            };
+            /** @description Datos de registro inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El email o el CUIT ya están registrados. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_account_api_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+            /** @description Sesión inválida o vencida. */
             401: {
                 headers: {
                     [name: string]: unknown;

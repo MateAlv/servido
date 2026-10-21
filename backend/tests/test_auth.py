@@ -7,9 +7,11 @@ from app.config import settings
 
 
 def registration_payload(
-    email: str = "comensal@example.com", password: str = "Segura123"
+    email: str = "comensal@example.com",
+    password: str = "Segura123",
+    nombre: str = "Comensal",
 ) -> dict[str, str]:
-    return {"email": email, "password": password}
+    return {"email": email, "password": password, "nombre": nombre}
 
 
 def test_us1_s1_registration_form_accepts_required_fields(client: TestClient) -> None:

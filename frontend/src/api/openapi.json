@@ -99,10 +99,155 @@
           }
         }
       }
+    },
+    "/api/auth/restaurante": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login Restaurant",
+        "operationId": "login_restaurant_api_auth_restaurante_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantLoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Credenciales con formato inv\u00e1lido."
+          },
+          "401": {
+            "description": "Credenciales inv\u00e1lidas."
+          }
+        }
+      }
+    },
+    "/api/restaurantes": {
+      "post": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Register Restaurant",
+        "operationId": "register_restaurant_api_restaurantes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestaurantRegistrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos de registro inv\u00e1lidos."
+          },
+          "409": {
+            "description": "El email o el CUIT ya est\u00e1n registrados."
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "account"
+        ],
+        "summary": "Get Account",
+        "description": "Who is signed in: the role, the name and the email of the account in the token.",
+        "operationId": "get_account_api_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesi\u00f3n inv\u00e1lida o vencida."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "AccountResponse": {
+        "properties": {
+          "rol": {
+            "type": "string",
+            "enum": [
+              "diner",
+              "restaurant"
+            ],
+            "title": "Rol"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rol",
+          "id",
+          "nombre",
+          "email"
+        ],
+        "title": "AccountResponse",
+        "description": "The account behind the token, whatever its role. Used to show who is signed in."
+      },
       "Credentials": {
         "properties": {
           "email": {
@@ -131,6 +276,17 @@
             "type": "string",
             "format": "uuid",
             "title": "Id"
+          },
+          "nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre"
           },
           "email": {
             "type": "string",
@@ -222,14 +378,120 @@
             "maxLength": 128,
             "minLength": 1,
             "title": "Password"
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Nombre"
           }
         },
         "type": "object",
         "required": [
           "email",
-          "password"
+          "password",
+          "nombre"
         ],
         "title": "RegistrationRequest"
+      },
+      "RestaurantLoginResponse": {
+        "properties": {
+          "restaurante": {
+            "$ref": "#/components/schemas/RestaurantResponse"
+          },
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "restaurante",
+          "access_token"
+        ],
+        "title": "RestaurantLoginResponse"
+      },
+      "RestaurantRegistrationRequest": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Email"
+          },
+          "cuit": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Cuit"
+          },
+          "telefono": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 1,
+            "title": "Telefono"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "email",
+          "cuit",
+          "telefono",
+          "password"
+        ],
+        "title": "RestaurantRegistrationRequest"
+      },
+      "RestaurantResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "cuit": {
+            "type": "string",
+            "title": "Cuit"
+          },
+          "telefono": {
+            "type": "string",
+            "title": "Telefono"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "email",
+          "cuit",
+          "telefono"
+        ],
+        "title": "RestaurantResponse"
       },
       "ValidationError": {
         "properties": {
@@ -270,6 +532,12 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }
