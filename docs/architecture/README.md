@@ -17,7 +17,7 @@ Cómo está armada la plataforma, cómo viaja una solicitud de punta a punta y c
 ![Vista física: CloudFront es la única entrada pública y manda todo a una instancia EC2, donde Docker Compose corre la web, la API y PostgreSQL. Los datos viven en un volumen aparte con snapshots cada noche. GitHub despliega con un rol OIDC.](01-vista-fisica.svg)
 
 - En producción corren tres contenedores en una sola instancia EC2 ([ADR 0008](../decisions/0008-aws-free-plan-hosting.md)): `db` (PostgreSQL 17) y `api`, con las mismas imágenes que levanta `make up`, y `web`, nginx con la app de React ya compilada (en local, `make up` usa el servidor de desarrollo de Vite).
-- Hay una sola puerta de entrada pública: CloudFront, con HTTPS en una dirección `*.cloudfront.net`. Le manda todo a nginx, que sirve la app y pasa `/api` a la API. La instancia solo acepta tráfico de CloudFront y no hay SSH: se entra con AWS Systems Manager.
+- Hay una sola puerta de entrada pública: CloudFront, con HTTPS en `servido.discordia.fyi` (el DNS está en Cloudflare y el certificado lo da ACM, gratis). Le manda todo a nginx, que sirve la app y pasa `/api` a la API. La instancia solo acepta tráfico de CloudFront y no hay SSH: se entra con AWS Systems Manager.
 - La base guarda sus datos en un volumen EBS aparte, con un snapshot cada noche (se guardan los últimos 7). Si se reemplaza la instancia, el volumen sigue ahí; si hay que volver atrás, se restaura un snapshot.
 - GitHub no guarda claves de AWS: en cada deploy pide un rol temporal (OIDC), que solo sirve para `main`, y le pide a la instancia que se actualice.
 - Los secretos (la contraseña de la base y la clave que firma los tokens de ingreso) los genera Terraform en SSM Parameter Store; `deploy.sh` los lee en cada deploy.

@@ -18,7 +18,7 @@ A first version of this decision put the database on RDS (`db.t4g.micro`) and th
   - `db`: PostgreSQL 17, the same image as development and CI.
   - `api`: FastAPI, the same image as `make up`.
   - `web`: nginx with the React build; it forwards `/api` to the API. Locally, `make up` runs the Vite dev server instead.
-- **CloudFront** is the only public address: HTTPS on `*.cloudfront.net` until the team buys a domain. The instance only accepts traffic from CloudFront. Only `/assets/*` (file names with a content hash) is cached at the edge.
+- **CloudFront** is the only public address: HTTPS on `servido.discordia.fyi` (a free subdomain of a team member's domain, DNS in Cloudflare, certificate from ACM) and on its `*.cloudfront.net` address. The instance only accepts traffic from CloudFront. Only `/assets/*` (file names with a content hash) is cached at the edge.
 - **Data** on its own encrypted EBS volume, snapshotted every night by Data Lifecycle Manager, last 7 kept.
 - **Secrets** in SSM Parameter Store: the database password and the key that signs login tokens.
 - **Deploys** with GitHub Actions on merges to `main` (or run by hand): OIDC role (no stored keys), then `deploy.sh` on the instance through SSM Run Command, which pulls the commit, writes the secrets to the instance's `.env` and rebuilds the containers. Terraform is applied by hand, never by CI.
@@ -32,4 +32,4 @@ A first version of this decision put the database on RDS (`db.t4g.micro`) and th
 - The cost plan presented to the PO budgeted two environments with RDS; it should be updated to this setup. The cronograma's separate test environment is dropped.
 - A deploy restarts the containers: a few seconds of downtime, acceptable for an MVP.
 - The account closes when the Free plan ends; anything worth keeping must be exported before that. `terraform destroy` removes everything at the end of the course.
-- A custom domain later needs an ACM certificate in `us-east-1` and a DNS record; nothing else changes.
+- The custom domain only needed an ACM certificate in `us-east-1` and two DNS records in Cloudflare; nothing else changed. Moving to another domain is the same steps with a different `domain_name`.

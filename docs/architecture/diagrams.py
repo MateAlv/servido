@@ -90,7 +90,7 @@ d.node(24, 150, 190, 64, "Comensal", ["celular o navegador"], "ext")
 d.node(24, 232, 190, 64, "Restaurante", ["navegador"], "ext")
 d.node(24, 400, 190, 84, "GitHub", ["repo público", "Actions: CI y deploy"], "ext")
 d.node(24, 560, 190, 70, "Equipo (6 personas)", ["docker compose local"], "ext")
-d.node(282, 150, 180, 146, "CloudFront", ["HTTPS · *.cloudfront.net", "cachea solo /assets",
+d.node(282, 150, 180, 146, "CloudFront", ["servido.discordia.fyi", "HTTPS · cachea /assets",
                                           "≈ USD 0 · free tier"], "acc")
 d.node(540, 150, 180, 120, "web · nginx", ["la app de React", "manda /api a la API"], "acc")
 d.node(780, 150, 180, 120, "api · FastAPI", ["Python 3.12", "migra la base al iniciar"], "acc")
@@ -198,7 +198,7 @@ d.node(958, 238, 200, 84, "Deploy", ["GitHub Actions"], "acc")
 d.node(706, 238, 200, 84, "Rol OIDC", ["credenciales temporales"])
 d.node(430, 224, 230, 112, "deploy.sh en la instancia", ["por SSM Run Command", "baja el commit de main",
                                                          "rearma los contenedores"])
-d.node(150, 238, 220, 84, "App en línea", ["https://….cloudfront.net", "migraciones al iniciar"],
+d.node(150, 238, 220, 84, "App en línea", ["https://servido.discordia.fyi", "migraciones al iniciar"],
        "acc", mono=(0,))
 d.edge([(1058, 144), (1058, 236)], "si cambió backend, frontend o infra/ec2, o a mano", (1048, 176), "dep")
 d.edge([(958, 280), (908, 280)], kind="dep")
