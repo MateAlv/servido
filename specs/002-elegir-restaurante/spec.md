@@ -2,7 +2,7 @@
 
 **Created**: 2026-10-13
 
-**Input**: Backlog Servido! — US-5, US-7, US-9
+**Input**: Backlog Servido! — US-5, US-7, US-9, US-33 (adelantada del Sprint 4 el 21/10)
 
 **Rol**: Comensal
 
@@ -63,7 +63,27 @@ Como **Comensal**, quiero ver en detalle el restaurante seleccionado, para decid
 2. **Dado** que apliqué un filtro, **Cuando** miro el detalle, **Entonces** puedo verificar que el restaurante cumple lo filtrado.
 3. **Dado** que estoy en el detalle, **Cuando** reviso el menú, **Entonces** veo los platos con sus precios actualizados antes de decidir si reservo.
 
+4. **Dado** que estoy en el detalle, **Cuando** lo miro, **Entonces** veo la descripción del restaurante, fotos y opiniones de otros comensales. *(Criterio del backlog validado por la PO, agregado el 21/10.)*
+
 ---
+
+### US-33 — Ver listado de restaurantes (Prioridad: -, Estimación: 5) *(adelantada del Sprint 4, decisión del equipo 21/10)*
+
+Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto con sus características, para poder decidir a cuál ir según qué tan lleno esté y su posición.
+
+**Why this priority**: Completa el mapa: en el celular, elegir desde una lista es más fácil que tocar marcadores. Se adelantó porque el listado ya acompaña al mapa.
+
+**Independent Test**: Con la ubicación habilitada, abrir el inicio del comensal o `/mapa` y comprobar que cada restaurante del listado muestra distancia y concurrencia, que la concurrencia se actualiza sola y que desde el listado se llega al detalle.
+
+**Acceptance Scenarios**:
+
+1. **Dado** que habilité mi ubicación, **Cuando** veo el listado, **Entonces** cada restaurante muestra la distancia desde mi posición.
+
+2. **Dado** que veo el listado, **Cuando** miro un restaurante, **Entonces** veo su indicador de concurrencia (bajo / medio / alto).
+
+3. **Dado** que el listado permanece abierto, **Cuando** transcurre el período de actualización, **Entonces** la concurrencia se actualiza sin recargar.
+
+4. **Dado** que veo un restaurante en el listado, **Cuando** lo elijo, **Entonces** accedo al detalle de su menú y características.
 
 ### Edge Cases
 
@@ -113,6 +133,10 @@ Como **Comensal**, quiero ver en detalle el restaurante seleccionado, para decid
 
 - **FR-012**: El filtro MUST aplicarse sobre los marcadores del mapa.
 
+- **FR-014**  *(US-33)*: El sistema MUST mostrar, junto al mapa, el listado de los mismos restaurantes con distancia y concurrencia; el filtro de precio MUST aplicarse también al listado.
+
+- **FR-013**  *(US-9)*: El detalle MUST mostrar la descripción, al menos una foto y las opiniones del restaurante. Mientras no existan reseñas reales (US-24, US-27), las opiniones son datos de prueba.
+
 ### Key Entities
 
 - **Restaurante (vista pública)**: nombre, descripción, tipo de cocina, rango de precios, restricciones contempladas, ubicación, menú.
@@ -125,9 +149,9 @@ Como **Comensal**, quiero ver en detalle el restaurante seleccionado, para decid
 
 ## Límites de alcance *(MVP Boundaries)*
 
-- **Dentro**: mapa con marcadores, distancia y concurrencia; filtro por precio; detalle accesible desde el mapa.
+- **Dentro**: mapa con marcadores, distancia y concurrencia; listado de los mismos restaurantes (US-33); filtro por precio; detalle accesible desde el mapa y el listado.
 
-- **Fuera**: listado de restaurantes, filtros por rating, restricciones, horarios y cantidad de comensales, foto de platos, promociones, reservar desde el detalle (US-33, US-35, US-53, US-59, US-61, US-41, US-55, US-11).
+- **Fuera**: filtros por rating, restricciones, horarios y cantidad de comensales, foto de platos, promociones, reservar desde el detalle (US-35, US-53, US-59, US-61, US-41, US-55, US-11).
 
 ## Success Criteria *(mandatory)*
 

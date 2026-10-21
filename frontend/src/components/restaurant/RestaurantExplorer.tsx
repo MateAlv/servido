@@ -2,12 +2,16 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router'
 
-import { fetchRestaurants, type RestaurantPublic } from '../../data/restaurants.fixture'
+import {
+  averageRating,
+  fetchRestaurants,
+  type RestaurantPublic,
+} from '../../data/restaurants.fixture'
 import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../lib/geo'
 import { OCCUPANCY_REFRESH_MS } from '../../lib/occupancy'
 import { useGeolocation } from '../../lib/useGeolocation'
 import { LiveIndicator } from '../order'
-import { Button, IconPin } from '../ui'
+import { Button, IconPin, IconStar } from '../ui'
 import { OccupancyLegend } from './OccupancyLegend'
 import { OccupancyMeter } from './OccupancyMeter'
 import { PriceFilter } from './PriceFilter'
@@ -151,6 +155,14 @@ export function RestaurantExplorer() {
                 className={styles.item}
                 data-selected={restaurant.id === selectedId || undefined}
               >
+                <img
+                  className={styles.thumb}
+                  src={restaurant.photo.thumb}
+                  alt=""
+                  width={64}
+                  height={64}
+                  loading="lazy"
+                />
                 <div className={styles.itemHead}>
                   <h3 className={styles.itemName}>{restaurant.name}</h3>
                   <span className={styles.tier} aria-label={`Precio ${restaurant.priceTier}`}>
@@ -158,6 +170,15 @@ export function RestaurantExplorer() {
                   </span>
                 </div>
                 <p className={styles.itemMeta}>
+                  {averageRating(restaurant) !== null && (
+                    <span className={styles.stars}>
+                      <IconStar className={styles.star} />
+                      {averageRating(restaurant)?.toLocaleString('es-AR', {
+                        maximumFractionDigits: 1,
+                      })}{' '}
+                      ·{' '}
+                    </span>
+                  )}
                   {restaurant.cuisine} · {restaurant.location.neighborhood}
                   {isValidPoint(diner) &&
                     ` · a ${formatDistance(distanceKm(diner, restaurant.location))}`}

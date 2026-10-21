@@ -76,7 +76,9 @@
 
 .item {
   display: grid;
-  gap: 6px;
+  grid-template-columns: 64px 1fr;
+  column-gap: 12px;
+  row-gap: 6px;
   padding: 14px 16px;
   border: 2px solid var(--color-line);
   border-radius: var(--radius-card);
@@ -87,6 +89,25 @@
 .item:hover,
 .item[data-selected] {
   border-color: var(--color-primary);
+}
+
+.thumb {
+  grid-row: span 2;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  object-fit: cover;
+  background: var(--color-surface-sunken);
+}
+
+.stars {
+  white-space: nowrap;
+}
+
+.star {
+  margin-right: 2px;
+  color: var(--color-star);
+  vertical-align: -2px;
 }
 
 .itemHead {
@@ -118,6 +139,7 @@
 }
 
 .itemFoot {
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

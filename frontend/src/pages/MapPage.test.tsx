@@ -153,11 +153,14 @@ describe('MapPage (US-5)', () => {
         name: 'Sin Ubicación',
         description: 'No aparece en el mapa.',
         cuisine: 'Prueba',
+        averageSpendPerPerson: 9000,
         priceTier: '$',
         dietaryRestrictions: [],
         location: { lat: Number.NaN, lng: Number.NaN, address: '', neighborhood: '' },
         occupancy: 'low',
         menu: [],
+        reviews: [],
+        photo: { cover: '', thumb: '' },
       },
     ])
 
@@ -262,6 +265,17 @@ describe('RestaurantDetailPage (US-9)', () => {
     expect(screen.getByText(/24\.500/)).toBeInTheDocument()
   })
 
+  it('US-9 S4 shows the description, a photo and the opinions of the restaurant', async () => {
+    renderMapWithDetail('/restaurantes/r-la-esquina')
+
+    expect(
+      await screen.findByRole('img', { name: 'Foto de La Esquina de Palermo' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/parrilla clásica porteña/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Opiniones' })).toBeInTheDocument()
+    expect(screen.getByText(/el bife llegó justo cuando nos sentamos/i)).toBeInTheDocument()
+  })
+
   it('US-9 edge goes back to the map with the same price filter', async () => {
     const user = userEvent.setup()
     renderMapWithDetail('/mapa?precio=%24%24')
@@ -275,5 +289,77 @@ describe('RestaurantDetailPage (US-9)', () => {
       'true',
     )
     expect(screen.getByRole('heading', { name: '2 restaurantes' })).toBeInTheDocument()
+  })
+})
+
+describe('Restaurant list next to the map (US-33)', () => {
+  function listItem(list: HTMLElement, name: string) {
+    return within(list).getByRole('heading', { name }).closest('li') as HTMLElement
+  }
+
+  it('US-33 S1 shows the distance to each restaurant', async () => {
+    renderWithProviders(<MapPage />)
+
+    const list = await screen.findByRole('region', { name: '7 restaurantes' })
+    const expected = formatDistance(distanceKm(DINER, { lat: -34.5885, lng: -58.4265 }))
+    expect(
+      within(listItem(list, 'La Esquina de Palermo')).getByText(new RegExp(expected)),
+    ).toBeInTheDocument()
+  })
+
+  it('US-33 S2 shows the occupancy of each restaurant', async () => {
+    renderWithProviders(<MapPage />)
+
+    const list = await screen.findByRole('region', { name: '7 restaurantes' })
+    expect(
+      within(listItem(list, 'Terraza del Río')).getByRole('img', { name: 'Concurrencia alta' }),
+    ).toBeInTheDocument()
+    expect(
+      within(listItem(list, 'Bodegón Estudiantil')).getByRole('img', { name: 'Concurrencia baja' }),
+    ).toBeInTheDocument()
+  })
+
+  it('US-33 S3 updates the occupancy in the list after the refresh period', async () => {
+    vi.useFakeTimers()
+    const fetchMock = vi.mocked(fetchRestaurants)
+    const restaurants = await fetchRestaurants()
+    renderWithProviders(<MapPage />)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    const list = screen.getByRole('region', { name: '7 restaurantes' })
+    expect(
+      within(listItem(list, 'Bodegón Estudiantil')).getByRole('img', { name: 'Concurrencia baja' }),
+    ).toBeInTheDocument()
+
+    fetchMock.mockResolvedValueOnce(
+      restaurants.map((restaurant) =>
+        restaurant.id === 'r-bodegon' ? { ...restaurant, occupancy: 'high' } : restaurant,
+      ),
+    )
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(OCCUPANCY_REFRESH_MS)
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100)
+    })
+
+    expect(
+      within(listItem(list, 'Bodegón Estudiantil')).getByRole('img', { name: 'Concurrencia alta' }),
+    ).toBeInTheDocument()
+  })
+
+  it('US-33 S4 opens the detail of a restaurant chosen in the list', async () => {
+    const user = userEvent.setup()
+    renderMapWithDetail()
+
+    const list = await screen.findByRole('region', { name: '7 restaurantes' })
+    await user.click(
+      within(listItem(list, 'Verde Que Te Quiero')).getByRole('link', { name: 'Ver detalle' }),
+    )
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Verde Que Te Quiero' }),
+    ).toBeInTheDocument()
   })
 })
