@@ -85,4 +85,4 @@ jobs:
           done
       - run: bash -n ec2/deploy.sh
       - name: Production compose file is valid
-        run: POSTGRES_PASSWORD=ci docker compose -f ec2/compose.yml config --quiet
+        run: POSTGRES_PASSWORD=ci JWT_SECRET=ci docker compose -f ec2/compose.yml config --quiet

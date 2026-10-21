@@ -10,3 +10,15 @@ resource "aws_ssm_parameter" "postgres_password" {
   type        = "SecureString"
   value       = random_password.postgres.result
 }
+
+resource "random_password" "jwt" {
+  length  = 64
+  special = false
+}
+
+resource "aws_ssm_parameter" "jwt_secret" {
+  name        = "/${local.name}/jwt-secret"
+  description = "Key that signs the API's login tokens (HS256)"
+  type        = "SecureString"
+  value       = random_password.jwt.result
+}
