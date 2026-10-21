@@ -12,7 +12,7 @@ infra/
 
 | Piece | Where | Size |
 | --- | --- | --- |
-| Public address (HTTPS) | CloudFront (`*.cloudfront.net`) | Price class 100 |
+| Public address (HTTPS) | CloudFront on `servido.discordia.fyi` (and its `*.cloudfront.net` address), certificate from ACM; the DNS is in Cloudflare | Price class 100 |
 | Web: the React build, served by nginx, which forwards `/api` | Container `web` | — |
 | API (FastAPI) | Container `api` | — |
 | Database (PostgreSQL 17) | Container `db`, data on its own EBS volume | 8 GB gp3 |
@@ -91,6 +91,23 @@ gh workflow run deploy.yml
 
 After that, every merge to `main` that touches `backend/`, `frontend/`, `infra/ec2/` or `.github/workflows/deploy.yml` deploys automatically: the instance pulls the commit and rebuilds the containers, and migrations run when the API starts. The app is at `terraform output site_url`.
 
+## Custom domain
+
+The app answers on `servido.discordia.fyi`, a subdomain of a domain Mateo owns, whose DNS is in Cloudflare (not in AWS). The certificate comes from ACM, is free and renews itself as long as its validation record stays in Cloudflare. To set it up, or to move to another domain with `domain_name`:
+
+```bash
+cd infra/terraform
+# 1. Create the certificate on its own, then print the records to add
+terraform apply -target=aws_acm_certificate.site
+terraform output cloudflare_dns_records
+```
+
+2. In Cloudflare → the domain → DNS → Records, add both CNAMEs from the output with **Proxy status: DNS only** (grey cloud). Proxying them through Cloudflare breaks the certificate validation.
+3. Run `terraform apply`. It waits until ACM validates the certificate (a few minutes) and then adds the domain to CloudFront (about 5 more minutes).
+4. Check: `curl "$(terraform output -raw api_health_url)"`.
+
+Without a domain, set `domain_name = null` in `terraform.tfvars`: the app keeps only the `*.cloudfront.net` address.
+
 ## Day to day
 
 Commands marked *(shell)* run in a Session Manager shell on the instance.
@@ -125,6 +142,7 @@ The new instance mounts the restored volume and deploys `main`, as on the first 
 | `FreeTierRestrictionError` or "not eligible for Free Tier" about the instance size | Use the defaults; the Free plan rejects anything bigger. |
 | `InsufficientInstanceCapacity` | Try again later, or `instance_type = "t3.small"`. |
 | `EntityAlreadyExists` for the GitHub OIDC provider | Someone created it already: `terraform import aws_iam_openid_connect_provider.github <arn>` |
+| `terraform apply` waits on `aws_acm_certificate_validation` | The validation CNAME is missing or proxied in Cloudflare. Check it with `dig +short CNAME <name from the output>`. |
 | Health check fails after apply | The first boot takes about 10 minutes. Then check `/var/log/cloud-init-output.log` and `sudo docker compose ps` *(shell)*. |
 | Disk full on the instance | `sudo docker system prune` *(shell)*. The database is on its own volume and is not affected. |
 | Deploy fails with `Not authorized to perform sts:AssumeRoleWithWebIdentity` | The repository's OIDC subject changed. Compare `gh api repos/MateAlv/servido/actions/oidc/customization/sub` with `github_oidc_subject_prefix` and apply. |

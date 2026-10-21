@@ -4,7 +4,7 @@
 
 Group project (Grupo 3) for *Gestión del Desarrollo de Sistemas Informáticos*, FIUBA, 2C 2026, built with Spec-Driven Development and AI coding agents.
 
-Live at <https://d2hzxi2oo4z9in.cloudfront.net> (AWS, deployed on every merge to `main`). Sprint 1 delivered sign-up and login for diners and restaurants, the restaurant map with the price filter, the list and the restaurant detail; see [docs/sprints/](docs/sprints/).
+Live at <https://servido.discordia.fyi> (AWS, deployed on every merge to `main`). Sprint 1 delivered sign-up and login for diners and restaurants, the restaurant map with the price filter, the list and the restaurant detail; see [docs/sprints/](docs/sprints/).
 
 ## Quick start
 

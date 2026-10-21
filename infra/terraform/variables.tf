@@ -52,3 +52,9 @@ variable "data_snapshot_id" {
   type        = string
   default     = null
 }
+
+variable "domain_name" {
+  description = "Custom address for the app, with its DNS in Cloudflare (see infra/README.md). null keeps only the *.cloudfront.net address."
+  type        = string
+  default     = "servido.discordia.fyi"
+}

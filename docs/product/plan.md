@@ -49,8 +49,8 @@ Sprints de una semana, de jueves a miércoles. Cada sprint cierra el miércoles 
 | Tarea | Cuándo | Responsables |
 | --- | --- | --- |
 | Repositorio con integración continua (el entorno de prueba en AWS se descartó: CI y Docker local cumplen ese rol, [ADR 0008](../decisions/0008-aws-free-plan-hosting.md)) | Sprint 1 (hecho) | Integrantes 3, 4 y 6 |
-| Producción en AWS con HTTPS en `*.cloudfront.net` y deploy automático en cada merge a `main` | Sprint 1 (hecho, adelantado del Sprint 2) | Integrante 4 |
-| Dominio propio para producción | Pendiente | Integrante 4 |
+| Producción en AWS con HTTPS y deploy automático en cada merge a `main` | Sprint 1 (hecho, adelantado del Sprint 2) | Integrante 4 |
+| Dominio propio: `servido.discordia.fyi`, un subdominio de un dominio de Mateo, sin costo | Sprint 1 (hecho) | Integrante 4 |
 | Pruebas automáticas de cada US a partir de su spec, que corren en cada cambio | Todos los sprints | Integrante 6 |
 | Specs y prototipos de las US del sprint siguiente | Todos los sprints | Todos |
 
