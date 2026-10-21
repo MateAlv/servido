@@ -96,7 +96,7 @@ d.node(540, 150, 180, 120, "web · nginx", ["la app de React", "manda /api a la 
 d.node(780, 150, 180, 120, "api · FastAPI", ["Python 3.12", "migra la base al iniciar"], "acc")
 d.node(1020, 150, 180, 120, "db · PostgreSQL 17", ["igual que en local", "sin puertos abiertos"], "acc")
 d.node(540, 400, 180, 84, "IAM · rol de deploy", ["OIDC, sin claves", "solo la rama main"])
-d.node(780, 400, 180, 84, "SSM Parameter Store", ["contraseña de la base", "cifrada · USD 0"])
+d.node(780, 400, 180, 84, "SSM Parameter Store", ["contraseña de la base", "y clave JWT · cifradas"])
 d.node(1020, 400, 180, 84, "EBS · datos", ["8 GB · cifrado", "sobrevive al reemplazo"])
 d.node(1020, 540, 180, 84, "Snapshots", ["Data Lifecycle Manager", "se guardan los últimos 7"])
 d.node(282, 540, 180, 84, "AWS Budgets", ["alerta USD 15/mes", "por email al equipo"])
@@ -111,7 +111,7 @@ d.edge([(960, 210), (1018, 210)], kind="acc")
 d.pill((989, 190), "SQL", "acc")
 d.edge([(1110, 270), (1110, 398)], "guarda los datos", (1110, 360))
 d.edge([(1110, 484), (1110, 538)], "cada noche", (1110, 511))
-d.edge([(870, 322), (870, 398)], "lee la contraseña", (870, 360))
+d.edge([(870, 322), (870, 398)], "lee los secretos", (870, 360))
 d.edge([(214, 442), (538, 442)], "asume el rol (OIDC)", (376, 442), "dep")
 d.edge([(630, 400), (630, 322)], "deploy.sh por SSM", (630, 360), "dep")
 d.edge([(119, 560), (119, 486)], "push · PR", (119, 523))
@@ -119,15 +119,15 @@ d.edge([(119, 560), (119, 486)], "push · PR", (119, 523))
 # ---------------------------------------------------------------- 2. Recorrido de una solicitud
 seq = Diagram("seq", 1000, 588,
               "Recorrido de una solicitud: CloudFront pide la página a nginx en la instancia y guarda los "
-              "archivos de /assets en el borde; los pedidos a /api pasan sin cache por nginx a la API y "
-              "esta consulta PostgreSQL.")
+              "archivos de /assets en el borde; los pedidos a /api, como el ingreso, pasan sin cache por "
+              "nginx a la API y esta consulta PostgreSQL.")
 d = seq
 actors = [("Navegador", "comensal", 100), ("CloudFront", "borde, HTTPS", 300), ("web", "nginx", 480),
           ("api", "FastAPI", 680), ("db", "PostgreSQL", 880)]
 d.add('<rect class="dg-band" x="20" y="86" width="960" height="202" rx="14"/>')
 d.add('<text class="dg-z" x="36" y="108">1 · Abre la app</text>')
 d.add('<rect class="dg-band" x="20" y="302" width="960" height="268" rx="14"/>')
-d.add('<text class="dg-z" x="36" y="324">2 · Busca restaurantes</text>')
+d.add('<text class="dg-z" x="36" y="324">2 · Ingresa</text>')
 for name, sub, x in actors:
     d.add(f'<line class="dg-life" x1="{x}" y1="70" x2="{x}" y2="570"/>')
     d.add(f'<rect class="dg-node dg-node-acc" x="{x - 75}" y="18" width="150" height="52" rx="14"/>')
@@ -137,10 +137,10 @@ messages = [
     (100, 300, 134, "GET /", "acc"), (300, 480, 162, "reenvía, sin cache", "acc"),
     (480, 300, 190, "index.html", "ret"), (300, 100, 218, "index.html", "ret"),
     (100, 300, 246, "GET /assets/… (JS, CSS)", "acc"), (300, 100, 274, "desde la cache del borde", "ret"),
-    (100, 300, 352, "GET /api/restaurantes?precio=$$", "acc"), (300, 480, 380, "reenvía, sin cache", "acc"),
-    (480, 680, 408, "/api → api:8000", "acc"), (680, 880, 436, "SELECT …", "acc"),
-    (880, 680, 464, "filas", "ret"), (680, 480, 492, "JSON", "ret"), (480, 300, 520, "JSON", "ret"),
-    (300, 100, 548, "JSON → React dibuja el mapa", "ret"),
+    (100, 300, 352, "POST /api/auth/comensal", "acc"), (300, 480, 380, "reenvía, sin cache", "acc"),
+    (480, 680, 408, "/api → api:8000", "acc"), (680, 880, 436, "SELECT cuenta por email", "acc"),
+    (880, 680, 464, "fila", "ret"), (680, 480, 492, "token JWT", "ret"), (480, 300, 520, "JSON", "ret"),
+    (300, 100, 548, "token → React abre el mapa", "ret"),
 ]
 for x1, x2, y, label, kind in messages:
     step = 6 if x2 > x1 else -6
@@ -189,7 +189,7 @@ d.zone(10, 16, 1180, 150, "Cada cambio")
 d.zone(10, 186, 1180, 180, "Al mergear a main")
 row = [("Rama por US", ["002-us5-mapa"], ""), ("Pull request", ["plantilla + uso de IA"], ""),
        ("CI en GitHub", ["backend · frontend · infra", "sin atribución a IA"], "acc"),
-       ("Revisión cruzada", ["otro integrante lo entiende"], ""), ("Merge a main", ["historial atómico"], "")]
+       ("Revisión cruzada", ["1 aprobación obligatoria"], ""), ("Merge a main", ["main protegida"], "")]
 for i, (title, lines, kind) in enumerate(row):
     d.node(30 + i * 232, 52, 200, 92, title, lines, kind, mono=(0,) if i == 0 else ())
     if i:
@@ -200,7 +200,7 @@ d.node(430, 224, 230, 112, "deploy.sh en la instancia", ["por SSM Run Command", 
                                                          "rearma los contenedores"])
 d.node(150, 238, 220, 84, "App en línea", ["https://….cloudfront.net", "migraciones al iniciar"],
        "acc", mono=(0,))
-d.edge([(1058, 144), (1058, 236)], "si cambió backend, frontend o infra/ec2", (1048, 176), "dep")
+d.edge([(1058, 144), (1058, 236)], "si cambió backend, frontend o infra/ec2, o a mano", (1048, 176), "dep")
 d.edge([(958, 280), (908, 280)], kind="dep")
 d.edge([(706, 280), (662, 280)], kind="dep")
 d.edge([(430, 280), (372, 280)], kind="dep")
@@ -256,7 +256,7 @@ groups = [
                      ("docker-compose.yml", "entorno local completo"), ("Makefile", "make up · lint · test")]),
     (980, "Infra y automatización", [("infra/terraform/", "todo lo de AWS"), ("infra/ec2/", "compose de producción"),
                                      (".github/workflows/", "CI, deploy, atribución"),
-                                     ("scripts/", "exporta el backlog")]),
+                                     ("scripts/", "backlog y SQL de la base")]),
 ]
 for gx, title, items in groups:
     d.zone(gx, 20, 240 if gx == 980 else 270, 410, title)

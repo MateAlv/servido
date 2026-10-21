@@ -10,10 +10,14 @@ How the team works on Servido!. The rules agents follow are in [AGENTS.md](AGENT
 
    ```bash
    make db                                              # Postgres on localhost:55432
+   # terminal 1
    cd backend && uv sync && uv run alembic upgrade head
    uv run uvicorn app.main:app --reload                 # API on :8000
+   # terminal 2
    cd frontend && npm install && npm run dev            # web on :5173, proxies /api to :8000
    ```
+
+   The backend reads its settings from environment variables with development defaults (`backend/app/config.py`), so no `.env` is needed locally. In production `JWT_SECRET` and the database password come from AWS ([infra/README.md](infra/README.md)).
 
 4. Open the repo with your AI agent. Spec Kit commands are already installed for Claude Code, Codex, Copilot, Antigravity and Gemini CLI. To add another agent, install the CLI (`uv tool install specify-cli==1.2.1`) and run `specify integration install <key>`.
 
@@ -23,14 +27,15 @@ How the team works on Servido!. The rules agents follow are in [AGENTS.md](AGENT
 2. Create a branch from `main`: `<spec-number>-us<N>-<short-name>`.
 3. Follow the spec-driven workflow in [AGENTS.md](AGENTS.md#spec-driven-workflow): clarify → plan → tasks → implement → converge.
 4. Commit often with conventional commits that name the US: `feat(US-5): show restaurants on the map`.
-5. Run `make lint test`, push and open a pull request. Fill the template, including **AI usage**.
+5. Run `make lint test`, push and open a pull request early, as a draft if the US is not done. Fill the template, including **AI usage**.
+6. `main` is protected: the PR needs one approval from another team member and green CI (`backend`, `frontend`, `infra`, `check`). Merging deploys to production automatically.
 
 Commits and PRs carry no AI attribution (no AI co-author trailers or "Generated with" footers); see [AGENTS.md](AGENTS.md#git-and-pull-requests). If your AI tool adds them by default, turn that off in its settings. Claude Code is already configured in the repo.
 
 ## Reviewing a pull request
 
 - You must understand the change well enough to explain it in the defense. If you don't, ask.
-- Check that every acceptance scenario of the US has a test with the `test_us<N>_s<M>_` name.
+- Check that every acceptance scenario of the US has a test: `test_us<N>_s<M>_…` in the backend, `it('US-N SM …')` in the frontend.
 - Check that the spec, plan and tasks match what was built, and that the AI usage section is filled in.
 - Prefer small follow-up PRs over blocking on style.
 

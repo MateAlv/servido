@@ -1,6 +1,6 @@
 # Diseño
 
-Guía visual de Servido! y catálogo de componentes. Con la app corriendo en modo desarrollo, el catálogo vivo está en **[/diseno](http://localhost:5173/diseno)**: cada componente con sus animaciones y botones para repetirlas.
+Guía visual de Servido! y catálogo de componentes. El catálogo vivo está en la ruta **/diseno** de la app (en local, [localhost:5173/diseno](http://localhost:5173/diseno); la ruta existe también en producción, aunque el enlace del pie solo aparece en modo desarrollo): cada componente con sus animaciones y botones para repetirlas.
 
 [boceto-pagina-inicial.html](boceto-pagina-inicial.html) es el primer boceto de estilo: de ahí salen los colores, las tipografías y las formas, pero no es el diseño final.
 
@@ -26,11 +26,12 @@ Todos en `frontend/src/styles/tokens.css`. Nunca usar valores sueltos.
 
 | Grupo | Tokens |
 | --- | --- |
-| Color | `--color-primary`, `--color-primary-dark`, `--color-accent`, `--color-ink`, `--color-cream`, `--color-text`, `--color-text-muted`, `--color-bg`, `--color-surface`, `--color-surface-sunken`, `--color-line`, `--color-inverse-*`, `--color-ok/warn/error` y sus `-bg` |
+| Color | `--color-primary`, `--color-primary-dark`, `--color-primary-soft`, `--color-on-primary`, `--color-accent`, `--color-ink`, `--color-cream`, `--color-location` (posición del comensal en el mapa), `--color-star` (estrellas de calificación), `--color-text`, `--color-text-muted`, `--color-bg`, `--color-surface`, `--color-surface-sunken`, `--color-line`, `--color-inverse-*`, `--color-ok/warn/error` y sus `-bg` |
 | Tipografía | `--font-display`, `--font-body`, `--text-xs` … `--text-2xl`, `--text-display` |
 | Espaciado | `--space-1` (4 px) … `--space-8` (72 px) |
 | Forma | `--radius-pill`, `--radius-card`, `--radius-field`, `--radius-small`, `--shadow-card`, `--shadow-pop`, `--shadow-press`, `--shadow-pin` |
 | Movimiento | `--duration-fast` (150 ms), `--duration-base` (240 ms), `--duration-slow` (420 ms), `--duration-brand` (900 ms), `--ease-out`, `--ease-in`, `--ease-in-out`, `--ease-spring`, `--stagger` (60 ms) |
+| Capas | `--z-sticky` (encabezado fijo), `--z-overlay`, `--z-toast`, `--z-splash` |
 
 ## Componentes
 
@@ -41,6 +42,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | Componente | Para qué | Animación |
 | --- | --- | --- |
 | `Logo` | Logo en el encabezado y en pantallas de marca. Variantes `full` / `mark`, `inline` / `stacked`, con o sin lema | `intro`: el pin cae y rebota, la campana aparece, se dibujan los rayos y suben las letras. `outro`: la tapa se levanta ("¡servido!") y el pin se hunde. `idle`: rayos que titilan y tapa que espía. Hover: la tapa se levanta |
+| `LogoMark` | El pin con la campana en SVG, sin animación propia. Lo usan `Logo` y `LogoSpinner`, que animan sus partes con `classes`; `orbit` dibuja la órbita del spinner | — |
 | `LogoSpinner` | Cargas de página o de secciones | `orbit`: un cometa gira alrededor del pin mientras la tapa espía. `hop`: el pin salta, ideal mientras se buscan restaurantes cerca |
 | `BrandSplash` | Bienvenida, una vez por sesión | El logo aparece, espera hasta que la app esté lista, desaparece y la pantalla se levanta como una campana. Se saltea con un clic |
 | `Highlight` | Resaltar una palabra en un título | Trazo de marcador que se dibuja solo |
@@ -77,6 +79,15 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 
 El inicio cambia según quién entra: visitante (presentación y una tarjeta por rol para crear cuenta o ingresar), comensal (elegir restaurante) o restaurante (su panel).
 
+### Acceso (`access/`)
+
+| Componente | Para qué | US |
+| --- | --- | --- |
+| `AccessForm` | Email y contraseña para ingresar con un tipo de cuenta (`role`: `diner` o `restaurant`). Muestra el error genérico de credenciales y ofrece "Registrarme". Lo usa `/ingresar`, con un `SegmentedControl` de `ACCOUNT_ROLE_OPTIONS` para elegir el tipo de cuenta | 3, 4 |
+| `RedirectIfSignedIn` | Envuelve las páginas de ingreso y registro: con una sesión abierta, manda al inicio | 1, 2, 3, 4 |
+
+`registerPathFor(role)` devuelve adónde lleva "Registrarme" para cada tipo de cuenta (`/registrarme` o `/suma-tu-local`).
+
 ### Pedido (`order/`)
 
 | Componente | Para qué | US |
@@ -100,10 +111,43 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 | Componente | Para qué | US |
 | --- | --- | --- |
 | `MapPin` | Marcador del mapa: el nombre del restaurante y la forma de su concurrencia (● baja, ▲ media, ■ alta). Caen uno tras otro y el seleccionado late. Con Leaflet va dentro de un `divIcon` con `interactive={false}`, porque el marcador ya es el botón | 5 |
+| `PinGlyph` | Solo la forma de concurrencia de un marcador (● ▲ ■); la usan `MapPin` y `OccupancyLegend` | 5 |
 | `OccupancyLegend` | Leyenda de las formas y colores de concurrencia; en el mapa flota abajo a la izquierda | 5 |
 | `RestaurantMap` | Mapa Leaflet + OpenStreetMap con la posición del comensal, los marcadores y el popup que lleva al detalle | 5 |
 | `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal | 5, 33 |
-| `RestaurantExplorer` | Elegir restaurante: filtro de precio, mapa con leyenda y la misma lista en tarjetas. El filtro vive en la URL (`?precio=$$`), así que se conserva al ir al detalle y volver. Lo usan el inicio del comensal y `/mapa` | 5, 7, 9 |
+| `PriceFilter` | Chips de precio (`$` … `$$$$`) y "Quitar filtro de precio"; avisa cuando no hay coincidencias | 7 |
+| `RestaurantExplorer` | Elegir restaurante: filtro de precio, mapa con leyenda y la misma lista en tarjetas con su concurrencia, que se actualiza sola. El filtro vive en la URL (`?precio=$$`), así que se conserva al ir al detalle y volver. Lo usan el inicio del comensal y `/mapa`. Todavía no hay API de restaurantes: los datos salen de `frontend/src/data/restaurants.fixture.ts` | 5, 7, 9, 33 |
+
+#### Filtro de precio (US-7)
+
+`PriceFilter` compone `Chip` y `Button`.
+Recibe `selectedTiers` (arreglo de `PriceTier`: `$`, `$$`, `$$$`, `$$$$`),
+`onChange` (nueva selección completa) y `resultCount` opcional. Quien lo usa conserva
+el estado: cada interacción notifica el cambio inmediatamente; quitar el filtro
+emite un arreglo vacío y no modifica otros criterios.
+
+`matchesPriceFilter(tier, hasMenu, selectedTiers)` permite filtrar los datos con
+`Array.filter`, conservando el orden y sin modificar el arreglo original. Sin
+selección se incluyen todos; con selección se excluyen restaurantes sin menú o sin
+categoría conocida. `RestaurantExplorer` lo aplica a los marcadores y a la lista por
+igual, con el `priceTier` y el menú de cada restaurante del fixture.
+
+Pasá `resultCount` solo después de una consulta exitosa: cero muestra el mensaje
+sin resultados, con la acción de quitar precio habilitada si hay selección.
+`RestaurantExplorer` administra la carga, los errores, los marcadores y la
+selección en la URL.
+
+`priceTierFromAverageSpend(averageSpendPerPerson)` convierte un gasto promedio
+por persona en pesos argentinos en `PriceTier`:
+`$` si es menor a $15.000, `$$` desde $15.000 hasta menos de $25.000,
+`$$$` desde $25.000 hasta $40.000 inclusive y `$$$$` si supera $40.000.
+Son límites provisionales del equipo. Los promedios están mockeados en el fixture:
+todavía no se calculan desde reseñas; eso queda para cuando existan al menos cinco
+reseñas con precio por persona.
+
+En `/diseno#filtro-precio` hay una demostración aislada, con cuatro restaurantes
+ficticios (uno sin menú): seleccioná `$$$$` para ver cero coincidencias y «Quitar
+filtro de precio» para recuperar los cuatro ejemplos.
 
 ## Reglas para animaciones nuevas
 
@@ -123,35 +167,3 @@ Animaciones que encajan con el backlog y todavía no están hechas:
 - **Reseña publicada** (US-27, US-50): las estrellas vuelan hacia el promedio del restaurante.
 - **Turno lleno** (US-30): la píldora de disponibilidad pasa a "Completo" con un pequeño temblor.
 - **Pedidos del turno para la cocina** (US-20): las tarjetas se reordenan con una transición cuando cambia la hora sugerida.
-
-### Filtro de precio (US-7)
-
-`PriceFilter`, exportado desde `components/restaurant`, compone `Chip` y `Button`.
-Recibe `selectedTiers` (arreglo de `PriceTier`: `$`, `$$`, `$$$`, `$$$$`),
-`onChange` (nueva selección completa) y `resultCount` opcional. La página conserva
-el estado: cada interacción notifica el cambio inmediatamente; quitar el filtro
-emite un arreglo vacío y no modifica otros criterios.
-
-`matchesPriceFilter(tier, hasMenu, selectedTiers)` permite filtrar los datos con
-`Array.filter`, conservando el orden y sin modificar el arreglo original. La página
-debe adaptar los campos reales del contrato generado a esos argumentos: todavía
-no existe un modelo de respuesta de restaurantes. Sin selección se incluyen todos;
-con selección se excluyen restaurantes sin menú o sin categoría conocida.
-
-Pasá `resultCount` solo después de una consulta exitosa: cero muestra el mensaje
-sin resultados, con la acción de quitar precio habilitada si hay selección. La
-página administra carga, errores, marcadores y persistencia de selección al volver
-del detalle.
-
-Ya podés probar el componente en `/diseno#filtro-precio`. La demostración usa
-restaurantes ficticios locales con `averageSpendPerPerson` numérico en pesos
-argentinos, muestra las coincidencias e incluye uno sin menú. La función pura
-`priceTierFromAverageSpend(averageSpendPerPerson)`, exportada desde
-`components/restaurant`, convierte un gasto promedio conocido en `PriceTier`:
-`$` si es menor a $15.000, `$$` desde $15.000 hasta menos de $25.000,
-`$$$` desde $25.000 hasta $40.000 inclusive y `$$$$` si supera $40.000.
-Son límites provisionales del equipo. Los promedios están mockeados: todavía no
-se calculan desde reseñas; eso queda para cuando existan al menos cinco reseñas
-con precio por persona.
-Seleccioná `$$$$` para ver cero coincidencias y «Quitar filtro de precio» para
-recuperar los cuatro ejemplos. No consulta la API ni utiliza el mapa.

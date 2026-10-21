@@ -61,13 +61,13 @@ and duplicate submission. Only one valid `comensales` row is created.
 
 ### Tests for US-1 (write first; they must fail before implementation)
 
-- [X] T010 [P] [US1] Add `test_us1_s1_identifies_required_fields` to `frontend/src/pages/AuthPages.test.tsx` to specify required email/password labeling and password-policy guidance before submission
-- [X] T011 [P] [US1] Add `test_us1_s2_rejects_missing_fields` to `backend/tests/test_auth.py` to specify HTTP 400 field validation without account creation
-- [X] T012 [P] [US1] Add `test_us1_s3_rejects_invalid_registration` to `backend/tests/test_auth.py` for malformed email, passwords of exactly 7 and exactly 129 characters, required letter/number, email-equal password, and field-specific errors
-- [X] T013 [P] [US1] Add `test_us1_s3_preserves_entered_email` to `frontend/src/pages/AuthPages.test.tsx` to specify that form errors do not refresh the page or discard entered non-sensitive data
-- [X] T014 [P] [US1] Add `test_us1_s4_creates_diner_account_once` to `backend/tests/test_auth.py` to specify HTTP 201, normalized email, Argon2-only storage, absent password/hash in response, and one database row
-- [X] T015 [P] [US1] Add `test_us1_edge_rejects_duplicate_email` and `test_us1_edge_prevents_duplicate_submission` to `backend/tests/test_auth.py` for HTTP 409 and database uniqueness
-- [X] T016 [P] [US1] Add `test_us1_edge_normalizes_email` and `test_us1_edge_accepts_supported_password` to `backend/tests/test_auth.py` for case/space normalization, Unicode, spaces, the 8-character lower boundary, and the 128-character upper boundary; T012 must separately assert rejection at exactly 7 and exactly 129 characters
+- [X] T010 [P] [US1] Add `US-1 S1 identifies email and password as required` to `frontend/src/pages/AuthPages.test.tsx` (it does not assert the `Nombre *` field) to specify required email/password labeling and password-policy guidance before submission
+- [X] T011 [P] [US1] Add `test_us1_s2_empty_registration_fields_are_rejected` to `backend/tests/test_auth.py` to specify HTTP 400 field validation without account creation
+- [X] T012 [P] [US1] Add `test_us1_s3_invalid_registration_reports_what_to_correct`, `test_us1_edge_password_of_exactly_7_characters_is_rejected`, `test_us1_edge_password_of_exactly_129_characters_is_rejected`, and `test_us1_edge_password_must_differ_from_email` to `backend/tests/test_auth.py` for malformed email, passwords of exactly 7 and exactly 129 characters, email-equal password, and field-specific errors (no separate test for a missing letter or number)
+- [X] T013 [P] [US1] Add `US-1 S3 reports server validation without refreshing` to `frontend/src/pages/AuthPages.test.tsx` to specify that form errors do not refresh the page or discard entered non-sensitive data
+- [X] T014 [P] [US1] Add `test_us1_s4_valid_registration_creates_one_account` to `backend/tests/test_auth.py` to specify HTTP 201, normalized email, Argon2-only storage, absent password/hash in response, and one database row
+- [X] T015 [P] [US1] Add `test_us1_edge_duplicate_email_is_rejected` to `backend/tests/test_auth.py` for HTTP 409 and database uniqueness (double submission is covered by the same sequential test and the unique constraint; there is no separate test)
+- [X] T016 [P] [US1] Add `test_us1_edge_email_is_normalized` and `test_us1_edge_password_boundaries_are_accepted` to `backend/tests/test_auth.py` for case/space normalization, the 8-character lower boundary, and the 128-character upper boundary (Unicode and spaces are not tested); T012 must separately assert rejection at exactly 7 and exactly 129 characters
 
 ### Implementation for US-1
 
@@ -95,15 +95,15 @@ masked password field.
 
 ### Tests for US-3 (write first; they must fail before implementation)
 
-- [X] T022 [P] [US3] Add `test_us3_s1_requests_credentials` to `frontend/src/pages/AuthPages.test.tsx` to specify labeled email and password inputs
-- [X] T023 [P] [US3] Add `test_us3_s2_rejects_invalid_credentials` to `backend/tests/test_auth.py` to specify HTTP 400 and no authentication attempt for missing/malformed fields
-- [X] T024 [P] [US3] Add `test_us3_s3_logs_in_diner_statelessly` to `backend/tests/test_auth.py` to specify HTTP 200, diner identity, JSON `access_token`, `token_type` bearer, HS256 algorithm, one-hour expiration, environment-provided secret, and no session-table write
-- [X] T025 [P] [US3] Add `test_us3_s4_uses_generic_credential_error` to `backend/tests/test_auth.py` to compare the identical HTTP 401 message for unknown email and wrong password
-- [X] T026 [P] [US3] Add `test_us3_s5_hides_password_while_typing` to `frontend/src/pages/AuthPages.test.tsx` to specify a password input that does not expose plaintext
+- [ ] T022 [P] [US3] Add `US-3 S1 …` to `frontend/src/pages/AuthPages.test.tsx` to specify labeled email and password inputs. Not written yet; only the backend `test_us3_s1_login_requests_credentials` exists
+- [X] T023 [P] [US3] Add `test_us3_s2_invalid_login_is_rejected_before_attempt` to `backend/tests/test_auth.py` to specify HTTP 400 and no authentication attempt for missing/malformed fields
+- [X] T024 [P] [US3] Add `test_us3_s3_valid_login_returns_one_hour_hs256_jwt` to `backend/tests/test_auth.py` to specify HTTP 200, diner identity, JSON `access_token`, `token_type` bearer, HS256 algorithm, one-hour expiration, environment-provided secret, and no session-table write
+- [X] T025 [P] [US3] Add `test_us3_s4_wrong_credentials_use_same_generic_message` to `backend/tests/test_auth.py` to compare the identical HTTP 401 message for unknown email and wrong password, and `US-3 S4 shows the generic login error` to `frontend/src/pages/AuthPages.test.tsx`
+- [X] T026 [P] [US3] Add `US-3 S5 hides the password while typing` to `frontend/src/pages/AuthPages.test.tsx` to specify a password input that does not expose plaintext
 
 ### Implementation for US-3
 
-- [ ] T027 [US3] Extend `backend/app/schemas/auth.py` with login request and safe authenticated-response schemas
+- [X] T027 [US3] Extend `backend/app/schemas/auth.py` with login request and safe authenticated-response schemas (`Credentials`, `LoginResponse`)
 - [X] T028 [US3] Implement stateless `POST /api/auth/comensal` in `backend/app/api/auth.py` using normalized email and Argon2 verification; return a JSON JWT signed with HS256, an environment-provided secret, and one-hour expiration on success, and identical Spanish HTTP 401 `"Credenciales inválidas"` for unknown email and wrong password without exposing hashes
 - [X] T029 [US3] Build `frontend/src/pages/LoginPage.tsx` and shared `frontend/src/pages/AuthPage.module.css` with Spanish errors, accessible labels, `type="password"`, no refresh on validation errors, design tokens, and 360px layout
 - [X] T030 [US3] Add the login route and stateless auth response handling in `frontend/src/router.tsx` and the existing client/auth state location, without adding a session table
@@ -111,6 +111,11 @@ masked password field.
 
 **Checkpoint**: US-3 is independently testable and authenticates diners
 without persisted sessions or inconsistent credential errors.
+
+### Added after the plan (21/10)
+
+- [X] T037 [US1] Ask for the diner's `nombre` at registration: nullable `comensales.nombre` in revision `002_restaurant_names`, required `nombre` in `RegistrationRequest`, and a `Nombre *` field in `frontend/src/pages/RegisterPage.tsx`
+- [X] T038 [US3] Add `GET /api/me` in `backend/app/api/account.py` and keep the token in `sessionStorage` (`frontend/src/api/session.ts`) to show who is signed in; tested by `frontend/src/components/layout/SiteHeader.test.tsx` › `US-3 S3 shows who is signed in and their role` and `US-3 S5 cerrar sesión forgets the token and shows the way in again`, and `frontend/src/pages/HomePage.test.tsx` › `US-3 S3 a signed-in diner lands on choosing a restaurant`
 
 ---
 
@@ -120,7 +125,7 @@ without persisted sessions or inconsistent credential errors.
 - [X] T033 Run the backend suite and complete frontend Vitest suite in the Node 22 project container, confirming every US-1/US-3 acceptance scenario has a passing automated test
 - [X] T034 Run `make db`, `make migrate`, and the upgrade/downgrade/upgrade commands documented in `specs/001-acceso-comensal/quickstart.md`
 - [X] T035 Review `specs/001-acceso-comensal/spec.md`, `plan.md`, `data-model.md`, `research.md`, `quickstart.md`, and `contracts/auth-api.md` against the implementation; update those exact files only if an approved behavior diverged
-- [X] T036 Review `specs/001-acceso-comensal/data-model.md` and confirm the future spec-003 boundary remains `op.add_column()` with nullable `telefono` and `auth_provider`, without recreation or rename
+- [X] T036 Review `specs/001-acceso-comensal/data-model.md` against the spec-003 migration: `002_restaurant_names` used `op.add_column()` without recreation or rename, but added `telefono` as `NOT NULL` and no `auth_provider` (Google sign-up moved to US-28)
 
 ## Dependencies & Execution Order
 

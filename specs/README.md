@@ -10,16 +10,23 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 
 ## Índice
 
-| Spec | Rol | US | SP | Sprint | spec | plan | tasks |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| [001-acceso-comensal](001-acceso-comensal/spec.md) | Comensal | 1, 3 | 4 | 1 | ✅ | ✅ | ✅ |
-| [002-elegir-restaurante](002-elegir-restaurante/spec.md) | Comensal | 5, 7, 9, 33 | 13 | 1 (US-33 adelantada del 4) | ✅ | ✅ | ✅ |
-| [003-cuenta-restaurante](003-cuenta-restaurante/spec.md) | Restaurante | 2, 4 | 4 | 1 | ✅ | — | — |
-| [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | — | — |
-| [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | — | — |
-| [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — |
+| Spec | Rol | US | SP | Sprint | spec | plan | tasks | Implementado |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [001-acceso-comensal](001-acceso-comensal/spec.md) | Comensal | 1, 3 | 4 | 1 | ✅ | ✅ | ✅ | ✅ US-1, US-3 |
+| [002-elegir-restaurante](002-elegir-restaurante/spec.md) | Comensal | 5, 7, 9, 33 | 13 | 1 (US-33 adelantada del 4) | ✅ | ✅ | ✅ | ✅ US-5, US-7, US-9, US-33 (con datos de prueba) |
+| [003-cuenta-restaurante](003-cuenta-restaurante/spec.md) | Restaurante | 2, 4 | 4 | 1 | ✅ | — | — | ✅ US-2, US-4 (con arrastres) |
+| [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | — | — | — |
+| [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | — | — | — |
+| [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — | — |
 
-Faltan las specs de las US de los Sprints 3 a 6 (ver [backlog](../docs/product/backlog.md)). Según el riesgo 8, conviene tenerlas listas antes para poder adelantar US.
+Arrastres de la spec 003: el registro con Google pasa a US-28 (Sprint 4) y el HTTP 403 por rol de US-4 (escenario 3) se prueba en el Sprint 2, cuando existan endpoints exclusivos de cada rol. La spec 002 todavía lee los restaurantes de `frontend/src/data/restaurants.fixture.ts`, hasta que la spec 004 agregue el endpoint.
+
+Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 solo está US-13, en la 005 (ver [backlog](../docs/product/backlog.md)). Según el riesgo 8, conviene tenerlas listas antes para poder adelantar US.
+
+### Pendientes del equipo
+
+- La spec 003 está implementada pero no tiene `plan.md` ni `tasks.md`, así que no cumple la [Definition of Done](../AGENTS.md#definition-of-done): spec, plan y tasks tienen que reflejar lo construido. Hay que generarlos a partir de lo que ya está hecho.
+- Spec 001: falta el test de frontend de US-3 S1 (ver `tasks.md`, T022).
 
 ### Numeración
 
@@ -27,12 +34,12 @@ Al migrar las specs al repo se renumeraron dos para que no haya números repetid
 
 ## Pendientes de aclarar con la PO
 
-Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las del Sprint 1 bloquean la demo del 21/10.
+Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las de la spec 002 se implementaron con la propuesta actual para la demo del 21/10 y siguen esperando la confirmación de la PO.
 
 | Spec | Duda | Propuesta actual |
 | --- | --- | --- |
-| 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba; la demo refresca cada 30 s |
-| 002 | Ubicación denegada | Mapa centrado en una zona por defecto, sin distancias, con aviso y botón para reintentar |
+| 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba; la demo refresca cada 30 s. Implementado así; falta que la PO lo confirme |
+| 002 | Ubicación denegada | Mapa centrado en Buenos Aires, sin distancias, con aviso y botón para reintentar. Implementado así; falta que la PO lo confirme |
 | 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Ver Edge Cases de la spec |
 
 ## Decisiones del equipo
@@ -41,15 +48,15 @@ Dudas que no hacía falta llevar a la PO. Ya están incorporadas en cada spec.
 
 | Fecha | Spec | Decisión |
 | --- | --- | --- |
-| 18/10 | 001, 003 | Contraseñas según OWASP ASVS 5.0: de 8 a 128 caracteres, cualquier carácter, sin combinaciones obligatorias, rechazando las más comunes y la igual al email. Aplica a comensales y restaurantes; el registro del restaurante también pide contraseña |
+| 18/10 | 001, 003 | *(Reemplazada el 19/10.)* Contraseñas según OWASP ASVS 5.0: de 8 a 128 caracteres, cualquier carácter, sin combinaciones obligatorias, rechazando las más comunes y la igual al email. Aplica a comensales y restaurantes; el registro del restaurante también pide contraseña |
 | 18/10 | 001 | El usuario para ingresar es el email |
 | 18/10 | 001 | Un email ya registrado no crea otra cuenta; se informa sin revelar más datos |
-| 18/10 | 002 | Filtro de precio provisorio: nivel $–$$$$ cargado en los datos de prueba de cada restaurante, hasta que existan reseñas con gasto (US-50) |
+| 18/10 | 002 | *(Reemplazada el 21/10.)* Filtro de precio provisorio: nivel $–$$$$ cargado en los datos de prueba de cada restaurante, hasta que existan reseñas con gasto (US-50) |
 | 19/10 | 001, 003 | Reemplaza la del 18/10 sobre contraseñas: de 8 a 128 caracteres, con al menos una letra y un número, cualquier otro carácter permitido y distinta del email |
 | 21/10 | 001 | El registro del comensal también pide su nombre (para saludarlo y para que el restaurante sepa quién reservó) |
 | 21/10 | 001, 003 | La API de acceso conserva los nombres en español (`/api/comensales`, `/api/restaurantes`, `nombre`, `id_comensal`…), como excepción al glosario de `AGENTS.md`. Lo nuevo sigue el glosario en inglés |
 | 21/10 | 002 | Restaurantes de prueba con menú y precios cargados en el frontend (`frontend/src/data/restaurants.fixture.ts`) para la demo del Sprint 1, hasta que exista el endpoint de restaurantes (spec 004) |
-| 21/10 | 002 | El precio de cada restaurante de prueba es un gasto promedio por persona simulado (como si viniera de la base); la categoría $–$$$$ se calcula con los límites de la spec |
+| 21/10 | 002 | Reemplaza la del 18/10 sobre el filtro de precio: el precio de cada restaurante de prueba es un gasto promedio por persona simulado (como si viniera de la base); la categoría $–$$$$ se calcula con los límites de la spec. Cuando existan reseñas con gasto (US-50), el promedio saldrá de ellas |
 | 21/10 | 002 | US-9 suma el criterio del backlog que faltaba en la spec: el detalle muestra fotos y opiniones (de prueba hasta US-24) |
 | 21/10 | 003 | Registro con Google pasa a US-28 (Sprint 4). El 403 por rol de US-4 se prueba cuando haya endpoints exclusivos de cada rol (Sprint 2) |
 | 21/10 | 002 | US-33 (listado de restaurantes, 5 SP) se adelanta del Sprint 4 al 1: el listado acompaña al mapa y cumple sus criterios |
