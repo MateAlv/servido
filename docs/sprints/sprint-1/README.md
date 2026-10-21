@@ -9,18 +9,21 @@ PM del sprint: Mateo Alvarez. Defensa: miércoles 21/10, 19:00.
 | 1 | Completar formulario de registro (comensal) | 3 | Hecha | 13 |
 | 2 | Ingresar datos obligatorios para registrarme (restaurante) | 3 | Hecha, sin registro con Google | 10 |
 | 3 | Ingresar usuario y contraseña (comensal) | 1 | Hecha | 11 |
-| 4 | Ingresar usuario y contraseña (restaurante) | 1 | Hecha, sin el 403 por rol | 4 |
+| 4 | Ingresar usuario y contraseña (restaurante) | 1 | Hecha | 4 |
 | 5 | Ver mapa de restaurantes | 5 | Hecha | 11 |
 | 7 | Filtrar restaurantes por precios del menú | 2 | Hecha | 25 |
 | 9 | Ver detalle de restaurante | 1 | Hecha | 5 |
 | 33 | Ver listado de restaurantes (adelantada del Sprint 4) | 5 | Hecha | 4 |
 | **Total** | | **21 de 16 planificados** | | **105** (28 backend, 77 frontend; 22 son de componentes sin US) |
 
-**Carryover**: el registro con Google que el backlog menciona en US-2 pasa a US-28 (Sprint 4). El escenario 3 de US-4 (403 con el rol equivocado) se prueba cuando existan endpoints exclusivos de cada rol (Sprint 2). Ver [specs/README.md](../../../specs/README.md#decisiones-del-equipo).
+**Pendiente de US-2**: el criterio "El sistema permite registrarse usando su cuenta de Google" no se hizo y pasa a US-28 (Sprint 4). Ver [specs/README.md](../../../specs/README.md#decisiones-del-equipo).
 
 ## Métricas
 
-![Burndown del Sprint 1](img/burndown.png)
+![Burn down del Sprint 1](img/burndown.png)
+![Burn up del Sprint 1](img/burnup.png)
+
+Los datos y las planillas Sprint n y Avance están en la planilla "Servido! · Sprint 1 · Artefactos" de la carpeta del Sprint 1 en Drive.
 
 - **Velocidad**: 21 SP terminados sobre 16 planificados (131 %), con US-33 adelantada.
 - **Burndown**: plano hasta el lunes. El mapa entró el martes y el filtro y el acceso el miércoles, el día de la demo.

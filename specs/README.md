@@ -19,7 +19,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | — | — | — |
 | [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — | — |
 
-Arrastres de la spec 003: el registro con Google pasa a US-28 (Sprint 4) y el HTTP 403 por rol de US-4 (escenario 3) se prueba en el Sprint 2, cuando existan endpoints exclusivos de cada rol. La spec 002 todavía lee los restaurantes de `frontend/src/data/restaurants.fixture.ts`, hasta que la spec 004 agregue el endpoint.
+Pendiente de la spec 003: el registro con Google pasa a US-28 (Sprint 4). El escenario 3 de US-4 (403 con el rol equivocado) tiene prueba cuando exista el primer endpoint exclusivo de un rol (Sprint 2); hoy la cuenta del restaurante solo accede a su panel. La spec 002 todavía lee los restaurantes de `frontend/src/data/restaurants.fixture.ts`, hasta que la spec 004 agregue el endpoint.
 
 Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 solo está US-13, en la 005 (ver [backlog](../docs/product/backlog.md)). Según el riesgo 8, conviene tenerlas listas antes para poder adelantar US.
 
