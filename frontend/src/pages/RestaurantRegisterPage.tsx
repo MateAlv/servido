@@ -29,6 +29,8 @@ export function RestaurantRegisterPage() {
   const navigate = useNavigate()
   const toast = useToast()
   const [fields, setFields] = useState(EMPTY_FIELDS)
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [confirmationError, setConfirmationError] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -40,6 +42,10 @@ export function RestaurantRegisterPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+    if (passwordConfirmation !== fields.password) {
+      setConfirmationError('Las contraseñas no coinciden.')
+      return
+    }
     setLoading(true)
     try {
       const { error } = await api.POST('/api/restaurantes', { body: fields })
@@ -99,6 +105,17 @@ export function RestaurantRegisterPage() {
               value={fields.password}
               onChange={fieldChange('password')}
               hint="Entre 8 y 128 caracteres, con al menos una letra y un número."
+              autoComplete="new-password"
+              required
+            />
+            <PasswordField
+              label="Confirmar contraseña *"
+              value={passwordConfirmation}
+              onChange={(event) => {
+                setPasswordConfirmation(event.target.value)
+                setConfirmationError('')
+              }}
+              error={confirmationError}
               autoComplete="new-password"
               required
             />

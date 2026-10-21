@@ -19,6 +19,7 @@ Como **Responsable del restaurante**, quiero Completar un formulario con los dat
 1. **Dado** que falta completar un campo obligatorio (mail, CUIT, teléfono) o el CUIT/mail no cumple el formato válido, **Cuando** intento continuar, **Entonces** el sistema me informa explícitamente qué dato corregir (HTTP 400 Bad Request) y no permite avanzar.
 2. **Dado** que ingreso un mail o CUIT que ya posee una cuenta registrada, **Cuando** intento registrarme, **Entonces** el sistema informa el duplicado y rechaza la creación de cuenta (HTTP 409 Conflict).
 3. **Dado** que ingreso datos obligatorios sintáctica y semánticamente válidos, **Cuando** envío el formulario, **Entonces** la cuenta del restaurante se crea exitosamente (HTTP 201 Created) con la contraseña almacenada mediante hash seguro.
+4. **Dado** que la confirmación de la contraseña no coincide con la contraseña, **Cuando** intento continuar, **Entonces** el sistema me avisa que las contraseñas no coinciden y no crea la cuenta.
 
 ### US-4 — Ingresar usuario y contraseña
 
@@ -50,7 +51,7 @@ Como **Responsable del restaurante**, quiero Ingresar a Servido! utilizando mi u
 - **FR-003** *(US-4)*: El login MUST rechazar accesos incorrectos con un mensaje genérico por seguridad.
 - **FR-004** *(US-4)*: El sistema MUST manejar control de acceso asegurando que la cuenta de restaurante solo dé acceso a funcionalidades de su rol.
 
-- **FR-005** *(US-2, US-4; decisión del equipo, 18/10)*: El registro MUST pedir también la contraseña con la que se ingresa en US-4, con las mismas reglas que la del comensal (spec 001, FR-012).
+- **FR-005** *(US-2, US-4; decisión del equipo, 18/10)*: El registro MUST pedir también la contraseña con la que se ingresa en US-4, con las mismas reglas que la del comensal (spec 001, FR-012), y pedirla dos veces como el comensal (spec 001, FR-013).
 
 ### Key Entities
 
