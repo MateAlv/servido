@@ -30,7 +30,7 @@ export type RestaurantPublic = {
   name: string
   description: string
   cuisine: string
-  /** Mock average spend per person in pesos (spec 002); later it comes from reviews (US-56). */
+  /** Mock average spend per person in pesos (spec 002); later it comes from reviews (US-50). */
   averageSpendPerPerson: number
   /** Derived from the average spend with priceTierFromAverageSpend. */
   priceTier: RestaurantPriceTier

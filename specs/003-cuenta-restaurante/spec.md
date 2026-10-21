@@ -44,7 +44,7 @@ Como **Responsable del restaurante**, quiero Ingresar a Servido! utilizando mi u
 
 ### Functional Requirements
 
-- **FR-001** *(US-2)*: El formulario MUST solicitar mail, CUIT y teléfono como obligatorios.
+- **FR-001** *(US-2)*: El formulario MUST solicitar nombre del restaurante, mail, CUIT y teléfono como obligatorios.
 - **FR-002** *(US-2)*: El sistema MUST validar unicidad de CUIT y mail contra la base de datos.
 
 - **FR-003** *(US-4)*: El login MUST rechazar accesos incorrectos con un mensaje genérico por seguridad.
@@ -54,7 +54,7 @@ Como **Responsable del restaurante**, quiero Ingresar a Servido! utilizando mi u
 
 ### Key Entities
 
-- **Restaurante**: id (UUID), mail (unique), CUIT (unique, 11 dígitos), telefono, auth_provider, password_hash.
+- **Restaurante**: id (UUID), nombre, mail (unique), CUIT (unique, 11 dígitos), telefono, password_hash. Dirección, barrio y tipo de comida quedan vacíos al registrarse y se completan más adelante (US-6, US-8). No hay proveedor de autenticación: el ingreso con Google pasa a US-28.
 
 ## Límites de alcance *(MVP Boundaries)*
 

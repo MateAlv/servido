@@ -89,11 +89,13 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 
 - **Ubicación denegada o no disponible**: [NEEDS CLARIFICATION: se propone mostrar el mapa centrado en una zona por defecto, sin distancias, e informar cómo habilitar la ubicación.]
 
+*Implementación provisoria (21/10)*: se implementó la propuesta. El mapa se centra en Buenos Aires, no muestra distancias, avisa que no se pudo usar la ubicación y ofrece el botón «Usar mi ubicación» para reintentar. Queda pendiente de confirmación con la PO.
+
 - **Cálculo de la concurrencia**: [NEEDS CLARIFICATION: fuente del dato, umbrales de bajo/medio/alto y frecuencia de actualización. Mientras no exista otra fuente, se asume un valor por restaurante provisto por la fuente de datos.]
 
-*Implementación provisoria (19/10)*: el mapa vuelve a pedir la concurrencia cada **30 segundos** mientras permanece abierto. La frecuencia queda pendiente de confirmación con la PO.
+*Implementación provisoria (19/10)*: el mapa y el listado vuelven a pedir la concurrencia cada **30 segundos** mientras permanecen abiertos. Cada restaurante de prueba trae su nivel (bajo / medio / alto) ya asignado, sin umbrales calculados. La frecuencia y la fuente quedan pendientes de confirmación con la PO.
 
-**Criterio del filtro de precio** *(decisión del equipo, actualizada el 19/10)*: por ahora el filtro es provisorio. Cada restaurante de la demo tiene un gasto promedio por persona numérico mockeado, expresado en pesos argentinos; su categoría se deriva de ese monto: `$` para menos de $15.000; `$$` desde $15.000 hasta menos de $25.000; `$$$` desde $25.000 hasta $40.000 inclusive; `$$$$` para más de $40.000. Estos límites resuelven provisoriamente las superposiciones de la propuesta original. El filtro muestra los restaurantes de las categorías elegidas. En el futuro, el promedio se calculará a partir de al menos 5 reseñas con precio por persona (US-56); ese cálculo todavía no está implementado ni forma parte de este cambio. La demostración del filtro de precios funciona con datos simulados y todavía no está conectada con los restaurantes mostrados en el mapa (US-5) ni con datos reales del backend.
+**Criterio del filtro de precio** *(decisión del equipo, actualizada el 19/10)*: por ahora el filtro es provisorio. Cada restaurante de la demo tiene un gasto promedio por persona numérico mockeado, expresado en pesos argentinos; su categoría se deriva de ese monto: `$` para menos de $15.000; `$$` desde $15.000 hasta menos de $25.000; `$$$` desde $25.000 hasta $40.000 inclusive; `$$$$` para más de $40.000. Estos límites resuelven provisoriamente las superposiciones de la propuesta original. El filtro muestra los restaurantes de las categorías elegidas. En el futuro, el promedio se calculará a partir de al menos 5 reseñas con precio por persona (US-50); ese cálculo todavía no está implementado. El filtro se aplica a los marcadores del mapa (US-5) y al listado (US-33), y se conserva en la URL; todavía usa los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts`, no datos reales del backend.
 
 - Sin restaurantes para mostrar o ninguno cumple el filtro: estado vacío informativo con acción para quitar el filtro.
 
@@ -101,7 +103,7 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 
 - Pérdida de conexión durante la actualización periódica: se conserva el último valor y se indica que puede estar desactualizado.
 
-- Alta densidad de restaurantes en una zona: los marcadores se agrupan para mantener el mapa legible.
+- Alta densidad de restaurantes en una zona: los marcadores se agrupan para mantener el mapa legible. *(No implementado en el Sprint 1: con los 7 restaurantes de prueba no hace falta agrupar. Queda pendiente para cuando haya restaurantes reales.)*
 
 - El filtro aplicado se conserva al abrir un detalle y volver al mapa.
 

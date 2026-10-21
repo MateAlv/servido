@@ -50,6 +50,11 @@ implementing fields or behavior that belong to later restaurant work.
 features outside spec 001. Adding `telefono` or `auth_provider` would require
 scope from the restaurant-account spec and is therefore deferred.
 
+**Later change (21/10):** revision `002_restaurant_names` added a nullable
+`comensales.nombre` (registration now asks for the name) and, for spec 003, a
+required `restaurantes.telefono`. `auth_provider` was never added. See
+`data-model.md`.
+
 ## Decision: Enforce storage invariants in PostgreSQL and behavioral validation in the API
 
 - Add unique constraints for diner email, restaurant email, and restaurant CUIT.
