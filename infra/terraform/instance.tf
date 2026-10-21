@@ -115,7 +115,7 @@ resource "aws_instance" "app" {
     Name = "${local.name}-app"
   }
 
-  depends_on = [aws_ssm_parameter.postgres_password]
+  depends_on = [aws_ssm_parameter.postgres_password, aws_ssm_parameter.jwt_secret]
 }
 
 resource "aws_volume_attachment" "data" {

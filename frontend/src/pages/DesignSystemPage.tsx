@@ -21,6 +21,7 @@ import { ConfirmationStamp, Ticket, TicketDivider, Timeline } from '../component
 import {
   MapPin,
   matchesPriceFilter,
+  OccupancyLegend,
   priceTierFromAverageSpend,
   OccupancyMeter,
   PriceFilter,
@@ -38,6 +39,7 @@ import {
   IconPlus,
   IconSearch,
   Modal,
+  PasswordField,
   QuantityStepper,
   RollingNumber,
   SegmentedControl,
@@ -322,6 +324,12 @@ function FormsDemo() {
           Validar
         </Button>
       </Demo>
+      <Demo
+        title="Contraseña"
+        note="Empieza oculta; el ojo la muestra u oculta y anuncia su estado con aria-pressed."
+      >
+        <PasswordField label="Contraseña" hint="Entre 8 y 128 caracteres." />
+      </Demo>
       <Demo title="Chips de filtro" note="Selección múltiple con aria-pressed.">
         <div className={styles.row}>
           {DIETS.map((diet) => (
@@ -500,17 +508,21 @@ function MapDemo() {
   const [selected, setSelected] = useState('Verde Que Te Quiero')
   const [run, setRun] = useState(0)
   const pins = [
-    { name: 'La Esquina de Palermo', label: '6 mesas', status: 'available' as const },
-    { name: 'Bodegón Estudiantil', label: '2 mesas', status: 'few' as const },
-    { name: 'Verde Que Te Quiero', label: '9 mesas', status: 'available' as const },
-    { name: 'Terraza del Río', label: 'Completo', status: 'full' as const },
+    {
+      name: 'La Esquina de Palermo',
+      statusLabel: 'concurrencia baja',
+      status: 'available' as const,
+    },
+    { name: 'Bodegón Estudiantil', statusLabel: 'concurrencia media', status: 'few' as const },
+    { name: 'Verde Que Te Quiero', statusLabel: 'concurrencia baja', status: 'available' as const },
+    { name: 'Terraza del Río', statusLabel: 'concurrencia alta', status: 'full' as const },
   ]
   return (
     <>
       <Demo
         title="Marcadores"
         wide
-        note="Caen uno detrás de otro; el seleccionado se invierte y late en el piso. Con Leaflet van dentro de un divIcon."
+        note="Muestran el nombre del restaurante y la forma de su concurrencia. Caen uno detrás de otro; el seleccionado se invierte y late en el piso. Con Leaflet van dentro de un divIcon."
       >
         <div key={run} className={styles.map}>
           {pins.map((pin, i) => (
@@ -526,6 +538,12 @@ function MapDemo() {
         <Button size="sm" variant="secondary" onClick={() => setRun((n) => n + 1)}>
           Soltar de nuevo
         </Button>
+      </Demo>
+      <Demo
+        title="Leyenda de concurrencia"
+        note="Explica la forma y el color de cada marcador; en el mapa va flotando abajo a la izquierda."
+      >
+        <OccupancyLegend />
       </Demo>
       <Demo
         title="Mapa interactivo"

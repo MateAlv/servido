@@ -1,4 +1,5 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -15,6 +16,11 @@ vi.mock('../data/restaurants.fixture', async (importOriginal) => {
 })
 
 const DINER = { lat: -34.59, lng: -58.43 }
+
+/** Leaflet markers are named by their title: restaurant and occupancy. */
+function marker(name: string, level: 'baja' | 'media' | 'alta') {
+  return `${name}, concurrencia ${level}`
+}
 const originalGeolocation = navigator.geolocation
 
 function mockGeolocationSuccess(point = DINER) {
@@ -57,22 +63,22 @@ describe('MapPage (US-5)', () => {
     renderWithProviders(<MapPage />)
 
     expect(await screen.findByText('Tu ubicación')).toBeInTheDocument()
-    expect(await screen.findByLabelText('La Esquina de Palermo: Media')).toBeInTheDocument()
-    expect(screen.getByLabelText('Terraza del Río: Alta')).toBeInTheDocument()
+    expect(await screen.findByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
+    expect(screen.getByTitle(marker('Terraza del Río', 'alta'))).toBeInTheDocument()
   })
 
   it('US-5 S2 shows the occupancy level of every restaurant', async () => {
     renderWithProviders(<MapPage />)
 
-    expect(await screen.findByLabelText('Bodegón Estudiantil: Baja')).toBeInTheDocument()
-    expect(screen.getByLabelText('La Esquina de Palermo: Media')).toBeInTheDocument()
-    expect(screen.getByLabelText('Terraza del Río: Alta')).toBeInTheDocument()
+    expect(await screen.findByTitle(marker('Bodegón Estudiantil', 'baja'))).toBeInTheDocument()
+    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
+    expect(screen.getByTitle(marker('Terraza del Río', 'alta'))).toBeInTheDocument()
   })
 
   it('US-5 S3 shows the distance to a restaurant when it is selected', async () => {
     renderWithProviders(<MapPage />)
 
-    fireEvent.click(await screen.findByLabelText('La Esquina de Palermo: Media'))
+    fireEvent.click(await screen.findByTitle(marker('La Esquina de Palermo', 'media')))
 
     const expected = formatDistance(distanceKm(DINER, { lat: -34.5885, lng: -58.4265 }))
     expect(await screen.findByText(expected)).toBeInTheDocument()
@@ -88,8 +94,13 @@ describe('MapPage (US-5)', () => {
       { route: '/mapa' },
     )
 
-    fireEvent.click(await screen.findByLabelText('La Esquina de Palermo: Media'))
-    fireEvent.click(await screen.findByRole('link', { name: 'Ver detalle' }))
+    fireEvent.click(await screen.findByTitle(marker('La Esquina de Palermo', 'media')))
+    const popup = await screen.findByText('Barrio')
+    fireEvent.click(
+      within(popup.closest('.leaflet-popup') as HTMLElement).getByRole('link', {
+        name: 'Ver detalle',
+      }),
+    )
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'La Esquina de Palermo' }),
@@ -121,7 +132,7 @@ describe('MapPage (US-5)', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0)
     })
-    expect(screen.getByLabelText('La Esquina de Palermo: Media')).toBeInTheDocument()
+    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
 
     fetchMock.mockRejectedValueOnce(new Error('offline'))
     await act(async () => {
@@ -132,7 +143,7 @@ describe('MapPage (US-5)', () => {
     })
 
     expect(screen.getByText(/puede estar desactualizada/i)).toBeInTheDocument()
-    expect(screen.getByLabelText('La Esquina de Palermo: Media')).toBeInTheDocument()
+    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
   })
 
   it('US-5 edge hides restaurants without a valid location (FR-011)', async () => {
@@ -146,13 +157,14 @@ describe('MapPage (US-5)', () => {
         dietaryRestrictions: [],
         location: { lat: Number.NaN, lng: Number.NaN, address: '', neighborhood: '' },
         occupancy: 'low',
+        menu: [],
       },
     ])
 
     renderWithProviders(<MapPage />)
 
-    expect(await screen.findByText(/todavía no hay restaurantes/i)).toBeInTheDocument()
-    expect(screen.queryByLabelText(/sin ubicación/i)).not.toBeInTheDocument()
+    expect(await screen.findByText(/no hay restaurantes para mostrar/i)).toBeInTheDocument()
+    expect(screen.queryByTitle(/sin ubicación/i)).not.toBeInTheDocument()
   })
 
   it('US-5 edge falls back to Buenos Aires when the location is denied', async () => {
@@ -160,8 +172,108 @@ describe('MapPage (US-5)', () => {
     renderWithProviders(<MapPage />)
 
     expect(await screen.findByText(/no pudimos usar tu ubicación/i)).toBeInTheDocument()
-    fireEvent.click(await screen.findByLabelText('La Esquina de Palermo: Media'))
+    fireEvent.click(await screen.findByTitle(marker('La Esquina de Palermo', 'media')))
     await waitFor(() => expect(screen.getByText('Barrio')).toBeInTheDocument())
     expect(screen.queryByText('Distancia')).not.toBeInTheDocument()
+  })
+})
+
+function renderMapWithDetail(route = '/mapa') {
+  return renderWithProviders(
+    <Routes>
+      <Route path="/mapa" element={<MapPage />} />
+      <Route path="/restaurantes/:id" element={<RestaurantDetailPage />} />
+    </Routes>,
+    { route },
+  )
+}
+
+describe('MapPage price filter (US-7)', () => {
+  it('US-7 S1 shows only the restaurants of the chosen price, on the map and in the list', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<MapPage />)
+    await screen.findByTitle(marker('Terraza del Río', 'alta'))
+
+    await user.click(screen.getByRole('button', { name: '$$' }))
+
+    expect(screen.getByRole('heading', { name: '2 restaurantes' })).toBeInTheDocument()
+    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
+    expect(screen.getByTitle(marker('Verde Que Te Quiero', 'media'))).toBeInTheDocument()
+    expect(screen.queryByTitle(marker('Terraza del Río', 'alta'))).not.toBeInTheDocument()
+  })
+
+  it('US-7 S2 updates the result when the filter changes', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<MapPage />)
+    await screen.findByTitle(marker('Terraza del Río', 'alta'))
+
+    await user.click(screen.getByRole('button', { name: '$$' }))
+    await user.click(screen.getByRole('button', { name: '$' }))
+    expect(screen.getByRole('heading', { name: '5 restaurantes' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: '$$' }))
+    expect(screen.getByRole('heading', { name: '3 restaurantes' })).toBeInTheDocument()
+    expect(screen.getByTitle(marker('Bodegón Estudiantil', 'baja'))).toBeInTheDocument()
+    expect(screen.queryByTitle(marker('La Esquina de Palermo', 'media'))).not.toBeInTheDocument()
+  })
+
+  it('US-7 S3 shows every restaurant again when the filter is removed', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<MapPage />, { route: '/mapa?precio=%24%24%24%24' })
+    expect(await screen.findByRole('heading', { name: '1 restaurante' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Quitar filtro de precio' }))
+
+    expect(screen.getByRole('heading', { name: '7 restaurantes' })).toBeInTheDocument()
+    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
+  })
+})
+
+describe('RestaurantDetailPage (US-9)', () => {
+  it('US-9 S1 opens the detail from the restaurant chosen on the map', async () => {
+    const user = userEvent.setup()
+    renderMapWithDetail()
+
+    const list = await screen.findByRole('region', { name: '7 restaurantes' })
+    const card = within(list).getByRole('heading', { name: 'Café San Telmo' }).closest('li')
+    await user.click(within(card as HTMLElement).getByRole('link', { name: 'Ver detalle' }))
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Café San Telmo' }),
+    ).toBeInTheDocument()
+  })
+
+  it('US-9 S2 shows the price level, so the diner can check it matches the filter', async () => {
+    const user = userEvent.setup()
+    renderMapWithDetail('/mapa?precio=%24%24%24')
+
+    const list = await screen.findByRole('region', { name: '1 restaurante' })
+    await user.click(within(list).getByRole('link', { name: 'Ver detalle' }))
+
+    await screen.findByRole('heading', { level: 1, name: 'Sushi Cañitas' })
+    const facts = screen.getByRole('list', { name: 'Características' })
+    expect(within(facts).getByText('$$$')).toBeInTheDocument()
+  })
+
+  it('US-9 S3 shows the menu with its prices', async () => {
+    renderMapWithDetail('/restaurantes/r-la-esquina')
+
+    expect(await screen.findByText('Bife de chorizo con papas')).toBeInTheDocument()
+    expect(screen.getByText(/24\.500/)).toBeInTheDocument()
+  })
+
+  it('US-9 edge goes back to the map with the same price filter', async () => {
+    const user = userEvent.setup()
+    renderMapWithDetail('/mapa?precio=%24%24')
+
+    const list = await screen.findByRole('region', { name: '2 restaurantes' })
+    await user.click(within(list).getAllByRole('link', { name: 'Ver detalle' })[0])
+    await user.click(await screen.findByRole('link', { name: /volver a los restaurantes/i }))
+
+    expect(await screen.findByRole('button', { name: '$$' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.getByRole('heading', { name: '2 restaurantes' })).toBeInTheDocument()
   })
 })

@@ -1,6 +1,6 @@
 # Production: the same three services as `make up`, built for production, on the app
 # instance. CloudFront is the only client (see network.tf) and reaches nginx on port 80.
-# deploy.sh writes .env (the database password) from SSM Parameter Store.
+# deploy.sh writes .env (database password and JWT secret) from SSM Parameter Store.
 name: servido
 
 x-logging: &logging
@@ -34,6 +34,7 @@ services:
       uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips '*'"
     environment:
       DATABASE_URL: postgresql+psycopg://servido:${POSTGRES_PASSWORD}@db:5432/servido
+      JWT_SECRET: ${JWT_SECRET:?run deploy.sh, it writes .env}
     depends_on:
       db:
         condition: service_healthy

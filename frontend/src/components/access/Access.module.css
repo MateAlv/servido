@@ -1,0 +1,12 @@
+.selector {
+  width: 100%;
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.error {
+  color: var(--color-error);
+}

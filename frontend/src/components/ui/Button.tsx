@@ -14,6 +14,8 @@ type ButtonProps = ComponentProps<'button'> & {
   fullWidth?: boolean
   /** Renders a router link with the button look, for actions that navigate. */
   to?: string
+  /** Router state for `to`, e.g. where the next page should send the user back. */
+  linkState?: unknown
 }
 
 export function Button({
@@ -27,6 +29,7 @@ export function Button({
   className,
   children,
   to,
+  linkState,
   ...props
 }: ButtonProps) {
   const classes = cx(
@@ -41,7 +44,7 @@ export function Button({
 
   if (to !== undefined) {
     return (
-      <Link to={to} className={classes}>
+      <Link to={to} state={linkState} className={classes}>
         {content}
         {children}
       </Link>

@@ -52,7 +52,8 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | Componente | Para qué |
 | --- | --- |
 | `Button`, `IconButton` | Acciones. `Button` tiene variantes `primary` (hundido 3D), `secondary`, `ghost`, tamaños, estado `loading` y `to` para navegar con look de botón |
-| `TextField` | Campos de formulario con ayuda y error (el error tiembla y se anuncia) |
+| `TextField` | Campos de formulario con ayuda y error (el error tiembla y se anuncia). `action` agrega un botón chico al final del campo |
+| `PasswordField` | Contraseña oculta con un ojo para mostrarla u ocultarla (`aria-pressed`). Usalo en todo campo de contraseña |
 | `Chip` | Filtros de selección múltiple (precio, restricciones) |
 | `SegmentedControl` | Una opción entre pocas, con indicador que se desliza |
 | `Card` | Superficie base; `interactive` se eleva al pasar el mouse |
@@ -66,6 +67,15 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar |
 | `StarRating` | Calificación interactiva o de solo lectura |
 | `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, …) |
+
+### Estructura (`layout/`)
+
+| Componente | Para qué |
+| --- | --- |
+| `SiteHeader` | Barra superior de todas las páginas: logo, y "Ingresar" / "Crear cuenta" o quién está conectado y "Cerrar sesión". Queda fija al hacer scroll |
+| `SiteFooter` | Pie de todas las páginas |
+
+El inicio cambia según quién entra: visitante (presentación y una tarjeta por rol para crear cuenta o ingresar), comensal (elegir restaurante) o restaurante (su panel).
 
 ### Pedido (`order/`)
 
@@ -89,9 +99,11 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 
 | Componente | Para qué | US |
 | --- | --- | --- |
-| `MapPin` | Marcador del mapa: caen uno tras otro y el seleccionado late. Con Leaflet va dentro de un `divIcon` | 5 |
+| `MapPin` | Marcador del mapa: el nombre del restaurante y la forma de su concurrencia (● baja, ▲ media, ■ alta). Caen uno tras otro y el seleccionado late. Con Leaflet va dentro de un `divIcon` con `interactive={false}`, porque el marcador ya es el botón | 5 |
+| `OccupancyLegend` | Leyenda de las formas y colores de concurrencia; en el mapa flota abajo a la izquierda | 5 |
 | `RestaurantMap` | Mapa Leaflet + OpenStreetMap con la posición del comensal, los marcadores y el popup que lleva al detalle | 5 |
 | `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal | 5, 33 |
+| `RestaurantExplorer` | Elegir restaurante: filtro de precio, mapa con leyenda y la misma lista en tarjetas. El filtro vive en la URL (`?precio=$$`), así que se conserva al ir al detalle y volver. Lo usan el inicio del comensal y `/mapa` | 5, 7, 9 |
 
 ## Reglas para animaciones nuevas
 
