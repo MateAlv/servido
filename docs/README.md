@@ -5,7 +5,9 @@
 | [catedra/](catedra/) | Spanish | Course rules: grading, what the TP must deliver each sprint, AI usage policy, sprint review format, management theory |
 | [product/](product/) | Spanish | Product context from the team's artifacts workbook: vision, personas, user story map, full backlog with acceptance criteria, sprint plan, risks, costs |
 | [decisions/](decisions/) | English | Architecture decision records |
-| [design/](design/) | Spanish | First style mock-up and visual identity notes |
+| [design/](design/) | Spanish | Design guide: visual identity, tokens, motion rules and the component catalog (also at `/diseno` in the app) |
+| [architecture/](architecture/) | Spanish | Diagrams of how the platform runs, deploys and is organized |
+| [sprints/](sprints/) | Spanish | Each sprint's scope, metrics, demo script and retrospective, as presented in its defense |
 
 Requirements live in [specs/](../specs/). Agent instructions live in [AGENTS.md](../AGENTS.md).
 

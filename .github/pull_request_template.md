@@ -8,7 +8,7 @@
 
 <!-- One line per scenario of the spec, with the test that covers it. -->
 
-- [ ] US-N scenario 1 — `test_usN_s1_...`
+- [ ] US-N scenario 1 — `test_usN_s1_...` (backend) or `it('US-N S1 ...')` (frontend)
 
 ## AI usage
 

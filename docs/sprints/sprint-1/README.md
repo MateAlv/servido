@@ -11,10 +11,10 @@ PM del sprint: Mateo Alvarez. Defensa: miércoles 21/10, 19:00.
 | 3 | Ingresar usuario y contraseña (comensal) | 1 | Hecha | 11 |
 | 4 | Ingresar usuario y contraseña (restaurante) | 1 | Hecha, sin el 403 por rol | 4 |
 | 5 | Ver mapa de restaurantes | 5 | Hecha | 11 |
-| 7 | Filtrar restaurantes por precios del menú | 2 | Hecha | 13 |
+| 7 | Filtrar restaurantes por precios del menú | 2 | Hecha | 25 |
 | 9 | Ver detalle de restaurante | 1 | Hecha | 5 |
 | 33 | Ver listado de restaurantes (adelantada del Sprint 4) | 5 | Hecha | 4 |
-| **Total** | | **21 de 16 planificados** | | **105** (28 backend, 77 frontend) |
+| **Total** | | **21 de 16 planificados** | | **105** (28 backend, 77 frontend; 22 son de componentes sin US) |
 
 **Carryover**: el registro con Google que el backlog menciona en US-2 pasa a US-28 (Sprint 4). El escenario 3 de US-4 (403 con el rol equivocado) se prueba cuando existan endpoints exclusivos de cada rol (Sprint 2). Ver [specs/README.md](../../../specs/README.md#decisiones-del-equipo).
 
@@ -24,13 +24,13 @@ PM del sprint: Mateo Alvarez. Defensa: miércoles 21/10, 19:00.
 
 - **Velocidad**: 21 SP terminados sobre 16 planificados (131 %), con US-33 adelantada.
 - **Burndown**: plano hasta el lunes. El mapa entró el martes y el filtro y el acceso el miércoles, el día de la demo.
-- **Pull requests**: 12 mergeados en el sprint (infraestructura, sistema de diseño, mapa, filtro, acceso, integración); 1 cerrado (demo).
+- **Pull requests**: 10 mergeados en el sprint (infraestructura, sistema de diseño, mapa, filtro e integración, que sumó el acceso del #11); 1 cerrado (demo). El #13 (pruebas de US-2 y US-4, fotos, opiniones y US-33) quedó en revisión el día de la demo.
 - **CI**: 29 corridas, 26 verdes. Las 3 rojas eran pruebas desactualizadas o formato, y se corrigieron antes de mergear.
 - **Producción**: la app corre en AWS desde el Sprint 1 (el plan lo preveía para el Sprint 2), con deploy automático en cada merge a `main`.
 
 ## Demo
 
-URL: <https://d2hzxi2oo4z9in.cloudfront.net>. Cuentas de demo: una de comensal y una de restaurante (credenciales en la presentación).
+URL: <https://d2hzxi2oo4z9in.cloudfront.net>. Cuentas de demo: una de comensal y una de restaurante, creadas desde el registro de la app antes de la defensa (no hay datos de cuentas precargados; las credenciales las tiene el PM).
 
 | Paso | Qué se muestra | US |
 | --- | --- | --- |

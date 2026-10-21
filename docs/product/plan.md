@@ -31,14 +31,15 @@ Sprints de una semana, de jueves a miércoles. Cada sprint cierra el miércoles 
 
 | Sprint | Fechas | PM | SP | Objetivo (demo de la defensa) | US |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 15/10 – 21/10 | Mateo | 16 | Registro e inicio de sesión de comensales y restaurantes. El comensal ve el mapa, filtra por precio y ve el detalle de un restaurante (con restaurantes de prueba cargados) | 1, 2, 3, 4, 5, 7, 9 |
-| 2 | 22/10 – 28/10 | Santiago | 12 | El restaurante carga datos, horarios, mesas y platos; el comensal crea una reserva. **Primera versión en producción** | 6, 8, 10, 11, 12 |
+| 1 | 15/10 – 21/10 | Mateo | 16 | Registro e inicio de sesión de comensales y restaurantes. El comensal ve el mapa, filtra por precio y ve el detalle de un restaurante (con restaurantes de prueba cargados). Se adelantó US-33 (listado) y la app ya quedó en producción | 1, 2, 3, 4, 5, 7, 9 y 33 |
+| 2 | 22/10 – 28/10 | Santiago | 12 | El restaurante carga datos, horarios, mesas y platos; el comensal crea una reserva | 6, 8, 10, 11, 12 |
 | 3 | 29/10 – 04/11 | Ezequiel | 18 | El comensal confirma la reserva y crea su pedido; el restaurante ve calendario, cliente, cancelaciones, pedidos del turno y estado de pago | 13–22 |
-| 4 | 05/11 – 11/11 | Lourdes | 19 | **MVP completo**: reserva activa, cancelación y calificación; además términos, capacidad, bloqueos, listado y editar platos | 23–34 |
+| 4 | 05/11 – 11/11 | Lourdes | 19 | **MVP completo**: reserva activa, cancelación y calificación; además términos, capacidad, bloqueos, editar platos | 23–32, 34 |
 | 5 | 12/11 – 18/11 | Ignacio | 20 | Reembolsos, horarios disponibles, cantidad de personas, detalle del plato, mails de validación y recuperar cuenta del restaurante | 35–47 |
 | 6 | 19/11 – 25/11 | Matías | 20 | Promociones, pago electrónico y en efectivo, Google, filtros y fotos. **Entrega final el 25/11** (cierre de código el martes 24/11) | 48–61 |
 
 - El MVP termina en el Sprint 4; los Sprints 5 y 6 funcionan como colchón.
+- US-33 (5 SP) se adelantó al Sprint 1: el Sprint 1 cerró con 21 SP y el Sprint 4 queda en 14. Lo que pasó en cada sprint está en [docs/sprints/](../sprints/).
 - Semanas con menos capacidad (entregas de otras materias y la FIUBA Talk del 04/11): Sprints 2, 3 y 5. En cada planning cada uno avisa su disponibilidad y se le asignan menos puntos.
 - Las US 40 y 43 todavía no tienen estimación del equipo (2 y 3 SP propuestos).
 - El detalle de cada US, con su asignación, está en [backlog.md](backlog.md).
@@ -47,8 +48,9 @@ Sprints de una semana, de jueves a miércoles. Cada sprint cierra el miércoles 
 
 | Tarea | Cuándo | Responsables |
 | --- | --- | --- |
-| Repositorio con integración continua y entorno de prueba en AWS | Sprint 1 | Integrantes 3, 4 y 6 |
-| Producción en AWS con dominio y HTTPS; después, un deploy por semana | Desde el cierre del Sprint 2 | Integrante 4 |
+| Repositorio con integración continua (el entorno de prueba en AWS se descartó: CI y Docker local cumplen ese rol, [ADR 0008](../decisions/0008-aws-free-plan-hosting.md)) | Sprint 1 (hecho) | Integrantes 3, 4 y 6 |
+| Producción en AWS con HTTPS en `*.cloudfront.net` y deploy automático en cada merge a `main` | Sprint 1 (hecho, adelantado del Sprint 2) | Integrante 4 |
+| Dominio propio para producción | Pendiente | Integrante 4 |
 | Pruebas automáticas de cada US a partir de su spec, que corren en cada cambio | Todos los sprints | Integrante 6 |
 | Specs y prototipos de las US del sprint siguiente | Todos los sprints | Todos |
 

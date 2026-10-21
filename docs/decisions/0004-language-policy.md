@@ -10,7 +10,7 @@ The team, the course and the Product Owner work in Spanish, and the specs are wr
 ## Decision
 
 - **English**: code, identifiers, comments, commit messages, pull requests, `AGENTS.md`, `README.md`, `CONTRIBUTING.md` and the ADRs in `docs/decisions/`.
-- **Spanish (Argentina)**: everything users see (UI text, messages, emails), the specs in `specs/`, and the product and course context in `docs/product/` and `docs/catedra/`.
+- **Spanish (Argentina)**: everything users see (UI text, messages, emails), the specs in `specs/`, the product and course context in `docs/product/` and `docs/catedra/`, the design guide in `docs/design/`, the architecture diagrams in `docs/architecture/` and the sprint records in `docs/sprints/`.
 - Spanish domain terms map to fixed English names, listed in the glossary in `AGENTS.md`.
 
 ## Consequences

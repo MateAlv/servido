@@ -56,7 +56,8 @@ Use these English names in code. Add a row when a new domain concept appears. Ex
 | Tipo de mesa (adentro, afuera, terraza) | `SeatingArea` | |
 | Capacidad | `capacity` | |
 | Concurrencia (bajo / medio / alto) | `OccupancyLevel` (`low` / `medium` / `high`) | |
-| Rango de precios ($ – $$$$) | `PriceTier` | |
+| Rango de precios ($ – $$$$) | `PriceTier` | Derived from `averageSpendPerPerson` |
+| Gasto promedio por persona | `averageSpendPerPerson` | Fixture field until the restaurants API exists |
 | Restricción alimenticia (sin TACC, vegetariano…) | `DietaryRestriction` (`gluten_free`, `vegetarian`…) | Always shown as declared by the restaurant (risk 5) |
 | Tiempo estimado de preparación | `prep_time_minutes` | |
 | Hora de llegada | `arrival_time` | |
@@ -78,28 +79,37 @@ Use these English names in code. Add a row when a new domain concept appears. Ex
 backend/            FastAPI app (Python 3.12, uv)
   app/main.py       App factory: routers, error handlers
   app/api/          One router module per resource, mounted under /api in app/api/__init__.py
+  app/api/deps.py   Shared dependencies, e.g. TokenClaimsDep (reads the Bearer token)
   app/models/       SQLAlchemy models; import each one in app/models/__init__.py
-  app/schemas/      Pydantic request/response models (create when first needed)
-  app/services/     Business rules that outgrow a router (create when first needed)
+  app/schemas/      Pydantic request/response models
+  app/services/     Business rules that outgrow a router (auth.py: passwords, JWT)
+  app/config.py     Settings from environment variables, with development defaults
   app/db.py         Engine, session and the SessionDep dependency
   migrations/       Alembic migrations
   tests/            pytest; conftest.py gives a TestClient on a real Postgres, rolled back per test
 frontend/           React + TypeScript SPA (Vite)
-  src/api/          openapi.json (contract), schema.d.ts (generated types), client.ts
-  src/pages/        One component per route; routes in src/router.tsx, shell in src/AppLayout.tsx
+  src/api/          openapi.json (contract), schema.d.ts (generated types), client.ts,
+                    session.ts (token in sessionStorage, current account), errors.ts
+  src/pages/        One component per route; routes in src/router.tsx, shell in src/AppLayout.tsx;
+                    pages/home/ holds the home page variants per role (not routes)
   src/components/   Design system, imported from each folder's index.ts:
                     brand/ (logo, splash, spinner) · ui/ (buttons, fields, modal, toasts…)
-                    layout/ (header, footer) · access/ (login form)
-                    order/ · reservation/ · restaurant/ (animated domain pieces, explorer)
-  src/lib/          Small helpers: cx (class names), cssVars, reduced-motion detection
+                    layout/ (header, footer) · access/ (login form, redirects, roles)
+                    order/ · reservation/ · restaurant/ (animated domain pieces, map,
+                    list, price filter) · dev/ (API status badge)
+  src/lib/          Small helpers: cx (class names), cssVars, reduced-motion detection,
+                    geo (distances), occupancy, useGeolocation
   src/data/         Temporary fixtures while the backend endpoint does not exist yet
+                    (restaurants.fixture.ts feeds the map, list and detail)
   src/styles/       tokens.css (design tokens) and global.css
   src/test/         Test setup, polyfills and renderWithProviders
 specs/              Spec Kit features: NNN-name/spec.md, plan.md, tasks.md…
-docs/               catedra/, product/, decisions/, design/, architecture/ (diagrams)
+docs/               catedra/, product/, decisions/, design/, architecture/ (diagrams),
+                    sprints/ (scope, metrics, demo and retro of each sprint)
 infra/terraform/    AWS infrastructure (Terraform): CloudFront, one EC2 instance, backups, deploy role, budget
 infra/ec2/          What runs on the instance: compose.yml (db, api, web) and deploy.sh
-scripts/            export_backlog.py (backlog snapshot from the team workbook)
+scripts/            export_backlog.py (backlog snapshot from the team workbook);
+                    sql/ (schema, seed data and views designed for the database)
 .specify/           Spec Kit templates, scripts and constitution
 ```
 
@@ -132,13 +142,13 @@ Run `make format lint test` before considering a task done.
 - **Error messages** that the UI shows are in Spanish. Login failures use one generic message that does not reveal which field was wrong.
 - **Money** is `Decimal` / `Numeric(10, 2)`, never float. **Datetimes** are timezone-aware, stored in UTC; business rules (shifts, "30 minutes before") use `America/Argentina/Buenos_Aires`.
 - **Passwords** are hashed with Argon2 and never logged or returned.
-- **Auth**: built in-house (no external identity provider) when the first spec needs it; Google sign-in comes later (US-28, US-52, US-58).
+- **Auth**: built in-house, no external identity provider. Login returns a stateless JWT (HS256, 1 hour) signed with `JWT_SECRET` (SSM in production); the frontend keeps it in `sessionStorage` and sends it as a Bearer token. Protected routes use `TokenClaimsDep` from `app/api/deps.py`; `GET /api/me` returns the current account. Endpoints exclusive to one role answer 403 to the other role (US-4 S3, pending until such endpoints exist). Google sign-in comes later (US-28, US-52, US-58).
 
 ## Frontend conventions
 
 - Server state through **TanStack Query** and the typed client in `src/api/client.ts`. Never hand-write API types: after a backend change run `make api-types` and commit `openapi.json` and `schema.d.ts` (CI checks both).
 - **Routing** with React Router; one page component per route in `src/pages/`.
-- **Build screens from the design system.** Check the catalog (`/diseno` in dev, and [docs/design/README.md](docs/design/README.md)) before writing UI; reuse or extend a component instead of styling a one-off. New components go in the matching `src/components/` folder, its `index.ts`, the `/diseno` page and the design guide.
+- **Build screens from the design system.** Check the catalog (`/diseno` in the running app, and [docs/design/README.md](docs/design/README.md)) before writing UI; reuse or extend a component instead of styling a one-off. New components go in the matching `src/components/` folder, its `index.ts`, the `/diseno` page and the design guide.
 - **Styling** with CSS Modules and the variables in `src/styles/tokens.css`. No hard-coded colors, durations or easings, and no CSS framework.
 - **Animations** are CSS keyframes with the motion tokens, no animation library ([ADR 0007](docs/decisions/0007-css-animations.md)). Every animation must work with reduced motion (see the rules in the design guide); entrance animations set `data-entrance`.
 - **Mobile first**: personas book from their phones. Layouts must work at 360 px wide.
@@ -193,4 +203,6 @@ Commit spec, plan and tasks together with the code. Their history is the evidenc
 - Which sprint we are in and what it must demo: [docs/product/plan.md](docs/product/plan.md).
 - Which specs exist and how far each one got: [specs/README.md](specs/README.md).
 - Open questions for the PO: [specs/README.md](specs/README.md#pendientes-de-aclarar-con-la-po). Do not resolve them yourself.
-- Hosting is defined in [ADR 0008](docs/decisions/0008-aws-free-plan-hosting.md) and `infra/`. Merges to `main` deploy automatically once the AWS account exists.
+- What each sprint delivered: [docs/sprints/](docs/sprints/).
+- Built so far (Sprint 1: US 1, 2, 3, 4, 5, 7, 9, 33). Routes: `/`, `/ingresar`, `/registrarme`, `/suma-tu-local`, `/mapa`, `/restaurantes/:id`, `/diseno`. Endpoints: `POST /api/comensales`, `POST /api/restaurantes`, `POST /api/auth/comensal`, `POST /api/auth/restaurante`, `GET /api/me`, `GET /api/health`. Restaurants, the map and the detail still read `src/data/restaurants.fixture.ts`.
+- Hosting is defined in [ADR 0008](docs/decisions/0008-aws-free-plan-hosting.md) and `infra/`. Production is live at <https://d2hzxi2oo4z9in.cloudfront.net>; merges to `main` deploy automatically. `main` is protected: PR, one approval and green CI. Terraform changes (for example a new secret) are applied by hand before merging the code that needs them.

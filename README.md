@@ -4,6 +4,8 @@
 
 Group project (Grupo 3) for *Gestión del Desarrollo de Sistemas Informáticos*, FIUBA, 2C 2026, built with Spec-Driven Development and AI coding agents.
 
+Live at <https://d2hzxi2oo4z9in.cloudfront.net> (AWS, deployed on every merge to `main`). Sprint 1 delivered sign-up and login for diners and restaurants, the restaurant map with the price filter, the list and the restaurant detail; see [docs/sprints/](docs/sprints/).
+
 ## Quick start
 
 Requirements: Docker, [uv](https://docs.astral.sh/uv/), Node.js 22 and `make`.
@@ -24,9 +26,10 @@ To run the backend or frontend outside Docker, start only the database with `mak
 | [backend/](backend/) | FastAPI + SQLAlchemy + Alembic (Python 3.12) |
 | [frontend/](frontend/) | React + TypeScript single-page app (Vite) |
 | [specs/](specs/) | Feature specs (Spec Kit) |
-| [docs/](docs/) | Course rules, product context, architecture decisions, design |
+| [docs/](docs/) | Course rules, product context, architecture decisions, design, sprint records |
 | [docs/architecture/](docs/architecture/) | Diagrams: how the platform and the repository work |
 | [infra/](infra/) | AWS infrastructure (Terraform) and the deploy runbook |
+| [scripts/](scripts/) | Backlog export from the team workbook, and SQL designs for the database |
 | [AGENTS.md](AGENTS.md) | Instructions for AI coding agents, and the best summary of the project's conventions |
 
 ## Team
