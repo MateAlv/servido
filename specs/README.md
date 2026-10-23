@@ -18,6 +18,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | — | — | — |
 | [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | — | — | — |
 | [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — | — |
+| [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51 | 2 | 2 (adelantadas del 6) | ✅ | — | — | — |
 
 Arrastres de la spec 003: el registro con Google pasa a US-28 (Sprint 4) y el HTTP 403 por rol de US-4 (escenario 3) se prueba en el Sprint 2, cuando existan endpoints exclusivos de cada rol. La spec 002 todavía lee los restaurantes de `frontend/src/data/restaurants.fixture.ts`, hasta que la spec 004 agregue el endpoint.
 
@@ -41,6 +42,8 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las de la spec 002 se
 | 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba; la demo refresca cada 30 s. Implementado así; falta que la PO lo confirme |
 | 002 | Ubicación denegada | Mapa centrado en Buenos Aires, sin distancias, con aviso y botón para reintentar. Implementado así; falta que la PO lo confirme |
 | 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Ver Edge Cases de la spec |
+| 007 | Reenvío del mail de verificación cuando venció o no llegó | Sí: opción "Reenviar mail de verificación"; cada reenvío invalida los enlaces anteriores |
+| 007 | Ingreso con Google cuando la cuenta de Servido! con ese email no está verificada | Ingresa y la cuenta queda verificada, porque Google ya comprobó el email |
 
 ## Decisiones del equipo
 
