@@ -108,6 +108,16 @@ terraform output cloudflare_dns_records
 
 Without a domain, set `domain_name = null` in `terraform.tfvars`: the app keeps only the `*.cloudfront.net` address.
 
+## Accounts outside AWS
+
+The team account **servido.gdsi@gmail.com** owns everything that is not in AWS. The password is shared inside the team, never in the repository.
+
+| Service | What | Where |
+| --- | --- | --- |
+| Google Cloud | Project `servido-512622` ("Servido"), only for Google sign-in (US-52). No billing account. | [console.cloud.google.com](https://console.cloud.google.com/auth/overview?project=servido-512622) |
+
+Google sign-in uses a **Web application** OAuth client, published (In production). Its authorized JavaScript origins are `https://servido.discordia.fyi`, `http://localhost:5173` and `http://localhost`, and it asks only for the basic scopes `openid`, `email` and `profile`, so Google does not review it. Do not upload a logo in Branding: that starts a brand verification that takes days. The client ID is public, because it goes in the frontend. The client secret is not used. Team members are Editors in the project's IAM.
+
 ## Day to day
 
 Commands marked *(shell)* run in a Session Manager shell on the instance.
