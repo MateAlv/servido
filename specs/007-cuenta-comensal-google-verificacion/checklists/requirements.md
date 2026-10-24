@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,6 +31,6 @@
 
 ## Notes
 
-- Two [NEEDS CLARIFICATION] markers remain for the PO: resending the verification mail, and Google sign-in with an unverified account. Each has a concrete proposal.
+- The two open questions were resolved as team decisions on 24/10 (resend the verification mail; Google sign-in verifies the account). They are recorded in the spec and in specs/README.md, pending PO validation.
 - Every acceptance criterion of US-52 (4) and US-51 (5) maps to at least one scenario. US-51 S5 (no orders without verification) can only be tested once orders exist (US-17).
 - Technical choices already made (Google Identity Services, Amazon SES from no-reply@servido.discordia.fyi) belong in plan.md, not here.

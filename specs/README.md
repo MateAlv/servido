@@ -42,8 +42,6 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las de la spec 002 se
 | 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba; la demo refresca cada 30 s. Implementado así; falta que la PO lo confirme |
 | 002 | Ubicación denegada | Mapa centrado en Buenos Aires, sin distancias, con aviso y botón para reintentar. Implementado así; falta que la PO lo confirme |
 | 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Ver Edge Cases de la spec |
-| 007 | Reenvío del mail de verificación cuando venció o no llegó | Sí: opción "Reenviar mail de verificación"; cada reenvío invalida los enlaces anteriores |
-| 007 | Ingreso con Google cuando la cuenta de Servido! con ese email no está verificada | Ingresa y la cuenta queda verificada, porque Google ya comprobó el email |
 
 ## Decisiones del equipo
 
@@ -63,6 +61,8 @@ Dudas que no hacía falta llevar a la PO. Ya están incorporadas en cada spec.
 | 21/10 | 002 | US-9 suma el criterio del backlog que faltaba en la spec: el detalle muestra fotos y opiniones (de prueba hasta US-24) |
 | 21/10 | 003 | Registro con Google pasa a US-28 (Sprint 4). El 403 por rol de US-4 se prueba cuando haya endpoints exclusivos de cada rol (Sprint 2) |
 | 21/10 | 001, 003 | Los registros de comensal y de restaurante piden confirmar la contraseña; si no coincide no se envía. Es solo del formulario: la API no cambia. Falta que la PO lo valide |
+| 24/10 | 007 | El comensal sin verificar puede pedir "Reenviar mail de verificación"; cada reenvío invalida los enlaces anteriores. Falta que la PO lo valide |
+| 24/10 | 007 | Ingresar con Google a una cuenta sin verificar la deja verificada, porque Google ya comprobó el email. Falta que la PO lo valide |
 | 21/10 | 002 | US-33 (listado de restaurantes, 5 SP) se adelanta del Sprint 4 al 1: el listado acompaña al mapa y cumple sus criterios |
 
 ## Notas de formato
