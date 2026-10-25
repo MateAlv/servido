@@ -35,6 +35,8 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://servido:${POSTGRES_PASSWORD}@db:5432/servido
       JWT_SECRET: ${JWT_SECRET:?run deploy.sh, it writes .env}
+    volumes:
+      - ${DATA_DIR:-/var/lib/servido}/uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
