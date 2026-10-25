@@ -119,3 +119,13 @@ def test_us52_s5_google_sign_in_verifies_the_account(
     token = response.json()["access_token"]
     me = client.get("/api/me", headers={"Authorization": f"Bearer {token}"})
     assert me.json()["email_verificado"] is True
+
+
+def test_us52_edge_rejected_token_logs_why(
+    client: TestClient, google_token: GoogleTokenFactory, caplog: pytest.LogCaptureFixture
+) -> None:
+    sign_in_with_google(client, google_token(email="alguien@hotmail.com", email_verified=False))
+    sign_in_with_google(client, google_token(aud="another-client.apps.googleusercontent.com"))
+
+    assert "Google hasn't verified the @hotmail.com email" in caplog.text
+    assert "Audience doesn't match" in caplog.text

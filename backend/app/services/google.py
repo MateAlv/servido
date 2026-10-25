@@ -1,9 +1,12 @@
+import logging
 from typing import Any
 
 import jwt
 from jwt import PyJWKClient
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 GOOGLE_ISSUERS = ("accounts.google.com", "https://accounts.google.com")
@@ -32,7 +35,10 @@ def verify_google_id_token(token: str) -> dict[str, Any]:
             options={"require": ["exp", "iss", "aud", "email"]},
         )
     except jwt.PyJWTError as error:
+        logger.warning("Rejected a Google ID token: %s", error)
         raise InvalidGoogleTokenError from error
     if claims.get("email_verified") is not True:
+        domain = str(claims.get("email", "")).rpartition("@")[2]
+        logger.warning("Rejected a Google ID token: Google hasn't verified the @%s email", domain)
         raise InvalidGoogleTokenError
     return claims
