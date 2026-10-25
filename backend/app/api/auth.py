@@ -1,3 +1,6 @@
+import secrets
+from typing import Any
+
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -9,6 +12,7 @@ from app.schemas.auth import (
     Credentials,
     DinerResponse,
     GoogleCredential,
+    GoogleSignUp,
     LoginResponse,
     RegistrationRequest,
 )
@@ -28,6 +32,17 @@ router = APIRouter(tags=["auth"])
 INVALID_CREDENTIALS_DETAIL = "Credenciales inválidas"
 GOOGLE_SIGN_IN_FAILED_DETAIL = "No pudimos ingresar con Google. Probá de nuevo."
 NO_DINER_FOR_GOOGLE_DETAIL = "No existe una cuenta de Servido! asociada a ese email de Google."
+GOOGLE_SIGN_UP_FAILED_DETAIL = "No pudimos crear tu cuenta con Google. Probá de nuevo."
+GOOGLE_EMAIL_TAKEN_DETAIL = "Ya existe una cuenta de Servido! con ese email. Ingresá con Google."
+NAME_MISSING_DETAIL = "Ingresá tu nombre para terminar de crear tu cuenta."
+NAME_MAX_LENGTH = 60
+
+
+def google_claims(credential: str, failure_detail: str) -> dict[str, Any]:
+    try:
+        return verify_google_id_token(credential)
+    except InvalidGoogleTokenError as error:
+        raise HTTPException(status_code=401, detail=failure_detail) from error
 
 
 def diner_session(diner: Diner) -> LoginResponse:
@@ -66,6 +81,39 @@ def register_diner(payload: RegistrationRequest, session: SessionDep) -> Diner:
 
 
 @router.post(
+    "/comensales/google",
+    response_model=LoginResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: {"description": "Falta la credencial, o Google no dio el nombre y no se envió."},
+        401: {"description": "La credencial de Google no es válida."},
+        409: {"description": "Ya hay un comensal con el email de esa cuenta de Google."},
+    },
+)
+def register_diner_with_google(payload: GoogleSignUp, session: SessionDep) -> LoginResponse:
+    claims = google_claims(payload.credential, GOOGLE_SIGN_UP_FAILED_DETAIL)
+    nombre = payload.nombre or (claims.get("name") or "").strip()[:NAME_MAX_LENGTH].strip()
+    if not nombre:
+        raise HTTPException(status_code=400, detail=NAME_MISSING_DETAIL)
+    diner = Diner(
+        nombre=nombre,
+        email=normalize_email(claims["email"]),
+        # Nobody knows this secret, so the account has no usable password (research R10).
+        password_hash=hash_password(secrets.token_urlsafe(32)),
+    )
+    # Google already proved that the email is theirs: no verification mail (FR-015).
+    mark_verified(diner)
+    session.add(diner)
+    try:
+        session.commit()
+    except IntegrityError as error:
+        session.rollback()
+        raise HTTPException(status_code=409, detail=GOOGLE_EMAIL_TAKEN_DETAIL) from error
+    session.refresh(diner)
+    return diner_session(diner)
+
+
+@router.post(
     "/auth/comensal",
     response_model=LoginResponse,
     responses={
@@ -90,10 +138,7 @@ def login_diner(payload: Credentials, session: SessionDep) -> LoginResponse:
     },
 )
 def login_diner_with_google(payload: GoogleCredential, session: SessionDep) -> LoginResponse:
-    try:
-        claims = verify_google_id_token(payload.credential)
-    except InvalidGoogleTokenError as error:
-        raise HTTPException(status_code=401, detail=GOOGLE_SIGN_IN_FAILED_DETAIL) from error
+    claims = google_claims(payload.credential, GOOGLE_SIGN_IN_FAILED_DETAIL)
     email = normalize_email(claims["email"])
     diner = session.scalar(select(Diner).where(Diner.email == email))
     if diner is None:

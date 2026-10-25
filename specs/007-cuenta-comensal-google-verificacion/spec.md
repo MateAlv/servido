@@ -1,12 +1,12 @@
-# Feature Specification: Cuenta del Comensal (Ingreso con Google y verificación del email)
+# Feature Specification: Cuenta del Comensal (Google y verificación del email)
 
 **Created**: 2026-10-23
 
-**Input**: Backlog Servido! — US-52, US-51
+**Input**: Backlog Servido! — US-52, US-51, US-58
 
 **Rol**: Comensal
 
-**Sprint**: 2 (las dos US se adelantan del Sprint 6)
+**Sprint**: 2 (las tres US se adelantan del Sprint 6; US-58 se sumó el 25/10, después de probar US-52 en producción)
 
 **Tests**: requeridos. Cada escenario de aceptación tiene al menos un test automatizado (constitución, principio III).
 
@@ -26,11 +26,33 @@ Como **Comensal**, quiero ingresar a Servido! utilizando mi cuenta de Google, pa
 
 2. **Dado** que existe una cuenta de comensal de Servido! con el mismo email que mi cuenta de Google, **Cuando** Google me autentica correctamente, **Entonces** accedo a mi cuenta de Servido!, igual que si hubiera ingresado con email y contraseña.
 
-3. **Dado** que no existe ninguna cuenta de comensal de Servido! con el email de mi cuenta de Google, **Cuando** Google me autentica correctamente, **Entonces** Servido! me informa que no existe una cuenta asociada, no me da acceso y me ofrece crear una cuenta.
+3. **Dado** que no existe ninguna cuenta de comensal de Servido! con el email de mi cuenta de Google, **Cuando** Google me autentica correctamente, **Entonces** Servido! me informa que no existe una cuenta asociada, no me da acceso y me ofrece crear una cuenta, también con esa misma cuenta de Google (US-58).
 
 4. **Dado** que la autenticación con Google no se completa (la cancelo, la rechazo o falla), **Cuando** vuelvo a Servido!, **Entonces** no accedo a ninguna cuenta y sigo en la pantalla de ingreso con un aviso de que no se pudo ingresar con Google.
 
 5. **Dado** que mi cuenta de Servido! con el email de Google todavía no está verificada, **Cuando** Google me autentica correctamente, **Entonces** accedo a mi cuenta y queda verificada.
+
+---
+
+### US-58 — Crear cuenta con Google (Prioridad: -, Estimación: 1)
+
+Como **Comensal**, quiero crear una cuenta en Servido! utilizando una cuenta de Google existente, para registrarme sin tener que ingresar manualmente todos mis datos.
+
+**Valor**: Crear la cuenta con un toque, sin inventar otra contraseña ni esperar el mail de verificación, saca la mayor fricción del primer uso.
+
+**Independent Test**: Desde la pantalla de registro, crear la cuenta con una cuenta de Google cuyo email no tiene cuenta en Servido! y llegar al inicio con la cuenta verificada; repetir con una cuenta de Google sin nombre, con una cuyo email ya tiene cuenta y con una autenticación cancelada o fallida.
+
+**Acceptance Scenarios**:
+
+1. **Dado** que estoy en la pantalla de registro del comensal, **Cuando** se muestra, **Entonces** puedo elegir crear la cuenta con Google, además del registro con email y contraseña.
+
+2. **Dado** que no existe una cuenta de comensal con el email de mi cuenta de Google, **Cuando** Google me autentica correctamente, **Entonces** Servido! crea mi cuenta con el email y el nombre de Google, ya verificada, y accedo a ella sin ingresar ningún dato.
+
+3. **Dado** que Google no me da un dato obligatorio para la cuenta (el nombre), **Cuando** Google me autentica correctamente, **Entonces** Servido! me pide que lo complete y crea la cuenta cuando lo ingreso.
+
+4. **Dado** que la autenticación con Google no se completa (la cancelo, la rechazo o falla), **Cuando** vuelvo a Servido!, **Entonces** no se crea ninguna cuenta y se me informa que no se pudo crear con Google.
+
+5. **Dado** que ya existe una cuenta de comensal con el email de mi cuenta de Google, **Cuando** intento crear una cuenta con Google, **Entonces** Servido! no crea otra, me informa que ya existe y me ofrece ingresar.
 
 ---
 
@@ -78,6 +100,10 @@ Como **Comensal**, quiero recibir un correo de verificación al registrarme, par
 
 - **El correo no se puede enviar** (dirección inexistente o falla del envío): la cuenta igual se crea, sin verificar, y el comensal puede pedir un correo nuevo.
 
+- **Cuenta creada con Google** *(US-58)*: no tiene contraseña, así que solo se ingresa con Google; el ingreso con email y contraseña responde el mismo error genérico de credenciales inválidas. No recibe mail de verificación, porque Google ya comprobó el email.
+
+- **Nombre de Google demasiado largo**: se guardan los primeros 60 caracteres, el máximo del nombre (spec 001).
+
 - **Cuentas creadas antes de esta funcionalidad**: se consideran verificadas, para no bloquear a quienes ya se registraron.
 
 ## Requirements *(mandatory)*
@@ -88,7 +114,7 @@ Como **Comensal**, quiero recibir un correo de verificación al registrarme, par
 
 - **FR-002** *(US-52)*: Cuando Google autentica correctamente al usuario, el sistema MUST dar acceso a la cuenta de comensal cuyo email coincide con el de la cuenta de Google, con la misma sesión que el ingreso con email y contraseña.
 
-- **FR-003** *(US-52)*: Si no existe una cuenta de comensal con ese email, el sistema MUST informar que no existe una cuenta asociada, MUST NOT dar acceso y MUST NOT crear una cuenta (crear cuenta con Google es US-58).
+- **FR-003** *(US-52)*: Si no existe una cuenta de comensal con ese email, el sistema MUST informar que no existe una cuenta asociada, MUST NOT dar acceso y MUST NOT crear una cuenta por su cuenta; MUST ofrecer crearla con Google (US-58).
 
 - **FR-004** *(US-52)*: Si la autenticación con Google no se completa o no es válida, el sistema MUST NOT dar acceso a ninguna cuenta.
 
@@ -110,6 +136,16 @@ Como **Comensal**, quiero recibir un correo de verificación al registrarme, par
 
 - **FR-013** *(US-52; decisión del equipo, 24/10)*: Si el comensal ingresa con Google y su cuenta todavía no está verificada, el sistema MUST registrarla como verificada.
 
+- **FR-014** *(US-58)*: La pantalla de registro del comensal MUST ofrecer crear la cuenta con Google, además del registro con email y contraseña.
+
+- **FR-015** *(US-58)*: Cuando Google autentica correctamente al usuario y no existe una cuenta de comensal con ese email, el sistema MUST crear la cuenta con el email y el nombre de Google, registrarla como verificada y dar acceso con la misma sesión que el ingreso con email y contraseña.
+
+- **FR-016** *(US-58)*: Si Google no da el nombre, el sistema MUST pedírselo al usuario y MUST NOT crear la cuenta hasta tenerlo.
+
+- **FR-017** *(US-58)*: Si la autenticación con Google no se completa o no es válida, el sistema MUST NOT crear ninguna cuenta.
+
+- **FR-018** *(US-58)*: Si ya existe una cuenta de comensal con el email de Google, el sistema MUST NOT crear otra y MUST informar que ya existe.
+
 ### Key Entities
 
 - **CuentaComensal** (spec 001): suma si el email está verificado y cuándo se verificó.
@@ -118,15 +154,17 @@ Como **Comensal**, quiero recibir un correo de verificación al registrarme, par
 
 ## Límites de alcance *(MVP Boundaries)*
 
-- **Dentro**: ingreso del comensal con Google para cuentas existentes; correo de verificación al registrarse con email y contraseña; verificación por enlace; restricción de pedidos para cuentas sin verificar.
+- **Dentro**: ingreso del comensal con Google para cuentas existentes; creación de la cuenta del comensal con Google; correo de verificación al registrarse con email y contraseña; verificación por enlace; restricción de pedidos para cuentas sin verificar.
 
-- **Fuera**: crear cuenta con Google (US-58); ingreso con Google del restaurante (US-28); verificación del email del restaurante; recuperar la cuenta (US-31); el pedido en sí (US-17, Sprint 3), del que esta spec solo define la restricción.
+- **Fuera**: crear la cuenta del restaurante con Google; ingreso con Google del restaurante (US-28); agregar una contraseña a una cuenta creada con Google; verificación del email del restaurante; recuperar la cuenta (US-31); el pedido en sí (US-17, Sprint 3), del que esta spec solo define la restricción.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
 - **SC-001**: Un comensal con cuenta ingresa con Google en menos de 15 segundos desde la pantalla de ingreso, sin escribir email ni contraseña.
+
+- **SC-006**: Un comensal nuevo crea su cuenta con Google en menos de 20 segundos desde la pantalla de registro.
 
 - **SC-002**: El 100% de los ingresos con Google sin cuenta asociada, cancelados o fallidos terminan sin acceso a ninguna cuenta.
 

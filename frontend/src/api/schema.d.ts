@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/comensales/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register Diner With Google */
+        post: operations["register_diner_with_google_api_comensales_google_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/comensal": {
         parameters: {
             query?: never;
@@ -226,6 +243,16 @@ export interface components {
             /** Credential */
             credential: string;
         };
+        /**
+         * GoogleSignUp
+         * @description Google's ID token, plus the name when Google didn't give one (US-58 S3).
+         */
+        GoogleSignUp: {
+            /** Credential */
+            credential: string;
+            /** Nombre */
+            nombre?: string | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -380,6 +407,51 @@ export interface operations {
                 content?: never;
             };
             /** @description El email ya está registrado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    register_diner_with_google_api_comensales_google_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleSignUp"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Falta la credencial, o Google no dio el nombre y no se envió. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La credencial de Google no es válida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ya hay un comensal con el email de esa cuenta de Google. */
             409: {
                 headers: {
                     [name: string]: unknown;

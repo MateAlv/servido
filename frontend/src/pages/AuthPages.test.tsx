@@ -3,18 +3,44 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { api } from '../api/client'
+import { googleReturns } from '../test/fakeGoogle'
 import { renderWithProviders } from '../test/renderWithProviders'
 import { LoginPage } from './LoginPage'
 import { RegisterPage } from './RegisterPage'
 import { RestaurantRegisterPage } from './RestaurantRegisterPage'
 
 vi.mock('../api/client', () => ({ api: { POST: vi.fn() } }))
+vi.mock('../lib/google', async () => {
+  const { fakeGoogle } = await import('../test/fakeGoogle')
+  return { GOOGLE_CLIENT_ID: 'test-client', loadGoogleIdentity: () => Promise.resolve(fakeGoogle) }
+})
 
 const post = vi.mocked(api.POST)
+
+const createdWithGoogle = {
+  data: {
+    comensal: {
+      id: 'diner-1',
+      nombre: 'Lucía',
+      email: 'lucia@example.com',
+      email_verificado: true,
+    },
+    access_token: 'session-token',
+    token_type: 'bearer',
+  },
+  error: undefined,
+  response: new Response(null, { status: 201 }),
+}
+
+function apiAnswers(status: number, detail: string) {
+  return { data: undefined, error: { detail }, response: new Response(null, { status }) }
+}
 
 describe('auth pages', () => {
   beforeEach(() => {
     post.mockReset()
+    sessionStorage.clear()
+    googleReturns('google-id-token')
   })
 
   it('US-1 S1 identifies email and password as required', () => {
@@ -94,6 +120,63 @@ describe('auth pages', () => {
     expect(
       await screen.findByText(/Te mandamos un mail para verificar tu email/),
     ).toBeInTheDocument()
+  })
+
+  it('US-58 S1 offers Google sign-up to diners', async () => {
+    renderWithProviders(<RegisterPage />)
+
+    expect(
+      await screen.findByRole('button', { name: 'Registrarse con Google' }),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText('Email *')).toBeInTheDocument()
+  })
+
+  it('US-58 S2 signs in the new account', async () => {
+    post.mockResolvedValue(createdWithGoogle)
+    const user = userEvent.setup()
+    renderWithProviders(<RegisterPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Registrarse con Google' }))
+
+    expect(post).toHaveBeenCalledWith('/api/comensales/google', {
+      body: { credential: 'google-id-token', nombre: undefined },
+    })
+    expect(await screen.findByText('¡Listo! Tu cuenta está creada.')).toBeInTheDocument()
+    expect(sessionStorage.getItem('servido-access-token')).toBe('session-token')
+  })
+
+  it('US-58 S3 asks for the name Google did not give', async () => {
+    post.mockResolvedValueOnce(
+      apiAnswers(400, 'Ingresá tu nombre para terminar de crear tu cuenta.'),
+    )
+    post.mockResolvedValueOnce(createdWithGoogle)
+    const user = userEvent.setup()
+    renderWithProviders(<RegisterPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Registrarse con Google' }))
+    await user.type(await screen.findByLabelText('Tu nombre *'), 'Lucía')
+    await user.click(screen.getByRole('button', { name: 'Terminar de crear mi cuenta' }))
+
+    expect(post).toHaveBeenLastCalledWith('/api/comensales/google', {
+      body: { credential: 'google-id-token', nombre: 'Lucía' },
+    })
+    expect(await screen.findByText('¡Listo! Tu cuenta está creada.')).toBeInTheDocument()
+  })
+
+  it('US-58 S5 offers to sign in when the account exists', async () => {
+    post.mockResolvedValue(
+      apiAnswers(409, 'Ya existe una cuenta de Servido! con ese email. Ingresá con Google.'),
+    )
+    const user = userEvent.setup()
+    renderWithProviders(<RegisterPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Registrarse con Google' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe una cuenta de Servido!')
+    expect(screen.getByRole('link', { name: 'Ir a ingresar' })).toHaveAttribute(
+      'href',
+      '/ingresar?rol=comensal',
+    )
   })
 
   it('US-3 S4 shows the generic login error', async () => {

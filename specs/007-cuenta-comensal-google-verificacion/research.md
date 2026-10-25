@@ -83,6 +83,14 @@
 
 **Rationale**: The spec decides that those accounts count as verified, including the Sprint 1 demo accounts, whose `@servido.demo` addresses can't receive mail.
 
+## R10. A diner account without a password (US-58)
+
+**Decision**: An account created with Google stores, as its password hash, the hash of 32 random bytes that are thrown away. No column changes.
+
+**Rationale**: `password_hash` is `NOT NULL` and every login path already compares against it. A hash of an unknown secret can't match any password, so the email and password login keeps answering its generic 401, with no new branch and no migration. A migration would also collide with `004_dishes`, which PR #22 adds at the same time. Adding a password later belongs to account recovery (US-31).
+
+**Alternatives considered**: A nullable `password_hash` plus a check in the login. It states "no password" more explicitly, but it needs a migration and a new branch in every password check, for the same behavior.
+
 ## R9. Order of the work
 
 **Decision**:
@@ -90,3 +98,4 @@
 2. **US-51:** column, token, mail, verification page, resend, and the unverified notice.
 3. **US-52 S5** ("Google verifies the account") lands with US-51, because it needs the verification state.
 4. **US-51 S5** (no orders without verification) is enforced and tested by US-17, which creates orders. This feature exposes the state it needs.
+5. **US-58** (25/10): reuses the US-52 token check. A login with a Google account that has no diner offers to create it with that same credential, so the diner doesn't pick their Google account twice.

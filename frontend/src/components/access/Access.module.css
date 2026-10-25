@@ -12,11 +12,13 @@
   gap: var(--space-2);
 }
 
-/* Google draws its button here; the height keeps the card from jumping while it loads. */
+/* Google draws its button here; the height keeps the card from jumping while it loads.
+   Google's iframe is light: under the dark theme's color-scheme it gets a white background. */
 .googleButton {
   display: flex;
   justify-content: center;
   min-height: 44px;
+  color-scheme: light;
 }
 
 .error {

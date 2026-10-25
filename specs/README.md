@@ -18,7 +18,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | — | — | — |
 | [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | — | — | — |
 | [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — | — |
-| [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51 | 2 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51 (falta validar con la PO; US-51 S5 se prueba con US-17) |
+| [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17) |
 
 Arrastres de la spec 003: el registro con Google pasa a US-28 (Sprint 4) y el HTTP 403 por rol de US-4 (escenario 3) se prueba en el Sprint 2, cuando existan endpoints exclusivos de cada rol. La spec 002 todavía lee los restaurantes de `frontend/src/data/restaurants.fixture.ts`, hasta que la spec 004 agregue el endpoint.
 
@@ -63,6 +63,7 @@ Dudas que no hacía falta llevar a la PO. Ya están incorporadas en cada spec.
 | 21/10 | 001, 003 | Los registros de comensal y de restaurante piden confirmar la contraseña; si no coincide no se envía. Es solo del formulario: la API no cambia. Falta que la PO lo valide |
 | 24/10 | 007 | El comensal sin verificar puede pedir "Reenviar mail de verificación"; cada reenvío invalida los enlaces anteriores. Falta que la PO lo valide |
 | 24/10 | 007 | Ingresar con Google a una cuenta sin verificar la deja verificada, porque Google ya comprobó el email. Falta que la PO lo valide |
+| 25/10 | 007 | Se adelanta US-58 (Crear cuenta con Google) del Sprint 6 al 2, junto con US-52. Si al ingresar con Google no hay cuenta, se ofrece crearla con la misma cuenta de Google |
 | 21/10 | 002 | US-33 (listado de restaurantes, 5 SP) se adelanta del Sprint 4 al 1: el listado acompaña al mapa y cumple sus criterios |
 
 ## Notas de formato

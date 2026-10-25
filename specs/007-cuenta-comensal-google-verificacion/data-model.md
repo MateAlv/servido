@@ -1,6 +1,6 @@
 # Data Model: Google sign-in and email verification (spec 007)
 
-US-52 adds no data. US-51 adds one column to `comensales` and one table.
+US-52 and US-58 add no data: an account created with Google is an ordinary diner, verified, whose password hash belongs to a random secret (research R10). US-51 adds one column to `comensales` and one table.
 
 ## Diner (`comensales`, from spec 001): one new column
 

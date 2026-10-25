@@ -23,6 +23,7 @@ describe('VerifyEmailPage', () => {
     renderWithProviders(<VerifyEmailPage />, { route: '/verificar-email?token=abc123' })
 
     expect(await screen.findByText('¡Listo! Tu email quedó verificado.')).toBeInTheDocument()
+    expect(screen.getByText(/Ya podés reservar tu mesa/)).toBeInTheDocument()
     expect(post).toHaveBeenCalledWith('/api/comensales/verificacion', {
       body: { token: 'abc123' },
     })

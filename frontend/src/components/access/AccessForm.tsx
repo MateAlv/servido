@@ -3,7 +3,7 @@ import { useState, type FormEvent } from 'react'
 
 import { api } from '../../api/client'
 import { getApiErrorMessage, getRequestErrorMessage } from '../../api/errors'
-import { signIn, type Account } from '../../api/session'
+import { dinerAccount, signIn, type Account } from '../../api/session'
 import { Button, PasswordField, TextField } from '../ui'
 import type { AccountRole } from './roles'
 import styles from './Access.module.css'
@@ -18,17 +18,7 @@ async function requestSignIn(
   if (role === 'diner') {
     const { data, error } = await api.POST('/api/auth/comensal', { body: { email, password } })
     if (error || !data) throw new Error(getApiErrorMessage(error, INVALID_CREDENTIALS))
-    const { comensal } = data
-    return {
-      token: data.access_token,
-      account: {
-        rol: 'diner',
-        id: comensal.id,
-        nombre: comensal.nombre ?? null,
-        email: comensal.email,
-        email_verificado: comensal.email_verificado,
-      },
-    }
+    return { token: data.access_token, account: dinerAccount(data.comensal) }
   }
   const { data, error } = await api.POST('/api/auth/restaurante', { body: { email, password } })
   if (error || !data) throw new Error(getApiErrorMessage(error, INVALID_CREDENTIALS))
