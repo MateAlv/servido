@@ -29,6 +29,24 @@ h1 {
   margin: 0 0 6px;
   font-family: var(--font-display);
 }
+.photo,
+.photoPlaceholder {
+  width: calc(100% + 32px);
+  height: 180px;
+  margin: -16px -16px 16px;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+.photo {
+  display: block;
+  object-fit: cover;
+}
+.photoPlaceholder {
+  display: grid;
+  place-items: center;
+  background: var(--color-primary-soft);
+  color: var(--color-text-muted);
+  font-weight: 800;
+}
 .grid p {
   color: var(--color-text-muted);
 }

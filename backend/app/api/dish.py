@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
-from uuid import UUID
+from pathlib import Path
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import select
@@ -12,6 +13,7 @@ from app.schemas.dish import DishCreateRequest, DishResponse
 from app.services.roles import RESTAURANT
 
 router = APIRouter(tags=["dishes"])
+DISH_UPLOADS_DIR = Path("uploads/dishes")
 
 
 def restaurant_id(claims: dict) -> UUID:
@@ -70,14 +72,18 @@ def create_dish(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
 
     foto_url = None
+    stored_photo: Path | None = None
     if foto is not None:
         if foto.content_type not in {"image/jpeg", "image/png"}:
             raise HTTPException(status_code=400, detail="La foto debe estar en formato JPG o PNG.")
         content = foto.file.read()
         if len(content) > 5 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="La foto no puede superar los 5 MB.")
-        # Image storage is outside this MVP; retain the validated upload contract.
-        foto_url = foto.filename
+        extension = ".jpg" if foto.content_type == "image/jpeg" else ".png"
+        stored_photo = DISH_UPLOADS_DIR / f"{uuid4()}{extension}"
+        DISH_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+        stored_photo.write_bytes(content)
+        foto_url = f"/media/dishes/{stored_photo.name}"
 
     dish = Dish(
         id_restaurante=id_restaurante,
@@ -90,6 +96,8 @@ def create_dish(
         session.commit()
     except IntegrityError as error:
         session.rollback()
+        if stored_photo is not None:
+            stored_photo.unlink(missing_ok=True)
         raise HTTPException(status_code=409, detail="Ya existe un plato con ese nombre.") from error
     session.refresh(dish)
     return dish

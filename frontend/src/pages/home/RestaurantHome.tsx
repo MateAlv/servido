@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 
 import type { Account } from '../../api/session'
 import {
@@ -116,7 +117,8 @@ export function RestaurantHome({ account }: { account: Account }) {
                   )}
                 </div>
                 <h3 className={styles.stepTitle}>
-                  <span className={styles.stepNumber}>{i + 1}.</span> {step.title}
+                  <span className={styles.stepNumber}>{i + 1}.</span>{' '}
+                  {step.title === 'Menú' ? <Link to="/restaurante/menu">Menú</Link> : step.title}
                 </h3>
                 <p className={styles.stepText}>{step.text}</p>
               </div>

@@ -12,6 +12,7 @@ type Dish = {
   categoria: string
   precio: string
   tiempo_preparacion_minutos: number | null
+  foto_url: string | null
 }
 
 export function MenuPage() {
@@ -52,6 +53,13 @@ export function MenuPage() {
         <div className={styles.grid}>
           {dishes.map((dish) => (
             <Card key={dish.id}>
+              {dish.foto_url ? (
+                <img className={styles.photo} src={dish.foto_url} alt={`Foto de ${dish.nombre}`} />
+              ) : (
+                <div className={styles.photoPlaceholder} aria-hidden="true">
+                  Sin foto
+                </div>
+              )}
               <h2>{dish.nombre}</h2>
               <p className={styles.category}>{dish.categoria.replace('_', ' ')}</p>
               {dish.descripcion && <p>{dish.descripcion}</p>}
