@@ -123,6 +123,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurantes/me/platos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Dishes */
+        get: operations["list_dishes_api_restaurantes_me_platos_get"];
+        put?: never;
+        /** Create Dish */
+        post: operations["create_dish_api_restaurantes_me_platos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -212,6 +230,26 @@ export interface components {
              */
             email_verificado: boolean;
         };
+        /** Body_create_dish_api_restaurantes_me_platos_post */
+        Body_create_dish_api_restaurantes_me_platos_post: {
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Categoria */
+            categoria: string;
+            /** Precio */
+            precio: string;
+            /**
+             * Restricciones Alimenticias
+             * @default []
+             */
+            restricciones_alimenticias: string[];
+            /** Tiempo Preparacion Minutos */
+            tiempo_preparacion_minutos?: number | null;
+            /** Foto */
+            foto?: string | null;
+        };
         /** Credentials */
         Credentials: {
             /** Email */
@@ -234,6 +272,28 @@ export interface components {
             fecha_registro?: string | null;
             /** Email Verificado */
             readonly email_verificado: boolean;
+        };
+        /** DishResponse */
+        DishResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion: string | null;
+            /** Categoria */
+            categoria: string;
+            /** Precio */
+            precio: string;
+            /** Restricciones Alimenticias */
+            restricciones_alimenticias: string[];
+            /** Tiempo Preparacion Minutos */
+            tiempo_preparacion_minutos: number | null;
+            /** Foto Url */
+            foto_url: string | null;
         };
         /**
          * GoogleCredential
@@ -616,6 +676,59 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    list_dishes_api_restaurantes_me_platos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DishResponse"][];
+                };
+            };
+        };
+    };
+    create_dish_api_restaurantes_me_platos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_create_dish_api_restaurantes_me_platos_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DishResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

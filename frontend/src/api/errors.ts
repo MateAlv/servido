@@ -5,6 +5,9 @@ export function getApiErrorMessage(error: unknown, fallback: string) {
     if (typeof detail === 'string') return detail
     if (Array.isArray(detail) && typeof detail[0]?.msg === 'string') return detail[0].msg
   }
+  if (typeof error === 'object' && error !== null && 'application/json' in error) {
+    return getApiErrorMessage(error['application/json'], fallback)
+  }
   return fallback
 }
 

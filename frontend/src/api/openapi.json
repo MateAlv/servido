@@ -254,6 +254,80 @@
         }
       }
     },
+    "/api/restaurantes/me/platos": {
+      "get": {
+        "tags": [
+          "dishes"
+        ],
+        "summary": "List Dishes",
+        "operationId": "list_dishes_api_restaurantes_me_platos_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DishResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Dishes Api Restaurantes Me Platos Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "dishes"
+        ],
+        "summary": "Create Dish",
+        "operationId": "create_dish_api_restaurantes_me_platos_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_dish_api_restaurantes_me_platos_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DishResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/me": {
       "get": {
         "tags": [
@@ -404,6 +478,71 @@
         "title": "AccountResponse",
         "description": "The account behind the token, whatever its role. Used to show who is signed in."
       },
+      "Body_create_dish_api_restaurantes_me_platos_post": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "precio": {
+            "type": "string",
+            "title": "Precio"
+          },
+          "restricciones_alimenticias": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Restricciones Alimenticias",
+            "default": []
+          },
+          "tiempo_preparacion_minutos": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tiempo Preparacion Minutos"
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "categoria",
+          "precio"
+        ],
+        "title": "Body_create_dish_api_restaurantes_me_platos_post"
+      },
       "Credentials": {
         "properties": {
           "email": {
@@ -473,6 +612,79 @@
           "email_verificado"
         ],
         "title": "DinerResponse"
+      },
+      "DishResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "precio": {
+            "type": "string",
+            "title": "Precio"
+          },
+          "restricciones_alimenticias": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Restricciones Alimenticias"
+          },
+          "tiempo_preparacion_minutos": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tiempo Preparacion Minutos"
+          },
+          "foto_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "categoria",
+          "precio",
+          "restricciones_alimenticias",
+          "tiempo_preparacion_minutos",
+          "foto_url"
+        ],
+        "title": "DishResponse"
       },
       "GoogleCredential": {
         "properties": {

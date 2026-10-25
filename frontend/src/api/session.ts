@@ -19,6 +19,10 @@ export function dinerAccount(comensal: components['schemas']['DinerResponse']): 
 const TOKEN_KEY = 'servido-access-token'
 export const ACCOUNT_QUERY_KEY = ['account'] as const
 
+export function accessToken(): string | null {
+  return sessionStorage.getItem(TOKEN_KEY)
+}
+
 async function loadAccount(): Promise<Account | null> {
   const token = sessionStorage.getItem(TOKEN_KEY)
   if (!token) return null

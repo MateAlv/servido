@@ -41,6 +41,8 @@ services:
       MAIL_BACKEND: ${MAIL_BACKEND:-ses}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       APP_BASE_URL: https://servido.discordia.fyi
+    volumes:
+      - ${DATA_DIR:-/var/lib/servido}/uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
