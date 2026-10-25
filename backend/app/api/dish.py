@@ -73,7 +73,7 @@ def create_dish(
 
     foto_url = None
     stored_photo: Path | None = None
-    if foto is not None:
+    if foto is not None and foto.filename:
         if foto.content_type not in {"image/jpeg", "image/png"}:
             raise HTTPException(status_code=400, detail="La foto debe estar en formato JPG o PNG.")
         content = foto.file.read()

@@ -29,7 +29,11 @@ describe('auth pages', () => {
     post.mockResolvedValue({
       data: undefined,
       error: {
-        detail: [{ loc: ['body', 'email'], msg: 'Ingresá un email válido.', type: 'value_error' }],
+        'application/json': {
+          detail: [
+            { loc: ['body', 'email'], msg: 'Ingresá un email válido.', type: 'value_error' },
+          ],
+        },
       },
       response: new Response(null, { status: 400 }),
     })
@@ -74,7 +78,7 @@ describe('auth pages', () => {
   it('US-3 S4 shows the generic login error', async () => {
     post.mockResolvedValue({
       data: undefined,
-      error: { detail: 'Credenciales inválidas' },
+      error: undefined,
       response: new Response(null, { status: 401 }),
     })
     const user = userEvent.setup()

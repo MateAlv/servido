@@ -34,7 +34,9 @@ def upgrade() -> None:
             "tiempo_preparacion_minutos IS NULL OR tiempo_preparacion_minutos > 0",
             name="ck_platos_tiempo_preparacion_positive",
         ),
-        sa.ForeignKeyConstraint(["id_restaurante"], ["restaurantes.id_restaurante"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["id_restaurante"], ["restaurantes.id_restaurante"], ondelete="CASCADE"
+        ),
         sa.PrimaryKeyConstraint("id_plato", name="pk_platos"),
         sa.UniqueConstraint("id_restaurante", "nombre", name="uq_platos_restaurante_nombre"),
     )
