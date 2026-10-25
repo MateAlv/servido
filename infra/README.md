@@ -116,7 +116,7 @@ The team account **servido.gdsi@gmail.com** owns everything that is not in AWS. 
 | --- | --- | --- |
 | Google Cloud | Project `servido-512622` ("Servido"), only for Google sign-in (US-52). No billing account. | [console.cloud.google.com](https://console.cloud.google.com/auth/overview?project=servido-512622) |
 
-Google sign-in uses a **Web application** OAuth client, published (In production). Its authorized JavaScript origins are `https://servido.discordia.fyi`, `http://localhost:5173` and `http://localhost`, and it asks only for the basic scopes `openid`, `email` and `profile`, so Google does not review it. Do not upload a logo in Branding: that starts a brand verification that takes days. The client ID is public, because it goes in the frontend. The client secret is not used. Team members are Editors in the project's IAM.
+Google sign-in uses the **Web application** OAuth client `Servido! web`, published (In production), with client ID `65379758997-psqucbqtjg6brottoh9bfctf9gnjag5g.apps.googleusercontent.com`. The consent screen links https://servido.discordia.fyi/privacidad and https://servido.discordia.fyi/terminos, which Google requires to publish an external app. Its authorized JavaScript origins are `https://servido.discordia.fyi`, `http://localhost:5173` and `http://localhost`, and it asks only for the basic scopes `openid`, `email` and `profile`, so Google does not review it. Do not upload a logo in Branding: that starts a brand verification that takes days. The client ID is public, because it goes in the frontend. The client secret is not used: it is kept with the team's passwords and must never reach the repository. Team members are Editors in the project's IAM.
 
 ## Day to day
 
