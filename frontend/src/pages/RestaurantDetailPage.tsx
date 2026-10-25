@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router'
 
+import { useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
 import { OccupancyMeter } from '../components/restaurant'
 import {
@@ -37,6 +38,8 @@ export function RestaurantDetailPage() {
     queryKey: ['restaurants', id],
     queryFn: () => fetchRestaurant(id),
   })
+  // Only a signed-in diner can start a reservation (US-11); the API would answer 403 to a restaurant.
+  const { data: account } = useAccount()
 
   const back = (
     <Link to={backTo} className={styles.back}>
@@ -181,17 +184,35 @@ export function RestaurantDetailPage() {
 
         <aside className={styles.side}>
           <Card className={styles.reserve}>
-            <StatusPill tone="warn" className={styles.soon}>
-              Próximamente
-            </StatusPill>
-            <h2 className={styles.sectionTitle}>Reservá con tu pedido</h2>
-            <p className={styles.muted}>
-              Muy pronto vas a poder reservar una mesa y elegir tus platos para que estén listos
-              cuando llegues.
-            </p>
-            <Button fullWidth disabled>
-              Reservar mesa
-            </Button>
+            {account?.rol === 'diner' ? (
+              <>
+                <StatusPill tone="ok" className={styles.soon}>
+                  Reservas abiertas
+                </StatusPill>
+                <h2 className={styles.sectionTitle}>Reservá con tu pedido</h2>
+                <p className={styles.muted}>
+                  Elegí la fecha, el horario y cuántos van a ser. Después revisás los datos y
+                  confirmás.
+                </p>
+                <Button fullWidth to={`/reservar/${restaurant.id}`}>
+                  Reservar mesa
+                </Button>
+              </>
+            ) : (
+              <>
+                <StatusPill tone="warn" className={styles.soon}>
+                  Próximamente
+                </StatusPill>
+                <h2 className={styles.sectionTitle}>Reservá con tu pedido</h2>
+                <p className={styles.muted}>
+                  Muy pronto vas a poder reservar una mesa y elegir tus platos para que estén listos
+                  cuando llegues.
+                </p>
+                <Button fullWidth disabled>
+                  Reservar mesa
+                </Button>
+              </>
+            )}
           </Card>
         </aside>
       </div>

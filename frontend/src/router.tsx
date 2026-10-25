@@ -25,6 +25,12 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: '/reservar/:restauranteId',
+        lazy: async () => ({
+          Component: (await import('./pages/ReservationPage')).ReservationPage,
+        }),
+      },
+      {
         path: '/diseno',
         lazy: async () => ({
           Component: (await import('./pages/DesignSystemPage')).DesignSystemPage,
