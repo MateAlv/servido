@@ -18,7 +18,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | — | — | — |
 | [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | — | — | — |
 | [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — | — |
-| [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51 | 2 | 2 (adelantadas del 6) | ✅ | ✅ | — | — |
+| [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51 | 2 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51 (falta validar con la PO; US-51 S5 se prueba con US-17) |
 
 Arrastres de la spec 003: el registro con Google pasa a US-28 (Sprint 4) y el HTTP 403 por rol de US-4 (escenario 3) se prueba en el Sprint 2, cuando existan endpoints exclusivos de cada rol. La spec 002 todavía lee los restaurantes de `frontend/src/data/restaurants.fixture.ts`, hasta que la spec 004 agregue el endpoint.
 
