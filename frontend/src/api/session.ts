@@ -5,6 +5,19 @@ import type { components } from './schema'
 
 export type Account = components['schemas']['AccountResponse']
 
+/** The account of a restaurant, from the `restaurante` that its login endpoints return. */
+export function restaurantAccount(
+  restaurante: components['schemas']['RestaurantResponse'],
+): Account {
+  return {
+    rol: 'restaurant',
+    id: restaurante.id,
+    nombre: restaurante.nombre,
+    email: restaurante.email,
+    email_verificado: true,
+  }
+}
+
 /** The account of a diner, from the `comensal` that the login and sign-up endpoints return. */
 export function dinerAccount(comensal: components['schemas']['DinerResponse']): Account {
   return {

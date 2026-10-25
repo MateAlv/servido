@@ -10,9 +10,12 @@ import { RegisterPage } from './RegisterPage'
 import { RestaurantRegisterPage } from './RestaurantRegisterPage'
 
 vi.mock('../api/client', () => ({ api: { POST: vi.fn() } }))
-vi.mock('../lib/google', async () => {
+vi.mock('../lib/google', async (importOriginal) => {
   const { fakeGoogle } = await import('../test/fakeGoogle')
-  return { GOOGLE_CLIENT_ID: 'test-client', loadGoogleIdentity: () => Promise.resolve(fakeGoogle) }
+  return {
+    ...(await importOriginal<typeof import('../lib/google')>()),
+    loadGoogleIdentity: () => Promise.resolve(fakeGoogle),
+  }
 })
 
 const post = vi.mocked(api.POST)
@@ -181,6 +184,81 @@ describe('auth pages', () => {
       'href',
       '/ingresar?rol=comensal',
     )
+  })
+
+  it('US-2 S5 asks only for the restaurant details after choosing Google', async () => {
+    post.mockResolvedValue({
+      data: {
+        restaurante: {
+          id: 'restaurant-1',
+          nombre: 'La Esquina de Palermo',
+          email: 'local@example.com',
+          cuit: '30712345671',
+          telefono: '11 5555-4444',
+        },
+        access_token: 'session-token',
+        token_type: 'bearer',
+      },
+      error: undefined,
+      response: new Response(null, { status: 201 }),
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantRegisterPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Registrarse con Google' }))
+
+    expect(screen.queryByLabelText('Email *')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Contraseña *')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Confirmar contraseña *')).not.toBeInTheDocument()
+    await user.type(screen.getByLabelText('Nombre del restaurante *'), 'La Esquina de Palermo')
+    await user.type(screen.getByLabelText('CUIT *'), '30-71234567-1')
+    await user.type(screen.getByLabelText('Teléfono *'), '11 5555-4444')
+    await user.click(screen.getByRole('button', { name: 'Crear cuenta del restaurante' }))
+
+    expect(post).toHaveBeenCalledWith('/api/restaurantes/google', {
+      body: {
+        credential: 'google-id-token',
+        nombre: 'La Esquina de Palermo',
+        cuit: '30-71234567-1',
+        telefono: '11 5555-4444',
+      },
+    })
+    expect(
+      await screen.findByText('¡Listo! La cuenta del restaurante está creada.'),
+    ).toBeInTheDocument()
+    expect(sessionStorage.getItem('servido-access-token')).toBe('session-token')
+  })
+
+  it('US-2 S5 keeps the Google account chosen on the login', () => {
+    renderWithProviders(<RestaurantRegisterPage />, {
+      route: { pathname: '/suma-tu-local', state: { googleCredential: 'google-id-token' } },
+    })
+
+    expect(screen.getByText(/Vas a ingresar con tu cuenta de Google/)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Contraseña *')).not.toBeInTheDocument()
+  })
+
+  it('US-2 S6 asks to choose Google again when the sign-in is rejected', async () => {
+    post.mockResolvedValue(
+      apiAnswers(401, 'No pudimos registrar el restaurante con Google. Probá de nuevo.'),
+    )
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantRegisterPage />, {
+      route: { pathname: '/suma-tu-local', state: { googleCredential: 'google-id-token' } },
+    })
+
+    await user.type(screen.getByLabelText('Nombre del restaurante *'), 'La Esquina de Palermo')
+    await user.type(screen.getByLabelText('CUIT *'), '30-71234567-1')
+    await user.type(screen.getByLabelText('Teléfono *'), '11 5555-4444')
+    await user.click(screen.getByRole('button', { name: 'Crear cuenta del restaurante' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No pudimos registrar el restaurante con Google.',
+    )
+    expect(
+      await screen.findByRole('button', { name: 'Registrarse con Google' }),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText('Contraseña *')).toBeInTheDocument()
   })
 
   it('US-3 S4 shows the generic login error', async () => {

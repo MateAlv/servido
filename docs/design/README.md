@@ -85,8 +85,8 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 | --- | --- | --- |
 | `AccessForm` | Email y contraseña para ingresar con un tipo de cuenta (`role`: `diner` o `restaurant`). Muestra el error genérico de credenciales y ofrece "Registrarme". Lo usa `/ingresar`, con un `SegmentedControl` de `ACCOUNT_ROLE_OPTIONS` para elegir el tipo de cuenta | 3, 4 |
 | `RedirectIfSignedIn` | Envuelve las páginas de ingreso y registro: con una sesión abierta, manda al inicio | 1, 2, 3, 4 |
-| `GoogleButton` | El botón oficial de Google, que dibuja el script de Google con su propio estilo (las reglas de marca de Google no permiten rehacerlo) y devuelve la credencial. Lo usan los dos botones de abajo | 52, 58 |
-| `GoogleSignInButton` | "Iniciar sesión con Google": manda la credencial a la API, abre la sesión del comensal o muestra el error. Si el email no tiene cuenta, ofrece "Crear cuenta con Google" con esa misma cuenta de Google. Va en `/ingresar`, solo para comensales | 52, 58 |
+| `GoogleButton` | El botón oficial de Google, que dibuja el script de Google con su propio estilo (las reglas de marca de Google no permiten rehacerlo) y devuelve la credencial. Lo usan los dos botones de abajo y `/suma-tu-local` | 52, 58, 28, 2 |
+| `GoogleSignInButton` | "Iniciar sesión con Google" para el rol elegido: manda la credencial a la API, abre la sesión o muestra el error. Si el email no tiene cuenta de ese rol, ofrece crearla con esa misma cuenta de Google: al comensal ahí mismo, y al restaurante lo lleva a `/suma-tu-local` para completar sus datos. Va en `/ingresar` | 52, 58, 28 |
 | `GoogleSignUpButton` | "Registrarse con Google": crea la cuenta del comensal ya verificada y abre la sesión; si Google no dio el nombre, lo pide. Va en `/registrarme` | 58 |
 
 `registerPathFor(role)` devuelve adónde lleva "Registrarme" para cada tipo de cuenta (`/registrarme` o `/suma-tu-local`).

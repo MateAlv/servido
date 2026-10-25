@@ -106,6 +106,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/restaurante/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login Restaurant With Google */
+        post: operations["login_restaurant_with_google_api_auth_restaurante_google_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurantes": {
         parameters: {
             query?: never;
@@ -117,6 +134,23 @@ export interface paths {
         put?: never;
         /** Register Restaurant */
         post: operations["register_restaurant_api_restaurantes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurantes/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register Restaurant With Google */
+        post: operations["register_restaurant_with_google_api_restaurantes_google_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -350,6 +384,20 @@ export interface components {
             /** Nombre */
             nombre: string;
         };
+        /**
+         * RestaurantGoogleRegistration
+         * @description US-2 S5: the email comes from the Google ID token, and there is no password.
+         */
+        RestaurantGoogleRegistration: {
+            /** Nombre */
+            nombre: string;
+            /** Cuit */
+            cuit: string;
+            /** Telefono */
+            telefono: string;
+            /** Credential */
+            credential: string;
+        };
         /** RestaurantLoginResponse */
         RestaurantLoginResponse: {
             restaurante: components["schemas"]["RestaurantResponse"];
@@ -365,12 +413,12 @@ export interface components {
         RestaurantRegistrationRequest: {
             /** Nombre */
             nombre: string;
-            /** Email */
-            email: string;
             /** Cuit */
             cuit: string;
             /** Telefono */
             telefono: string;
+            /** Email */
+            email: string;
             /** Password */
             password: string;
         };
@@ -641,6 +689,51 @@ export interface operations {
             };
         };
     };
+    login_restaurant_with_google_api_auth_restaurante_google_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleCredential"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantLoginResponse"];
+                };
+            };
+            /** @description Falta la credencial de Google. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La credencial de Google no es válida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No hay un restaurante con el email de esa cuenta de Google. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     register_restaurant_api_restaurantes_post: {
         parameters: {
             query?: never;
@@ -671,6 +764,51 @@ export interface operations {
                 content?: never;
             };
             /** @description El email o el CUIT ya están registrados. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    register_restaurant_with_google_api_restaurantes_google_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestaurantGoogleRegistration"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantLoginResponse"];
+                };
+            };
+            /** @description Datos de registro inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La credencial de Google no es válida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El email de Google o el CUIT ya están registrados. */
             409: {
                 headers: {
                     [name: string]: unknown;
