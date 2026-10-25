@@ -7,6 +7,18 @@
   gap: var(--space-4);
 }
 
+.google {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* Google draws its button here; the height keeps the card from jumping while it loads. */
+.googleButton {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
 .error {
   color: var(--color-error);
 }

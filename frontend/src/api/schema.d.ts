@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/comensal/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login Diner With Google */
+        post: operations["login_diner_with_google_api_auth_comensal_google_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/restaurante": {
         parameters: {
             query?: never;
@@ -153,6 +170,14 @@ export interface components {
             email: string;
             /** Fecha Registro */
             fecha_registro?: string | null;
+        };
+        /**
+         * GoogleCredential
+         * @description The ID token that Google Identity Services gives the browser.
+         */
+        GoogleCredential: {
+            /** Credential */
+            credential: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -337,6 +362,51 @@ export interface operations {
             };
             /** @description Credenciales inválidas. */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    login_diner_with_google_api_auth_comensal_google_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleCredential"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Falta la credencial de Google. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La credencial de Google no es válida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No hay un comensal con el email de esa cuenta de Google. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

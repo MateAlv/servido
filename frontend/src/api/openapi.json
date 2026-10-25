@@ -100,6 +100,46 @@
         }
       }
     },
+    "/api/auth/comensal/google": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login Diner With Google",
+        "operationId": "login_diner_with_google_api_auth_comensal_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleCredential"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta la credencial de Google."
+          },
+          "401": {
+            "description": "La credencial de Google no es v\u00e1lida."
+          },
+          "404": {
+            "description": "No hay un comensal con el email de esa cuenta de Google."
+          }
+        }
+      }
+    },
     "/api/auth/restaurante": {
       "post": {
         "tags": [
@@ -311,6 +351,21 @@
           "email"
         ],
         "title": "DinerResponse"
+      },
+      "GoogleCredential": {
+        "properties": {
+          "credential": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Credential"
+          }
+        },
+        "type": "object",
+        "required": [
+          "credential"
+        ],
+        "title": "GoogleCredential",
+        "description": "The ID token that Google Identity Services gives the browser."
       },
       "HTTPValidationError": {
         "properties": {

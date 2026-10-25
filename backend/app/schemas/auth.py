@@ -41,6 +41,12 @@ class RegistrationRequest(Credentials):
         return value
 
 
+class GoogleCredential(BaseModel):
+    """The ID token that Google Identity Services gives the browser."""
+
+    credential: str = Field(min_length=1)
+
+
 class DinerResponse(BaseModel):
     id: UUID = Field(validation_alias="id_comensal")
     nombre: str | None = None
