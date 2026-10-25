@@ -58,12 +58,12 @@ Everything runs inside the request: no queues or workers. US-52 is built first. 
 | Principle | Gate | Pass |
 | --- | --- | --- |
 | I. Backlog-bound scope | Builds only US-52 and US-51. No caching beyond the in-memory Google keys PyJWT already handles. No queues: the mail is sent in the request. | [x] |
-| II. Spec before code | Spec 007 has no open clarifications. The PO has not validated it yet (the 24/10 decisions are flagged). **Code starts after that validation, or with the explicit risk accepted by the PM.** | [ ] |
+| II. Spec before code | Spec 007 has no open clarifications. The PO has not validated it yet (the 24/10 decisions are flagged). **On 24/10 the PM (Mateo) accepted coding US-52 and US-51 before that validation; anything the PO changes is adjusted afterwards.** | [x] (risk accepted) |
 | III. Every scenario tested | Every scenario is in the map below. US-51 S5 is tested by US-17, which adds orders. One active link per diner is a unique constraint. | [x] |
 | IV. Humans own AI output | Three small endpoints, one table, one page. Each piece fits in a short review. | [x] |
 | V. Simple, cheap, conventional | Two justified dependencies. SES is a new AWS service, so it gets ADR 0009, which also records Google as an identity provider for sign-in. Both are free at this volume. | [x] |
 
-**Post-design re-check**: unchanged. Gate II stays open until the PO validates spec 007.
+**Post-design re-check**: unchanged. Gate II passes on the PM's accepted risk until the PO validates spec 007.
 
 ## Acceptance Scenario → Test Map
 
