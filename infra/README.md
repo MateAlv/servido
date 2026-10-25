@@ -111,13 +111,27 @@ Without a domain, set `domain_name = null` in `terraform.tfvars`: the app keeps 
 
 ## Mail (Amazon SES)
 
-The API mails the diner's verification link (spec 007, US-51, [ADR 0009](../docs/decisions/0009-google-sign-in-and-ses-mail.md)). In production `MAIL_BACKEND=ses` (`infra/ec2/compose.yml`). Locally the link is printed in the API log instead.
+The API mails the diner's verification link (spec 007, US-51, [ADR 0009](../docs/decisions/0009-google-sign-in-and-ses-mail.md)). In production `MAIL_BACKEND=ses` (`infra/ec2/compose.yml`), or `smtp` while the Gmail fallback below is on. Locally the link is printed in the API log instead.
 
 One-time setup:
 
 1. `terraform apply` creates the SES identity for the domain, lets the instance role send, and raises the instance metadata hop limit to 2 so the api container can use that role.
 2. `terraform output ses_dkim_records` prints three CNAMEs. Add them in Cloudflare with **DNS only**. SES shows the domain as verified within minutes to hours.
 3. SES starts in the **sandbox**: it only delivers to verified addresses. Request production access once: SES console → Account dashboard → Request production access (transactional mail, account verification, a few mails a day). Until AWS approves it, add the testers' addresses under SES → Identities.
+
+### Gmail instead of SES
+
+While SES has no production access, the API can send from **servido.gdsi@gmail.com** over SMTP (`MAIL_BACKEND=smtp`). `deploy.sh` switches to it whenever the SSM parameter `/servido-prod/smtp-password` exists:
+
+1. In the team Google account, turn on 2-Step Verification and create an app password (myaccount.google.com/apppasswords).
+2. Store it without pasting it anywhere else; the prompt keeps it out of the shell history:
+   ```bash
+   read -rs SMTP_PASSWORD && AWS_PROFILE=servido aws ssm put-parameter --region us-east-1 \
+     --name /servido-prod/smtp-password --type SecureString --value "$SMTP_PASSWORD" && unset SMTP_PASSWORD
+   ```
+3. Redeploy (Actions → Deploy → Run workflow).
+
+To go back to SES, delete the parameter (`aws ssm delete-parameter --name /servido-prod/smtp-password`), revoke the app password and redeploy.
 
 If a mail can't be sent, registration still succeeds and the API logs `Could not send the verification mail`; the diner can press "Reenviar mail de verificación".
 

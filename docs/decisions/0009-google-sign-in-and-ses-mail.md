@@ -34,6 +34,6 @@ Until now authentication was built in-house with email and password (spec 001), 
 - **The Google consent screen is published.** Google requires the provisional `/privacidad` and `/terminos` pages for that; US-29 replaces the terms. Without brand verification, the consent screen shows the domain instead of the app name.
 - **SES starts in the sandbox:**
   - It only delivers to verified addresses until AWS approves production access, a one-time request.
-  - If AWS refuses, the fallback is SMTP with the team Gmail. Only the mail sender changes.
+  - The fallback is SMTP with the team Gmail (`MAIL_BACKEND=smtp`), built on 25/10 when AWS asked for more details before deciding. It needs an app password of servido.gdsi@gmail.com stored in SSM, and mails come from that address. Deleting the parameter goes back to SES.
 - **A failed send doesn't fail registration:** the account is created unverified and the diner can ask for a new mail.
 - **Cost:** SES charges about USD 0.10 per 1,000 mails, paid from the Free plan credits, and Google sign-in is free.

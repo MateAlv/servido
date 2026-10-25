@@ -1,5 +1,8 @@
 import logging
+import smtplib
 from dataclasses import dataclass
+from email.message import EmailMessage
+from email.utils import formataddr
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -26,9 +29,11 @@ outbox: list[Mail] = []
 
 
 def send_mail(mail: Mail) -> None:
-    """Sends with the backend chosen by MAIL_BACKEND: ses, memory or console (research R6)."""
+    """Sends with the backend chosen by MAIL_BACKEND: ses, smtp, memory or console (research R6)."""
     if settings.mail_backend == "ses":
         send_with_ses(mail)
+    elif settings.mail_backend == "smtp":
+        send_with_smtp(mail)
     elif settings.mail_backend == "memory":
         outbox.append(mail)
     else:
@@ -53,4 +58,21 @@ def send_with_ses(mail: Mail) -> None:
             },
         )
     except (BotoCoreError, ClientError) as error:
+        raise MailError(str(error)) from error
+
+
+def send_with_smtp(mail: Mail) -> None:
+    # Gmail rewrites any other sender to the account's own address, so the mail comes from it.
+    message = EmailMessage()
+    message["From"] = formataddr(("Servido!", settings.smtp_username))
+    message["To"] = mail.to
+    message["Subject"] = mail.subject
+    message.set_content(mail.text)
+    message.add_alternative(mail.html, subtype="html")
+    try:
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as server:
+            server.starttls()
+            server.login(settings.smtp_username, settings.smtp_password)
+            server.send_message(message)
+    except (OSError, smtplib.SMTPException) as error:
         raise MailError(str(error)) from error

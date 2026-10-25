@@ -55,6 +55,7 @@
 **Decision**: Amazon SES (v2 API) through `boto3`, called synchronously right after the diner is committed. The sender is `Servido! <no-reply@servido.discordia.fyi>`. On the instance, the credentials come from the existing instance role, which gets `ses:SendEmail` on that identity only. A setting `mail_backend` chooses the implementation:
 
 - `ses` in production;
+- `smtp` in production while SES has no production access: the team Gmail with an app password;
 - `console` locally, which logs the link;
 - `memory` in tests, which keeps the messages so tests can read the link.
 
@@ -62,7 +63,7 @@
 
 **Alternatives considered**:
 - SES SMTP with `smtplib`: no dependency, but it needs SMTP credentials derived from an IAM user's long-lived key, stored as a new secret.
-- Gmail SMTP: the fallback decided on 23/10 if AWS refuses SES production access. Only the `ses` implementation would change.
+- Gmail SMTP: the fallback decided on 23/10 if AWS refuses SES production access. Built on 25/10 as the `smtp` backend, because AWS asked for more details before deciding. It needs an app password, which is a long-lived secret of the team's Google account.
 
 **SES setup** (Terraform plus manual steps, see quickstart):
 - **Terraform:** `aws_sesv2_email_identity` for `servido.discordia.fyi` with Easy DKIM, whose three CNAME records go in Cloudflare by hand like the ACM validation. Also an IAM policy on the instance role.

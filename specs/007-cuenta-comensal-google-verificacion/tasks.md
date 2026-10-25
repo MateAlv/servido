@@ -86,6 +86,7 @@
 - [ ] T033 Apply infra/terraform/mail.tf, add the DKIM CNAMEs in Cloudflare and request SES production access (quickstart; done by Mateo)
 - [X] T034 Document SES in infra/README.md (table of pieces, "Accounts outside AWS", day-to-day)
 - [X] T035 Update AGENTS.md (auth with Google; new endpoints and route) and specs/README.md (007 implemented)
+- [X] T037 `smtp` mail backend (team Gmail) as the fallback while SES has no production access, switched on by the SSM parameter `smtp-password` in infra/ec2/deploy.sh
 - [ ] T036 `make format lint test`, then check the quickstart in production
 
 ## Dependencies & Execution Order
