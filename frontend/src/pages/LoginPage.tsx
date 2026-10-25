@@ -4,10 +4,12 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import {
   ACCOUNT_ROLE_OPTIONS,
   AccessForm,
+  GoogleSignInButton,
   RedirectIfSignedIn,
   registerPathFor,
   type AccountRole,
 } from '../components/access'
+import type { Account } from '../api/session'
 import { Card, SegmentedControl, useToast } from '../components/ui'
 import styles from './AuthPage.module.css'
 
@@ -21,6 +23,11 @@ export function LoginPage() {
     searchParams.get('rol') === 'restaurante' ? 'restaurant' : 'diner',
   )
   const createdEmail = (state as { email?: unknown } | null)?.email
+
+  function welcome(account: Account) {
+    toast(`¡Hola, ${account.nombre ?? account.email}!`, { tone: 'ok' })
+    navigate('/')
+  }
 
   return (
     <RedirectIfSignedIn>
@@ -41,12 +48,15 @@ export function LoginPage() {
             key={role}
             role={role}
             initialEmail={typeof createdEmail === 'string' ? createdEmail : ''}
-            onSignedIn={(account) => {
-              toast(`¡Hola, ${account.nombre ?? account.email}!`, { tone: 'ok' })
-              navigate('/')
-            }}
+            onSignedIn={welcome}
             onRegister={() => navigate(registerPathFor(role))}
           />
+          {role === 'diner' && (
+            <>
+              <p className={styles.divider}>o</p>
+              <GoogleSignInButton onSignedIn={welcome} />
+            </>
+          )}
           <p className={styles.footer}>
             <Link to="/">Volver al inicio</Link>
           </p>

@@ -75,6 +75,31 @@ describe('auth pages', () => {
     expect(post).not.toHaveBeenCalled()
   })
 
+  it('US-51 S1 asks to check the mail after registering', async () => {
+    post.mockResolvedValue({
+      data: {
+        id: 'diner-1',
+        nombre: 'Martín',
+        email: 'martin@example.com',
+        email_verificado: false,
+      },
+      error: undefined,
+      response: new Response(null, { status: 201 }),
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<RegisterPage />)
+
+    await user.type(screen.getByLabelText('Nombre *'), 'Martín')
+    await user.type(screen.getByLabelText('Email *'), 'martin@example.com')
+    await user.type(screen.getByLabelText('Contraseña *'), 'Servido2026')
+    await user.type(screen.getByLabelText('Confirmar contraseña *'), 'Servido2026')
+    await user.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+
+    expect(
+      await screen.findByText(/Te mandamos un mail para verificar tu email/),
+    ).toBeInTheDocument()
+  })
+
   it('US-3 S4 shows the generic login error', async () => {
     post.mockResolvedValue({
       data: undefined,

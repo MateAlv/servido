@@ -26,6 +26,7 @@ async function requestSignIn(
         id: comensal.id,
         nombre: comensal.nombre ?? null,
         email: comensal.email,
+        email_verificado: comensal.email_verificado,
       },
     }
   }
@@ -39,6 +40,7 @@ async function requestSignIn(
       id: restaurante.id,
       nombre: restaurante.nombre,
       email: restaurante.email,
+      email_verificado: true,
     },
   }
 }

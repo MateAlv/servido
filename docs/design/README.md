@@ -85,6 +85,7 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 | --- | --- | --- |
 | `AccessForm` | Email y contraseña para ingresar con un tipo de cuenta (`role`: `diner` o `restaurant`). Muestra el error genérico de credenciales y ofrece "Registrarme". Lo usa `/ingresar`, con un `SegmentedControl` de `ACCOUNT_ROLE_OPTIONS` para elegir el tipo de cuenta | 3, 4 |
 | `RedirectIfSignedIn` | Envuelve las páginas de ingreso y registro: con una sesión abierta, manda al inicio | 1, 2, 3, 4 |
+| `GoogleSignInButton` | El botón oficial "Acceder con Google", que dibuja el script de Google con su propio estilo (las reglas de marca de Google no permiten rehacerlo). Manda la credencial a la API, abre la sesión del comensal o muestra el error, con "Creá tu cuenta" si el email no tiene cuenta. Va en `/ingresar`, solo para comensales | 52 |
 
 `registerPathFor(role)` devuelve adónde lleva "Registrarme" para cada tipo de cuenta (`/registrarme` o `/suma-tu-local`).
 

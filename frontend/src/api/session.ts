@@ -26,6 +26,12 @@ async function loadAccount(): Promise<Account | null> {
   return data
 }
 
+/** The Authorization header of the open session, for endpoints that need one. */
+export function sessionHeaders(): Record<string, string> {
+  const token = sessionStorage.getItem(TOKEN_KEY)
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 /** The signed-in account, or `null` when nobody is signed in. */
 export function useAccount() {
   return useQuery({ queryKey: ACCOUNT_QUERY_KEY, queryFn: loadAccount, staleTime: Infinity })

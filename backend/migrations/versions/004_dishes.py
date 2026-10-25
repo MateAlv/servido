@@ -1,7 +1,7 @@
 """Add restaurant dishes.
 
-Revision ID: 003_dishes
-Revises: 002_restaurant_names
+Revision ID: 004_dishes
+Revises: 003_email_verification
 """
 
 from collections.abc import Sequence
@@ -9,8 +9,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "003_dishes"
-down_revision: str | None = "002_restaurant_names"
+revision: str = "004_dishes"
+down_revision: str | None = "003_email_verification"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -100,6 +100,46 @@
         }
       }
     },
+    "/api/auth/comensal/google": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login Diner With Google",
+        "operationId": "login_diner_with_google_api_auth_comensal_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleCredential"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta la credencial de Google."
+          },
+          "401": {
+            "description": "La credencial de Google no es v\u00e1lida."
+          },
+          "404": {
+            "description": "No hay un comensal con el email de esa cuenta de Google."
+          }
+        }
+      }
+    },
     "/api/auth/restaurante": {
       "post": {
         "tags": [
@@ -277,6 +317,77 @@
           }
         ]
       }
+    },
+    "/api/comensales/verificacion": {
+      "post": {
+        "tags": [
+          "email verification"
+        ],
+        "summary": "Verify Email",
+        "description": "Verifies a diner's email with the token of the mailed link. It never signs in (FR-011).",
+        "operationId": "verify_email_api_comensales_verificacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El enlace no es v\u00e1lido o venci\u00f3."
+          }
+        }
+      }
+    },
+    "/api/comensales/verificacion/reenvio": {
+      "post": {
+        "tags": [
+          "email verification"
+        ],
+        "summary": "Resend Verification",
+        "description": "Mails the signed-in diner a new link; the previous one stops working (FR-012).",
+        "operationId": "resend_verification_api_comensales_verificacion_reenvio_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesi\u00f3n inv\u00e1lida o vencida."
+          },
+          "403": {
+            "description": "La sesi\u00f3n no es de un comensal."
+          },
+          "409": {
+            "description": "El email ya est\u00e1 verificado."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -310,6 +421,11 @@
           "email": {
             "type": "string",
             "title": "Email"
+          },
+          "email_verificado": {
+            "type": "boolean",
+            "title": "Email Verificado",
+            "default": true
           }
         },
         "type": "object",
@@ -442,12 +558,18 @@
               }
             ],
             "title": "Fecha Registro"
+          },
+          "email_verificado": {
+            "type": "boolean",
+            "title": "Email Verificado",
+            "readOnly": true
           }
         },
         "type": "object",
         "required": [
           "id",
-          "email"
+          "email",
+          "email_verificado"
         ],
         "title": "DinerResponse"
       },
@@ -524,6 +646,21 @@
         ],
         "title": "DishResponse"
       },
+      "GoogleCredential": {
+        "properties": {
+          "credential": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Credential"
+          }
+        },
+        "type": "object",
+        "required": [
+          "credential"
+        ],
+        "title": "GoogleCredential",
+        "description": "The ID token that Google Identity Services gives the browser."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -576,6 +713,19 @@
           "access_token"
         ],
         "title": "LoginResponse"
+      },
+      "MessageResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "MessageResponse"
       },
       "RegistrationRequest": {
         "properties": {
@@ -744,6 +894,20 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VerificationRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "VerificationRequest"
       }
     },
     "securitySchemes": {

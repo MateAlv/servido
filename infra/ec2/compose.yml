@@ -1,6 +1,7 @@
 # Production: the same three services as `make up`, built for production, on the app
 # instance. CloudFront is the only client (see network.tf) and reaches nginx on port 80.
-# deploy.sh writes .env (database password and JWT secret) from SSM Parameter Store.
+# deploy.sh writes .env (database password, JWT secret and, optionally, the Gmail app
+# password) from SSM Parameter Store.
 name: servido
 
 x-logging: &logging
@@ -35,6 +36,11 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://servido:${POSTGRES_PASSWORD}@db:5432/servido
       JWT_SECRET: ${JWT_SECRET:?run deploy.sh, it writes .env}
+      # Verification mails through SES with the instance role (spec 007, ADR 0009), or through
+      # the team's Gmail when deploy.sh finds the smtp-password parameter.
+      MAIL_BACKEND: ${MAIL_BACKEND:-ses}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      APP_BASE_URL: https://servido.discordia.fyi
     volumes:
       - ${DATA_DIR:-/var/lib/servido}/uploads:/app/uploads
     depends_on:

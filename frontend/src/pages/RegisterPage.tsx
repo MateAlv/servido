@@ -32,7 +32,9 @@ export function RegisterPage() {
         body: { nombre, email, password },
       })
       if (error) throw new Error(getApiErrorMessage(error, 'No pudimos crear tu cuenta.'))
-      toast('¡Listo! Tu cuenta está creada. Ingresá para empezar.', { tone: 'ok' })
+      toast('¡Listo! Tu cuenta está creada. Te mandamos un mail para verificar tu email.', {
+        tone: 'ok',
+      })
       navigate('/ingresar?rol=comensal', { state: { email } })
     } catch (requestError) {
       setError(getRequestErrorMessage(requestError, 'No pudimos crear tu cuenta.'))
