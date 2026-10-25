@@ -45,6 +45,7 @@ export type RestaurantPublic = {
   reviews: RestaurantReview[]
   /** Cover photo, and a square version for lists (`frontend/public/restaurants`). */
   photo: { cover: string; thumb: string }
+  foto_url?: string | null
 }
 
 /**

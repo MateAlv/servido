@@ -114,6 +114,21 @@ export function RestaurantHome({ account }: { account: Account }) {
                   <span className={styles.stepNumber}>{i + 1}.</span> {step.title}
                 </h3>
                 <p className={styles.stepText}>{step.text}</p>
+                {step.title === 'Tu local' && (
+                  <Button size="sm" to="/restaurante/perfil">
+                    Configurar perfil
+                  </Button>
+                )}
+                {step.title === 'Horarios y mesas' && (
+                  <div>
+                    <Button size="sm" to="/restaurante/horarios">
+                      Configurar horarios
+                    </Button>
+                    <Button size="sm" variant="secondary" to="/restaurante/mesas">
+                      Configurar mesas
+                    </Button>
+                  </div>
+                )}
               </div>
             </Reveal>
           ))}

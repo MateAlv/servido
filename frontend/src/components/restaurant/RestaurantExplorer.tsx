@@ -157,7 +157,7 @@ export function RestaurantExplorer() {
               >
                 <img
                   className={styles.thumb}
-                  src={restaurant.photo.thumb}
+                  src={restaurant.foto_url ?? restaurant.photo.thumb}
                   alt=""
                   width={64}
                   height={64}

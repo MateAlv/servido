@@ -5,6 +5,9 @@ import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { RestaurantRegisterPage } from './pages/RestaurantRegisterPage'
+import { RestaurantProfilePage } from './pages/RestaurantProfilePage'
+import { OpeningHoursPage } from './pages/OpeningHoursPage'
+import { TableInventoryPage } from './pages/TableInventoryPage'
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +17,9 @@ export const router = createBrowserRouter([
       { path: '/ingresar', element: <LoginPage /> },
       { path: '/registrarme', element: <RegisterPage /> },
       { path: '/suma-tu-local', element: <RestaurantRegisterPage /> },
+      { path: '/restaurante/perfil', element: <RestaurantProfilePage /> },
+      { path: '/restaurante/horarios', element: <OpeningHoursPage /> },
+      { path: '/restaurante/mesas', element: <TableInventoryPage /> },
       {
         path: '/mapa',
         lazy: async () => ({ Component: (await import('./pages/MapPage')).MapPage }),
