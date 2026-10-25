@@ -9,6 +9,8 @@ import { Card, Spinner } from '../components/ui'
 import styles from './AuthPage.module.css'
 
 const INVALID_LINK = 'No pudimos verificar tu email: el enlace no es válido o venció.'
+const WHAT_NOW =
+  'Ya podés reservar tu mesa y pedir tus platos antes de llegar, así comés sin esperar. ¡Buen provecho!'
 
 async function verifyEmail(token: string): Promise<string> {
   const { data, error } = await api.POST('/api/comensales/verificacion', { body: { token } })
@@ -46,9 +48,12 @@ export function VerifyEmailPage() {
           </p>
         )}
         {verification.isSuccess && (
-          <p className={styles.lead} role="status">
-            {verification.data}
-          </p>
+          <>
+            <p className={styles.lead} role="status">
+              {verification.data}
+            </p>
+            <p className={styles.lead}>{WHAT_NOW}</p>
+          </>
         )}
         {(token === '' || verification.isError) && (
           <p className={styles.error} role="alert">
