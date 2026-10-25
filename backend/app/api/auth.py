@@ -19,6 +19,7 @@ from app.services.auth import (
     normalize_email,
     verify_password,
 )
+from app.services.email_verification import mark_verified, send_verification_mail
 from app.services.google import InvalidGoogleTokenError, verify_google_id_token
 from app.services.roles import DINER, RESTAURANT
 
@@ -60,6 +61,7 @@ def register_diner(payload: RegistrationRequest, session: SessionDep) -> Diner:
             status_code=409, detail="Ya existe una cuenta asociada a ese email."
         ) from error
     session.refresh(diner)
+    send_verification_mail(session, diner)
     return diner
 
 
@@ -96,6 +98,10 @@ def login_diner_with_google(payload: GoogleCredential, session: SessionDep) -> L
     diner = session.scalar(select(Diner).where(Diner.email == email))
     if diner is None:
         raise HTTPException(status_code=404, detail=NO_DINER_FOR_GOOGLE_DETAIL)
+    # Google already proved that the email is theirs (FR-013).
+    if diner.email_verified_at is None:
+        mark_verified(diner)
+        session.commit()
     return diner_session(diner)
 
 

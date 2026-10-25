@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, computed_field, field_validator
 
 from app.services.auth import normalize_email, validate_email, validate_password
 
@@ -52,8 +52,14 @@ class DinerResponse(BaseModel):
     nombre: str | None = None
     email: str
     fecha_registro: datetime | None = None
+    email_verified_at: datetime | None = Field(default=None, exclude=True)
 
     model_config = {"from_attributes": True}
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def email_verificado(self) -> bool:
+        return self.email_verified_at is not None
 
 
 class LoginResponse(BaseModel):
@@ -69,3 +75,13 @@ class AccountResponse(BaseModel):
     id: UUID
     nombre: str | None
     email: str
+    # Restaurants are not verified by mail (spec 007 covers diners only).
+    email_verificado: bool = True
+
+
+class VerificationRequest(BaseModel):
+    token: str = Field(min_length=1)
+
+
+class MessageResponse(BaseModel):
+    detail: str

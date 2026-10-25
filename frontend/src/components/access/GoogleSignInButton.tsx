@@ -46,6 +46,7 @@ export function GoogleSignInButton({ onSignedIn }: GoogleSignInButtonProps) {
         id: comensal.id,
         nombre: comensal.nombre ?? null,
         email: comensal.email,
+        email_verificado: comensal.email_verificado,
       }
       signIn(queryClient, data.access_token, account)
       onSignedIn(account)

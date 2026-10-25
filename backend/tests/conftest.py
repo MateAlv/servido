@@ -13,12 +13,22 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.db import engine, get_session
 from app.main import app
-from app.services import google
+from app.services import google, mail
 
 
 @pytest.fixture(scope="session", autouse=True)
 def migrated_database() -> None:
     command.upgrade(Config("alembic.ini"), "head")
+
+
+@pytest.fixture(autouse=True)
+def mail_outbox(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[mail.Mail]]:
+    """Every test keeps its mails in memory instead of sending them."""
+    monkeypatch.setattr(settings, "mail_backend", "memory")
+    monkeypatch.setattr(settings, "app_base_url", "https://servido.test")
+    mail.outbox.clear()
+    yield mail.outbox
+    mail.outbox.clear()
 
 
 @pytest.fixture

@@ -1,4 +1,5 @@
 import type { Account } from '../../api/session'
+import { UnverifiedNotice } from '../../components/access'
 import { RestaurantExplorer } from '../../components/restaurant'
 import { Reveal } from '../../components/ui'
 import styles from './DinerHome.module.css'
@@ -11,6 +12,7 @@ function firstName(account: Account): string {
 export function DinerHome({ account }: { account: Account }) {
   return (
     <main className={styles.page}>
+      <UnverifiedNotice account={account} />
       <header className={styles.header}>
         <Reveal>
           <p className={styles.eyebrow}>Hola, {firstName(account)}</p>

@@ -106,3 +106,16 @@ def test_us52_edge_restaurant_email_does_not_sign_in(
     response = sign_in_with_google(client, google_token())
 
     assert response.status_code == 404
+
+
+def test_us52_s5_google_sign_in_verifies_the_account(
+    client: TestClient, google_token: GoogleTokenFactory
+) -> None:
+    register_diner(client)
+
+    response = sign_in_with_google(client, google_token())
+
+    assert response.json()["comensal"]["email_verificado"] is True
+    token = response.json()["access_token"]
+    me = client.get("/api/me", headers={"Authorization": f"Bearer {token}"})
+    assert me.json()["email_verificado"] is True
