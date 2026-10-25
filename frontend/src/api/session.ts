@@ -5,6 +5,17 @@ import type { components } from './schema'
 
 export type Account = components['schemas']['AccountResponse']
 
+/** The account of a diner, from the `comensal` that the login and sign-up endpoints return. */
+export function dinerAccount(comensal: components['schemas']['DinerResponse']): Account {
+  return {
+    rol: 'diner',
+    id: comensal.id,
+    nombre: comensal.nombre ?? null,
+    email: comensal.email,
+    email_verificado: comensal.email_verificado,
+  }
+}
+
 const TOKEN_KEY = 'servido-access-token'
 export const ACCOUNT_QUERY_KEY = ['account'] as const
 

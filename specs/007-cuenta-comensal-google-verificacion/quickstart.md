@@ -21,6 +21,16 @@ How to check the feature end to end. Endpoints are in [contracts/accounts-api.md
 
 If the button shows an error right after the OAuth client was created, wait: Google says new origins take from 5 minutes to a few hours.
 
+## US-58: create the account with Google (local)
+
+1. Open http://localhost:5173/registrarme and press **Registrarse con Google** with a Google account that has no diner.
+   - Expected: you land on the diner home, signed in, with no "verificá tu email" notice (S2).
+2. Sign out and press it again with the same Google account.
+   - Expected: "Ya existe una cuenta de Servido! con ese email. Ingresá con Google." (S5).
+3. Sign out, open /ingresar and press **Iniciar sesión con Google** with another Google account that has no diner, then **Crear cuenta con Google** under the error.
+   - Expected: the account is created without picking the Google account again.
+4. Automated: `cd backend && uv run pytest tests/test_google_sign_up.py` and `cd frontend && npx vitest run src/pages`.
+
 ## US-51: verification mail (local)
 
 1. Register a diner at http://localhost:5173/registrarme.

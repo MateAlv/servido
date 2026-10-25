@@ -24,6 +24,30 @@ Responses:
 - The session token is the same JWT as the password login (spec 001, FR-008a).
 - A restaurant account with that email does not match: only diners are looked up.
 
+## US-58: `POST /api/comensales/google`
+
+Creates a diner account from the ID token that Google Identity Services gives the browser, and signs it in.
+
+Request:
+
+```json
+{ "credential": "<Google ID token>", "nombre": "Martín" }
+```
+
+`nombre` is optional: it's only sent when Google didn't give a name and the API asked for it.
+
+Responses:
+
+| Status | When | Body |
+| --- | --- | --- |
+| 201 | Valid token and no diner has its email | Same as `POST /api/auth/comensal`. The account has the Google email, the Google name (or `nombre`, cut to 60 characters), no password and is already verified (FR-015). No verification mail is sent. |
+| 401 | Invalid token (same checks as US-52) | `{ "detail": "No pudimos crear tu cuenta con Google. Probá de nuevo." }` |
+| 409 | A diner already has that email | `{ "detail": "Ya existe una cuenta de Servido! con ese email. Ingresá con Google." }` |
+| 400 | Google gave no name and the request has no `nombre` | `{ "detail": "Ingresá tu nombre para terminar de crear tu cuenta." }` (FR-016). The frontend recognizes this exact message and shows the name field. |
+| 400 | `credential` missing or empty, or `nombre` blank or longer than 60 | Standard validation body |
+
+- An account created this way has no password: `POST /api/auth/comensal` answers the usual 401 for it (research R10).
+
 ## US-51: changes to existing endpoints
 
 - `POST /api/comensales` (registration): unchanged contract. After creating the diner, it sends the verification mail (FR-005). A failure to send does not change the response.

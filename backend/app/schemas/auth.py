@@ -47,6 +47,19 @@ class GoogleCredential(BaseModel):
     credential: str = Field(min_length=1)
 
 
+class GoogleSignUp(GoogleCredential):
+    """Google's ID token, plus the name when Google didn't give one (US-58 S3)."""
+
+    nombre: str | None = Field(default=None, min_length=1, max_length=60)
+
+    @field_validator("nombre")
+    @classmethod
+    def nombre_must_not_be_blank(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("Ingresá tu nombre.")
+        return value.strip() if value is not None else None
+
+
 class DinerResponse(BaseModel):
     id: UUID = Field(validation_alias="id_comensal")
     nombre: str | None = None

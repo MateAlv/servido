@@ -71,9 +71,15 @@ Everything runs inside the request: no queues or workers. US-52 is built first. 
 | --- | --- | --- |
 | US-52 S1 — the diner login offers "Ingresar con Google" | `frontend/src/pages/LoginPage.test.tsx` › `US-52 S1 offers Google sign-in to diners` | Frontend |
 | US-52 S2 — valid Google token with an existing diner signs in | `backend/tests/test_google_sign_in.py::test_us52_s2_google_account_with_a_diner_signs_in` | Backend |
-| US-52 S3 — no diner with that email: says so, no access | `backend/tests/test_google_sign_in.py::test_us52_s3_google_account_without_a_diner_is_not_found` · `LoginPage.test.tsx` › `US-52 S3 offers to create an account when there is none` | Both |
+| US-52 S3 — no diner with that email: says so, no access, offers to create it | `backend/tests/test_google_sign_in.py::test_us52_s3_google_account_without_a_diner_is_not_found` · `LoginPage.test.tsx` › `US-52 S3 offers to create an account when there is none` and `US-52 S3 creates the account with the same Google account` | Both |
 | US-52 S4 — invalid token: no access, notice shown | `backend/tests/test_google_sign_in.py::test_us52_s4_invalid_google_token_is_rejected` (bad signature, audience, issuer, expired, unverified email) · `LoginPage.test.tsx` › `US-52 S4 shows that Google sign-in failed` | Both |
 | US-52 S5 — Google sign-in verifies an unverified diner | `backend/tests/test_google_sign_in.py::test_us52_s5_google_sign_in_verifies_the_account` | Backend |
+| US-58 S1 — the diner sign-up offers "Registrarse con Google" | `frontend/src/pages/AuthPages.test.tsx` › `US-58 S1 offers Google sign-up to diners` | Frontend |
+| US-58 S2 — creates a verified account from Google and signs it in | `backend/tests/test_google_sign_up.py::test_us58_s2_google_account_creates_a_verified_diner` · `AuthPages.test.tsx` › `US-58 S2 signs in the new account` | Both |
+| US-58 S3 — asks for the name when Google gives none | `test_google_sign_up.py::test_us58_s3_missing_name_is_asked_for` · `AuthPages.test.tsx` › `US-58 S3 asks for the name Google did not give` | Both |
+| US-58 S4 — invalid token: no account | `test_google_sign_up.py::test_us58_s4_invalid_google_token_creates_nothing` | Backend |
+| US-58 S5 — an existing email: no second account, offers to sign in | `test_google_sign_up.py::test_us58_s5_existing_email_is_not_registered_again` · `AuthPages.test.tsx` › `US-58 S5 offers to sign in when the account exists` | Both |
+| Edge — an account created with Google has no password | `test_google_sign_up.py::test_us58_edge_google_account_has_no_password` | Backend |
 | US-51 S1 — registering sends the mail | `backend/tests/test_email_verification.py::test_us51_s1_registration_sends_a_verification_mail` · `RegisterPage` toast check in `AuthPages.test.tsx` › `US-51 S1 asks to check the mail after registering` | Both |
 | US-51 S2 — the mail contains a verification link | `test_email_verification.py::test_us51_s2_mail_contains_the_verification_link` | Backend |
 | US-51 S3 — a valid link verifies the account | `test_email_verification.py::test_us51_s3_valid_link_verifies_the_account` · `VerifyEmailPage.test.tsx` › `US-51 S3 confirms the verification` | Both |
@@ -95,7 +101,7 @@ Google's keys are never fetched in tests. The tests sign ID tokens with a local 
 specs/007-cuenta-comensal-google-verificacion/
 ├── spec.md              # Spanish, pending PO validation
 ├── plan.md              # This file
-├── research.md          # Decisions R1–R9
+├── research.md          # Decisions R1–R10
 ├── data-model.md        # email_verified_at and email_verifications
 ├── quickstart.md        # Local and production checks
 ├── contracts/accounts-api.md
@@ -106,7 +112,7 @@ specs/007-cuenta-comensal-google-verificacion/
 
 ```text
 backend/
-├── app/api/auth.py                      # ~ POST /auth/comensal/google; registration sends the mail
+├── app/api/auth.py                      # ~ POST /auth/comensal/google and /comensales/google; registration sends the mail
 ├── app/api/email_verification.py        # + POST /comensales/verificacion and /verificacion/reenvio; ~ app/api/__init__.py
 ├── app/api/account.py                   # ~ email_verificado in /me
 ├── app/models/diner.py                  # ~ email_verified_at
@@ -123,10 +129,13 @@ backend/
 frontend/
 ├── src/api/openapi.json, schema.d.ts    # ~ `make api-types`
 ├── src/lib/google.ts                    # + client ID and the loader for the Google script
-├── src/components/access/GoogleSignInButton.tsx  # + renders Google's button, posts the credential
+├── src/components/access/GoogleButton.tsx        # + renders Google's button and hands back the credential
+├── src/components/access/GoogleSignInButton.tsx  # + signs in; offers to create the account (US-58)
+├── src/components/access/GoogleSignUpButton.tsx  # + creates the account (US-58)
+├── src/components/access/useGoogleSignUp.ts      # + posts the credential; GoogleSignUpFeedback.tsx asks for a missing name
 ├── src/components/access/UnverifiedNotice.tsx    # + notice with "Reenviar mail de verificación"
 ├── src/pages/LoginPage.tsx              # ~ Google button for diners, + LoginPage.test.tsx
-├── src/pages/RegisterPage.tsx           # ~ "revisá tu mail" after registering
+├── src/pages/RegisterPage.tsx           # ~ "revisá tu mail" after registering; Google sign-up
 ├── src/pages/VerifyEmailPage.tsx        # + /verificar-email, with its test
 ├── src/pages/home/DinerHome.tsx         # ~ shows UnverifiedNotice
 └── src/router.tsx                       # ~ /verificar-email

@@ -96,3 +96,15 @@
 - **US-51 (Phase 3)** needs T021–T022 before T024–T027.
 - **Phase 4** needs both stories. T033 can start any time: it's waiting for AWS.
 - Tests of each phase are written before its implementation and fail first.
+
+## Phase 5: US-58 — Crear cuenta con Google (added 25/10)
+
+**Goal**: a new diner creates a verified account with their Google account, from the sign-up or right after a Google login that found no account.
+
+- [X] T038 [P] [US58] `test_us58_s2_…`, `test_us58_s3_…`, `test_us58_s4_…`, `test_us58_s5_…` and `test_us58_edge_google_account_has_no_password` in backend/tests/test_google_sign_up.py
+- [X] T039 [P] [US58] `US-58 S1`, `S2`, `S3` and `S5` in frontend/src/pages/AuthPages.test.tsx, and `US-52 S3 creates the account with the same Google account` in LoginPage.test.tsx
+- [X] T040 [US58] `GoogleSignUp` schema and `POST /api/comensales/google` in backend/app/api/auth.py (201 / 401 / 409 / 422, contract), sharing the token check with the sign-in
+- [X] T041 [US58] `make api-types`
+- [X] T042 [US58] frontend/src/components/access/GoogleButton.tsx (Google's button only), used by GoogleSignInButton and the new GoogleSignUpButton
+- [X] T043 [US58] GoogleSignUpButton in frontend/src/pages/RegisterPage.tsx; "Crear cuenta con Google" under the US-52 S3 error
+- [X] T044 [US58] Docs: AGENTS.md, docs/design/README.md, specs/README.md, ADR 0009

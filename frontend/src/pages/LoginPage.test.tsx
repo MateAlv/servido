@@ -3,36 +3,17 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { api } from '../api/client'
-import type { GoogleCredentialResponse, GoogleIdentity } from '../lib/google'
+import { googleReturns } from '../test/fakeGoogle'
 import { renderWithProviders } from '../test/renderWithProviders'
 import { LoginPage } from './LoginPage'
 
 vi.mock('../api/client', () => ({ api: { POST: vi.fn() } }))
-
-// Stands in for Google's script: its button hands back a credential when clicked.
-const fakeGoogle: GoogleIdentity = {
-  initialize: vi.fn(),
-  renderButton: vi.fn(),
-}
-vi.mock('../lib/google', () => ({
-  GOOGLE_CLIENT_ID: 'test-client',
-  loadGoogleIdentity: () => Promise.resolve(fakeGoogle),
-}))
+vi.mock('../lib/google', async () => {
+  const { fakeGoogle } = await import('../test/fakeGoogle')
+  return { GOOGLE_CLIENT_ID: 'test-client', loadGoogleIdentity: () => Promise.resolve(fakeGoogle) }
+})
 
 const post = vi.mocked(api.POST)
-
-function googleReturns(credential: string) {
-  let callback: (response: GoogleCredentialResponse) => void = () => {}
-  vi.mocked(fakeGoogle.initialize).mockImplementation((config) => {
-    callback = config.callback
-  })
-  vi.mocked(fakeGoogle.renderButton).mockImplementation((parent) => {
-    const button = document.createElement('button')
-    button.textContent = 'Acceder con Google'
-    button.onclick = () => callback({ credential })
-    parent.append(button)
-  })
-}
 
 function apiAnswers(status: number, detail: string) {
   post.mockResolvedValue({
@@ -72,10 +53,35 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'No existe una cuenta de Servido! asociada a ese email de Google.',
     )
-    expect(screen.getByRole('link', { name: 'Creá tu cuenta' })).toHaveAttribute(
-      'href',
-      '/registrarme',
-    )
+    expect(screen.getByRole('button', { name: 'Crear cuenta con Google' })).toBeInTheDocument()
+  })
+
+  it('US-52 S3 creates the account with the same Google account', async () => {
+    apiAnswers(404, 'No existe una cuenta de Servido! asociada a ese email de Google.')
+    const user = userEvent.setup()
+    renderWithProviders(<LoginPage />)
+    await user.click(await screen.findByRole('button', { name: 'Acceder con Google' }))
+    post.mockResolvedValue({
+      data: {
+        comensal: {
+          id: 'diner-1',
+          nombre: 'Lucía',
+          email: 'lucia@example.com',
+          email_verificado: true,
+        },
+        access_token: 'session-token',
+        token_type: 'bearer',
+      },
+      error: undefined,
+      response: new Response(null, { status: 201 }),
+    })
+
+    await user.click(await screen.findByRole('button', { name: 'Crear cuenta con Google' }))
+
+    expect(post).toHaveBeenLastCalledWith('/api/comensales/google', {
+      body: { credential: 'google-id-token', nombre: undefined },
+    })
+    expect(await screen.findByText('¡Hola, Lucía!')).toBeInTheDocument()
   })
 
   it('US-52 S4 shows that Google sign-in failed', async () => {
@@ -88,6 +94,8 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'No pudimos ingresar con Google. Probá de nuevo.',
     )
-    expect(screen.queryByRole('link', { name: 'Creá tu cuenta' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Crear cuenta con Google' }),
+    ).not.toBeInTheDocument()
   })
 })

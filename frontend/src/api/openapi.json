@@ -63,6 +63,46 @@
         }
       }
     },
+    "/api/comensales/google": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register Diner With Google",
+        "operationId": "register_diner_with_google_api_comensales_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleSignUp"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta la credencial, o Google no dio el nombre y no se envi\u00f3."
+          },
+          "401": {
+            "description": "La credencial de Google no es v\u00e1lida."
+          },
+          "409": {
+            "description": "Ya hay un comensal con el email de esa cuenta de Google."
+          }
+        }
+      }
+    },
     "/api/auth/comensal": {
       "post": {
         "tags": [
@@ -448,6 +488,34 @@
         ],
         "title": "GoogleCredential",
         "description": "The ID token that Google Identity Services gives the browser."
+      },
+      "GoogleSignUp": {
+        "properties": {
+          "credential": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Credential"
+          },
+          "nombre": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre"
+          }
+        },
+        "type": "object",
+        "required": [
+          "credential"
+        ],
+        "title": "GoogleSignUp",
+        "description": "Google's ID token, plus the name when Google didn't give one (US-58 S3)."
       },
       "HTTPValidationError": {
         "properties": {
