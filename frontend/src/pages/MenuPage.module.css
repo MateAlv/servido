@@ -62,6 +62,20 @@ h1 {
   color: var(--color-text-muted);
   font-weight: 800;
 }
+.restrictions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.restriction {
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-ok-bg);
+  color: var(--color-ok);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
 .grid p {
   color: var(--color-text-muted);
 }

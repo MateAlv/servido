@@ -11,8 +11,15 @@ type Dish = {
   descripcion: string | null
   categoria: string
   precio: string
+  restricciones_alimenticias: string[]
   tiempo_preparacion_minutos: number | null
   foto_url: string | null
+}
+
+const restrictionLabels: Record<string, string> = {
+  sin_tacc: 'Sin TACC',
+  vegetariano: 'Vegetariano',
+  vegano: 'Vegano',
 }
 
 export function MenuPage() {
@@ -60,6 +67,15 @@ export function MenuPage() {
               ) : (
                 <div className={styles.photoPlaceholder} aria-hidden="true">
                   Sin foto
+                </div>
+              )}
+              {dish.restricciones_alimenticias.length > 0 && (
+                <div className={styles.restrictions} aria-label="Restricciones alimenticias">
+                  {dish.restricciones_alimenticias.map((restriction) => (
+                    <span key={restriction} className={styles.restriction}>
+                      {restrictionLabels[restriction] ?? restriction}
+                    </span>
+                  ))}
                 </div>
               )}
               <h2>{dish.nombre}</h2>
