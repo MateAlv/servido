@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
 import { accessToken, useAccount } from '../api/session'
-import { Button, Card, TextField } from '../components/ui'
+import { Button, Card, IconArrowRight, TextField } from '../components/ui'
 import styles from './AddDishPage.module.css'
 
 const categories = [
@@ -52,8 +52,10 @@ export function AddDishPage() {
 
   return (
     <main className={styles.page}>
+      <Link to="/restaurante/menu" className={styles.back}>
+        <IconArrowRight className={styles.backIcon} /> Volver al menú
+      </Link>
       <header className={styles.header}>
-        <p className={styles.eyebrow}>Menú</p>
         <h1>Agregar un plato</h1>
         <p>Completá los datos para que tu equipo pueda ofrecerlo en los pedidos.</p>
       </header>

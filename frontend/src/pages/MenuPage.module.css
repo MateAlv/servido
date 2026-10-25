@@ -3,6 +3,21 @@
   margin: 0 auto;
   padding: 28px 24px 60px;
 }
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  color: var(--color-text);
+  font-weight: 800;
+  text-decoration: none;
+}
+.back:hover {
+  color: var(--color-primary);
+}
+.backIcon {
+  transform: scaleX(-1);
+}
 .header {
   display: flex;
   justify-content: space-between;

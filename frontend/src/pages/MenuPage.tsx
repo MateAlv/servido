@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
 import { accessToken, useAccount } from '../api/session'
-import { Button, Card } from '../components/ui'
+import { Button, Card, IconArrowRight } from '../components/ui'
 import styles from './MenuPage.module.css'
 
 type Dish = {
@@ -37,9 +37,11 @@ export function MenuPage() {
 
   return (
     <main className={styles.page}>
+      <Link to="/" className={styles.back}>
+        <IconArrowRight className={styles.backIcon} /> Volver al menú principal
+      </Link>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Menú</p>
           <h1>Los platos de tu restaurante</h1>
         </div>
         <Button to="/restaurante/menu/nuevo-plato">Agregar plato</Button>
