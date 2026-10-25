@@ -23,3 +23,7 @@ class Diner(Base):
     fecha_registro: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
+    # Spec 007: NULL until the diner opens the mailed link or signs in with Google.
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

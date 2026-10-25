@@ -33,3 +33,11 @@ output "github_variables" {
     gh variable set EC2_INSTANCE_ID --body "${aws_instance.app.id}"
   EOT
 }
+
+output "ses_dkim_records" {
+  description = "Add these in Cloudflare (DNS only) so SES can send as the domain."
+  value = local.custom_domain ? [
+    for token in aws_sesv2_email_identity.mail[0].dkim_signing_attributes[0].tokens :
+    "CNAME  ${token}._domainkey.${var.domain_name}  ->  ${token}.dkim.amazonses.com"
+  ] : []
+}

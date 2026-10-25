@@ -88,6 +88,8 @@ resource "aws_instance" "app" {
 
   metadata_options {
     http_tokens = "required"
+    # Docker's bridge adds a hop: the api container needs 2 to get the role's credentials (SES).
+    http_put_response_hop_limit = 2
   }
 
   root_block_device {

@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/comensal/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Login Diner With Google */
+        post: operations["login_diner_with_google_api_auth_comensal_google_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/restaurante": {
         parameters: {
             query?: never;
@@ -109,6 +126,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/comensales/verificacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify Email
+         * @description Verifies a diner's email with the token of the mailed link. It never signs in (FR-011).
+         */
+        post: operations["verify_email_api_comensales_verificacion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/comensales/verificacion/reenvio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend Verification
+         * @description Mails the signed-in diner a new link; the previous one stops working (FR-012).
+         */
+        post: operations["resend_verification_api_comensales_verificacion_reenvio_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -132,6 +189,11 @@ export interface components {
             nombre: string | null;
             /** Email */
             email: string;
+            /**
+             * Email Verificado
+             * @default true
+             */
+            email_verificado: boolean;
         };
         /** Credentials */
         Credentials: {
@@ -153,6 +215,16 @@ export interface components {
             email: string;
             /** Fecha Registro */
             fecha_registro?: string | null;
+            /** Email Verificado */
+            readonly email_verificado: boolean;
+        };
+        /**
+         * GoogleCredential
+         * @description The ID token that Google Identity Services gives the browser.
+         */
+        GoogleCredential: {
+            /** Credential */
+            credential: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -176,6 +248,11 @@ export interface components {
              * @default bearer
              */
             token_type: string;
+        };
+        /** MessageResponse */
+        MessageResponse: {
+            /** Detail */
+            detail: string;
         };
         /** RegistrationRequest */
         RegistrationRequest: {
@@ -238,6 +315,11 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VerificationRequest */
+        VerificationRequest: {
+            /** Token */
+            token: string;
         };
     };
     responses: never;
@@ -344,6 +426,51 @@ export interface operations {
             };
         };
     };
+    login_diner_with_google_api_auth_comensal_google_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleCredential"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description Falta la credencial de Google. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La credencial de Google no es válida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No hay un comensal con el email de esa cuenta de Google. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     login_restaurant_api_auth_restaurante_post: {
         parameters: {
             query?: never;
@@ -440,6 +567,78 @@ export interface operations {
             };
             /** @description Sesión inválida o vencida. */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    verify_email_api_comensales_verificacion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerificationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El enlace no es válido o venció. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resend_verification_api_comensales_verificacion_reenvio_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Sesión inválida o vencida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La sesión no es de un comensal. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El email ya está verificado. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

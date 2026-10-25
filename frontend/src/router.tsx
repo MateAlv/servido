@@ -25,6 +25,12 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: '/verificar-email',
+        lazy: async () => ({
+          Component: (await import('./pages/VerifyEmailPage')).VerifyEmailPage,
+        }),
+      },
+      {
         path: '/privacidad',
         lazy: async () => ({ Component: (await import('./pages/PrivacyPage')).PrivacyPage }),
       },

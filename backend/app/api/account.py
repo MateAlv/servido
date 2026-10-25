@@ -33,7 +33,11 @@ def get_account(claims: TokenClaimsDep, session: SessionDep) -> AccountResponse:
         if diner is None:
             raise unauthorized
         return AccountResponse(
-            rol=DINER, id=diner.id_comensal, nombre=diner.nombre, email=diner.email
+            rol=DINER,
+            id=diner.id_comensal,
+            nombre=diner.nombre,
+            email=diner.email,
+            email_verificado=diner.email_verified_at is not None,
         )
     if role == RESTAURANT:
         restaurant = session.get(Restaurant, account_id)
