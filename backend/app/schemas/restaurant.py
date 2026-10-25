@@ -6,13 +6,12 @@ from app.services.auth import normalize_email, validate_email, validate_password
 from app.services.restaurant import has_cuit_length, is_valid_cuit, is_valid_phone, normalize_cuit
 
 
-class RestaurantRegistrationRequest(BaseModel):
-    # Order matters: the password rules compare against the email, validated first.
+class RestaurantDetails(BaseModel):
+    """The restaurant's own data, asked for whether it signs up with a password or with Google."""
+
     nombre: str = Field(min_length=1, max_length=150)
-    email: str = Field(min_length=1, max_length=255)
     cuit: str = Field(min_length=1, max_length=20)
     telefono: str = Field(min_length=1, max_length=30)
-    password: str = Field(min_length=1, max_length=128)
 
     @field_validator("nombre")
     @classmethod
@@ -21,14 +20,6 @@ class RestaurantRegistrationRequest(BaseModel):
         if not cleaned:
             raise ValueError("Ingresá el nombre del restaurante.")
         return cleaned
-
-    @field_validator("email")
-    @classmethod
-    def email_must_be_valid(cls, value: str) -> str:
-        normalized = normalize_email(value)
-        if not validate_email(normalized):
-            raise ValueError("Ingresá un email válido.")
-        return normalized
 
     @field_validator("cuit")
     @classmethod
@@ -48,6 +39,20 @@ class RestaurantRegistrationRequest(BaseModel):
             raise ValueError("Ingresá un teléfono válido.")
         return cleaned
 
+
+class RestaurantRegistrationRequest(RestaurantDetails):
+    # Order matters: the password rules compare against the email, validated first.
+    email: str = Field(min_length=1, max_length=255)
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def email_must_be_valid(cls, value: str) -> str:
+        normalized = normalize_email(value)
+        if not validate_email(normalized):
+            raise ValueError("Ingresá un email válido.")
+        return normalized
+
     @field_validator("password")
     @classmethod
     def password_must_be_valid(cls, value: str, info: ValidationInfo) -> str:
@@ -55,6 +60,12 @@ class RestaurantRegistrationRequest(BaseModel):
         if error:
             raise ValueError(error)
         return value
+
+
+class RestaurantGoogleRegistration(RestaurantDetails):
+    """US-2 S5: the email comes from the Google ID token, and there is no password."""
+
+    credential: str = Field(min_length=1)
 
 
 class RestaurantResponse(BaseModel):

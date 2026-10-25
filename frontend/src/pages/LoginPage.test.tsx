@@ -8,9 +8,12 @@ import { renderWithProviders } from '../test/renderWithProviders'
 import { LoginPage } from './LoginPage'
 
 vi.mock('../api/client', () => ({ api: { POST: vi.fn() } }))
-vi.mock('../lib/google', async () => {
+vi.mock('../lib/google', async (importOriginal) => {
   const { fakeGoogle } = await import('../test/fakeGoogle')
-  return { GOOGLE_CLIENT_ID: 'test-client', loadGoogleIdentity: () => Promise.resolve(fakeGoogle) }
+  return {
+    ...(await importOriginal<typeof import('../lib/google')>()),
+    loadGoogleIdentity: () => Promise.resolve(fakeGoogle),
+  }
 })
 
 const post = vi.mocked(api.POST)
@@ -30,14 +33,60 @@ describe('LoginPage', () => {
   })
 
   it('US-52 S1 offers Google sign-in to diners', async () => {
-    const user = userEvent.setup()
     renderWithProviders(<LoginPage />)
 
     expect(await screen.findByRole('button', { name: 'Acceder con Google' })).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
+  })
 
+  it('US-28 S1 offers Google sign-in to restaurants', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<LoginPage />)
     await user.click(screen.getByRole('radio', { name: 'Restaurante' }))
-    expect(screen.queryByRole('button', { name: 'Acceder con Google' })).not.toBeInTheDocument()
+
+    expect(await screen.findByRole('button', { name: 'Acceder con Google' })).toBeInTheDocument()
+  })
+
+  it('US-28 S2 signs the restaurant in with Google', async () => {
+    post.mockResolvedValue({
+      data: {
+        restaurante: {
+          id: 'restaurant-1',
+          nombre: 'La Esquina de Palermo',
+          email: 'local@example.com',
+          cuit: '30712345671',
+          telefono: '11 5555-4444',
+        },
+        access_token: 'session-token',
+        token_type: 'bearer',
+      },
+      error: undefined,
+      response: new Response(null, { status: 200 }),
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<LoginPage />, { route: '/ingresar?rol=restaurante' })
+
+    await user.click(await screen.findByRole('button', { name: 'Acceder con Google' }))
+
+    expect(post).toHaveBeenCalledWith('/api/auth/restaurante/google', {
+      body: { credential: 'google-id-token' },
+    })
+    expect(await screen.findByText('¡Hola, La Esquina de Palermo!')).toBeInTheDocument()
+  })
+
+  it('US-28 S3 offers to register the restaurant with the same Google account', async () => {
+    apiAnswers(404, 'No existe una cuenta de restaurante asociada a ese email de Google.')
+    const user = userEvent.setup()
+    renderWithProviders(<LoginPage />, { route: '/ingresar?rol=restaurante' })
+
+    await user.click(await screen.findByRole('button', { name: 'Acceder con Google' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No existe una cuenta de restaurante asociada a ese email de Google.',
+    )
+    expect(
+      screen.getByRole('button', { name: 'Registrar el restaurante con Google' }),
+    ).toBeInTheDocument()
   })
 
   it('US-52 S3 offers to create an account when there is none', async () => {

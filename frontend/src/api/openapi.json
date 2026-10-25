@@ -217,6 +217,46 @@
         }
       }
     },
+    "/api/auth/restaurante/google": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login Restaurant With Google",
+        "operationId": "login_restaurant_with_google_api_auth_restaurante_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleCredential"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantLoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta la credencial de Google."
+          },
+          "401": {
+            "description": "La credencial de Google no es v\u00e1lida."
+          },
+          "404": {
+            "description": "No hay un restaurante con el email de esa cuenta de Google."
+          }
+        }
+      }
+    },
     "/api/restaurantes": {
       "post": {
         "tags": [
@@ -250,6 +290,46 @@
           },
           "409": {
             "description": "El email o el CUIT ya est\u00e1n registrados."
+          }
+        }
+      }
+    },
+    "/api/restaurantes/google": {
+      "post": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Register Restaurant With Google",
+        "operationId": "register_restaurant_with_google_api_restaurantes_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestaurantGoogleRegistration"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantLoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos de registro inv\u00e1lidos."
+          },
+          "401": {
+            "description": "La credencial de Google no es v\u00e1lida."
+          },
+          "409": {
+            "description": "El email de Google o el CUIT ya est\u00e1n registrados."
           }
         }
       }
@@ -824,6 +904,42 @@
         ],
         "title": "RegistrationRequest"
       },
+      "RestaurantGoogleRegistration": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "cuit": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Cuit"
+          },
+          "telefono": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 1,
+            "title": "Telefono"
+          },
+          "credential": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Credential"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "cuit",
+          "telefono",
+          "credential"
+        ],
+        "title": "RestaurantGoogleRegistration",
+        "description": "US-2 S5: the email comes from the Google ID token, and there is no password."
+      },
       "RestaurantLoginResponse": {
         "properties": {
           "restaurante": {
@@ -854,12 +970,6 @@
             "minLength": 1,
             "title": "Nombre"
           },
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Email"
-          },
           "cuit": {
             "type": "string",
             "maxLength": 20,
@@ -872,6 +982,12 @@
             "minLength": 1,
             "title": "Telefono"
           },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Email"
+          },
           "password": {
             "type": "string",
             "maxLength": 128,
@@ -882,9 +998,9 @@
         "type": "object",
         "required": [
           "nombre",
-          "email",
           "cuit",
           "telefono",
+          "email",
           "password"
         ],
         "title": "RestaurantRegistrationRequest"

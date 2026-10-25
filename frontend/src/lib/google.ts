@@ -38,6 +38,20 @@ declare global {
 
 let loading: Promise<GoogleIdentity> | null = null
 
+/**
+ * The email inside a Google ID token, only to show it. The API checks the token; this doesn't.
+ * Empty when the token can't be read.
+ */
+export function googleEmail(credential: string): string {
+  try {
+    const payload = credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    const { email } = JSON.parse(atob(payload)) as { email?: unknown }
+    return typeof email === 'string' ? email : ''
+  } catch {
+    return ''
+  }
+}
+
 /** Loads Google's script once and resolves with its sign-in API. */
 export function loadGoogleIdentity(): Promise<GoogleIdentity> {
   const loaded = window.google?.accounts?.id
