@@ -12,6 +12,7 @@ Short records of decisions that shape the codebase. The course asks teams to doc
 | [0006](0006-database-on-rds.md) | Production database on Amazon RDS | Superseded by 0008 |
 | [0007](0007-css-animations.md) | Animations with CSS, no animation library | Accepted |
 | [0008](0008-aws-free-plan-hosting.md) | Hosting on the AWS Free plan: everything in Docker on one instance, Terraform | Accepted |
+| [0009](0009-google-sign-in-and-ses-mail.md) | Google sign-in with Google Identity Services, transactional mail with Amazon SES | Accepted |
 
 ## Adding one
 
