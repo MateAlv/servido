@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
 import { accessToken, useAccount } from '../api/session'
-import { Button, Card } from '../components/ui'
+import { Button, Card, IconArrowRight } from '../components/ui'
 import styles from './MenuPage.module.css'
 
 type Dish = {
@@ -11,8 +11,15 @@ type Dish = {
   descripcion: string | null
   categoria: string
   precio: string
+  restricciones_alimenticias: string[]
   tiempo_preparacion_minutos: number | null
   foto_url: string | null
+}
+
+const restrictionLabels: Record<string, string> = {
+  sin_tacc: 'Sin TACC',
+  vegetariano: 'Vegetariano',
+  vegano: 'Vegano',
 }
 
 export function MenuPage() {
@@ -37,9 +44,11 @@ export function MenuPage() {
 
   return (
     <main className={styles.page}>
+      <Link to="/" className={styles.back}>
+        <IconArrowRight className={styles.backIcon} /> Volver al menú principal
+      </Link>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Menú</p>
           <h1>Los platos de tu restaurante</h1>
         </div>
         <Button to="/restaurante/menu/nuevo-plato">Agregar plato</Button>
@@ -58,6 +67,15 @@ export function MenuPage() {
               ) : (
                 <div className={styles.photoPlaceholder} aria-hidden="true">
                   Sin foto
+                </div>
+              )}
+              {dish.restricciones_alimenticias.length > 0 && (
+                <div className={styles.restrictions} aria-label="Restricciones alimenticias">
+                  {dish.restricciones_alimenticias.map((restriction) => (
+                    <span key={restriction} className={styles.restriction}>
+                      {restrictionLabels[restriction] ?? restriction}
+                    </span>
+                  ))}
                 </div>
               )}
               <h2>{dish.nombre}</h2>
