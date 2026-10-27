@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router'
 
-import { Button, Card, TextField } from '../components/ui'
+import { Button, Card, IconArrowLeft, TextField, useToast } from '../components/ui'
 import { configurationApi, type RestaurantProfile } from '../api/restaurantConfiguration'
 import styles from './RestaurantProfilePage.module.css'
 
@@ -25,6 +26,8 @@ export function RestaurantProfilePage() {
   }>()
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const navigate = useNavigate()
+  const toast = useToast()
 
   useEffect(() => {
     configurationApi
@@ -33,8 +36,15 @@ export function RestaurantProfilePage() {
       .catch((requestError: Error) => setError(requestError.message))
   }, [])
 
-  function change(field: keyof RestaurantProfile, value: string | null) {
+  function change<Field extends keyof RestaurantProfile>(
+    field: Field,
+    value: RestaurantProfile[Field],
+  ) {
     setProfile((current) => ({ ...current, [field]: value }))
+    if (field === 'direccion') {
+      setPreview(undefined)
+      setProfile((current) => ({ ...current, latitud: null, longitud: null }))
+    }
     setMessage('')
   }
 
@@ -53,12 +63,21 @@ export function RestaurantProfilePage() {
 
   async function save(event: FormEvent) {
     event.preventDefault()
+    if (!profile.nombre.trim()) {
+      setError('Ingresá el nombre del restaurante.')
+      return
+    }
+    if (profile.direccion?.trim() && !preview && profile.latitud === null) {
+      setError('Verificá la dirección antes de guardar.')
+      return
+    }
     try {
       const next = preview
         ? { ...profile, latitud: preview.latitude, longitud: preview.longitude }
         : profile
       setProfile(await configurationApi.updateProfile(next))
-      setMessage('Guardaste los datos de tu local.')
+      toast('Guardaste los datos de tu local.', { tone: 'ok' })
+      navigate('/')
       setError('')
     } catch (requestError) {
       setError((requestError as Error).message)
@@ -67,6 +86,9 @@ export function RestaurantProfilePage() {
 
   return (
     <main className={styles.page}>
+      <Button className={styles.back} variant="ghost" size="sm" to="/" icon={<IconArrowLeft />}>
+        Volver al panel
+      </Button>
       <header>
         <p className={styles.eyebrow}>Configuración del local</p>
         <h1 className={styles.title}>Tu perfil público</h1>
@@ -92,6 +114,22 @@ export function RestaurantProfilePage() {
             hint="Por ejemplo: $, $$ o $$$."
             value={profile.rango_precio ?? ''}
             onChange={(event) => change('rango_precio', event.target.value)}
+          />
+          <TextField
+            label="Restricciones alimenticias"
+            hint="Separalas con comas, por ejemplo: vegetariano, sin TACC."
+            value={profile.restricciones_tags?.join(', ') ?? ''}
+            onChange={(event) =>
+              change(
+                'restricciones_tags',
+                event.target.value
+                  ? event.target.value
+                      .split(',')
+                      .map((tag) => tag.trim())
+                      .filter(Boolean)
+                  : null,
+              )
+            }
           />
           <TextField
             label="URL de foto"

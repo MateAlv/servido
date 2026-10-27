@@ -130,6 +130,7 @@ def get_opening_hours(claims: TokenClaimsDep, session: SessionDep) -> list[Openi
         session.scalars(
             select(OpeningShift)
             .where(OpeningShift.restaurant_id == restaurant.id_restaurante)
+            .where(OpeningShift.active.is_(True))
             .order_by(OpeningShift.day_of_week, OpeningShift.start_time)
         )
     )
@@ -217,4 +218,7 @@ def replace_table_inventory(
                 "reservations": affected,
             },
         ) from error
+    except ValueError as error:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
     return [table_inventory_response(group) for group in groups]

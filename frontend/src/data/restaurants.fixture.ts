@@ -1,5 +1,5 @@
 import type { OccupancyLevel } from '../components/restaurant'
-import { priceTierFromAverageSpend } from '../components/restaurant/priceFilter'
+import { priceTierFromAverageSpend } from '../components/restaurant/priceFilterUtils'
 import type { GeoPoint } from '../lib/geo'
 
 export type RestaurantPriceTier = '$' | '$$' | '$$$' | '$$$$'

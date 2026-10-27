@@ -5,6 +5,9 @@
   margin: 0 auto;
   padding: 2rem 1rem 4rem;
 }
+.back {
+  justify-self: start;
+}
 
 .eyebrow {
   color: var(--color-primary);

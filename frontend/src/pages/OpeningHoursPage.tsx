@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 
-import { Button, Card, TextField } from '../components/ui'
+import { Button, Card, IconArrowLeft, TextField, useToast } from '../components/ui'
 import { configurationApi, type OpeningShift } from '../api/restaurantConfiguration'
 import styles from './RestaurantProfilePage.module.css'
 
@@ -10,6 +11,8 @@ export function OpeningHoursPage() {
   const [hours, setHours] = useState<OpeningShift[]>([])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const navigate = useNavigate()
+  const toast = useToast()
 
   useEffect(() => {
     configurationApi
@@ -26,9 +29,34 @@ export function OpeningHoursPage() {
   }
 
   async function save() {
+    const invalid = hours.some(
+      (shift) => !shift.start_time || !shift.end_time || shift.end_time <= shift.start_time,
+    )
+    const activeByDay = new Map<number, OpeningShift[]>()
+    hours
+      .filter((shift) => shift.active)
+      .forEach((shift) => {
+        activeByDay.set(shift.day_of_week, [...(activeByDay.get(shift.day_of_week) ?? []), shift])
+      })
+    const overlaps = [...activeByDay.values()].some((dayShifts) => {
+      const sorted = [...dayShifts].sort((a, b) => a.start_time.localeCompare(b.start_time))
+      return sorted.some(
+        (shift, index) => index > 0 && shift.start_time < sorted[index - 1].end_time,
+      )
+    })
+    if (invalid || overlaps) {
+      setError(
+        invalid
+          ? 'La hora de fin debe ser posterior a la de inicio.'
+          : 'Los turnos del mismo día no pueden superponerse.',
+      )
+      setMessage('')
+      return
+    }
     try {
       setHours(await configurationApi.updateHours(hours))
-      setMessage('Guardaste los horarios.')
+      toast('Guardaste los horarios.', { tone: 'ok' })
+      navigate('/')
       setError('')
     } catch (requestError) {
       setError((requestError as Error).message)
@@ -37,6 +65,9 @@ export function OpeningHoursPage() {
 
   return (
     <main className={styles.page}>
+      <Button className={styles.back} variant="ghost" size="sm" to="/" icon={<IconArrowLeft />}>
+        Volver al panel
+      </Button>
       <header>
         <p className={styles.eyebrow}>Configuración del local</p>
         <h1 className={styles.title}>Horarios de atención</h1>

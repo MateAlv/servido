@@ -15,7 +15,7 @@ import { Button, IconPin, IconStar } from '../ui'
 import { OccupancyLegend } from './OccupancyLegend'
 import { OccupancyMeter } from './OccupancyMeter'
 import { PriceFilter } from './PriceFilter'
-import { matchesPriceFilter, PRICE_TIERS, type PriceTier } from './priceFilter'
+import { matchesPriceFilter, PRICE_TIERS, type PriceTier } from './priceFilterUtils'
 import { RestaurantMap } from './RestaurantMap'
 import styles from './RestaurantExplorer.module.css'
 

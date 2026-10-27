@@ -80,7 +80,12 @@ describe('HomePage', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Hola, La Esquina' }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Próximos pasos' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Gestión del local' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Datos del restaurante' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Turnos y horarios' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Mesas y capacidad' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Platos y menú' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Reservas' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Soy restaurante' })).not.toBeInTheDocument()
   })
 

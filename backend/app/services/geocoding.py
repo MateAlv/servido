@@ -1,4 +1,5 @@
 import json
+import time
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -8,12 +9,21 @@ class GeocodingError(Exception):
     """A user-visible geocoding failure."""
 
 
+_last_request_at = 0.0
+
+
 def geocode_address(address: str) -> dict[str, Decimal | str]:
+    global _last_request_at
+    wait = 1.0 - (time.monotonic() - _last_request_at)
+    if wait > 0:
+        time.sleep(wait)
+
     query = urlencode({"q": address, "format": "jsonv2", "limit": 1, "accept-language": "es"})
     request = Request(
         f"https://nominatim.openstreetmap.org/search?{query}",
         headers={"User-Agent": "Servido/1.0 (restaurant configuration)"},
     )
+    _last_request_at = time.monotonic()
     try:
         with urlopen(request, timeout=10) as response:
             result = json.load(response)

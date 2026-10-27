@@ -34,3 +34,30 @@ def test_us8_s2_invalid_shift_intervals_are_rejected(client: TestClient) -> None
     assert response.status_code == 400
     stored = client.get("/api/restaurante/horarios", headers=headers).json()
     assert [{key: item[key] for key in valid[0]} for item in stored] == valid
+
+
+def test_us8_edge_shifts_crossing_midnight_follow_validation_rule(client: TestClient) -> None:
+    headers = _auth(client)
+    response = client.put(
+        "/api/restaurante/horarios",
+        json=[{"day_of_week": 1, "start_time": "22:00:00", "end_time": "02:00:00"}],
+        headers=headers,
+    )
+    assert response.status_code == 400
+
+    adjacent = [
+        {"day_of_week": 1, "start_time": "12:00:00", "end_time": "15:00:00"},
+        {"day_of_week": 1, "start_time": "15:00:00", "end_time": "18:00:00"},
+    ]
+    assert (
+        client.put("/api/restaurante/horarios", json=adjacent, headers=headers).status_code == 200
+    )
+
+
+def test_us8_s3_inactive_weekday_has_no_opening_shifts(client: TestClient) -> None:
+    headers = _auth(client)
+    payload = [
+        {"day_of_week": 2, "start_time": "12:00:00", "end_time": "15:00:00", "active": False}
+    ]
+    assert client.put("/api/restaurante/horarios", json=payload, headers=headers).status_code == 200
+    assert client.get("/api/restaurante/horarios", headers=headers).json() == []

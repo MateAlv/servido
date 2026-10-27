@@ -1,7 +1,8 @@
 const TOKEN_KEY = 'servido-access-token'
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = sessionStorage.getItem(TOKEN_KEY)
+  const token =
+    typeof window === 'undefined' ? null : window.sessionStorage.getItem(TOKEN_KEY)
   const response = await fetch(`/api${path}`, {
     ...init,
     headers: {
@@ -12,8 +13,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
   const body = (await response.json()) as T | { detail?: string }
   if (!response.ok) {
-    const detail = (body as { detail?: string }).detail
-    throw new Error(typeof detail === 'string' ? detail : 'No pudimos guardar los cambios.')
+    const detail = (body as { detail?: string | { message?: string } }).detail
+    const message =
+      typeof detail === 'string'
+        ? detail
+        : detail?.message ?? 'No pudimos guardar los cambios.'
+    throw new Error(message)
   }
   return body as T
 }

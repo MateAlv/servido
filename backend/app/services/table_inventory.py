@@ -24,6 +24,10 @@ def replace_inventory(
     restaurant_id: UUID,
     groups: list[dict[str, int | bool]],
 ) -> list[TableInventoryGroup]:
+    capacities = [int(group["capacity"]) for group in groups]
+    if len(capacities) != len(set(capacities)):
+        raise ValueError("No puede haber dos grupos con la misma capacidad.")
+
     existing = {
         group.capacity: group
         for group in session.scalars(
@@ -36,9 +40,14 @@ def replace_inventory(
     removed = set(existing) - incoming_capacities
     changed = set(incoming_capacities) | removed
     for capacity in changed:
-        old_quantity = existing[capacity].quantity if capacity in existing else 0
+        old_group = existing.get(capacity)
+        old_quantity = old_group.quantity if old_group is not None and old_group.available else 0
         new_group = next((group for group in groups if int(group["capacity"]) == capacity), None)
-        new_quantity = int(new_group["quantity"]) if new_group is not None else 0
+        new_quantity = (
+            int(new_group["quantity"])
+            if new_group is not None and bool(new_group["available"])
+            else 0
+        )
         delta = new_quantity - old_quantity
         if delta >= 0:
             continue

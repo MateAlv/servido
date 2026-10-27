@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 
-import { Button, Card, TextField } from '../components/ui'
+import { Button, Card, IconArrowLeft, TextField, useToast } from '../components/ui'
 import { configurationApi, type TableGroup } from '../api/restaurantConfiguration'
 import styles from './RestaurantProfilePage.module.css'
 
@@ -8,6 +9,8 @@ export function TableInventoryPage() {
   const [groups, setGroups] = useState<TableGroup[]>([])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const navigate = useNavigate()
+  const toast = useToast()
 
   useEffect(() => {
     configurationApi
@@ -21,9 +24,28 @@ export function TableInventoryPage() {
   }
 
   async function save() {
+    if (
+      groups.some(
+        (group) =>
+          !Number.isInteger(group.capacity) ||
+          group.capacity <= 0 ||
+          !Number.isInteger(group.quantity) ||
+          group.quantity <= 0,
+      )
+    ) {
+      setError('La capacidad y la cantidad deben ser números enteros mayores a cero.')
+      setMessage('')
+      return
+    }
+    if (new Set(groups.map((group) => group.capacity)).size !== groups.length) {
+      setError('No puede haber dos grupos con la misma capacidad.')
+      setMessage('')
+      return
+    }
     try {
       setGroups(await configurationApi.updateTables(groups))
-      setMessage('Guardaste el inventario de mesas.')
+      toast('Guardaste el inventario de mesas.', { tone: 'ok' })
+      navigate('/')
       setError('')
     } catch (requestError) {
       setError((requestError as Error).message)
@@ -32,6 +54,9 @@ export function TableInventoryPage() {
 
   return (
     <main className={styles.page}>
+      <Button className={styles.back} variant="ghost" size="sm" to="/" icon={<IconArrowLeft />}>
+        Volver al panel
+      </Button>
       <header>
         <p className={styles.eyebrow}>Configuración del local</p>
         <h1 className={styles.title}>Inventario de mesas</h1>
