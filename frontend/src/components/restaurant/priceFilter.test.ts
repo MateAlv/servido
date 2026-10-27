@@ -5,7 +5,7 @@ import {
   matchesPriceFilter,
   PRICE_TIERS,
   type PriceTier,
-} from './priceFilter'
+} from './priceFilterUtils'
 
 describe('matchesPriceFilter', () => {
   it('US-7 S1 matches each price tier and multiple selected tiers', () => {

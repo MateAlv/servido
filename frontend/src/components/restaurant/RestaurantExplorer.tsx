@@ -15,7 +15,7 @@ import { Button, IconPin, IconStar } from '../ui'
 import { OccupancyLegend } from './OccupancyLegend'
 import { OccupancyMeter } from './OccupancyMeter'
 import { PriceFilter } from './PriceFilter'
-import { matchesPriceFilter, PRICE_TIERS, type PriceTier } from './priceFilter'
+import { matchesPriceFilter, PRICE_TIERS, type PriceTier } from './priceFilterUtils'
 import { RestaurantMap } from './RestaurantMap'
 import styles from './RestaurantExplorer.module.css'
 
@@ -157,7 +157,7 @@ export function RestaurantExplorer() {
               >
                 <img
                   className={styles.thumb}
-                  src={restaurant.photo.thumb}
+                  src={restaurant.foto_url ?? restaurant.photo.thumb}
                   alt=""
                   width={64}
                   height={64}

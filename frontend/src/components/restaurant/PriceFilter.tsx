@@ -1,5 +1,5 @@
 import { Button, Chip } from '../ui'
-import { PRICE_TIERS, type PriceTier } from './priceFilter'
+import { PRICE_TIERS, type PriceTier } from './priceFilterUtils'
 import styles from './PriceFilter.module.css'
 
 type PriceFilterProps = {
@@ -9,7 +9,7 @@ type PriceFilterProps = {
   resultCount?: number
 }
 
-export function PriceFilter({ selectedTiers, onChange, resultCount }: PriceFilterProps) {
+export const PriceFilter = ({ selectedTiers, onChange, resultCount }: PriceFilterProps) => {
   function toggle(tier: PriceTier) {
     onChange(
       selectedTiers.includes(tier)

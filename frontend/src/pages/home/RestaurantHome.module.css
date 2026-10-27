@@ -26,10 +26,15 @@
 }
 
 .lead {
-  max-width: 620px;
+  max-width: 680px;
   margin: 8px 0 0;
   color: var(--color-text-muted);
   font-size: var(--text-lg);
+}
+
+.dashboardError {
+  margin: 0 0 20px;
+  color: var(--color-danger, #b42318);
 }
 
 .top {
@@ -47,11 +52,12 @@
   height: 100%;
 }
 
-.cardHead {
+.cardHead,
+.managementHead {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
 
 .cardTitle {
@@ -59,7 +65,8 @@
   font: 800 22px / 1.15 var(--font-display);
 }
 
-.cardText {
+.cardText,
+.summary p {
   margin: 0;
   color: var(--color-text-muted);
 }
@@ -100,35 +107,26 @@
   font: 800 28px / 1.1 var(--font-display);
 }
 
-.steps {
+.managementGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.step {
+.managementCard {
   display: grid;
   align-content: start;
-  gap: 8px;
+  gap: 16px;
   height: 100%;
-  padding: 18px;
-  border: 2px dashed var(--color-line);
-  border-radius: var(--radius-card);
-  background: var(--color-surface);
 }
 
-.stepHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+.managementHead {
+  justify-content: flex-start;
 }
 
-.stepIcon {
+.managementIcon {
   display: grid;
+  flex: 0 0 auto;
   width: 42px;
   height: 42px;
   place-items: center;
@@ -138,30 +136,35 @@
   font-size: 22px;
 }
 
-.stepTitle {
-  margin: 4px 0 0;
-  font: 800 19px / 1.2 var(--font-display);
+.summary {
+  display: grid;
+  gap: 6px;
+  min-height: 62px;
 }
 
-.stepNumber {
-  color: var(--color-text-muted);
+.summary p:first-child {
+  color: var(--color-text);
+  font-weight: 800;
 }
 
-.stepText {
-  margin: 0;
+.muted {
   color: var(--color-text-muted);
   font-size: var(--text-sm);
 }
 
+.managementCard a {
+  justify-self: start;
+}
+
 @media (max-width: 960px) {
-  .steps {
+  .managementGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 680px) {
   .top,
-  .steps {
+  .managementGrid {
     grid-template-columns: 1fr;
   }
 }

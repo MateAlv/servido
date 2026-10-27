@@ -135,7 +135,7 @@ export function RestaurantMap({
               <article className={styles.card}>
                 <img
                   className={styles.cover}
-                  src={restaurant.photo.cover}
+                  src={restaurant.foto_url ?? restaurant.photo.cover}
                   alt=""
                   width={POPUP_WIDTH}
                   height={120}

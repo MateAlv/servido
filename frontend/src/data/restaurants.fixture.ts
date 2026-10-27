@@ -1,5 +1,5 @@
 import type { OccupancyLevel } from '../components/restaurant'
-import { priceTierFromAverageSpend } from '../components/restaurant/priceFilter'
+import { priceTierFromAverageSpend } from '../components/restaurant/priceFilterUtils'
 import type { GeoPoint } from '../lib/geo'
 
 export type RestaurantPriceTier = '$' | '$$' | '$$$' | '$$$$'
@@ -45,6 +45,7 @@ export type RestaurantPublic = {
   reviews: RestaurantReview[]
   /** Cover photo, and a square version for lists (`frontend/public/restaurants`). */
   photo: { cover: string; thumb: string }
+  foto_url?: string | null
 }
 
 /**

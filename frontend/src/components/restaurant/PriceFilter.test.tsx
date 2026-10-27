@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { PriceFilter } from './PriceFilter'
-import { matchesPriceFilter, PRICE_TIERS, type PriceTier } from './priceFilter'
+import { matchesPriceFilter, PRICE_TIERS, type PriceTier } from './priceFilterUtils'
 
 function Harness() {
   const [selected, setSelected] = useState<PriceTier[]>([])

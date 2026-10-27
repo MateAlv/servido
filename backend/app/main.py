@@ -21,6 +21,19 @@ def custom_openapi() -> dict:
         version="1.0.0",
         routes=app.routes,
     )
+    schema.setdefault("components", {}).setdefault("schemas", {})["ErrorResponse"] = {
+        "title": "ErrorResponse",
+        "type": "object",
+        "properties": {
+            "detail": {
+                "anyOf": [
+                    {"type": "string"},
+                    {"type": "array", "items": {"$ref": "#/components/schemas/ValidationError"}},
+                    {"type": "object"},
+                ]
+            }
+        },
+    }
     for path_item in schema["paths"].values():
         for operation in path_item.values():
             if not isinstance(operation, dict):
@@ -28,6 +41,15 @@ def custom_openapi() -> dict:
             default_validation_response = operation.get("responses", {}).pop("422", None)
             if default_validation_response is not None:
                 operation["responses"].setdefault("400", default_validation_response)
+            for response_status, response in operation.get("responses", {}).items():
+                if not isinstance(response, dict):
+                    continue
+                if response_status in {"400", "401", "403", "404", "409"}:
+                    response["content"] = {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                        }
+                    }
     app.openapi_schema = schema
     return schema
 

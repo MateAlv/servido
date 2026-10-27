@@ -157,6 +157,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurante/perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Restaurant Profile */
+        get: operations["get_restaurant_profile_api_restaurante_perfil_get"];
+        /** Update Restaurant Profile */
+        put: operations["update_restaurant_profile_api_restaurante_perfil_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurante/perfil/foto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Restaurant Photo */
+        post: operations["upload_restaurant_photo_api_restaurante_perfil_foto_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurante/perfil/geocodificar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Geocode Restaurant Address */
+        post: operations["geocode_restaurant_address_api_restaurante_perfil_geocodificar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurante/horarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Opening Hours */
+        get: operations["get_opening_hours_api_restaurante_horarios_get"];
+        /** Replace Opening Hours */
+        put: operations["replace_opening_hours_api_restaurante_horarios_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurante/mesas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Table Inventory */
+        get: operations["get_table_inventory_api_restaurante_mesas_get"];
+        /** Replace Table Inventory */
+        put: operations["replace_table_inventory_api_restaurante_mesas_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurantes/me/platos": {
         parameters: {
             query?: never;
@@ -284,6 +372,11 @@ export interface components {
             /** Foto */
             foto?: string | null;
         };
+        /** Body_upload_restaurant_photo_api_restaurante_perfil_foto_post */
+        Body_upload_restaurant_photo_api_restaurante_perfil_foto_post: {
+            /** Foto */
+            foto: string;
+        };
         /** Credentials */
         Credentials: {
             /** Email */
@@ -328,6 +421,20 @@ export interface components {
             tiempo_preparacion_minutos: number | null;
             /** Foto Url */
             foto_url: string | null;
+        };
+        /** GeocodingPreview */
+        GeocodingPreview: {
+            /** Display Name */
+            display_name: string;
+            /** Latitude */
+            latitude: string;
+            /** Longitude */
+            longitude: string;
+        };
+        /** GeocodingRequest */
+        GeocodingRequest: {
+            /** Address */
+            address: string;
         };
         /**
          * GoogleCredential
@@ -375,6 +482,51 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /** OpeningHoursResponse */
+        OpeningHoursResponse: {
+            /** Day Of Week */
+            day_of_week: number;
+            /**
+             * Start Time
+             * Format: time
+             */
+            start_time: string;
+            /**
+             * End Time
+             * Format: time
+             */
+            end_time: string;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** OpeningShiftPayload */
+        OpeningShiftPayload: {
+            /** Day Of Week */
+            day_of_week: number;
+            /**
+             * Start Time
+             * Format: time
+             */
+            start_time: string;
+            /**
+             * End Time
+             * Format: time
+             */
+            end_time: string;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+        };
         /** RegistrationRequest */
         RegistrationRequest: {
             /** Email */
@@ -409,6 +561,48 @@ export interface components {
              */
             token_type: string;
         };
+        /** RestaurantProfileResponse */
+        RestaurantProfileResponse: {
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Tipo Cocina */
+            tipo_cocina?: string | null;
+            /** Rango Precio */
+            rango_precio?: string | null;
+            /** Foto Url */
+            foto_url?: string | null;
+            /** Restricciones Tags */
+            restricciones_tags?: string[] | null;
+            /** Direccion */
+            direccion?: string | null;
+            /** Latitud */
+            latitud?: string | null;
+            /** Longitud */
+            longitud?: string | null;
+        };
+        /** RestaurantProfileUpdate */
+        RestaurantProfileUpdate: {
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Tipo Cocina */
+            tipo_cocina?: string | null;
+            /** Rango Precio */
+            rango_precio?: string | null;
+            /** Foto Url */
+            foto_url?: string | null;
+            /** Restricciones Tags */
+            restricciones_tags?: string[] | null;
+            /** Direccion */
+            direccion?: string | null;
+            /** Latitud */
+            latitud?: number | string | null;
+            /** Longitud */
+            longitud?: number | string | null;
+        };
         /** RestaurantRegistrationRequest */
         RestaurantRegistrationRequest: {
             /** Nombre */
@@ -437,6 +631,39 @@ export interface components {
             cuit: string;
             /** Telefono */
             telefono: string;
+            /** Foto Url */
+            foto_url?: string | null;
+        };
+        /** TableInventoryGroupPayload */
+        TableInventoryGroupPayload: {
+            /** Capacity */
+            capacity: number;
+            /** Quantity */
+            quantity: number;
+            /**
+             * Available
+             * @default true
+             */
+            available: boolean;
+        };
+        /** TableInventoryGroupResponse */
+        TableInventoryGroupResponse: {
+            /** Capacity */
+            capacity: number;
+            /** Quantity */
+            quantity: number;
+            /**
+             * Available
+             * @default true
+             */
+            available: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Free Quantity */
+            free_quantity: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -455,6 +682,10 @@ export interface components {
         VerificationRequest: {
             /** Token */
             token: string;
+        };
+        /** ErrorResponse */
+        ErrorResponse: {
+            detail?: string | components["schemas"]["ValidationError"][] | Record<string, never>;
         };
     };
     responses: never;
@@ -512,14 +743,18 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description El email ya está registrado. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -550,21 +785,27 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description La credencial de Google no es válida. */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description Ya hay un comensal con el email de esa cuenta de Google. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -595,14 +836,18 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description Credenciales inválidas. */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -633,21 +878,27 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description La credencial de Google no es válida. */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description No hay un comensal con el email de esa cuenta de Google. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -678,14 +929,18 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description Credenciales inválidas. */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -716,21 +971,27 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description La credencial de Google no es válida. */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description No hay un restaurante con el email de esa cuenta de Google. */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -761,14 +1022,18 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description El email o el CUIT ya están registrados. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -799,21 +1064,254 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description La credencial de Google no es válida. */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description El email de Google o el CUIT ya están registrados. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_restaurant_profile_api_restaurante_perfil_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantProfileResponse"];
+                };
+            };
+        };
+    };
+    update_restaurant_profile_api_restaurante_perfil_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestaurantProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    upload_restaurant_photo_api_restaurante_perfil_foto_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_restaurant_photo_api_restaurante_perfil_foto_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    geocode_restaurant_address_api_restaurante_perfil_geocodificar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GeocodingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeocodingPreview"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_opening_hours_api_restaurante_horarios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningHoursResponse"][];
+                };
+            };
+        };
+    };
+    replace_opening_hours_api_restaurante_horarios_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningShiftPayload"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningHoursResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_table_inventory_api_restaurante_mesas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableInventoryGroupResponse"][];
+                };
+            };
+        };
+    };
+    replace_table_inventory_api_restaurante_mesas_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TableInventoryGroupPayload"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableInventoryGroupResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -865,7 +1363,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -893,7 +1391,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -924,7 +1424,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -951,21 +1453,27 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description La sesión no es de un comensal. */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description El email ya está verificado. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };

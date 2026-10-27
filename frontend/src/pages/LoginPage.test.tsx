@@ -47,6 +47,19 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('button', { name: 'Acceder con Google' })).toBeInTheDocument()
   })
 
+  it('keeps one login form when switching account types repeatedly', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<LoginPage />)
+
+    await user.click(screen.getByRole('radio', { name: 'Restaurante' }))
+    await user.click(screen.getByRole('radio', { name: 'Comensal' }))
+    await user.click(screen.getByRole('radio', { name: 'Restaurante' }))
+
+    expect(screen.getAllByLabelText('Email')).toHaveLength(1)
+    expect(screen.getAllByLabelText('Contraseña')).toHaveLength(1)
+    expect(document.querySelectorAll('form')).toHaveLength(1)
+  })
+
   it('US-28 S2 signs the restaurant in with Google', async () => {
     post.mockResolvedValue({
       data: {

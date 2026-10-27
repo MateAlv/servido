@@ -1,9 +1,12 @@
+from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from app.services.auth import normalize_email, validate_email, validate_password
 from app.services.restaurant import has_cuit_length, is_valid_cuit, is_valid_phone, normalize_cuit
+
+DIETARY_RESTRICTIONS = {"sin_tacc", "vegetariano", "vegano"}
 
 
 class RestaurantDetails(BaseModel):
@@ -74,6 +77,7 @@ class RestaurantResponse(BaseModel):
     email: str
     cuit: str
     telefono: str
+    foto_url: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -82,3 +86,58 @@ class RestaurantLoginResponse(BaseModel):
     restaurante: RestaurantResponse
     access_token: str
     token_type: str = "bearer"
+
+
+class RestaurantProfileUpdate(BaseModel):
+    nombre: str = Field(min_length=1, max_length=150)
+    descripcion: str | None = None
+    tipo_cocina: str | None = Field(default=None, max_length=60)
+    rango_precio: str | None = Field(default=None, max_length=10)
+    foto_url: str | None = None
+    restricciones_tags: list[str] | None = None
+    direccion: str | None = Field(default=None, max_length=200)
+    latitud: Decimal | None = Field(default=None, ge=-90, le=90)
+    longitud: Decimal | None = Field(default=None, ge=-180, le=180)
+
+    @field_validator("nombre")
+    @classmethod
+    def profile_name_must_not_be_blank(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Ingresá el nombre del restaurante.")
+        return cleaned
+
+    @field_validator("restricciones_tags")
+    @classmethod
+    def restrictions_must_be_known(cls, values: list[str] | None) -> list[str] | None:
+        if values is not None and not set(values).issubset(DIETARY_RESTRICTIONS):
+            raise ValueError("Elegí restricciones alimenticias válidas.")
+        return values
+
+    @model_validator(mode="after")
+    def coordinates_must_be_together(self) -> "RestaurantProfileUpdate":
+        if (self.latitud is None) != (self.longitud is None):
+            raise ValueError("La latitud y la longitud deben enviarse juntas.")
+        return self
+
+
+class RestaurantProfileResponse(RestaurantProfileUpdate):
+    model_config = {"from_attributes": True}
+
+
+class GeocodingRequest(BaseModel):
+    address: str = Field(min_length=1)
+
+    @field_validator("address")
+    @classmethod
+    def address_must_not_be_blank(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Ingresá una dirección.")
+        return cleaned
+
+
+class GeocodingPreview(BaseModel):
+    display_name: str
+    latitude: Decimal
+    longitude: Decimal

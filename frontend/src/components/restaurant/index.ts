@@ -8,6 +8,6 @@ export {
   matchesPriceFilter,
   PRICE_TIERS,
   type PriceTier,
-} from './priceFilter'
+} from './priceFilterUtils'
 export { RestaurantExplorer } from './RestaurantExplorer'
 export { RestaurantMap } from './RestaurantMap'
