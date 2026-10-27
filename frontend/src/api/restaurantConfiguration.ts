@@ -1,24 +1,44 @@
 const TOKEN_KEY = 'servido-access-token'
 
+function token(): string | null {
+  try {
+    return typeof window === 'undefined' ? null : window.sessionStorage.getItem(TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const token =
-    typeof window === 'undefined' ? null : window.sessionStorage.getItem(TOKEN_KEY)
   const response = await fetch(`/api${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(token() ? { Authorization: `Bearer ${token()}` } : {}),
       ...init?.headers,
     },
   })
-  const body = (await response.json()) as T | { detail?: string }
+  const body = (await response.json()) as T | { detail?: string | { message?: string } }
   if (!response.ok) {
     const detail = (body as { detail?: string | { message?: string } }).detail
-    const message =
+    throw new Error(
       typeof detail === 'string'
         ? detail
-        : detail?.message ?? 'No pudimos guardar los cambios.'
-    throw new Error(message)
+        : detail?.message ?? 'No pudimos guardar los cambios.',
+    )
+  }
+  return body as T
+}
+
+async function uploadRequest<T>(path: string, form: FormData): Promise<T> {
+  const response = await fetch(`/api${path}`, {
+    method: 'POST',
+    headers: token() ? { Authorization: `Bearer ${token()}` } : {},
+    body: form,
+  })
+  const body = (await response.json()) as T | { detail?: string }
+  if (!response.ok) {
+    const detail = (body as { detail?: string }).detail
+    throw new Error(typeof detail === 'string' ? detail : 'No pudimos cargar la imagen.')
   }
   return body as T
 }
@@ -56,6 +76,11 @@ export const configurationApi = {
       method: 'PUT',
       body: JSON.stringify(profile),
     }),
+  uploadPhoto: (photo: File) => {
+    const form = new FormData()
+    form.append('foto', photo)
+    return uploadRequest<{ foto_url: string }>('/restaurante/perfil/foto', form)
+  },
   geocode: (address: string) =>
     request<{ display_name: string; latitude: number; longitude: number }>(
       '/restaurante/perfil/geocodificar',

@@ -29,7 +29,7 @@ def test_us6_s1_profile_information_is_saved_and_available(client: TestClient) -
         "tipo_cocina": "Italiana",
         "rango_precio": "$$",
         "foto_url": "https://example.com/local.jpg",
-        "restricciones_tags": ["vegetarian"],
+        "restricciones_tags": ["vegetariano"],
         "direccion": "Av. Siempre Viva 123",
         "latitud": -34.6037,
         "longitud": -58.3816,
@@ -81,3 +81,15 @@ def test_us6_s4_unresolved_address_is_rejected_without_saving(
     assert response.status_code == 400
     assert response.json()["detail"] == "No encontramos esa dirección."
     assert client.get("/api/restaurante/perfil", headers=headers).json()["direccion"] is None
+
+
+def test_us6_s5_restaurant_photo_can_be_uploaded_from_device(client: TestClient) -> None:
+    headers = _auth(client)
+    response = client.post(
+        "/api/restaurante/perfil/foto",
+        files={"foto": ("local.png", b"\x89PNG\r\n\x1a\n", "image/png")},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["foto_url"].startswith("/media/restaurants/")

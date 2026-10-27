@@ -39,6 +39,21 @@
   object-fit: cover;
   border-radius: 0.75rem;
 }
+.fieldset {
+  display: grid;
+  gap: 0.6rem;
+  border: 0;
+  padding: 0;
+}
+.fieldset legend,
+.fileLabel {
+  font-weight: 700;
+}
+.checkbox {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
 .preview,
 .success {
   color: var(--color-success, #237a48);

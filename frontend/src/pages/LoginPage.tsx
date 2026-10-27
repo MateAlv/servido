@@ -45,14 +45,13 @@ export function LoginPage() {
             className={styles.selector}
           />
           <AccessForm
-            key={role}
             role={role}
             initialEmail={typeof createdEmail === 'string' ? createdEmail : ''}
             onSignedIn={welcome}
             onRegister={() => navigate(registerPathFor(role))}
           />
           <p className={styles.divider}>o</p>
-          <GoogleSignInButton key={role} role={role} onSignedIn={welcome} />
+          <GoogleSignInButton role={role} onSignedIn={welcome} />
           <p className={styles.footer}>
             <Link to="/">Volver al inicio</Link>
           </p>

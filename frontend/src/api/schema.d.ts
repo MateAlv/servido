@@ -175,6 +175,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurante/perfil/foto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Restaurant Photo */
+        post: operations["upload_restaurant_photo_api_restaurante_perfil_foto_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurante/perfil/geocodificar": {
         parameters: {
             query?: never;
@@ -354,6 +371,11 @@ export interface components {
             tiempo_preparacion_minutos?: number | null;
             /** Foto */
             foto?: string | null;
+        };
+        /** Body_upload_restaurant_photo_api_restaurante_perfil_foto_post */
+        Body_upload_restaurant_photo_api_restaurante_perfil_foto_post: {
+            /** Foto */
+            foto: string;
         };
         /** Credentials */
         Credentials: {
@@ -1106,6 +1128,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RestaurantProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    upload_restaurant_photo_api_restaurante_perfil_foto_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_restaurant_photo_api_restaurante_perfil_foto_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
             /** @description Validation Error */

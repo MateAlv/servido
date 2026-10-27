@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useLocation } from 'react-router'
@@ -9,6 +9,7 @@ import { RestaurantProfilePage } from './RestaurantProfilePage'
 const api = vi.hoisted(() => ({
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
+  uploadPhoto: vi.fn(),
   geocode: vi.fn(),
 }))
 
@@ -39,20 +40,23 @@ describe('RestaurantProfilePage (US-6)', () => {
     })
   })
 
-  it('US-6 S1 saves and previews foto_url without uploading a file', async () => {
+  it('US-6 S1 saves the selected restaurant photo and dietary restrictions', async () => {
+    const user = userEvent.setup()
     renderWithProviders(<RestaurantProfilePage />)
-    const field = await screen.findByLabelText('URL de foto')
+    const field = await screen.findByLabelText('Foto del restaurante')
+    const photo = new File(['image'], 'local.png', { type: 'image/png' })
+    api.uploadPhoto.mockResolvedValue({ foto_url: '/media/restaurants/local.png' })
 
-    fireEvent.change(field, { target: { value: 'https://example.com/local.jpg' } })
-    expect(screen.getByAltText('Vista previa del restaurante')).toHaveAttribute(
-      'src',
-      'https://example.com/local.jpg',
-    )
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar perfil' }))
+    await user.upload(field, photo)
+    await user.click(screen.getByLabelText('Sin TACC'))
+    await user.click(screen.getByRole('button', { name: 'Guardar perfil' }))
 
     await waitFor(() =>
       expect(api.updateProfile).toHaveBeenCalledWith(
-        expect.objectContaining({ foto_url: 'https://example.com/local.jpg' }),
+        expect.objectContaining({
+          foto_url: '/media/restaurants/local.png',
+          restricciones_tags: ['sin_tacc'],
+        }),
       ),
     )
   })

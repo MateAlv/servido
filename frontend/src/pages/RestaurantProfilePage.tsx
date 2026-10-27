@@ -5,6 +5,12 @@ import { Button, Card, IconArrowLeft, TextField, useToast } from '../components/
 import { configurationApi, type RestaurantProfile } from '../api/restaurantConfiguration'
 import styles from './RestaurantProfilePage.module.css'
 
+const dietaryRestrictions = [
+  ['sin_tacc', 'Sin TACC'],
+  ['vegetariano', 'Vegetariano'],
+  ['vegano', 'Vegano'],
+] as const
+
 const EMPTY_PROFILE: RestaurantProfile = {
   nombre: '',
   descripcion: null,
@@ -26,6 +32,7 @@ export function RestaurantProfilePage() {
   }>()
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [photo, setPhoto] = useState<File>()
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -72,9 +79,13 @@ export function RestaurantProfilePage() {
       return
     }
     try {
-      const next = preview
+      let next = preview
         ? { ...profile, latitud: preview.latitude, longitud: preview.longitude }
         : profile
+      if (photo) {
+        const uploaded = await configurationApi.uploadPhoto(photo)
+        next = { ...next, foto_url: uploaded.foto_url }
+      }
       setProfile(await configurationApi.updateProfile(next))
       toast('Guardaste los datos de tu local.', { tone: 'ok' })
       navigate('/')
@@ -115,28 +126,39 @@ export function RestaurantProfilePage() {
             value={profile.rango_precio ?? ''}
             onChange={(event) => change('rango_precio', event.target.value)}
           />
-          <TextField
-            label="Restricciones alimenticias"
-            hint="Separalas con comas, por ejemplo: vegetariano, sin TACC."
-            value={profile.restricciones_tags?.join(', ') ?? ''}
-            onChange={(event) =>
-              change(
-                'restricciones_tags',
-                event.target.value
-                  ? event.target.value
-                      .split(',')
-                      .map((tag) => tag.trim())
-                      .filter(Boolean)
-                  : null,
-              )
-            }
-          />
-          <TextField
-            label="URL de foto"
-            type="url"
-            hint="Ingresá una URL pública. Este MVP no carga archivos."
-            value={profile.foto_url ?? ''}
-            onChange={(event) => change('foto_url', event.target.value || null)}
+          <fieldset className={styles.fieldset}>
+            <legend>Restricciones alimenticias</legend>
+            {dietaryRestrictions.map(([value, label]) => (
+              <label key={value} className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={profile.restricciones_tags?.includes(value) ?? false}
+                  onChange={() => {
+                    const current = profile.restricciones_tags ?? []
+                    change(
+                      'restricciones_tags',
+                      current.includes(value)
+                        ? current.filter((item) => item !== value)
+                        : [...current, value],
+                    )
+                  }}
+                />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+          <label className={styles.fileLabel} htmlFor="foto">
+            Foto del restaurante
+          </label>
+          <input
+            id="foto"
+            type="file"
+            accept="image/jpeg,image/png"
+            onChange={(event) => {
+              const selected = event.target.files?.[0]
+              setPhoto(selected)
+              if (selected) setProfile((current) => ({ ...current, foto_url: URL.createObjectURL(selected) }))
+            }}
           />
           {profile.foto_url && (
             <img

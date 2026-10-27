@@ -544,6 +544,56 @@
         ]
       }
     },
+    "/api/restaurante/perfil/foto": {
+      "post": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Upload Restaurant Photo",
+        "operationId": "upload_restaurant_photo_api_restaurante_perfil_foto_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_restaurant_photo_api_restaurante_perfil_foto_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Upload Restaurant Photo Api Restaurante Perfil Foto Post"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/restaurante/perfil/geocodificar": {
       "post": {
         "tags": [
@@ -1078,6 +1128,20 @@
         ],
         "title": "Body_create_dish_api_restaurantes_me_platos_post"
       },
+      "Body_upload_restaurant_photo_api_restaurante_perfil_foto_post": {
+        "properties": {
+          "foto": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Foto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "foto"
+        ],
+        "title": "Body_upload_restaurant_photo_api_restaurante_perfil_foto_post"
+      },
       "Credentials": {
         "properties": {
           "email": {
@@ -1570,9 +1634,7 @@
           "foto_url": {
             "anyOf": [
               {
-                "type": "string",
-                "minLength": 1,
-                "format": "uri"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -1681,9 +1743,7 @@
           "foto_url": {
             "anyOf": [
               {
-                "type": "string",
-                "minLength": 1,
-                "format": "uri"
+                "type": "string"
               },
               {
                 "type": "null"

@@ -1,7 +1,8 @@
 import secrets
-from uuid import UUID
+from pathlib import Path
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from sqlalchemy import delete, or_, select
 from sqlalchemy.exc import IntegrityError
 
@@ -30,6 +31,7 @@ from app.services.roles import RESTAURANT
 from app.services.table_inventory import ReservationConflictError, replace_inventory
 
 router = APIRouter(tags=["restaurant"])
+RESTAURANT_UPLOADS_DIR = Path("uploads/restaurants")
 
 DUPLICATE_DETAIL = "Ya existe una cuenta de restaurante asociada a ese email o CUIT."
 GOOGLE_SIGN_UP_FAILED_DETAIL = "No pudimos registrar el restaurante con Google. Probá de nuevo."
@@ -143,6 +145,34 @@ def update_restaurant_profile(
     session.commit()
     session.refresh(restaurant)
     return restaurant
+
+
+@router.post("/restaurante/perfil/foto", response_model=dict[str, str])
+def upload_restaurant_photo(
+    claims: TokenClaimsDep,
+    session: SessionDep,
+    foto: UploadFile = File(...),  # noqa: B008
+) -> dict[str, str]:
+    restaurant = restaurant_from_claims(claims, session)
+    if foto.content_type not in {"image/jpeg", "image/png"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La foto debe estar en formato JPG o PNG.",
+        )
+    content = foto.file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La foto no puede superar los 5 MB.",
+        )
+    extension = ".jpg" if foto.content_type == "image/jpeg" else ".png"
+    stored_photo = RESTAURANT_UPLOADS_DIR / f"{uuid4()}{extension}"
+    RESTAURANT_UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    stored_photo.write_bytes(content)
+    restaurant.foto_url = f"/media/restaurants/{stored_photo.name}"
+    session.commit()
+    session.refresh(restaurant)
+    return {"foto_url": restaurant.foto_url}
 
 
 @router.post("/restaurante/perfil/geocodificar", response_model=GeocodingPreview)

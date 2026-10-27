@@ -1,10 +1,12 @@
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import AnyHttpUrl, BaseModel, Field, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from app.services.auth import normalize_email, validate_email, validate_password
 from app.services.restaurant import has_cuit_length, is_valid_cuit, is_valid_phone, normalize_cuit
+
+DIETARY_RESTRICTIONS = {"sin_tacc", "vegetariano", "vegano"}
 
 
 class RestaurantDetails(BaseModel):
@@ -91,7 +93,7 @@ class RestaurantProfileUpdate(BaseModel):
     descripcion: str | None = None
     tipo_cocina: str | None = Field(default=None, max_length=60)
     rango_precio: str | None = Field(default=None, max_length=10)
-    foto_url: AnyHttpUrl | None = None
+    foto_url: str | None = None
     restricciones_tags: list[str] | None = None
     direccion: str | None = Field(default=None, max_length=200)
     latitud: Decimal | None = Field(default=None, ge=-90, le=90)
@@ -104,6 +106,13 @@ class RestaurantProfileUpdate(BaseModel):
         if not cleaned:
             raise ValueError("Ingresá el nombre del restaurante.")
         return cleaned
+
+    @field_validator("restricciones_tags")
+    @classmethod
+    def restrictions_must_be_known(cls, values: list[str] | None) -> list[str] | None:
+        if values is not None and not set(values).issubset(DIETARY_RESTRICTIONS):
+            raise ValueError("Elegí restricciones alimenticias válidas.")
+        return values
 
     @model_validator(mode="after")
     def coordinates_must_be_together(self) -> "RestaurantProfileUpdate":
