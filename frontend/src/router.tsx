@@ -22,15 +22,6 @@ export const router = createBrowserRouter([
       { path: '/restaurante/horarios', element: <OpeningHoursPage /> },
       { path: '/restaurante/mesas', element: <TableInventoryPage /> },
       {
-        path: '/restaurante/menu',
-        element: (
-          <RestaurantAreaPage
-            title="Menú"
-            description="La gestión de platos y precios estará disponible próximamente."
-          />
-        ),
-      },
-      {
         path: '/restaurante/reservas',
         element: (
           <RestaurantAreaPage
@@ -40,6 +31,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: '/restaurante/menu/nuevo-plato',
+        lazy: async () => ({ Component: (await import('./pages/AddDishPage')).AddDishPage }),
+      },
+      {
+        path: '/restaurante/menu',
+        lazy: async () => ({ Component: (await import('./pages/MenuPage')).MenuPage }),
+      },
+      {
         path: '/mapa',
         lazy: async () => ({ Component: (await import('./pages/MapPage')).MapPage }),
       },
@@ -47,6 +46,12 @@ export const router = createBrowserRouter([
         path: '/restaurantes/:id',
         lazy: async () => ({
           Component: (await import('./pages/RestaurantDetailPage')).RestaurantDetailPage,
+        }),
+      },
+      {
+        path: '/verificar-email',
+        lazy: async () => ({
+          Component: (await import('./pages/VerifyEmailPage')).VerifyEmailPage,
         }),
       },
       {

@@ -5,6 +5,28 @@ import type { components } from './schema'
 
 export type Account = components['schemas']['AccountResponse']
 
+export function restaurantAccount(
+  restaurante: components['schemas']['RestaurantResponse'],
+): Account {
+  return {
+    rol: 'restaurant',
+    id: restaurante.id,
+    nombre: restaurante.nombre,
+    email: restaurante.email,
+    email_verificado: true,
+  }
+}
+
+export function dinerAccount(comensal: components['schemas']['DinerResponse']): Account {
+  return {
+    rol: 'diner',
+    id: comensal.id,
+    nombre: comensal.nombre ?? null,
+    email: comensal.email,
+    email_verificado: comensal.email_verificado,
+  }
+}
+
 const TOKEN_KEY = 'servido-access-token'
 export const ACCOUNT_QUERY_KEY = ['account'] as const
 
@@ -16,6 +38,10 @@ function getSessionStorage(): Storage | null {
   }
 }
 
+export function accessToken(): string | null {
+  return getSessionStorage()?.getItem(TOKEN_KEY) ?? null
+}
+
 async function loadAccount(): Promise<Account | null> {
   const storage = getSessionStorage()
   const token = storage?.getItem(TOKEN_KEY)
@@ -24,28 +50,26 @@ async function loadAccount(): Promise<Account | null> {
     headers: { Authorization: `Bearer ${token}` },
   })
   if (error || !data) {
-    // The token expired or was altered: forget it so the app shows the login buttons again.
     storage?.removeItem(TOKEN_KEY)
     return null
   }
   return data
 }
 
-/** The signed-in account, or `null` when nobody is signed in. */
 export function useAccount() {
   return useQuery({ queryKey: ACCOUNT_QUERY_KEY, queryFn: loadAccount, staleTime: Infinity })
 }
 
-/** Keeps the token of a successful login and makes the account known to the whole app. */
+export function sessionHeaders(): Record<string, string> {
+  const token = accessToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export function signIn(queryClient: QueryClient, token: string, account: Account) {
   getSessionStorage()?.setItem(TOKEN_KEY, token)
   queryClient.setQueryData<Account | null>(ACCOUNT_QUERY_KEY, account)
 }
 
-/**
- * Closes the session in this browser: forgets the token and the account. The API keeps no
- * session (FR-008a), so nothing is sent to the server; the token would only work until it expires.
- */
 export function signOut(queryClient: QueryClient) {
   getSessionStorage()?.removeItem(TOKEN_KEY)
   queryClient.setQueryData<Account | null>(ACCOUNT_QUERY_KEY, null)

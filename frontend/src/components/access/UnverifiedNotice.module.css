@@ -1,0 +1,29 @@
+.notice {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-field);
+  background: var(--color-warn-bg);
+}
+
+.text,
+.status,
+.error {
+  margin: 0;
+}
+
+.status:empty {
+  display: none;
+}
+
+.status {
+  color: var(--color-ok);
+  font-weight: 700;
+}
+
+.error {
+  color: var(--color-error);
+  font-weight: 700;
+}

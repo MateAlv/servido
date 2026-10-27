@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, computed_field, field_validator
 
 from app.services.auth import normalize_email, validate_email, validate_password
 
@@ -41,13 +41,38 @@ class RegistrationRequest(Credentials):
         return value
 
 
+class GoogleCredential(BaseModel):
+    """The ID token that Google Identity Services gives the browser."""
+
+    credential: str = Field(min_length=1)
+
+
+class GoogleSignUp(GoogleCredential):
+    """Google's ID token, plus the name when Google didn't give one (US-58 S3)."""
+
+    nombre: str | None = Field(default=None, min_length=1, max_length=60)
+
+    @field_validator("nombre")
+    @classmethod
+    def nombre_must_not_be_blank(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("Ingresá tu nombre.")
+        return value.strip() if value is not None else None
+
+
 class DinerResponse(BaseModel):
     id: UUID = Field(validation_alias="id_comensal")
     nombre: str | None = None
     email: str
     fecha_registro: datetime | None = None
+    email_verified_at: datetime | None = Field(default=None, exclude=True)
 
     model_config = {"from_attributes": True}
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def email_verificado(self) -> bool:
+        return self.email_verified_at is not None
 
 
 class LoginResponse(BaseModel):
@@ -63,3 +88,13 @@ class AccountResponse(BaseModel):
     id: UUID
     nombre: str | None
     email: str
+    # Restaurants are not verified by mail (spec 007 covers diners only).
+    email_verificado: bool = True
+
+
+class VerificationRequest(BaseModel):
+    token: str = Field(min_length=1)
+
+
+class MessageResponse(BaseModel):
+    detail: str

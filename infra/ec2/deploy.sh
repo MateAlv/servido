@@ -29,6 +29,10 @@ main() {
     {
       printf 'POSTGRES_PASSWORD=%s\n' "$(parameter postgres-password)"
       printf 'JWT_SECRET=%s\n' "$(parameter jwt-secret)"
+      # Optional: while it exists, mail goes through the team's Gmail instead of SES.
+      if smtp_password="$(parameter smtp-password 2> /dev/null)"; then
+        printf 'MAIL_BACKEND=smtp\nSMTP_PASSWORD=%s\n' "$smtp_password"
+      fi
     } > infra/ec2/.env
   )
 

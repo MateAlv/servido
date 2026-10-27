@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:8000',
+      '/media': process.env.API_PROXY_TARGET ?? 'http://localhost:8000',
     },
   },
   test: {

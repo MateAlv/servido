@@ -3,10 +3,12 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api import api_router
 
 app = FastAPI(title="Servido! API", docs_url="/api/docs", openapi_url="/api/openapi.json")
+app.mount("/media", StaticFiles(directory="uploads", check_dir=False), name="media")
 app.include_router(api_router)
 
 
