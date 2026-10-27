@@ -63,6 +63,46 @@
         }
       }
     },
+    "/api/comensales/google": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register Diner With Google",
+        "operationId": "register_diner_with_google_api_comensales_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleSignUp"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta la credencial, o Google no dio el nombre y no se envi\u00f3."
+          },
+          "401": {
+            "description": "La credencial de Google no es v\u00e1lida."
+          },
+          "409": {
+            "description": "Ya hay un comensal con el email de esa cuenta de Google."
+          }
+        }
+      }
+    },
     "/api/auth/comensal": {
       "post": {
         "tags": [
@@ -96,6 +136,46 @@
           },
           "401": {
             "description": "Credenciales inv\u00e1lidas."
+          }
+        }
+      }
+    },
+    "/api/auth/comensal/google": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login Diner With Google",
+        "operationId": "login_diner_with_google_api_auth_comensal_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleCredential"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta la credencial de Google."
+          },
+          "401": {
+            "description": "La credencial de Google no es v\u00e1lida."
+          },
+          "404": {
+            "description": "No hay un comensal con el email de esa cuenta de Google."
           }
         }
       }
@@ -137,6 +217,46 @@
         }
       }
     },
+    "/api/auth/restaurante/google": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login Restaurant With Google",
+        "operationId": "login_restaurant_with_google_api_auth_restaurante_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleCredential"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantLoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Falta la credencial de Google."
+          },
+          "401": {
+            "description": "La credencial de Google no es v\u00e1lida."
+          },
+          "404": {
+            "description": "No hay un restaurante con el email de esa cuenta de Google."
+          }
+        }
+      }
+    },
     "/api/restaurantes": {
       "post": {
         "tags": [
@@ -174,6 +294,120 @@
         }
       }
     },
+    "/api/restaurantes/google": {
+      "post": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Register Restaurant With Google",
+        "operationId": "register_restaurant_with_google_api_restaurantes_google_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestaurantGoogleRegistration"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantLoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos de registro inv\u00e1lidos."
+          },
+          "401": {
+            "description": "La credencial de Google no es v\u00e1lida."
+          },
+          "409": {
+            "description": "El email de Google o el CUIT ya est\u00e1n registrados."
+          }
+        }
+      }
+    },
+    "/api/restaurantes/me/platos": {
+      "get": {
+        "tags": [
+          "dishes"
+        ],
+        "summary": "List Dishes",
+        "operationId": "list_dishes_api_restaurantes_me_platos_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DishResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Dishes Api Restaurantes Me Platos Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "dishes"
+        ],
+        "summary": "Create Dish",
+        "operationId": "create_dish_api_restaurantes_me_platos_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_dish_api_restaurantes_me_platos_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DishResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/me": {
       "get": {
         "tags": [
@@ -195,6 +429,77 @@
           },
           "401": {
             "description": "Sesi\u00f3n inv\u00e1lida o vencida."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/comensales/verificacion": {
+      "post": {
+        "tags": [
+          "email verification"
+        ],
+        "summary": "Verify Email",
+        "description": "Verifies a diner's email with the token of the mailed link. It never signs in (FR-011).",
+        "operationId": "verify_email_api_comensales_verificacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El enlace no es v\u00e1lido o venci\u00f3."
+          }
+        }
+      }
+    },
+    "/api/comensales/verificacion/reenvio": {
+      "post": {
+        "tags": [
+          "email verification"
+        ],
+        "summary": "Resend Verification",
+        "description": "Mails the signed-in diner a new link; the previous one stops working (FR-012).",
+        "operationId": "resend_verification_api_comensales_verificacion_reenvio_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesi\u00f3n inv\u00e1lida o vencida."
+          },
+          "403": {
+            "description": "La sesi\u00f3n no es de un comensal."
+          },
+          "409": {
+            "description": "El email ya est\u00e1 verificado."
           }
         },
         "security": [
@@ -236,6 +541,11 @@
           "email": {
             "type": "string",
             "title": "Email"
+          },
+          "email_verificado": {
+            "type": "boolean",
+            "title": "Email Verificado",
+            "default": true
           }
         },
         "type": "object",
@@ -247,6 +557,71 @@
         ],
         "title": "AccountResponse",
         "description": "The account behind the token, whatever its role. Used to show who is signed in."
+      },
+      "Body_create_dish_api_restaurantes_me_platos_post": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "precio": {
+            "type": "string",
+            "title": "Precio"
+          },
+          "restricciones_alimenticias": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Restricciones Alimenticias",
+            "default": []
+          },
+          "tiempo_preparacion_minutos": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tiempo Preparacion Minutos"
+          },
+          "foto": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "categoria",
+          "precio"
+        ],
+        "title": "Body_create_dish_api_restaurantes_me_platos_post"
       },
       "Credentials": {
         "properties": {
@@ -303,14 +678,136 @@
               }
             ],
             "title": "Fecha Registro"
+          },
+          "email_verificado": {
+            "type": "boolean",
+            "title": "Email Verificado",
+            "readOnly": true
           }
         },
         "type": "object",
         "required": [
           "id",
-          "email"
+          "email",
+          "email_verificado"
         ],
         "title": "DinerResponse"
+      },
+      "DishResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "precio": {
+            "type": "string",
+            "title": "Precio"
+          },
+          "restricciones_alimenticias": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Restricciones Alimenticias"
+          },
+          "tiempo_preparacion_minutos": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tiempo Preparacion Minutos"
+          },
+          "foto_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "categoria",
+          "precio",
+          "restricciones_alimenticias",
+          "tiempo_preparacion_minutos",
+          "foto_url"
+        ],
+        "title": "DishResponse"
+      },
+      "GoogleCredential": {
+        "properties": {
+          "credential": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Credential"
+          }
+        },
+        "type": "object",
+        "required": [
+          "credential"
+        ],
+        "title": "GoogleCredential",
+        "description": "The ID token that Google Identity Services gives the browser."
+      },
+      "GoogleSignUp": {
+        "properties": {
+          "credential": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Credential"
+          },
+          "nombre": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre"
+          }
+        },
+        "type": "object",
+        "required": [
+          "credential"
+        ],
+        "title": "GoogleSignUp",
+        "description": "Google's ID token, plus the name when Google didn't give one (US-58 S3)."
       },
       "HTTPValidationError": {
         "properties": {
@@ -365,6 +862,19 @@
         ],
         "title": "LoginResponse"
       },
+      "MessageResponse": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "MessageResponse"
+      },
       "RegistrationRequest": {
         "properties": {
           "email": {
@@ -393,6 +903,42 @@
           "nombre"
         ],
         "title": "RegistrationRequest"
+      },
+      "RestaurantGoogleRegistration": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "cuit": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Cuit"
+          },
+          "telefono": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 1,
+            "title": "Telefono"
+          },
+          "credential": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Credential"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "cuit",
+          "telefono",
+          "credential"
+        ],
+        "title": "RestaurantGoogleRegistration",
+        "description": "US-2 S5: the email comes from the Google ID token, and there is no password."
       },
       "RestaurantLoginResponse": {
         "properties": {
@@ -424,12 +970,6 @@
             "minLength": 1,
             "title": "Nombre"
           },
-          "email": {
-            "type": "string",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Email"
-          },
           "cuit": {
             "type": "string",
             "maxLength": 20,
@@ -442,6 +982,12 @@
             "minLength": 1,
             "title": "Telefono"
           },
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Email"
+          },
           "password": {
             "type": "string",
             "maxLength": 128,
@@ -452,9 +998,9 @@
         "type": "object",
         "required": [
           "nombre",
-          "email",
           "cuit",
           "telefono",
+          "email",
           "password"
         ],
         "title": "RestaurantRegistrationRequest"
@@ -532,6 +1078,20 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VerificationRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "VerificationRequest"
       }
     },
     "securitySchemes": {

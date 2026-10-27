@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router'
 import { Button, Card, PasswordField, TextField, useToast } from '../components/ui'
 import { api } from '../api/client'
 import { getApiErrorMessage, getRequestErrorMessage } from '../api/errors'
-import { RedirectIfSignedIn } from '../components/access'
+import { GoogleSignUpButton, RedirectIfSignedIn } from '../components/access'
 import styles from './AuthPage.module.css'
 
 export function RegisterPage() {
@@ -32,7 +32,9 @@ export function RegisterPage() {
         body: { nombre, email, password },
       })
       if (error) throw new Error(getApiErrorMessage(error, 'No pudimos crear tu cuenta.'))
-      toast('¡Listo! Tu cuenta está creada. Ingresá para empezar.', { tone: 'ok' })
+      toast('¡Listo! Tu cuenta está creada. Te mandamos un mail para verificar tu email.', {
+        tone: 'ok',
+      })
       navigate('/ingresar?rol=comensal', { state: { email } })
     } catch (requestError) {
       setError(getRequestErrorMessage(requestError, 'No pudimos crear tu cuenta.'))
@@ -94,6 +96,13 @@ export function RegisterPage() {
               Crear cuenta
             </Button>
           </form>
+          <p className={styles.divider}>o</p>
+          <GoogleSignUpButton
+            onSignedIn={() => {
+              toast('¡Listo! Tu cuenta está creada.', { tone: 'ok' })
+              navigate('/')
+            }}
+          />
           <p className={styles.footer}>
             ¿Ya tenés cuenta? <Link to="/ingresar?rol=comensal">Ingresá</Link>
           </p>

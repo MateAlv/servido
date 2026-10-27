@@ -5,8 +5,36 @@ import type { components } from './schema'
 
 export type Account = components['schemas']['AccountResponse']
 
+/** The account of a restaurant, from the `restaurante` that its login endpoints return. */
+export function restaurantAccount(
+  restaurante: components['schemas']['RestaurantResponse'],
+): Account {
+  return {
+    rol: 'restaurant',
+    id: restaurante.id,
+    nombre: restaurante.nombre,
+    email: restaurante.email,
+    email_verificado: true,
+  }
+}
+
+/** The account of a diner, from the `comensal` that the login and sign-up endpoints return. */
+export function dinerAccount(comensal: components['schemas']['DinerResponse']): Account {
+  return {
+    rol: 'diner',
+    id: comensal.id,
+    nombre: comensal.nombre ?? null,
+    email: comensal.email,
+    email_verificado: comensal.email_verificado,
+  }
+}
+
 const TOKEN_KEY = 'servido-access-token'
 export const ACCOUNT_QUERY_KEY = ['account'] as const
+
+export function accessToken(): string | null {
+  return sessionStorage.getItem(TOKEN_KEY)
+}
 
 async function loadAccount(): Promise<Account | null> {
   const token = sessionStorage.getItem(TOKEN_KEY)
@@ -20,6 +48,12 @@ async function loadAccount(): Promise<Account | null> {
     return null
   }
   return data
+}
+
+/** The Authorization header of the open session, for endpoints that need one. */
+export function sessionHeaders(): Record<string, string> {
+  const token = sessionStorage.getItem(TOKEN_KEY)
+  return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
 /** The signed-in account, or `null` when nobody is signed in. */

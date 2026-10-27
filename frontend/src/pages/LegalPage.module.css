@@ -1,0 +1,48 @@
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4.4vw, 44px);
+  line-height: 1.1;
+}
+
+.updated {
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.draft {
+  margin: 20px 0 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-field);
+  background: var(--color-warn-bg);
+  font-weight: 700;
+}
+
+.container h2 {
+  margin: 32px 0 8px;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+
+.container p,
+.container li {
+  line-height: 1.6;
+}
+
+.container ul {
+  padding-left: 20px;
+}
+
+@media (max-width: 560px) {
+  .container {
+    padding: 20px 16px 48px;
+  }
+}

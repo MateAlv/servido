@@ -56,6 +56,34 @@ def test_us2_s1_invalid_email_or_cuit_says_what_to_fix(
 
 
 @pytest.mark.parametrize(
+    ("cuit", "message"),
+    [
+        ("123", "El CUIT tiene que tener 11 dígitos."),
+        ("30-71234567-2", "El CUIT no es válido: revisá los números."),
+    ],
+)
+def test_us2_s1_cuit_error_says_whether_length_or_digits_are_wrong(
+    client: TestClient, cuit: str, message: str
+) -> None:
+    response = client.post("/api/restaurantes", json=restaurant_payload(cuit=cuit))
+
+    assert response.status_code == 400
+    assert message in response.json()["detail"][0]["msg"]
+
+
+@pytest.mark.parametrize(
+    "cuit", ["30712345671", "30 71234567 1", "30.71234567.1", "30\u201371234567\u20131"]
+)
+def test_us2_s3_cuit_is_accepted_with_spaces_dots_or_any_dash(
+    client: TestClient, cuit: str
+) -> None:
+    response = client.post("/api/restaurantes", json=restaurant_payload(cuit=cuit))
+
+    assert response.status_code == 201
+    assert response.json()["cuit"] == "30712345671"
+
+
+@pytest.mark.parametrize(
     "duplicate",
     [
         {"cuit": "20-12345678-6"},  # same email, another CUIT

@@ -6,6 +6,21 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://servido:servido@localhost:55432/servido"
     jwt_secret: str = "development-only-change-me-please-use-a-real-secret"
+    # Public: it identifies the "Servido! web" OAuth client (infra/README.md). No secret is used.
+    google_client_id: str = (
+        "65379758997-psqucbqtjg6brottoh9bfctf9gnjag5g.apps.googleusercontent.com"
+    )
+    # console logs the mail, memory keeps it for tests; ses and smtp send it (production).
+    mail_backend: str = "console"
+    mail_from: str = "Servido! <no-reply@servido.discordia.fyi>"
+    # Where the links inside mails point to: the frontend.
+    app_base_url: str = "http://localhost:5173"
+    aws_region: str = "us-east-1"
+    # The smtp backend sends from the team's Gmail with an app password (infra/README.md).
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_username: str = "servido.gdsi@gmail.com"
+    smtp_password: str = ""
 
 
 settings = Settings()

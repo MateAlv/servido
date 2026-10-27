@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 
 import type { Account } from '../../api/session'
 import {
@@ -92,6 +93,7 @@ export function RestaurantHome({ account }: { account: Account }) {
             <Button variant="secondary" icon={<IconSearch />} to="/mapa">
               Ver el mapa de restaurantes
             </Button>
+            <Button to="/restaurante/menu/nuevo-plato">Agregar un plato al menú</Button>
           </Card>
         </Reveal>
       </div>
@@ -108,10 +110,15 @@ export function RestaurantHome({ account }: { account: Account }) {
                   <span className={styles.stepIcon} aria-hidden="true">
                     {step.icon}
                   </span>
-                  <StatusPill tone="warn">Próximamente</StatusPill>
+                  {step.title === 'Menú' ? (
+                    <StatusPill tone="ok">Disponible</StatusPill>
+                  ) : (
+                    <StatusPill tone="warn">Próximamente</StatusPill>
+                  )}
                 </div>
                 <h3 className={styles.stepTitle}>
-                  <span className={styles.stepNumber}>{i + 1}.</span> {step.title}
+                  <span className={styles.stepNumber}>{i + 1}.</span>{' '}
+                  {step.title === 'Menú' ? <Link to="/restaurante/menu">Menú</Link> : step.title}
                 </h3>
                 <p className={styles.stepText}>{step.text}</p>
               </div>

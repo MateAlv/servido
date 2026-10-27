@@ -15,6 +15,14 @@ export const router = createBrowserRouter([
       { path: '/registrarme', element: <RegisterPage /> },
       { path: '/suma-tu-local', element: <RestaurantRegisterPage /> },
       {
+        path: '/restaurante/menu/nuevo-plato',
+        lazy: async () => ({ Component: (await import('./pages/AddDishPage')).AddDishPage }),
+      },
+      {
+        path: '/restaurante/menu',
+        lazy: async () => ({ Component: (await import('./pages/MenuPage')).MenuPage }),
+      },
+      {
         path: '/mapa',
         lazy: async () => ({ Component: (await import('./pages/MapPage')).MapPage }),
       },
@@ -29,6 +37,20 @@ export const router = createBrowserRouter([
         lazy: async () => ({
           Component: (await import('./pages/ReservationPage')).ReservationPage,
         }),
+      },
+      {
+        path: '/verificar-email',
+        lazy: async () => ({
+          Component: (await import('./pages/VerifyEmailPage')).VerifyEmailPage,
+        }),
+      },
+      {
+        path: '/privacidad',
+        lazy: async () => ({ Component: (await import('./pages/PrivacyPage')).PrivacyPage }),
+      },
+      {
+        path: '/terminos',
+        lazy: async () => ({ Component: (await import('./pages/TermsPage')).TermsPage }),
       },
       {
         path: '/diseno',
