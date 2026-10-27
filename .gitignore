@@ -31,3 +31,5 @@ dist/
 *.tfvars
 !*.tfvars.example
 backend.hcl
+
+.opencode/

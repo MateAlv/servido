@@ -16,7 +16,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [002-elegir-restaurante](002-elegir-restaurante/spec.md) | Comensal | 5, 7, 9, 33 | 13 | 1 (US-33 adelantada del 4) | ✅ | ✅ | ✅ | ✅ US-5, US-7, US-9, US-33 (con datos de prueba) |
 | [003-cuenta-restaurante](003-cuenta-restaurante/spec.md) | Restaurante | 2, 4, 28 | 5 | 1 (US-28 adelantada del 4 al 2) | ✅ | ✅ (solo Google) | ✅ (solo Google) | ✅ US-2, US-4, US-28 (US-4 S3 pendiente) |
 | [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | — | — | — |
-| [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | — | — | — |
+| [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | ✅ (US-11;) | ✅ | ✅ US-11 (solo frontend con datos de prueba en esta instancia;)|
 | [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — | — |
 | [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17) |
 
@@ -28,6 +28,9 @@ Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 solo est
 
 - El `plan.md` y el `tasks.md` de la spec 003 cubren solo lo de Google (25/10). Falta documentar ahí lo construido en el Sprint 1 (US-2 y US-4) para cumplir la [Definition of Done](../AGENTS.md#definition-of-done).
 - Spec 001: falta el test de frontend de US-3 S1 (ver `tasks.md`, T022).
+- La spec 004 está especificada pero no tiene `plan.md` ni `tasks.md` ni modelos (`Shift` y `Table` no están en `backend/app/models/`). Eso bloquea la fase backend de la 005 (modelo `reserva`, endpoints de disponibilidad y sus tests, T002–T018 de su `tasks.md`): el checkpoint T001 prohíbe crear una segunda tabla para la FK. Hay que planificar e implementar la 004 antes de cerrar la US-11.
+- La US-11 de la 005 sigue el camino mock del checkpoint T001 (frontend con `frontend/src/api/availability.ts` y `frontend/src/data/reservationAvailability.fixture.ts`, rotulado «Datos de prueba»): borrarlo cuando existan los endpoints de la 004 y la 005 (T018).
+- La US-11 quedó sin el pase visual de navegador (360 px, teclado y lector de pantalla, T024/T032); los tests automatizados pasan.
 
 ### Numeración
 
@@ -41,7 +44,7 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las de la spec 002 se
 | --- | --- | --- |
 | 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba; la demo refresca cada 30 s. Implementado así; falta que la PO lo confirme |
 | 002 | Ubicación denegada | Mapa centrado en Buenos Aires, sin distancias, con aviso y botón para reintentar. Implementado así; falta que la PO lo confirme |
-| 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Ver Edge Cases de la spec |
+| 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Se asume que el comensal indica la cantidad; El máximo lo define el restaurante. |
 
 ## Decisiones del equipo
 
@@ -66,6 +69,9 @@ Dudas que no hacía falta llevar a la PO. Ya están incorporadas en cada spec.
 | 25/10 | 007 | Se adelanta US-58 (Crear cuenta con Google) del Sprint 6 al 2, junto con US-52. Si al ingresar con Google no hay cuenta, se ofrece crearla con la misma cuenta de Google |
 | 25/10 | 003 | Se construye el registro con Google de US-2 (pendiente desde el 21/10) y se adelanta US-28 del Sprint 4 al 2. Con Google, el formulario del restaurante pide los mismos datos sin mail ni contraseña; si al ingresar con Google no hay restaurante, se ofrece registrarlo con esa cuenta. Falta que la PO lo valide |
 | 21/10 | 002 | US-33 (listado de restaurantes, 5 SP) se adelanta del Sprint 4 al 1: el listado acompaña al mapa y cumple sus criterios |
+| 23/10 | 005 | Lo que el flujo todavía no tiene (turnos y mesas de la 004, un horario ya ocupado) se muestra con datos de prueba en `frontend/src/data/reservationAvailability.fixture.ts`, servidos por `frontend/src/api/availability.ts` y rotulados «Datos de prueba» en la UI, como los restaurantes de prueba de la 002. No se mockea la creación de la reserva (US-13) ni se agregan datos falsos al backend; el mock se borra cuando existan los endpoints |
+| 23/10 | 005 | El máximo de comensales por reserva lo define el restaurante: es la capacidad de su mesa habilitada más grande, no un límite fijo del sistema ni infinito. Se devuelve como `max_party_size`, el formulario lo usa como tope y un enlace editado a mano se ajusta a ese valor. No se agrega una columna en `restaurantes`: duplicaría lo que ya dicen las mesas de la 004 |
+| 23/10 | 005 | La US-11 no elige una mesa concreta: sigue el prototipo `prototipo-us11.html`, la pantalla informa si hay mesa disponible para la preferencia elegida («Hay mesa disponible…» o el aviso de S7) y la mesa se asigna al confirmar la reserva (US-13). La URL lleva `?fecha=&hora=&personas=&tipo=` sin `mesa`, la respuesta de mesas es informativa y cambian la spec, `plan.md`, `tasks.md`, `data-model.md`, `contracts/` y `quickstart.md`. Falta que la PO lo confirme |
 
 ## Notas de formato
 

@@ -33,6 +33,12 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: '/reservar/:restauranteId',
+        lazy: async () => ({
+          Component: (await import('./pages/ReservationPage')).ReservationPage,
+        }),
+      },
+      {
         path: '/verificar-email',
         lazy: async () => ({
           Component: (await import('./pages/VerifyEmailPage')).VerifyEmailPage,

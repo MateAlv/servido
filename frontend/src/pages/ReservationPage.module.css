@@ -1,0 +1,218 @@
+/* Page styles for /reservar/:restauranteId (US-11). Tokens only; the disabled chip look
+   is page CSS passed to Chip through className, so the shared component stays unchanged. */
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 22px 24px 60px;
+}
+
+.loading {
+  display: grid;
+  min-height: 60vh;
+  place-items: center;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  color: var(--color-text);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--color-primary);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 6px 0 4px;
+  font: 800 clamp(32px, 5vw, 48px) / 1.05 var(--font-display);
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.steps {
+  display: grid;
+  gap: 18px;
+  max-width: 720px;
+  min-width: 0;
+}
+
+.step {
+  display: grid;
+  gap: 16px;
+}
+
+.stepTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font: 800 var(--text-xl) / 1.15 var(--font-display);
+}
+
+.num {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font: 800 var(--text-base) var(--font-display);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px 24px;
+  align-items: start;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.date {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-field);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: 700 var(--text-base) var(--font-body);
+}
+
+.date:hover {
+  border-color: var(--color-text-muted);
+}
+
+.dateInvalid {
+  border-color: var(--color-error);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-weight: 800;
+  font-size: var(--text-sm);
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.slotList {
+  display: grid;
+  gap: 12px;
+}
+
+/* The occupied/disabled look of a chip, without touching the shared component. */
+.slotChip:disabled,
+.slotChip:disabled:hover {
+  border-style: dashed;
+  border-color: var(--color-line);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.chipNote {
+  font-size: var(--text-xs);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.notice {
+  margin: 0;
+  padding: 12px 14px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-sunken);
+  font-weight: 700;
+}
+
+.ok {
+  background: var(--color-ok-bg);
+  border-color: transparent;
+  color: var(--color-ok);
+}
+
+.tableList {
+  display: grid;
+  gap: 10px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.mockPill {
+  white-space: nowrap;
+}
+
+/* Siguiente (prototipo-us11.html): right-aligned under the three steps. */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 560px) {
+  .container {
+    padding: 16px 16px 40px;
+  }
+
+  .header {
+    flex-direction: column;
+  }
+
+  .fields {
+    grid-template-columns: 1fr;
+  }
+}

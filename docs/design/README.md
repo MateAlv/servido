@@ -56,7 +56,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `Button`, `IconButton` | Acciones. `Button` tiene variantes `primary` (hundido 3D), `secondary`, `ghost`, tamaños, estado `loading` y `to` para navegar con look de botón |
 | `TextField` | Campos de formulario con ayuda y error (el error tiembla y se anuncia). `action` agrega un botón chico al final del campo |
 | `PasswordField` | Contraseña oculta con un ojo para mostrarla u ocultarla (`aria-pressed`). Usalo en todo campo de contraseña |
-| `Chip` | Filtros de selección múltiple (precio, restricciones) |
+| `Chip` | Opciones que se alternan: filtros de selección múltiple (precio, restricciones) y grupos donde se elige una sola (horarios, tipo de mesa) |
 | `SegmentedControl` | Una opción entre pocas, con indicador que se desliza |
 | `Card` | Superficie base; `interactive` se eleva al pasar el mouse |
 | `StatusPill` | Estado corto: disponibilidad, pago, reserva |
