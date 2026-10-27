@@ -12,7 +12,9 @@ class TableInventoryGroup(Base):
     __table_args__ = (
         CheckConstraint("capacity > 0", name="capacity_positive"),
         CheckConstraint("quantity > 0", name="quantity_positive"),
-        UniqueConstraint("restaurant_id", "capacity", name="restaurant_capacity_identity"),
+        UniqueConstraint(
+            "restaurant_id", "capacity", name="uq_table_inventory_restaurant_capacity"
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)

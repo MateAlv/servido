@@ -157,7 +157,8 @@ export function RestaurantProfilePage() {
             onChange={(event) => {
               const selected = event.target.files?.[0]
               setPhoto(selected)
-              if (selected) setProfile((current) => ({ ...current, foto_url: URL.createObjectURL(selected) }))
+              if (selected)
+                setProfile((current) => ({ ...current, foto_url: URL.createObjectURL(selected) }))
             }}
           />
           {profile.foto_url && (

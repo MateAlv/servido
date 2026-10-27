@@ -14,7 +14,11 @@ class OpeningShift(Base):
         CheckConstraint("day_of_week BETWEEN 1 AND 7", name="day_of_week_range"),
         CheckConstraint("end_time > start_time", name="end_after_start"),
         UniqueConstraint(
-            "restaurant_id", "day_of_week", "start_time", "end_time", name="shift_identity"
+            "restaurant_id",
+            "day_of_week",
+            "start_time",
+            "end_time",
+            name="uq_turnos_shift_identity",
         ),
     )
 

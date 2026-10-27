@@ -21,9 +21,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     const detail = (body as { detail?: string | { message?: string } }).detail
     throw new Error(
-      typeof detail === 'string'
-        ? detail
-        : detail?.message ?? 'No pudimos guardar los cambios.',
+      typeof detail === 'string' ? detail : (detail?.message ?? 'No pudimos guardar los cambios.'),
     )
   }
   return body as T
