@@ -18,9 +18,15 @@ vi.mock('../api/restaurants', async (importOriginal) => {
 
 const DINER = { lat: -34.59, lng: -58.43 }
 
-/** Leaflet markers are named by their title: restaurant and occupancy. */
-function marker(name: string, level: 'baja' | 'media' | 'alta') {
-  return `${name}, concurrencia ${level}`
+/** Clicks a Leaflet marker and returns the card it opens. */
+async function openCard(name: string) {
+  fireEvent.click(screen.getByTitle(name))
+  const title = await waitFor(() => {
+    const found = document.querySelector('.leaflet-popup h3')
+    expect(found).toHaveTextContent(name)
+    return found as HTMLElement
+  })
+  return title.closest('.leaflet-popup') as HTMLElement
 }
 const originalGeolocation = navigator.geolocation
 
@@ -64,22 +70,27 @@ describe('MapPage (US-5)', () => {
     renderWithProviders(<MapPage />)
 
     expect(await screen.findByText('Tu ubicación')).toBeInTheDocument()
-    expect(await screen.findByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
-    expect(screen.getByTitle(marker('Terraza del Río', 'alta'))).toBeInTheDocument()
+    expect(await screen.findByTitle('La Esquina de Palermo')).toBeInTheDocument()
+    expect(screen.getByTitle('Terraza del Río')).toBeInTheDocument()
   })
 
-  it('US-5 S2 shows the occupancy level of every restaurant', async () => {
+  it('US-5 S2 shows the occupancy level of a restaurant when its marker is clicked', async () => {
     renderWithProviders(<MapPage />)
 
-    expect(await screen.findByTitle(marker('Bodegón Estudiantil', 'baja'))).toBeInTheDocument()
-    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
-    expect(screen.getByTitle(marker('Terraza del Río', 'alta'))).toBeInTheDocument()
+    // The pins carry only the name: occupancy appears in the card that opens on click.
+    expect(await screen.findByTitle('Bodegón Estudiantil')).not.toHaveTextContent(/[●▲■]/)
+
+    const card = await openCard('Bodegón Estudiantil')
+    expect(within(card).getByRole('img', { name: 'Concurrencia baja' })).toBeInTheDocument()
+
+    const other = await openCard('Terraza del Río')
+    expect(within(other).getByRole('img', { name: 'Concurrencia alta' })).toBeInTheDocument()
   })
 
   it('US-5 S3 shows the distance to a restaurant when it is selected', async () => {
     renderWithProviders(<MapPage />)
 
-    fireEvent.click(await screen.findByTitle(marker('La Esquina de Palermo', 'media')))
+    fireEvent.click(await screen.findByTitle('La Esquina de Palermo'))
 
     const expected = formatDistance(distanceKm(DINER, { lat: -34.5885, lng: -58.4265 }))
     expect(await screen.findByText(expected)).toBeInTheDocument()
@@ -95,7 +106,7 @@ describe('MapPage (US-5)', () => {
       { route: '/mapa' },
     )
 
-    fireEvent.click(await screen.findByTitle(marker('La Esquina de Palermo', 'media')))
+    fireEvent.click(await screen.findByTitle('La Esquina de Palermo'))
     const popup = await screen.findByText('Barrio')
     fireEvent.click(
       within(popup.closest('.leaflet-popup') as HTMLElement).getByRole('link', {
@@ -133,7 +144,7 @@ describe('MapPage (US-5)', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0)
     })
-    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
+    expect(screen.getByTitle('La Esquina de Palermo')).toBeInTheDocument()
 
     fetchMock.mockRejectedValueOnce(new Error('offline'))
     await act(async () => {
@@ -144,7 +155,7 @@ describe('MapPage (US-5)', () => {
     })
 
     expect(screen.getByText(/puede estar desactualizada/i)).toBeInTheDocument()
-    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
+    expect(screen.getByTitle('La Esquina de Palermo')).toBeInTheDocument()
   })
 
   it('US-5 edge shows a real restaurant without any occupancy indicator', async () => {
@@ -174,6 +185,11 @@ describe('MapPage (US-5)', () => {
     expect(within(list).queryByRole('img', { name: /Concurrencia/ })).not.toBeInTheDocument()
     expect(within(list).queryByLabelText(/^Precio/)).not.toBeInTheDocument()
     expect(screen.queryByText(/sin datos/i)).not.toBeInTheDocument()
+    // With no occupancy anywhere, the live update time is not shown either.
+    expect(screen.queryByText(/^Actualizado/)).not.toBeInTheDocument()
+
+    const card = await openCard('Parrilla Real')
+    expect(within(card).queryByRole('img', { name: /Concurrencia/ })).not.toBeInTheDocument()
   })
 
   it('US-5 edge hides restaurants without a valid location (FR-011)', async () => {
@@ -206,7 +222,7 @@ describe('MapPage (US-5)', () => {
     renderWithProviders(<MapPage />)
 
     expect(await screen.findByText(/no pudimos usar tu ubicación/i)).toBeInTheDocument()
-    fireEvent.click(await screen.findByTitle(marker('La Esquina de Palermo', 'media')))
+    fireEvent.click(await screen.findByTitle('La Esquina de Palermo'))
     await waitFor(() => expect(screen.getByText('Barrio')).toBeInTheDocument())
     expect(screen.queryByText('Distancia')).not.toBeInTheDocument()
   })
@@ -226,20 +242,20 @@ describe('MapPage price filter (US-7)', () => {
   it('US-7 S1 shows only the restaurants of the chosen price, on the map and in the list', async () => {
     const user = userEvent.setup()
     renderWithProviders(<MapPage />)
-    await screen.findByTitle(marker('Terraza del Río', 'alta'))
+    await screen.findByTitle('Terraza del Río')
 
     await user.click(screen.getByRole('button', { name: '$$' }))
 
     expect(screen.getByRole('heading', { name: '2 restaurantes' })).toBeInTheDocument()
-    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
-    expect(screen.getByTitle(marker('Verde Que Te Quiero', 'media'))).toBeInTheDocument()
-    expect(screen.queryByTitle(marker('Terraza del Río', 'alta'))).not.toBeInTheDocument()
+    expect(screen.getByTitle('La Esquina de Palermo')).toBeInTheDocument()
+    expect(screen.getByTitle('Verde Que Te Quiero')).toBeInTheDocument()
+    expect(screen.queryByTitle('Terraza del Río')).not.toBeInTheDocument()
   })
 
   it('US-7 S2 updates the result when the filter changes', async () => {
     const user = userEvent.setup()
     renderWithProviders(<MapPage />)
-    await screen.findByTitle(marker('Terraza del Río', 'alta'))
+    await screen.findByTitle('Terraza del Río')
 
     await user.click(screen.getByRole('button', { name: '$$' }))
     await user.click(screen.getByRole('button', { name: '$' }))
@@ -247,8 +263,8 @@ describe('MapPage price filter (US-7)', () => {
 
     await user.click(screen.getByRole('button', { name: '$$' }))
     expect(screen.getByRole('heading', { name: '3 restaurantes' })).toBeInTheDocument()
-    expect(screen.getByTitle(marker('Bodegón Estudiantil', 'baja'))).toBeInTheDocument()
-    expect(screen.queryByTitle(marker('La Esquina de Palermo', 'media'))).not.toBeInTheDocument()
+    expect(screen.getByTitle('Bodegón Estudiantil')).toBeInTheDocument()
+    expect(screen.queryByTitle('La Esquina de Palermo')).not.toBeInTheDocument()
   })
 
   it('US-7 S3 shows every restaurant again when the filter is removed', async () => {
@@ -259,7 +275,7 @@ describe('MapPage price filter (US-7)', () => {
     await user.click(screen.getByRole('button', { name: 'Quitar filtro de precio' }))
 
     expect(screen.getByRole('heading', { name: '7 restaurantes' })).toBeInTheDocument()
-    expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
+    expect(screen.getByTitle('La Esquina de Palermo')).toBeInTheDocument()
   })
 })
 

@@ -10,7 +10,6 @@ import { OCCUPANCY_REFRESH_MS } from '../../lib/occupancy'
 import { useGeolocation } from '../../lib/useGeolocation'
 import { LiveIndicator } from '../order'
 import { Button, IconPin, IconStar } from '../ui'
-import { OccupancyLegend } from './OccupancyLegend'
 import { OccupancyMeter } from './OccupancyMeter'
 import { PriceFilter } from './PriceFilter'
 import { matchesPriceFilter, PRICE_TIERS, type PriceTier } from './priceFilterUtils'
@@ -41,8 +40,8 @@ function byDistanceThenName(diner: GeoPoint | null) {
 }
 
 /**
- * Everything a diner needs to choose a restaurant: price filter, map with occupancy,
- * and the same restaurants as a list (US-5, US-7, US-9).
+ * Everything a diner needs to choose a restaurant: price filter, map and the same restaurants
+ * as a list (US-5, US-7, US-9). Occupancy appears only where there is data.
  */
 export function RestaurantExplorer() {
   const location = useLocation()
@@ -75,6 +74,9 @@ export function RestaurantExplorer() {
       ),
     )
     .sort(byDistanceThenName(diner))
+
+  // The live update time and its failure notice only make sense if some occupancy is shown.
+  const hasOccupancy = located.some((restaurant) => restaurant.occupancy)
 
   const backHere = { from: `${location.pathname}${location.search}` }
 
@@ -111,7 +113,7 @@ export function RestaurantExplorer() {
         </div>
 
         <div className={styles.status}>
-          {restaurantsQuery.dataUpdatedAt > 0 && (
+          {hasOccupancy && restaurantsQuery.dataUpdatedAt > 0 && (
             <LiveIndicator>
               Actualizado {updatedAtLabel(restaurantsQuery.dataUpdatedAt)}
             </LiveIndicator>
@@ -131,7 +133,7 @@ export function RestaurantExplorer() {
           </div>
         )}
 
-        {restaurantsQuery.isRefetchError && located.length > 0 && (
+        {restaurantsQuery.isRefetchError && hasOccupancy && (
           <p className={styles.notice}>
             No pudimos actualizar la concurrencia. Puede estar desactualizada.
           </p>
@@ -236,9 +238,6 @@ export function RestaurantExplorer() {
             onSelect={(restaurant) => setSelectedId(restaurant.id)}
             detailState={backHere}
           />
-          <div className={styles.legend}>
-            <OccupancyLegend />
-          </div>
         </div>
       )}
     </div>

@@ -20,7 +20,7 @@ Como **Comensal**, quiero ver la ubicación y características de cada restauran
 
 1. **Dado** que habilité mi ubicación, **Cuando** abro el mapa, **Entonces** veo mi posición actual y los restaurantes como marcadores.
 
-2. **Dado** que el mapa está visible, **Cuando** miro cada restaurante, **Entonces** se muestra un indicador de concurrencia (bajo / medio / alto). *(Salvo los restaurantes reales sin datos de concurrencia, que no muestran el indicador: D4, 28/10, falta que la PO lo valide.)*
+2. **Dado** que el mapa está visible, **Cuando** miro cada restaurante, **Entonces** se muestra un indicador de concurrencia (bajo / medio / alto). *(Decisión del equipo, 28/10, falta que la PO la valide: el indicador aparece al tocar el marcador, en la tarjeta del restaurante; el marcador muestra solo el nombre y el mapa no lleva leyenda. Los restaurantes reales sin datos de concurrencia no muestran el indicador: D4.)*
 
 3. **Dado** que el mapa está visible, **Cuando** miro un restaurante, **Entonces** puedo ver la distancia desde mi posición hasta él.
 

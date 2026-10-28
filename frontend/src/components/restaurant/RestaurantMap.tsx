@@ -15,10 +15,8 @@ import {
 
 import { averageRating, type RestaurantPublic } from '../../data/restaurants.fixture'
 import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../lib/geo'
-import { OCCUPANCY_LABELS } from '../../lib/occupancy'
 import { Button, IconStar } from '../ui'
 import { MapPin } from './MapPin'
-import { PIN_STATUS_BY_OCCUPANCY } from './pinStatus'
 import { OccupancyMeter } from './OccupancyMeter'
 import styles from './RestaurantMap.module.css'
 
@@ -97,27 +95,13 @@ export function RestaurantMap({
         const selected = restaurant.id === selectedId
         const distKm = isValidPoint(diner) ? distanceKm(diner, restaurant.location) : null
         const rating = averageRating(restaurant)
-        // Without occupancy data the pin shows only the name: nothing is said about it.
-        const statusLabel = restaurant.occupancy
-          ? `concurrencia ${OCCUPANCY_LABELS[restaurant.occupancy].toLowerCase()}`
-          : undefined
-        const markerLabel = statusLabel ? `${restaurant.name}, ${statusLabel}` : restaurant.name
         const icon = divIcon({
           className: styles.pinWrapper,
           html: renderToStaticMarkup(
-            <MapPin
-              name={restaurant.name}
-              status={
-                restaurant.occupancy ? PIN_STATUS_BY_OCCUPANCY[restaurant.occupancy] : undefined
-              }
-              statusLabel={statusLabel}
-              selected={selected}
-              index={index}
-              interactive={false}
-            />,
+            <MapPin name={restaurant.name} selected={selected} index={index} interactive={false} />,
           ),
           iconSize: [0, 0],
-          popupAnchor: [0, -44],
+          popupAnchor: [0, -36],
         })
 
         return (
@@ -125,8 +109,8 @@ export function RestaurantMap({
             key={restaurant.id}
             position={[restaurant.location.lat, restaurant.location.lng]}
             icon={icon}
-            alt={markerLabel}
-            title={markerLabel}
+            alt={restaurant.name}
+            title={restaurant.name}
             riseOnHover
             zIndexOffset={selected ? 1000 : 0}
             eventHandlers={{ click: () => onSelect(restaurant) }}
@@ -166,6 +150,7 @@ export function RestaurantMap({
                     )}
                     {restaurant.cuisine && <span>{restaurant.cuisine}</span>}
                   </p>
+                  {/* Occupancy shows only here, on click, and only when there is data. */}
                   {restaurant.occupancy && (
                     <OccupancyMeter level={restaurant.occupancy} showLabel />
                   )}

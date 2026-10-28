@@ -21,7 +21,6 @@ import { ConfirmationStamp, Ticket, TicketDivider, Timeline } from '../component
 import {
   MapPin,
   matchesPriceFilter,
-  OccupancyLegend,
   priceTierFromAverageSpend,
   OccupancyMeter,
   PriceFilter,
@@ -508,30 +507,26 @@ function MapDemo() {
   const [selected, setSelected] = useState('Verde Que Te Quiero')
   const [run, setRun] = useState(0)
   const pins = [
-    {
-      name: 'La Esquina de Palermo',
-      statusLabel: 'concurrencia baja',
-      status: 'available' as const,
-    },
-    { name: 'Bodegón Estudiantil', statusLabel: 'concurrencia media', status: 'few' as const },
-    { name: 'Verde Que Te Quiero', statusLabel: 'concurrencia baja', status: 'available' as const },
-    { name: 'Terraza del Río', statusLabel: 'concurrencia alta', status: 'full' as const },
+    'La Esquina de Palermo',
+    'Bodegón Estudiantil',
+    'Verde Que Te Quiero',
+    'Terraza del Río',
   ]
   return (
     <>
       <Demo
         title="Marcadores"
         wide
-        note="Muestran el nombre del restaurante y la forma de su concurrencia. Caen uno detrás de otro; el seleccionado se invierte y late en el piso. Con Leaflet van dentro de un divIcon."
+        note="Muestran solo el nombre del restaurante; la concurrencia aparece en la tarjeta al tocarlo, si hay datos. Caen uno detrás de otro; el seleccionado se invierte y late en el piso. Con Leaflet van dentro de un divIcon."
       >
         <div key={run} className={styles.map}>
-          {pins.map((pin, i) => (
+          {pins.map((name, i) => (
             <MapPin
-              key={pin.name}
-              {...pin}
+              key={name}
+              name={name}
               index={i}
-              selected={selected === pin.name}
-              onClick={() => setSelected(pin.name)}
+              selected={selected === name}
+              onClick={() => setSelected(name)}
             />
           ))}
         </div>
@@ -540,15 +535,9 @@ function MapDemo() {
         </Button>
       </Demo>
       <Demo
-        title="Leyenda de concurrencia"
-        note="Explica la forma y el color de cada marcador; en el mapa va flotando abajo a la izquierda."
-      >
-        <OccupancyLegend />
-      </Demo>
-      <Demo
         title="Mapa interactivo"
         wide
-        note="RestaurantMap junta Leaflet + OpenStreetMap (ADR 0003): tu posición, los marcadores con concurrencia y el acceso al detalle."
+        note="RestaurantMap junta Leaflet + OpenStreetMap (ADR 0003): tu posición, los marcadores y una tarjeta con la concurrencia y el acceso al detalle."
       >
         <div className={styles.interactiveMap}>
           <RestaurantMap
