@@ -40,6 +40,19 @@ describe('restaurants (decision D4 of spec 005)', () => {
     expect(RESTAURANTS_FIXTURE.every((restaurant) => !restaurant.bookable)).toBe(true)
   })
 
+  it('replaces the test restaurant that has the same name as a real one', async () => {
+    get.mockResolvedValue({
+      data: { restaurants: [{ ...REAL, name: 'La Esquina de Palermo' }] },
+      error: undefined,
+    } as never)
+
+    const restaurants = await fetchRestaurants()
+
+    const named = restaurants.filter((restaurant) => restaurant.name === 'La Esquina de Palermo')
+    expect(named).toHaveLength(1)
+    expect(named[0].bookable).toBe(true)
+  })
+
   it('keeps the test restaurants when the API cannot be reached', async () => {
     get.mockImplementation(async () => {
       throw new TypeError('offline')

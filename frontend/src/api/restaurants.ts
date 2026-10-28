@@ -72,7 +72,12 @@ export async function fetchRestaurants(): Promise<RestaurantPublic[]> {
   try {
     const { data } = await api.GET('/api/restaurants')
     const real = data?.restaurants.map((restaurant) => fromApi(restaurant)) ?? []
-    return [...real, ...RESTAURANTS_FIXTURE]
+    // A real restaurant replaces the test one with its name: never two with the same name.
+    const realNames = new Set(real.map((restaurant) => restaurant.name.toLocaleLowerCase('es')))
+    const tests = RESTAURANTS_FIXTURE.filter(
+      (restaurant) => !realNames.has(restaurant.name.toLocaleLowerCase('es')),
+    )
+    return [...real, ...tests]
   } catch {
     return RESTAURANTS_FIXTURE
   }
