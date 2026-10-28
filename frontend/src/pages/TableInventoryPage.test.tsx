@@ -15,7 +15,9 @@ vi.mock('../api/restaurantConfiguration', () => ({ configurationApi: api }))
 describe('TableInventoryPage (US-10)', () => {
   beforeEach(() => {
     api.getTables.mockResolvedValue([])
-    api.updateTables.mockResolvedValue([{ capacity: 2, quantity: 3, available: true }])
+    api.updateTables.mockResolvedValue([
+      { capacity: 2, quantity: 3, seating_area: 'indoor', available: true },
+    ])
   })
 
   it('US-10 S1 saves grouped quantities without physical table identifiers', async () => {
@@ -27,10 +29,25 @@ describe('TableInventoryPage (US-10)', () => {
 
     await waitFor(() =>
       expect(api.updateTables).toHaveBeenCalledWith([
-        { capacity: 2, quantity: 1, available: true },
+        { capacity: 2, quantity: 1, seating_area: 'indoor', available: true },
       ]),
     )
     expect(screen.queryByLabelText(/Mesa 1|Mesa 2/)).not.toBeInTheDocument()
+  })
+
+  it('US-10 S1 saves the seating area of each group', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<TableInventoryPage />)
+
+    await user.click(screen.getByRole('button', { name: 'Agregar grupo' }))
+    await user.click(screen.getByRole('radio', { name: 'Terraza' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar mesas' }))
+
+    await waitFor(() =>
+      expect(api.updateTables).toHaveBeenCalledWith([
+        { capacity: 2, quantity: 1, seating_area: 'terrace', available: true },
+      ]),
+    )
   })
 
   it('US-10 rejects invalid group quantities before saving', async () => {

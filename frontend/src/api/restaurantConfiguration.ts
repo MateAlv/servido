@@ -1,3 +1,5 @@
+import type { SeatingArea } from '../lib/seating'
+
 const TOKEN_KEY = 'servido-access-token'
 
 function token(): string | null {
@@ -63,6 +65,7 @@ export type OpeningShift = {
 export type TableGroup = {
   capacity: number
   quantity: number
+  seating_area: SeatingArea
   available: boolean
   free_quantity?: number
 }

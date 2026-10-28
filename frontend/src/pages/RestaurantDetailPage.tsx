@@ -13,7 +13,8 @@ import {
   StarRating,
   StatusPill,
 } from '../components/ui'
-import { averageRating, fetchRestaurant } from '../data/restaurants.fixture'
+import { fetchRestaurant } from '../api/restaurants'
+import { averageRating } from '../data/restaurants.fixture'
 import styles from './RestaurantDetailPage.module.css'
 
 const DATE_FORMAT = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long' })
@@ -87,13 +88,17 @@ export function RestaurantDetailPage() {
           </Reveal>
           <Reveal delay={60}>
             <ul className={styles.facts} aria-label="Características">
-              <li className={styles.fact}>
-                <span className={styles.factLabel}>Precio</span>
-                <span className={styles.tier}>{restaurant.priceTier}</span>
-                <span className={styles.factNote}>
-                  {PRICE_FORMAT.format(restaurant.averageSpendPerPerson)} por persona
-                </span>
-              </li>
+              {restaurant.priceTier && (
+                <li className={styles.fact}>
+                  <span className={styles.factLabel}>Precio</span>
+                  <span className={styles.tier}>{restaurant.priceTier}</span>
+                  {restaurant.averageSpendPerPerson !== null && (
+                    <span className={styles.factNote}>
+                      {PRICE_FORMAT.format(restaurant.averageSpendPerPerson)} por persona
+                    </span>
+                  )}
+                </li>
+              )}
               {rating !== null && (
                 <li className={styles.fact}>
                   <span className={styles.factLabel}>Opiniones</span>
@@ -184,7 +189,7 @@ export function RestaurantDetailPage() {
 
         <aside className={styles.side}>
           <Card className={styles.reserve}>
-            {account?.rol === 'diner' ? (
+            {restaurant.bookable && account?.rol === 'diner' ? (
               <>
                 <StatusPill tone="ok" className={styles.soon}>
                   Reservas abiertas

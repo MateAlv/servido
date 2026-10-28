@@ -3,16 +3,17 @@ import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { fetchRestaurants } from '../data/restaurants.fixture'
+import { fetchRestaurants } from '../api/restaurants'
 import { formatDistance, distanceKm } from '../lib/geo'
 import { OCCUPANCY_REFRESH_MS } from '../lib/occupancy'
 import { renderWithProviders } from '../test/renderWithProviders'
 import { MapPage } from './MapPage'
 import { RestaurantDetailPage } from './RestaurantDetailPage'
 
-vi.mock('../data/restaurants.fixture', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../data/restaurants.fixture')>()
-  return { ...actual, fetchRestaurants: vi.fn(actual.fetchRestaurants) }
+vi.mock('../api/restaurants', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../api/restaurants')>()
+  const { RESTAURANTS_FIXTURE } = await import('../data/restaurants.fixture')
+  return { ...actual, fetchRestaurants: vi.fn(async () => RESTAURANTS_FIXTURE) }
 })
 
 const DINER = { lat: -34.59, lng: -58.43 }
@@ -146,6 +147,35 @@ describe('MapPage (US-5)', () => {
     expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
   })
 
+  it('D4 shows a real restaurant without inventing occupancy or price', async () => {
+    vi.mocked(fetchRestaurants).mockResolvedValueOnce([
+      {
+        id: '6f1c0000-0000-4000-8000-000000000001',
+        name: 'Parrilla Real',
+        description: '',
+        cuisine: 'Parrilla',
+        averageSpendPerPerson: null,
+        priceTier: null,
+        dietaryRestrictions: [],
+        location: { lat: -34.58, lng: -58.43, address: 'Honduras 4800', neighborhood: 'Palermo' },
+        occupancy: null,
+        menu: [],
+        reviews: [],
+        photo: { cover: '/servido-logo.png', thumb: '/servido-logo.png' },
+        bookable: true,
+      },
+    ])
+
+    renderWithProviders(<MapPage />)
+
+    expect(await screen.findByTitle('Parrilla Real, concurrencia sin datos')).toBeInTheDocument()
+    const list = screen.getByRole('region', { name: '1 restaurante' })
+    expect(within(list).getByRole('img', { name: 'Concurrencia sin datos' })).toBeInTheDocument()
+    expect(within(list).queryByLabelText(/^Precio/)).not.toBeInTheDocument()
+    // The list's meter and the map legend both explain the neutral pin.
+    expect(screen.getAllByText('Sin datos')).toHaveLength(2)
+  })
+
   it('US-5 edge hides restaurants without a valid location (FR-011)', async () => {
     vi.mocked(fetchRestaurants).mockResolvedValueOnce([
       {
@@ -161,6 +191,7 @@ describe('MapPage (US-5)', () => {
         menu: [],
         reviews: [],
         photo: { cover: '', thumb: '' },
+        bookable: false,
       },
     ])
 

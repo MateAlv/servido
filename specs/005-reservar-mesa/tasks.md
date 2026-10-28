@@ -70,8 +70,8 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 - [ ] T014 **Superseded on 28/10 (see Phase 3, T034–T041).** [US11] Add the response schemas in `backend/app/schemas/reservation.py` (`AvailabilityResponse` with `restaurant_id`, `date`, `open`, `duration_minutes`, `max_party_size`, `slots`; `AvailableTablesResponse` with `restaurant_id`, `date`, `start_time`, `ends_at`, `tables`), with Spanish validation messages — **blocked: spec 004**
 - [ ] T015 **Superseded on 28/10 (see Phase 3, T034–T041).** [US11] Implement `backend/app/services/availability.py`: BA date → UTC window, `max_party_size` as `max(capacity)` over the active tables (`0` when there are none), 30-minute starts that fit the 90-minute block inside the shift, past starts removed, free tables with the overlap predicate, no slots or tables above the cap, and the ordering of `data-model.md` — **blocked: spec 004**
 - [ ] T016 **Superseded on 28/10 (see Phase 3, T034–T041).** [US11] Implement the two GET endpoints in `backend/app/api/reservation.py` (`/restaurants/{restaurant_id}/availability` and `/availability/tables`) with `TokenClaimsDep` + diner-role check (`403` for restaurants), `404` for unknown restaurants, `400` for a past date or start and for `party_size < 1`, and mount the router in `backend/app/api/__init__.py` — **blocked: spec 004**
-- [ ] T017 [US11] Run `make api-types` and commit `frontend/src/api/openapi.json` and `frontend/src/api/schema.d.ts` — **blocked: T016**
-- [ ] T018 [US11] Swap `frontend/src/api/availability.ts` to the generated typed client (`api.GET(...)`), delete `frontend/src/data/reservationAvailability.fixture.ts` and the «Datos de prueba» pill, and remove the pending item from `specs/README.md`. Only when T002–T017 are done
+- [X] T017 [US11] Run `make api-types` and commit `frontend/src/api/openapi.json` and `frontend/src/api/schema.d.ts` — **blocked: T016**
+- [X] T018 [US11] Swap `frontend/src/api/availability.ts` to the generated typed client (`api.GET(...)`), delete `frontend/src/data/reservationAvailability.fixture.ts` and the «Datos de prueba» pill, and remove the pending item from `specs/README.md`. Only when T002–T017 are done
 
 ### Frontend implementation
 
@@ -106,12 +106,12 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 
 ### 2. Real restaurants and the US-11 page on the API (D4)
 
-- [ ] T042 [US10] Seating area selector per group in `frontend/src/pages/TableInventoryPage.tsx` («Adentro», «Afuera», «Terraza») and its test
-- [ ] T043 [P] [US9] Tests in `backend/tests/test_public_restaurants.py`: `test_lists_only_bookable_restaurants`, `test_detail_includes_the_menu`, `test_price_tier_is_null_unless_it_is_a_known_tier`, `test_unknown_or_not_bookable_answers_404`
-- [ ] T044 [US9] `GET /api/restaurants` and `/api/restaurants/{restaurant_id}` in `backend/app/api/public_restaurant.py` per `contracts/restaurants-api.md`
-- [ ] T017 (above) `make api-types`
-- [ ] T045 [US5] [US7] [US9] [US33] `frontend/src/api/restaurants.ts`: fetch the bookable restaurants and map them into `RestaurantPublic` (price tier from `price_tier`, occupancy `null`); the map, the list and the detail show them next to the fixtures; the pin, the list and the detail get a «Sin datos» occupancy state; «Reservar mesa» only for real restaurants (fixtures keep «Próximamente»); `ReservationPage` reads its header from `GET /api/restaurants/{id}` instead of the fixture's `fetchRestaurant`; tests in the map/list and detail test files
-- [ ] T018 (above) Swap `frontend/src/api/availability.ts` to the typed client for the group response, delete the fixture and the «Datos de prueba» label, update `ReservationPage.test.tsx`
+- [X] T042 [US10] Seating area selector per group in `frontend/src/pages/TableInventoryPage.tsx` («Adentro», «Afuera», «Terraza») and its test
+- [X] T043 [P] [US9] Tests in `backend/tests/test_public_restaurants.py`: `test_lists_only_bookable_restaurants`, `test_detail_includes_the_menu`, `test_price_tier_is_null_unless_it_is_a_known_tier`, `test_unknown_or_not_bookable_answers_404`
+- [X] T044 [US9] `GET /api/restaurants` and `/api/restaurants/{restaurant_id}` in `backend/app/api/public_restaurant.py` per `contracts/restaurants-api.md`
+- [X] T017 (above) `make api-types`
+- [X] T045 [US5] [US7] [US9] [US33] `frontend/src/api/restaurants.ts`: fetch the bookable restaurants and map them into `RestaurantPublic` (price tier from `price_tier`, occupancy `null`); the map, the list and the detail show them next to the fixtures; the pin, the list and the detail get a «Sin datos» occupancy state; «Reservar mesa» only for real restaurants (fixtures keep «Próximamente»); `ReservationPage` reads its header from `GET /api/restaurants/{id}` instead of the fixture's `fetchRestaurant`; tests in the map/list and detail test files
+- [X] T018 (above) Swap `frontend/src/api/availability.ts` to the typed client for the group response, delete the fixture and the «Datos de prueba» label, update `ReservationPage.test.tsx`
 
 ### 3. US-13
 

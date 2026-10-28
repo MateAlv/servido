@@ -5,38 +5,21 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router'
 import {
   fetchAvailability,
   fetchAvailableTables,
-  isUsingMockData,
   type DayAvailability,
   type SeatingArea,
   type TablesAvailability,
 } from '../api/availability'
 import { useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
-import {
-  Button,
-  Card,
-  Chip,
-  QuantityStepper,
-  Skeleton,
-  StatusPill,
-  useToast,
-} from '../components/ui'
-import { fetchRestaurant } from '../data/restaurants.fixture'
+import { Button, Card, Chip, QuantityStepper, Skeleton, useToast } from '../components/ui'
+import { fetchRestaurant } from '../api/restaurants'
 import { cx } from '../lib/cx'
+import { SEATING_AREA_LABELS, SEATING_AREA_OPTIONS } from '../lib/seating'
 import { todayInBuenosAires } from '../lib/date'
 import styles from './ReservationPage.module.css'
 
-const SEATING_AREAS: { value: SeatingArea; label: string }[] = [
-  { value: 'indoor', label: 'Adentro' },
-  { value: 'outdoor', label: 'Afuera' },
-  { value: 'terrace', label: 'Terraza' },
-]
-
-const AREA_LABEL: Record<SeatingArea, string> = {
-  indoor: 'Adentro',
-  outdoor: 'Afuera',
-  terrace: 'Terraza',
-}
+const SEATING_AREAS = SEATING_AREA_OPTIONS
+const AREA_LABEL = SEATING_AREA_LABELS
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
@@ -165,6 +148,17 @@ export function ReservationPage() {
       <main className={styles.container}>
         <h1 className={styles.title}>Restaurante no encontrado</h1>
         <p className={styles.muted}>El restaurante no existe o no está disponible.</p>
+      </main>
+    )
+  }
+
+  // The test restaurants of spec 002 aren't in the database: only real ones take reservations.
+  if (!restaurant.bookable) {
+    return (
+      <main className={styles.container}>
+        <h1 className={styles.title}>{restaurant.name}</h1>
+        <p className={styles.muted}>Este restaurante todavía no toma reservas.</p>
+        <Link to={`/restaurantes/${restaurant.id}`}>Volver al restaurante</Link>
       </main>
     )
   }
@@ -315,11 +309,6 @@ export function ReservationPage() {
             {restaurant.cuisine} · {restaurant.location.neighborhood}
           </p>
         </div>
-        {isUsingMockData && (
-          <StatusPill tone="warn" className={styles.mockPill}>
-            Datos de prueba
-          </StatusPill>
-        )}
       </header>
 
       <div className={styles.steps}>

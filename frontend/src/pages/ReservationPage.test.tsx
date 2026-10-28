@@ -15,11 +15,25 @@ import { renderWithProviders } from '../test/renderWithProviders'
 import { ReservationPage } from './ReservationPage'
 import { RestaurantDetailPage } from './RestaurantDetailPage'
 
-// The page's only data seam (AGENTS.md): while the fixture answers, availability.ts is what
-// stands between the page and the API, so the tests replace it with a deterministic double.
+// The page reads the API through availability.ts and restaurants.ts; the tests replace both
+// with deterministic doubles.
 vi.mock('../api/availability', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/availability')>()
   return { ...actual, fetchAvailability: vi.fn(), fetchAvailableTables: vi.fn() }
+})
+
+// RESTAURANT_ID is a real (bookable) restaurant; TEST_RESTAURANT_ID is one of the test
+// restaurants of spec 002, which can't be booked (decision D4).
+const TEST_RESTAURANT_ID = 'r-bodegon'
+vi.mock('../api/restaurants', async () => {
+  const { testRestaurant } = await import('../data/restaurants.fixture')
+  return {
+    fetchRestaurant: vi.fn(async (id: string) => {
+      if (id === TEST_RESTAURANT_ID) return testRestaurant(id)
+      const restaurant = testRestaurant('r-la-esquina')
+      return restaurant && { ...restaurant, id, bookable: true }
+    }),
+  }
 })
 
 vi.mock('../api/session', async (importOriginal) => {
@@ -31,7 +45,7 @@ const availabilityMock = vi.mocked(fetchAvailability)
 const tablesMock = vi.mocked(fetchAvailableTables)
 const useAccountMock = vi.mocked(useAccount)
 
-const RESTAURANT_ID = 'r-la-esquina'
+const RESTAURANT_ID = '6f1c0000-0000-4000-8000-000000000001'
 const DINER = { rol: 'diner', id: 'c-1', nombre: 'Ana', email: 'ana@example.com' }
 const RESTAURANT_ACCOUNT = {
   rol: 'restaurant',
@@ -70,8 +84,8 @@ function tablesAvailability(overrides: Partial<TablesAvailability> = {}): Tables
     start_time: '12:00',
     ends_at: `${DATE}T13:30:00-03:00`,
     tables: [
-      { id: 'mesa-1', label: 'Mesa 1', capacity: 2, seating_area: 'indoor' },
-      { id: 'mesa-3', label: 'Mesa 3', capacity: 4, seating_area: 'outdoor' },
+      { capacity: 2, seating_area: 'indoor', free: 1 },
+      { capacity: 4, seating_area: 'outdoor', free: 1 },
     ],
     ...overrides,
   }
@@ -115,7 +129,6 @@ describe('ReservationPage (US-11)', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'La Esquina de Palermo' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('Datos de prueba')).toBeInTheDocument()
     const dateInput = await screen.findByLabelText('Fecha')
     expect(dateInput).toHaveAttribute('min', todayInBuenosAires())
 
@@ -324,5 +337,31 @@ describe('ReservationPage (US-11)', () => {
     await screen.findByRole('heading', { level: 1, name: 'La Esquina de Palermo' })
     expect(screen.queryByRole('link', { name: 'Reservar mesa' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Reservar mesa' })).toBeDisabled()
+  })
+
+  it('D4 keeps the test restaurants out of the booking flow', async () => {
+    const { unmount } = renderWithProviders(
+      <Routes>
+        <Route path="/restaurantes/:id" element={<RestaurantDetailPage />} />
+      </Routes>,
+      { route: `/restaurantes/${TEST_RESTAURANT_ID}` },
+    )
+
+    await screen.findByRole('heading', { level: 1, name: 'Bodegón Estudiantil' })
+    expect(screen.queryByRole('link', { name: 'Reservar mesa' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reservar mesa' })).toBeDisabled()
+    unmount()
+
+    renderWithProviders(
+      <Routes>
+        <Route path="/reservar/:restauranteId" element={<ReservationPage />} />
+      </Routes>,
+      { route: `/reservar/${TEST_RESTAURANT_ID}` },
+    )
+
+    expect(
+      await screen.findByText('Este restaurante todavía no toma reservas.'),
+    ).toBeInTheDocument()
+    expect(availabilityMock).not.toHaveBeenCalled()
   })
 })

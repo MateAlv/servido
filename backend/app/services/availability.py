@@ -9,11 +9,12 @@ from datetime import date, datetime, time, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import and_, exists, select
 from sqlalchemy.orm import Session
 
 from app.models.opening_shift import OpeningShift
 from app.models.reservation import RESERVATION_MINUTES, Reservation
+from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
 
 BUENOS_AIRES = ZoneInfo("America/Argentina/Buenos_Aires")
@@ -198,3 +199,19 @@ def groups_at(
     starts_at = check_start(session, restaurant_id, day, start, now)
     groups = available_groups(session, restaurant_id)
     return starts_at, free_groups(session, restaurant_id, groups, party_size, starts_at)
+
+
+def bookable_condition():
+    """Where clause for restaurants a diner can book: coordinates, an active shift and an
+    available table group (decision D4)."""
+    return and_(
+        Restaurant.latitud.is_not(None),
+        exists().where(
+            OpeningShift.restaurant_id == Restaurant.id_restaurante,
+            OpeningShift.active.is_(True),
+        ),
+        exists().where(
+            TableInventoryGroup.restaurant_id == Restaurant.id_restaurante,
+            TableInventoryGroup.available.is_(True),
+        ),
+    )

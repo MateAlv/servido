@@ -193,10 +193,6 @@
   white-space: nowrap;
 }
 
-.mockPill {
-  white-space: nowrap;
-}
-
 /* Siguiente (prototipo-us11.html): right-aligned under the three steps. */
 .actions {
   display: flex;

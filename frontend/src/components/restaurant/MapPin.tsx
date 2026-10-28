@@ -3,7 +3,7 @@ import { cssVars } from '../../lib/cssVars'
 import type { PinStatus } from './pinStatus'
 import styles from './MapPin.module.css'
 
-const GLYPHS: Record<PinStatus, string> = { available: '●', few: '▲', full: '■' }
+const GLYPHS: Record<PinStatus, string> = { available: '●', few: '▲', full: '■', unknown: '○' }
 
 /** The colored shape of a pin, also used by the map legend. */
 export function PinGlyph({ status, className }: { status: PinStatus; className?: string }) {

@@ -82,6 +82,10 @@
   background: #b3261e;
 }
 
+.unknown {
+  background: var(--color-text-muted);
+}
+
 @keyframes drop {
   0% {
     transform: translateY(-36px);

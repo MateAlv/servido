@@ -2,11 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useRef, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router'
 
-import {
-  averageRating,
-  fetchRestaurants,
-  type RestaurantPublic,
-} from '../../data/restaurants.fixture'
+import { fetchRestaurants } from '../../api/restaurants'
+import { averageRating, type RestaurantPublic } from '../../data/restaurants.fixture'
 import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../lib/geo'
 import { OCCUPANCY_REFRESH_MS } from '../../lib/occupancy'
 import { useGeolocation } from '../../lib/useGeolocation'
@@ -165,9 +162,11 @@ export function RestaurantExplorer() {
                 />
                 <div className={styles.itemHead}>
                   <h3 className={styles.itemName}>{restaurant.name}</h3>
-                  <span className={styles.tier} aria-label={`Precio ${restaurant.priceTier}`}>
-                    {restaurant.priceTier}
-                  </span>
+                  {restaurant.priceTier && (
+                    <span className={styles.tier} aria-label={`Precio ${restaurant.priceTier}`}>
+                      {restaurant.priceTier}
+                    </span>
+                  )}
                 </div>
                 <p className={styles.itemMeta}>
                   {averageRating(restaurant) !== null && (
@@ -215,7 +214,9 @@ export function RestaurantExplorer() {
             detailState={backHere}
           />
           <div className={styles.legend}>
-            <OccupancyLegend />
+            <OccupancyLegend
+              withNoData={visible.some((restaurant) => restaurant.occupancy === null)}
+            />
           </div>
         </div>
       )}

@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { Button, Card, IconArrowLeft, TextField, useToast } from '../components/ui'
+import {
+  Button,
+  Card,
+  IconArrowLeft,
+  SegmentedControl,
+  TextField,
+  useToast,
+} from '../components/ui'
 import { configurationApi, type TableGroup } from '../api/restaurantConfiguration'
+import { SEATING_AREA_OPTIONS } from '../lib/seating'
 import styles from './RestaurantProfilePage.module.css'
 
 export function TableInventoryPage() {
@@ -20,7 +28,10 @@ export function TableInventoryPage() {
   }, [])
 
   function addGroup() {
-    setGroups((current) => [...current, { capacity: 2, quantity: 1, available: true }])
+    setGroups((current) => [
+      ...current,
+      { capacity: 2, quantity: 1, seating_area: 'indoor', available: true },
+    ])
   }
 
   async function save() {
@@ -37,8 +48,9 @@ export function TableInventoryPage() {
       setMessage('')
       return
     }
-    if (new Set(groups.map((group) => group.capacity)).size !== groups.length) {
-      setError('No puede haber dos grupos con la misma capacidad.')
+    const keys = groups.map((group) => `${group.capacity}-${group.seating_area}`)
+    if (new Set(keys).size !== groups.length) {
+      setError('No puede haber dos grupos con la misma capacidad y el mismo tipo de mesa.')
       setMessage('')
       return
     }
@@ -61,7 +73,7 @@ export function TableInventoryPage() {
         <p className={styles.eyebrow}>Configuración del local</p>
         <h1 className={styles.title}>Inventario de mesas</h1>
         <p className={styles.lead}>
-          Registrá grupos: por ejemplo, 4 mesas de capacidad 2. No hay Mesa 1 ni Mesa 2.
+          Registrá grupos: por ejemplo, 4 mesas de capacidad 2 adentro. No hay Mesa 1 ni Mesa 2.
         </p>
       </header>
       <Card>
@@ -95,6 +107,18 @@ export function TableInventoryPage() {
                       itemIndex === index
                         ? { ...item, capacity: Number(event.target.value) }
                         : item,
+                    ),
+                  )
+                }
+              />
+              <SegmentedControl
+                label="Tipo de mesa"
+                options={SEATING_AREA_OPTIONS}
+                value={group.seating_area}
+                onChange={(seatingArea) =>
+                  setGroups((current) =>
+                    current.map((item, itemIndex) =>
+                      itemIndex === index ? { ...item, seating_area: seatingArea } : item,
                     ),
                   )
                 }

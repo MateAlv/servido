@@ -1,0 +1,14 @@
+import type { components } from '../api/schema'
+
+/** Glossary: tipo de mesa. A fixed catalog (spec 004, FR-009). */
+export type SeatingArea = components['schemas']['FreeGroupResponse']['seating_area']
+
+export const SEATING_AREA_LABELS: Record<SeatingArea, string> = {
+  indoor: 'Adentro',
+  outdoor: 'Afuera',
+  terrace: 'Terraza',
+}
+
+export const SEATING_AREA_OPTIONS = (Object.keys(SEATING_AREA_LABELS) as SeatingArea[]).map(
+  (value) => ({ value, label: SEATING_AREA_LABELS[value] }),
+)

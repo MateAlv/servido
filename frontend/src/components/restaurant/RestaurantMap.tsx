@@ -18,7 +18,7 @@ import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../l
 import { OCCUPANCY_LABELS } from '../../lib/occupancy'
 import { Button, IconStar } from '../ui'
 import { MapPin } from './MapPin'
-import { PIN_STATUS_BY_OCCUPANCY } from './pinStatus'
+import { pinStatusFor } from './pinStatus'
 import { OccupancyMeter } from './OccupancyMeter'
 import styles from './RestaurantMap.module.css'
 
@@ -97,13 +97,15 @@ export function RestaurantMap({
         const selected = restaurant.id === selectedId
         const distKm = isValidPoint(diner) ? distanceKm(diner, restaurant.location) : null
         const rating = averageRating(restaurant)
-        const statusLabel = `concurrencia ${OCCUPANCY_LABELS[restaurant.occupancy].toLowerCase()}`
+        const statusLabel = restaurant.occupancy
+          ? `concurrencia ${OCCUPANCY_LABELS[restaurant.occupancy].toLowerCase()}`
+          : 'concurrencia sin datos'
         const icon = divIcon({
           className: styles.pinWrapper,
           html: renderToStaticMarkup(
             <MapPin
               name={restaurant.name}
-              status={PIN_STATUS_BY_OCCUPANCY[restaurant.occupancy]}
+              status={pinStatusFor(restaurant.occupancy)}
               statusLabel={statusLabel}
               selected={selected}
               index={index}
@@ -143,9 +145,11 @@ export function RestaurantMap({
                 <div className={styles.cardBody}>
                   <div className={styles.cardHead}>
                     <h3 className={styles.popupTitle}>{restaurant.name}</h3>
-                    <span className={styles.tier} aria-label={`Precio ${restaurant.priceTier}`}>
-                      {restaurant.priceTier}
-                    </span>
+                    {restaurant.priceTier && (
+                      <span className={styles.tier} aria-label={`Precio ${restaurant.priceTier}`}>
+                        {restaurant.priceTier}
+                      </span>
+                    )}
                   </div>
                   <p className={styles.popupMeta}>
                     {rating !== null && (

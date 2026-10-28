@@ -1013,6 +1013,286 @@
           }
         ]
       }
+    },
+    "/api/restaurants/{restaurant_id}/availability": {
+      "get": {
+        "tags": [
+          "reservation"
+        ],
+        "summary": "Get Availability",
+        "operationId": "get_availability_api_restaurants__restaurant_id__availability_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "restaurant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Restaurant Id"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Date"
+            }
+          },
+          {
+            "name": "party_size",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Party Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fecha pasada o datos inv\u00e1lidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El restaurante no existe.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurants/{restaurant_id}/availability/tables": {
+      "get": {
+        "tags": [
+          "reservation"
+        ],
+        "summary": "Get Available Tables",
+        "operationId": "get_available_tables_api_restaurants__restaurant_id__availability_tables_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "restaurant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Restaurant Id"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Date"
+            }
+          },
+          {
+            "name": "start_time",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "time",
+              "title": "Start Time"
+            }
+          },
+          {
+            "name": "party_size",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Party Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TablesAvailabilityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fecha u horario no v\u00e1lidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El restaurante no existe.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurants": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "List Bookable Restaurants",
+        "operationId": "list_bookable_restaurants_api_restaurants_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicRestaurantList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurants/{restaurant_id}": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Get Bookable Restaurant",
+        "operationId": "get_bookable_restaurant_api_restaurants__restaurant_id__get",
+        "parameters": [
+          {
+            "name": "restaurant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Restaurant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicRestaurantDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El restaurante no existe o no toma reservas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1062,6 +1342,49 @@
         ],
         "title": "AccountResponse",
         "description": "The account behind the token, whatever its role. Used to show who is signed in."
+      },
+      "AvailabilityResponse": {
+        "properties": {
+          "restaurant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Restaurant Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "open": {
+            "type": "boolean",
+            "title": "Open"
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "title": "Duration Minutes"
+          },
+          "max_party_size": {
+            "type": "integer",
+            "title": "Max Party Size"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/SlotResponse"
+            },
+            "type": "array",
+            "title": "Slots"
+          }
+        },
+        "type": "object",
+        "required": [
+          "restaurant_id",
+          "date",
+          "open",
+          "duration_minutes",
+          "max_party_size",
+          "slots"
+        ],
+        "title": "AvailabilityResponse"
       },
       "Body_create_dish_api_restaurantes_me_platos_post": {
         "properties": {
@@ -1285,6 +1608,34 @@
         ],
         "title": "DishResponse"
       },
+      "FreeGroupResponse": {
+        "properties": {
+          "capacity": {
+            "type": "integer",
+            "title": "Capacity"
+          },
+          "seating_area": {
+            "type": "string",
+            "enum": [
+              "indoor",
+              "outdoor",
+              "terrace"
+            ],
+            "title": "Seating Area"
+          },
+          "free": {
+            "type": "integer",
+            "title": "Free"
+          }
+        },
+        "type": "object",
+        "required": [
+          "capacity",
+          "seating_area",
+          "free"
+        ],
+        "title": "FreeGroupResponse"
+      },
       "GeocodingPreview": {
         "properties": {
           "display_name": {
@@ -1500,6 +1851,310 @@
           "end_time"
         ],
         "title": "OpeningShiftPayload"
+      },
+      "PublicDish": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "price": {
+            "type": "string",
+            "title": "Price"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "dietary_restrictions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dietary Restrictions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "category",
+          "price",
+          "photo_url",
+          "dietary_restrictions"
+        ],
+        "title": "PublicDish"
+      },
+      "PublicRestaurant": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "cuisine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cuisine"
+          },
+          "price_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Tier"
+          },
+          "dietary_restrictions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dietary Restrictions"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "neighborhood": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Neighborhood"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "cuisine",
+          "price_tier",
+          "dietary_restrictions",
+          "address",
+          "neighborhood",
+          "lat",
+          "lng",
+          "photo_url"
+        ],
+        "title": "PublicRestaurant",
+        "description": "A bookable restaurant as the diner's map, list and detail show it (decision D4)."
+      },
+      "PublicRestaurantDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "cuisine": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cuisine"
+          },
+          "price_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Tier"
+          },
+          "dietary_restrictions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dietary Restrictions"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "neighborhood": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Neighborhood"
+          },
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "menu": {
+            "items": {
+              "$ref": "#/components/schemas/PublicDish"
+            },
+            "type": "array",
+            "title": "Menu"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "cuisine",
+          "price_tier",
+          "dietary_restrictions",
+          "address",
+          "neighborhood",
+          "lat",
+          "lng",
+          "photo_url",
+          "menu"
+        ],
+        "title": "PublicRestaurantDetail"
+      },
+      "PublicRestaurantList": {
+        "properties": {
+          "restaurants": {
+            "items": {
+              "$ref": "#/components/schemas/PublicRestaurant"
+            },
+            "type": "array",
+            "title": "Restaurants"
+          }
+        },
+        "type": "object",
+        "required": [
+          "restaurants"
+        ],
+        "title": "PublicRestaurantList"
       },
       "RegistrationRequest": {
         "properties": {
@@ -1904,6 +2559,24 @@
         ],
         "title": "RestaurantResponse"
       },
+      "SlotResponse": {
+        "properties": {
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_time",
+          "available"
+        ],
+        "title": "SlotResponse"
+      },
       "TableInventoryGroupPayload": {
         "properties": {
           "capacity": {
@@ -1915,6 +2588,16 @@
             "type": "integer",
             "exclusiveMinimum": 0.0,
             "title": "Quantity"
+          },
+          "seating_area": {
+            "type": "string",
+            "enum": [
+              "indoor",
+              "outdoor",
+              "terrace"
+            ],
+            "title": "Seating Area",
+            "default": "indoor"
           },
           "available": {
             "type": "boolean",
@@ -1941,6 +2624,16 @@
             "exclusiveMinimum": 0.0,
             "title": "Quantity"
           },
+          "seating_area": {
+            "type": "string",
+            "enum": [
+              "indoor",
+              "outdoor",
+              "terrace"
+            ],
+            "title": "Seating Area",
+            "default": "indoor"
+          },
           "available": {
             "type": "boolean",
             "title": "Available",
@@ -1964,6 +2657,45 @@
           "free_quantity"
         ],
         "title": "TableInventoryGroupResponse"
+      },
+      "TablesAvailabilityResponse": {
+        "properties": {
+          "restaurant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Restaurant Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Ends At"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/components/schemas/FreeGroupResponse"
+            },
+            "type": "array",
+            "title": "Tables"
+          }
+        },
+        "type": "object",
+        "required": [
+          "restaurant_id",
+          "date",
+          "start_time",
+          "ends_at",
+          "tables"
+        ],
+        "title": "TablesAvailabilityResponse"
       },
       "ValidationError": {
         "properties": {
