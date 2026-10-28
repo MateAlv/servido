@@ -537,6 +537,14 @@ describe('ReservationPage (US-13)', () => {
     expect(screen.getByText(longDate(DATE))).toBeInTheDocument()
   })
 
+  it('US-13 S5 says so when a reloaded confirmation is not found', async () => {
+    dayReservationsMock.mockResolvedValue([])
+    renderPage(`?confirmada=no-existe&fecha=${DATE}`)
+
+    expect(await screen.findByText('No encontramos esa reserva.')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Fecha')).not.toBeInTheDocument()
+  })
+
   it('US-13 S5 keeps showing the confirmation after a reload', async () => {
     dayReservationsMock.mockResolvedValue([reservation({ id: 'res-9' })])
     renderPage(`?confirmada=res-9&fecha=${DATE}`)

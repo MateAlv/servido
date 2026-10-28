@@ -93,3 +93,12 @@ def test_us6_s5_restaurant_photo_can_be_uploaded_from_device(client: TestClient)
 
     assert response.status_code == 200
     assert response.json()["foto_url"].startswith("/media/restaurants/")
+
+
+def test_us6_edge_description_is_at_most_2000_characters(client: TestClient) -> None:
+    headers = _auth(client)
+    profile = {"nombre": "Local de prueba", "descripcion": "a" * 2001}
+
+    response = client.put("/api/restaurante/perfil", json=profile, headers=headers)
+
+    assert response.status_code == 400

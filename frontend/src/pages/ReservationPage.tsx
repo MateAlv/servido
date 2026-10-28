@@ -248,7 +248,8 @@ export function ReservationPage() {
   if (
     accountPending ||
     restaurantPending ||
-    (reviewing && hora && (availability.isLoading || tables.isLoading))
+    (reviewing && hora && (availability.isLoading || tables.isLoading)) ||
+    (confirmedId !== null && !shownConfirmation && confirmedReload.isLoading)
   ) {
     return (
       <main className={styles.loading}>
@@ -437,6 +438,8 @@ export function ReservationPage() {
     const params = paramsFromSelection(selection)
     params.set('paso', 'revision')
     reviewPushed.current = true
+    setReturnNotice('')
+    quietNotices.current = false
     setSearchParams(params)
   }
 
@@ -474,6 +477,18 @@ export function ReservationPage() {
       </header>
     </>
   )
+
+  if (confirmedId !== null && !shownConfirmation) {
+    return (
+      <main className={styles.container}>
+        {header('Tu reserva')}
+        <p className={styles.muted}>No encontramos esa reserva.</p>
+        <div className={styles.actions}>
+          <Button to="/">Ir al inicio</Button>
+        </div>
+      </main>
+    )
+  }
 
   if (shownConfirmation) {
     return (
@@ -624,7 +639,11 @@ export function ReservationPage() {
         </Card>
 
         <div className={styles.actions}>
-          <Button ref={nextButton} disabled={!canContinue} onClick={openReview}>
+          <Button
+            ref={nextButton}
+            disabled={!canContinue || dateDraft !== null}
+            onClick={openReview}
+          >
             Siguiente
           </Button>
         </div>

@@ -31,11 +31,11 @@ def upgrade() -> None:
         op.f("ck_table_inventory_seating_area_known"), "table_inventory", SEATING_AREA_KNOWN
     )
     # The API accepts at most 100 seats and 200 tables per group: a bigger group could exhaust the
-    # server's memory when a reservation looks for a free table.
-    op.create_check_constraint(
-        op.f("ck_table_inventory_within_bounds"),
-        "table_inventory",
-        "capacity <= 100 AND quantity <= 200",
+    # server's memory when a reservation looks for a free table. NOT VALID checks new and updated
+    # rows without failing the deploy if an older group is already above the bounds.
+    op.execute(
+        "ALTER TABLE table_inventory ADD CONSTRAINT ck_table_inventory_within_bounds "
+        "CHECK (capacity <= 100 AND quantity <= 200) NOT VALID"
     )
     op.drop_constraint("uq_table_inventory_restaurant_capacity", "table_inventory", type_="unique")
     op.create_unique_constraint(

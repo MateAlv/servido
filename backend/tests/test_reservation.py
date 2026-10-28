@@ -14,6 +14,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.models.diner import Diner
 from app.models.opening_shift import OpeningShift
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
@@ -802,3 +803,14 @@ def test_us11_s6_lists_only_the_seating_areas_the_restaurant_has(
     body = slots(client, headers, restaurant.id_restaurante).json()
 
     assert body["seating_areas"] == ["indoor", "terrace"]
+
+
+def test_us13_edge_deleted_diner_token_answers_401(client: TestClient, session: Session) -> None:
+    headers = diner_headers(client)
+    session.execute(delete(Diner).where(Diner.id_comensal == diner_id(client, headers)))
+    session.flush()
+
+    response = day_reservations(client, headers)
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Tu sesión no es válida o venció. Volvé a ingresar."
