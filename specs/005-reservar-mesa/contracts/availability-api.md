@@ -16,8 +16,8 @@ Base path: `/api`. Both endpoints are read-only: the reservation is created only
 - Duration is fixed at 90 minutes; starts are on a 30-minute grid. A start is only offered if the whole block fits inside the shift (see `data-model.md`).
 - `404` when the restaurant does not exist: `{"detail": "No encontramos ese restaurante."}`.
 - `400` for invalid input. Two shapes:
-  - A malformed or missing query parameter (bad date/time format, `party_size < 1`) uses the project's standard validation shape: `{"detail": [{"loc": [...], "msg": "<Spanish message>", ...}]}`.
-  - A business rejection (a past date or start; the US-13 confirmation also rejects `party_size > max_party_size`) is a plain `{"detail": "<Spanish message>"}`.
+  - A malformed or missing query parameter (bad date/time format, `party_size < 1`) uses the project's standard validation shape: `{"detail": [{"loc": [...], "msg": "...", ...}]}`. FastAPI writes some of those `msg` texts in English; the page never shows them and uses its own Spanish copy.
+  - A business rejection (a past date or start, a date beyond 60 days) is a plain `{"detail": "<Spanish message>"}`.
 - Suggested messages for the business rejections: `"No podés reservar en una fecha pasada."`, `"Ese horario ya pasó."` and, in the confirmation, `"El grupo supera la capacidad máxima del restaurante."`. The frontend shows its own copy, so the tests assert the status code.
 
 ## Maximum party size
@@ -44,6 +44,7 @@ Time slots of one day.
   "open": true,
   "duration_minutes": 90,
   "max_party_size": 4,
+  "seating_areas": ["indoor", "terrace"],
   "slots": [
     { "start_time": "20:00", "available": true },
     { "start_time": "20:30", "available": false },
@@ -52,6 +53,7 @@ Time slots of one day.
 }
 ```
 
+- `seating_areas` lists, in catalog order, the areas where the restaurant has available table groups. The page offers only those (plus «Sin preferencia»): it never shows an area the restaurant doesn't have.
 - `max_party_size` is the largest capacity among the restaurant's active tables (`0` when it has none); it is the largest group the restaurant accepts.
 - `open` is `false` when the weekday has no active shift; `slots` is then empty.
 - `available` is `false` when no table with `capacity >= party_size` is free for the whole block. The slot is still returned so the UI can show it as not selectable (S4).

@@ -1,6 +1,6 @@
 ---
 
-description: "Task list for reservar mesa (US-11 now, US-13 later)"
+description: "Task list for reservar mesa (US-11 in Sprint 2, US-13 and the US-11 backend in Sprint 3)"
 ---
 
 # Tasks: reservar mesa
@@ -11,15 +11,15 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 
 **Tests**: REQUIRED. The constitution (principle III) requires at least one automated test per acceptance scenario, named after its US and scenario. Test tasks come first and must fail before the implementation.
 
-**Organization**: one phase per user story, in the order of `spec.md`. US-11 is built in Sprint 2; US-13 is later and stays deferred at the bottom so this file covers the whole spec.
+**Organization**: Phases 1–2 are US-11 as planned on 23/10 (frontend on test data; its backend tasks were superseded on 28/10). Phase 3 is US-13 together with the US-11 backend, planned on 28/10.
 
-**Scope note**: US-11 does not create reservations (FR-011, SC-005). The `reservations` table is created here only because availability must read it.
+**Scope note**: US-11 creates no reservation (FR-011, SC-005); only the US-13 confirmation (`POST /api/reservations`) does.
 
-**Status note (23/10)**: spec 004 has no `plan.md` and no `Shift`/`Table` models in `backend/app/models/`, so the T001 checkpoint blocks the foundational phase (T002–T005) and the backend phase (T006–T011, T014–T018): the FK to `tables` and the availability queries cannot exist. US-11 is built on the mock path (T012–T013, T019–T024); the gap is recorded in `specs/README.md`.
+**Status note (23/10, resolved 28/10 when spec 004 merged)**: spec 004 has no `plan.md` and no `Shift`/`Table` models in `backend/app/models/`, so the T001 checkpoint blocks the foundational phase (T002–T005) and the backend phase (T006–T011, T014–T018): the FK to `tables` and the availability queries cannot exist. US-11 is built on the mock path (T012–T013, T019–T024); the gap is recorded in `specs/README.md`.
 
 **Decision note (23/10)**: US-11 does not choose a concrete table, following `prototipo-us11.html`: the page informs whether a table is free for the chosen preference and the table is assigned when the reservation is confirmed (US-13). T019, T020, T023 and T028 reflect that; the spec, plan, data model, contract and quickstart were updated together with it.
 
-**Mock note**: anything the flow needs that is not implemented yet is mocked in `frontend/src/data/` so the screen can be shown (precedent: the fixture restaurants of spec 002). The mock mirrors `contracts/availability-api.md`, is labelled «Datos de prueba» in the UI, and its removal is a task of its own (T018). It never replaces a backend test and never writes to the database.
+**Mock note** *(superseded 28/10: the fixture and its label were deleted in T018)*: anything the flow needs that is not implemented yet is mocked in `frontend/src/data/` so the screen can be shown (precedent: the fixture restaurants of spec 002). The mock mirrors `contracts/availability-api.md`, is labelled «Datos de prueba» in the UI, and its removal is a task of its own (T018). It never replaces a backend test and never writes to the database.
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -35,7 +35,7 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 
 **Checkpoint before starting**: if `Shift` and `Table` are not in `backend/app/models/`, **do not** create a second table model and do not write the migration (the FK to `tables` cannot exist). Record the gap in `specs/README.md` and continue with the mock path (T012–T013) so the sprint can still demo the flow.
 
-- [x] T001 Confirm the dependency contract of spec 004: `Shift` (weekday, start, end, active) and `Table` (`capacity`, `seating_area`, `active`, `label`) must exist in `backend/app/models/`. **Result (23/10)**: neither exists, and 004 has no `plan.md` either. Per this checkpoint no second table model and no migration were created; the gap is recorded in `specs/README.md` and the feature followed the mock path (T012–T013, T019–T024)
+- [X] T001 Confirm the dependency contract of spec 004: `Shift` (weekday, start, end, active) and `Table` (`capacity`, `seating_area`, `active`, `label`) must exist in `backend/app/models/`. **Result (23/10)**: neither exists, and 004 has no `plan.md` either. Per this checkpoint no second table model and no migration were created; the gap is recorded in `specs/README.md` and the feature followed the mock path (T012–T013, T019–T024)
 - [ ] T002 **Superseded on 28/10 (see Phase 3, T034–T041).** [P] Create the `Reservation` model in `backend/app/models/reservation.py` with `id` (UUID), `diner_id`, `restaurant_id`, `table_id`, `starts_at` (`TIMESTAMP WITH TIME ZONE`), `ends_at` (generated: `starts_at + INTERVAL '90 minutes'`), `party_size` (`CHECK > 0`; the restaurant's maximum is validated by the service and the write path, not by a column) and `created_at`, following `data-model.md` — **blocked: needs spec 004's `tables` model**
 - [ ] T003 **Superseded on 28/10 (see Phase 3, T034–T041).** Import `Reservation` in `backend/app/models/__init__.py` so Alembic sees it — **blocked: T002**
 - [ ] T004 **Superseded on 28/10 (see Phase 3, T034–T041).** Generate the migration with `make migration m="add reservations"` in `backend/migrations/versions/`, then review and complete it by hand: `CREATE EXTENSION IF NOT EXISTS btree_gist`, `EXCLUDE USING gist (table_id WITH =, tstzrange(starts_at, ends_at) WITH &&)`, index `ix_reservations_restaurant_id_starts_at`, and a `downgrade()` that drops the table (the extension stays) — **blocked: T002**
@@ -62,8 +62,8 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 
 ### Temporary mock (unblocked: it can start before spec 004 exists)
 
-- [x] T012 [P] [US11] Create `frontend/src/api/availability.ts` with `fetchAvailability()` and `fetchAvailableTables()`, plus `frontend/src/data/reservationAvailability.fixture.ts`, mirroring `contracts/availability-api.md`: Monday closed, shifts 12:00–15:00 and 20:00–23:30 on the other days, five tables where `Mesa 5` is inactive and the four offered are `Mesa 1` and `Mesa 2` (indoor, 2), `Mesa 3` (outdoor, 4) and `Mesa 4` (terrace, 4), `max_party_size: 4`, one slot (20:30) marked `available: false` to show S4, `Mesa 4` taken at 21:00 so the Terraza preference shows «Sin mesas», past times removed, 30-minute starts, and only tables with `capacity >= party_size`. Export `isUsingMockData` so the UI can label it and the tests can assert it. "Today in Buenos Aires" lives in `frontend/src/lib/date.ts` so the page never imports the fixture
-- [x] T013 [US11] Show a `StatusPill` «Datos de prueba» in `frontend/src/pages/ReservationPage.tsx` while `isUsingMockData` is true, so the demo never looks like real data
+- [X] T012 [P] [US11] Create `frontend/src/api/availability.ts` with `fetchAvailability()` and `fetchAvailableTables()`, plus `frontend/src/data/reservationAvailability.fixture.ts`, mirroring `contracts/availability-api.md`: Monday closed, shifts 12:00–15:00 and 20:00–23:30 on the other days, five tables where `Mesa 5` is inactive and the four offered are `Mesa 1` and `Mesa 2` (indoor, 2), `Mesa 3` (outdoor, 4) and `Mesa 4` (terrace, 4), `max_party_size: 4`, one slot (20:30) marked `available: false` to show S4, `Mesa 4` taken at 21:00 so the Terraza preference shows «Sin mesas», past times removed, 30-minute starts, and only tables with `capacity >= party_size`. Export `isUsingMockData` so the UI can label it and the tests can assert it. "Today in Buenos Aires" lives in `frontend/src/lib/date.ts` so the page never imports the fixture
+- [X] T013 [US11] Show a `StatusPill` «Datos de prueba» in `frontend/src/pages/ReservationPage.tsx` while `isUsingMockData` is true, so the demo never looks like real data
 
 ### Backend implementation (needs spec 004; skip until it exists)
 
@@ -75,11 +75,11 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 
 ### Frontend implementation
 
-- [x] T019 [P] [US11] Build `frontend/src/pages/ReservationPage.tsx` with `ReservationPage.module.css`: native date input with `min`, `QuantityStepper` with `min={1}` and `max={max_party_size}` (keep 1 and disable `+` until the first availability response gives the cap) plus the "Máximo N personas" hint, `Chip` grid for the slots (disabled and labelled «Ocupado» when unavailable, styles from the page's CSS Module), "Sin preferencia" + `Chip` per seating area inside a `role="group"` (disabled and labelled «Sin mesas» when that area has no free table), the availability message "Hay mesa disponible para ese día y horario" or the empty state "No hay mesas disponibles para esta fecha y horario" (no table list and no "Elegir mesa" button: the table is assigned at confirmation, decision of 23/10), "Ese día el restaurante no atiende", "El restaurante todavía no tiene mesas disponibles" when `max_party_size` is 0 and "La capacidad máxima de este restaurante es de N personas" above the cap, `Skeleton` while loading, `useToast` for the notices and Spanish (voseo) text. Import only `availability.ts` (T012) and `lib/date.ts`, never the fixture directly
-- [x] T020 [US11] Keep the selection in the URL (`?fecha=&hora=&personas=&tipo=`) with `useSearchParams` and `replace: true`, derived through local `selectionFromParams` / `paramsFromSelection` helpers: ignore missing or invalid values (`personas` → 1, `tipo` → "Sin preferencia", no date → no slots query, no time → no tables query), clamp `personas` to `max_party_size` with a notice, never write an invalid value, and clear a `hora` that is not an available slot in the response with a notice (S5). Key the queries on the values each one uses (slots: date + party size; tables: date + time + party size) with TanStack Query
-- [x] T021 [US11] Add the lazy route `/reservar/:restauranteId` in `frontend/src/router.tsx`, send a diner without a session to `/ingresar` and a restaurant account to `/` (the page is diner-only)
-- [x] T022 [US11] Turn the disabled "Reservar mesa" button in `frontend/src/pages/RestaurantDetailPage.tsx` into the link to the new route only for a signed-in diner, leaving the "Próximamente" card for visitors and restaurant accounts (only this button changes; the rest of the page belongs to spec 002)
-- [x] T023 [US11] Frontend tests in `frontend/src/pages/ReservationPage.test.tsx`, replacing `frontend/src/api/availability.ts` with a deterministic double while the mock exists (after T018, mock `src/api/client` like the other pages): `US-11 S1 offers date, time and seating preference`, `US-11 S2 does not allow a past date`, `US-11 S4 disables an occupied time`, `US-11 S5 asks again for the tables when the time changes`, `US-11 S5 clears a time that is no longer available and keeps the date`, `US-11 S6 shows only the tables of the chosen seating area`, `US-11 S7 informs there are no tables and keeps the controls usable`, `US-11 edge caps the party size at the restaurant maximum`, `US-11 edge keeps the selection when the page reloads`, `US-11 edge ignores an invalid value in the URL`, `US-11 edge sends a visitor to the sign-in page`, `US-11 edge sends a restaurant account back home` and `US-11 edge offers the reserve link to a diner only` (the test that discarded a stale `mesa` from the URL is gone with the concrete-table selection)
+- [X] T019 [P] [US11] Build `frontend/src/pages/ReservationPage.tsx` with `ReservationPage.module.css`: native date input with `min`, `QuantityStepper` with `min={1}` and `max={max_party_size}` (keep 1 and disable `+` until the first availability response gives the cap) plus the "Máximo N personas" hint, `Chip` grid for the slots (disabled and labelled «Ocupado» when unavailable, styles from the page's CSS Module), "Sin preferencia" + `Chip` per seating area inside a `role="group"` (disabled and labelled «Sin mesas» when that area has no free table), the availability message "Hay mesa disponible para ese día y horario" or the empty state "No hay mesas disponibles para esta fecha y horario" (no table list and no "Elegir mesa" button: the table is assigned at confirmation, decision of 23/10), "Ese día el restaurante no atiende", "El restaurante todavía no tiene mesas disponibles" when `max_party_size` is 0 and "La capacidad máxima de este restaurante es de N personas" above the cap, `Skeleton` while loading, `useToast` for the notices and Spanish (voseo) text. Import only `availability.ts` (T012) and `lib/date.ts`, never the fixture directly
+- [X] T020 [US11] Keep the selection in the URL (`?fecha=&hora=&personas=&tipo=`) with `useSearchParams` and `replace: true`, derived through local `selectionFromParams` / `paramsFromSelection` helpers: ignore missing or invalid values (`personas` → 1, `tipo` → "Sin preferencia", no date → no slots query, no time → no tables query), clamp `personas` to `max_party_size` with a notice, never write an invalid value, and clear a `hora` that is not an available slot in the response with a notice (S5). Key the queries on the values each one uses (slots: date + party size; tables: date + time + party size) with TanStack Query
+- [X] T021 [US11] Add the lazy route `/reservar/:restauranteId` in `frontend/src/router.tsx`, send a diner without a session to `/ingresar` and a restaurant account to `/` (the page is diner-only)
+- [X] T022 [US11] Turn the disabled "Reservar mesa" button in `frontend/src/pages/RestaurantDetailPage.tsx` into the link to the new route only for a signed-in diner, leaving the "Próximamente" card for visitors and restaurant accounts (only this button changes; the rest of the page belongs to spec 002)
+- [X] T023 [US11] Frontend tests in `frontend/src/pages/ReservationPage.test.tsx`, replacing `frontend/src/api/availability.ts` with a deterministic double while the mock exists (after T018, mock `src/api/client` like the other pages): `US-11 S1 offers date, time and seating preference`, `US-11 S2 does not allow a past date`, `US-11 S4 disables an occupied time`, `US-11 S5 asks again for the tables when the time changes`, `US-11 S5 clears a time that is no longer available and keeps the date`, `US-11 S6 shows only the tables of the chosen seating area`, `US-11 S7 informs there are no tables and keeps the controls usable`, `US-11 edge caps the party size at the restaurant maximum`, `US-11 edge keeps the selection when the page reloads`, `US-11 edge ignores an invalid value in the URL`, `US-11 edge sends a visitor to the sign-in page`, `US-11 edge sends a restaurant account back home` and `US-11 edge offers the reserve link to a diner only` (the test that discarded a stale `mesa` from the URL is gone with the concrete-table selection)
 - [ ] T024 [US11] Check the page at 360 px, with keyboard only and with a screen reader's usual reading order: labelled fields, visible focus, buttons for actions, the «Ocupado» slot announced as text and not only by color, the "Máximo N personas" hint. Confirm no shared component was added (the disabled chip style is page CSS) and update only the `Chip` row in `docs/design/README.md`; `/diseno` needs no new entry. **Done**: the `Chip` row is updated and no shared component was added; the visual/keyboard pass in a browser is still pending (see Validation results)
 
 **Checkpoint**: US-11 works end to end — with the mock if spec 004 is missing, with the real endpoints if it is merged — and its tests pass in both cases.
@@ -119,11 +119,18 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 - [X] T047 [US13] `POST /api/reservations` (rule 9, `FOR UPDATE` on the group, `request_id`) and `GET /api/reservations?date=` (rule 10) in `backend/app/api/reservation.py`
 - [X] T048 [US13] Rule 11 in `backend/app/services/reservation_conflicts.py` with the new interface `check_reservation_conflict(session, restaurant_id, capacity, seating_area, new_quantity)`; update `replace_inventory` to call it per changed group with its session, and rewrite the two tests in `backend/tests/test_table_inventory.py` that monkeypatch the stub (lines 30 and 96) to use real reservations
 - [X] T049 [US13] `make api-types`
-- [X] T050 [P] [US13] Frontend tests in `frontend/src/pages/ReservationPage.test.tsx`: `US-13 S1` to `S6`, `US-13 edge returns to the selection when the table was taken`, `US-13 edge returns to the review after signing in again`; in `LoginPage.test.tsx`: `US-13 edge goes back to the page it came from`; in `TableInventoryPage.test.tsx`: `US-10 S3 lists the reservations that block the change`
+- [X] T050 [P] [US13] Frontend tests in `frontend/src/pages/ReservationPage.test.tsx`: `US-13 S1` to `S6`, `US-13 edge returns to the selection when the table was taken`, `US-13 edge signs out when the session expired at confirmation`, `US-13 edge signs out when the session expired while choosing`, `US-13 edge reuses the request id when the confirmation is retried`, `US-13 edge says the restaurant was not found`, `US-13 edge returns a reloaded review whose table is gone to the selection`, `US-13 edge gives one notice when a reloaded review lost its time`, `US-13 edge only offers dates up to 60 days ahead (D10)`; in `LoginPage.test.tsx`: `US-13 edge goes back to the page it came from`, `US-13 edge never returns to another site after signing in`; `frontend/src/lib/returnPath.test.ts`; in `TableInventoryPage.test.tsx`: `US-10 S3 lists the reservations that block the change`
 - [X] T051 [US13] Review step (`paso=revision`, pushed in history), confirmation with `request_id`, overlap warning, and the 409/401/404 states in `frontend/src/pages/ReservationPage.tsx` and its CSS module, per the plan's US-13 design
 - [X] T052 [US13] `?volver=` in `frontend/src/pages/LoginPage.tsx` (same-site paths only) and in the visitor redirect of the reservation page
 - [X] T053 [US10] `TableInventoryPage` lists the reservations of a `409` (date, time, party size)
 - [X] T054 Docs: `AGENTS.md` (endpoints, routes, the reservation flow), `docs/design/README.md` (hiding the occupancy indicator without data and anything else that changes), `specs/README.md` (005 row), and tell the owner of spec 003 that US-4 S3 can be tested
+
+### Review follow-ups (28/10, in progress)
+
+- [X] T056 Security bounds from the security review: table group `quantity` ≤ 200, `capacity` ≤ 100, at most 50 groups per save, restaurant `descripcion` ≤ 2000 characters, a deleted diner's token answers 401, a time with a zone answers 400 on every endpoint
+- [X] T057 [US13] D11 booking limits: at most 20 confirmed reservations per diner for one day and 5 at the same restaurant that day (`409` with a Spanish message), with backend and frontend tests
+- [X] T058 [US13] UX and accessibility fixes from the reviews: real restaurants with partial data hide empty photo, menu, opinions, address and separators; only the seating areas the restaurant has; seating copy («adentro», «en la terraza»); one notice on a 409; the confirmation survives a reload; focus after «Volver» and after a 409; the table screen fits 360 px and uses the error tokens; the date field doesn't fight typing; the price filter keeps real restaurants with a declared tier
+- [X] T059 Docs cleanup from the traceability review: research, quickstart, tasks, specs 002/003/004, `specs/README.md`, `AGENTS.md`, `docs/design/README.md`
 
 ### After the merge
 
@@ -133,9 +140,9 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 
 ## Phase 4: Wrap-up
 
-- [x] T030 Run `make format lint test` and fix any failure
-- [x] T031 Update `specs/README.md` (005 row, pending PO items, the 004 gap and the mock as a pending removal) and this file if the implementation deviated (the concrete-table selection was dropped: see the decision note above)
-- [ ] T032 Follow [quickstart.md](quickstart.md) in the running app, both with the mock and, if spec 004 is merged, with a real restaurant, and record the result — **pending: the browser pass was not run; the automated checks are in Validation results**
+- [X] T030 Run `make format lint test` and fix any failure
+- [X] T031 Update `specs/README.md` (005 row, pending PO items, the 004 gap and the mock as a pending removal) and this file if the implementation deviated (the concrete-table selection was dropped: see the decision note above)
+- [ ] T032 Follow [quickstart.md](quickstart.md) in production with a real restaurant (after T055), on a phone and with the keyboard, and record the result — **pending**
 
 ---
 
@@ -155,11 +162,18 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 
 - [P] tasks touch different files and have no dependency on each other.
 - The restaurant's maximum party size is derived (`max(capacity)` of its active tables), not stored; do not add a column or a second source of truth for it (FR-013, `data-model.md`).
-- Branch `005-us11-reserve-table`; commits in English with the US: `feat(US-11): mock restaurant availability for the demo`, `feat(US-11): show available tables for a date and time`, `feat(US-11): build the reservation selection page`. No AI attribution in commits.
-- One PR for US-11 with the **AI usage** section filled in, plus the spec, plan, tasks and the new `research.md` / `data-model.md` / `contracts/` / `quickstart.md`. If the mock is still in use at merge time, say so in the PR and in `specs/README.md`.
-- When the endpoints merge, tell the owner of spec 003: the US-4 S3 test (`403` for the restaurant role) can finally be written in `backend/tests/test_auth.py`.
+- Sprint 2 (US-11 frontend): branch `005-us11-reserve-table`, PR #25. Sprint 3 (US-13 + US-11 backend): branch `005-us13-confirmar-reserva`, PR #29, one PR by team decision. Commits in English with the US; no AI attribution.
+- US-4 S3 (spec 003) is now tested: `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`.
 
 ## Validation results
+
+### US-13 and the US-11 backend (2026-10-28)
+
+- `make format lint test`: backend 138 tests, frontend 154 tests, lint and types clean; `make api-types` committed; CI green on PR #29.
+- Migration `006_reservations`: upgrade, downgrade, upgrade and `alembic check` clean on a local database.
+- Five independent review agents before merging: functional/test coverage (no blockers; every scenario of US-13 has a test, several were tightened), security (table-group bounds added; booking limits became D11), accessibility, UI/UX (follow-ups in T058), traceability (this cleanup, T059). An earlier backend and frontend review round found the per-reservation counting bug, the concurrent duplicate confirmation and the missing booking horizon (D10), all fixed.
+- Races verified with two real database sessions: last free table, duplicate `request_id`, a table save during a confirmation.
+- Not done yet: the browser pass at 360 px and with the keyboard (T024/T032) and the production demo (T055).
 
 ### Mock path, US-11 frontend (2026-10-23)
 

@@ -109,6 +109,8 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 | `Timeline` | Recorrido de la reserva: reservaste → la cocina empieza → llegás. El paso en curso late | 19, 43 |
 | `ConfirmationStamp` | Sello de confirmación con destellos | 13, 54, 56 |
 
+La revisión y la confirmación de la reserva (US-13, `pages/reservation/`) todavía no usan `Ticket` ni `ConfirmationStamp`: muestran los datos en una lista de dos columnas (`.summary`) que es estilo propio de la página `/reservar`, no un componente del catálogo. Si otra pantalla necesita ese resumen, se convierte en componente.
+
 ### Restaurante (`restaurant/`)
 
 | Componente | Para qué | US |
@@ -120,6 +122,10 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 | `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal. Si un restaurante no tiene datos de concurrencia, no se muestra (no decimos «sin datos») | 5, 33 |
 | `PriceFilter` | Chips de precio (`$` … `$$$$`) y "Quitar filtro de precio"; avisa cuando no hay coincidencias | 7 |
 | `RestaurantExplorer` | Elegir restaurante: filtro de precio, mapa con leyenda y la misma lista en tarjetas con su concurrencia, que se actualiza sola. El filtro vive en la URL (`?precio=$$`), así que se conserva al ir al detalle y volver. Lo usan el inicio del comensal y `/mapa`. Muestra los restaurantes reales de `GET /api/restaurants` (sin concurrencia ni calificación todavía) junto con los de prueba de `frontend/src/data/restaurants.fixture.ts`; solo los reales se pueden reservar (spec 005, D4) | 5, 7, 9, 33 |
+
+#### Restaurantes reales con datos incompletos
+
+Los restaurantes reales (spec 005, D4) pueden no tener todavía foto, tipo de cocina, barrio, dirección, menú, opiniones ni datos de concurrencia. Lo que falta no se muestra: no hay indicador de concurrencia, ni tarjetas vacías, ni separadores sueltos («·», «,»), y nunca un «sin datos» o «sin cargar». Solo se ve lo que el restaurante cargó.
 
 #### Filtro de precio (US-7)
 

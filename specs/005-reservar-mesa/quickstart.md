@@ -1,69 +1,53 @@
-# Quickstart: reservar mesa (US-11)
+# Quickstart: reservar mesa (US-11, US-13)
 
-## Prerequisites
+How to try the booking flow end to end, locally and in production. Rules: [data-model.md](data-model.md); endpoints: [contracts/](contracts/). This is the script for T032 (browser pass) and T055 (production demo).
 
-Two ways to try it, and the second one always works:
+## Local setup
 
-1. **Real data** — spec 004 merged, plus a restaurant with at least one active shift and one active table. Without shifts the endpoints answer `{ "open": false, "slots": [] }`; without active tables they also answer `max_party_size: 0`. That is correct, not a bug.
-2. **Mock** (only until the US-13 PR deletes it, T018) — nothing else needed. While spec 004 or the endpoints are missing, `frontend/src/api/availability.ts` answers from `frontend/src/data/reservationAvailability.fixture.ts` and the page shows a «Datos de prueba» pill.
+1. `make db`, then `cd backend && uv run alembic upgrade head && uv run uvicorn app.main:app --reload`, and `cd frontend && npm run dev` (or `make up`).
+2. If you applied an earlier version of migration `006_reservations`: `cd backend && uv run alembic downgrade 005_merge_feature_heads && uv run alembic upgrade head`.
+3. Create a restaurant at `/suma-tu-local` and a diner at `/registrarme`.
 
-The seven restaurants of `frontend/src/data/restaurants.fixture.ts` are not in the database: with real data they cannot be booked, so use a restaurant created through the app (`/suma-tu-local`) with hours and tables loaded. With the mock, those same seven restaurants can be used to show the flow.
+## Restaurant: make it bookable
 
-You also need a diner session: register at `/registrarme` and sign in at `/ingresar`.
+A restaurant appears on the diner's map, and can be booked, once it has a location, an active shift and an available table group.
 
-## Run it
+1. Sign in as the restaurant. In the profile, enter an address and confirm the location on the map preview; add a photo, cuisine and description so the listing looks complete (empty fields are simply not shown to diners).
+2. In the opening hours, add shifts (for example every day 12:00–15:00 and 20:00–23:30).
+3. In the tables screen, add groups with their quantity, capacity and seating area («Adentro», «Afuera», «Terraza»), for example 4 tables for 2 indoors and 2 tables for 4 on the terrace. Save.
 
-```bash
-make up                 # web on :5173, API on :8000, Postgres on :55432
-make migrate            # after the feature's migration is added
-```
+## Diner: choose (US-11)
 
-## Check the API
+1. Open the map: the restaurant shows next to the test restaurants. Real restaurants have no occupancy indicator yet; the test ones can't be booked («Próximamente»).
+2. Open the restaurant and press «Reservar mesa». A visitor without a session sees «Ingresá para reservar», signs in (or creates an account) and comes back here.
+3. Pick a date: past days and days more than 60 days ahead can't be chosen (D10). Pick the party size (capped at the largest table), a time (occupied times show «Ocupado») and a seating preference. The page says whether there is a free table.
+4. Reload: everything stays selected, because it lives in the URL.
 
-```bash
-TOKEN="<the JWT an AccessForm login returned>"
-RESTAURANT="<id of a restaurant with shifts and tables>"
-DATE="2026-10-28"        # a weekday the restaurant opens
+## Diner: review and confirm (US-13)
 
-# 1. Time slots of the day; the answer includes max_party_size (the restaurant's cap)
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "http://localhost:8000/api/restaurants/$RESTAURANT/availability?date=$DATE&party_size=2"
+1. Press «Siguiente». The review shows the restaurant, the date, the time range (90 minutes), the party size and the assigned table, e.g. «Mesa para 4 · Terraza» (S1, S2). Nothing is stored yet (S4).
+2. Press «Volver» or the phone's back button: the selection is kept (S3). Go forward again and press «Confirmar reserva»: the reservation is confirmed and shown (S5). Reloading the confirmation keeps showing it.
+3. Book an overlapping time, at this or another restaurant: the review warns «Ya tenés una reserva en … de … a …» and still lets you confirm (S6).
+4. Limits (D11): a diner can't have more than 20 confirmed reservations for one day, nor more than 5 at the same restaurant that day; the next one is refused with a message.
+5. With two browsers and two diners, go to the review for the last free table of a group in both, then confirm in both: one confirms, the other gets «La mesa se ocupó mientras confirmabas…» and goes back to the selection with its values.
+6. Leave a review open until the session expires (or delete the token from the browser's session storage) and confirm or change the date: you are sent to sign in, and come back to the page with the selection.
 
-# 2. Tables for one slot
-curl -s -H "Authorization: Bearer $TOKEN" \
-  "http://localhost:8000/api/restaurants/$RESTAURANT/availability/tables?date=$DATE&start_time=20:00&party_size=2"
-```
+## Restaurant: booked tables (D9, spec 004 US-10 S3)
 
-Expected failures: `401` without a token, `403` with a restaurant token, `404` with an unknown id, `400` with a past date, a past start time or `party_size=0`. A `party_size` above `max_party_size` is not an error: the slots endpoint answers `200` with the cap and no slots, and the tables endpoint answers `200` with no tables.
+1. As the restaurant, try to lower the quantity of a group that has a future reservation, disable it, remove it, or change its capacity or seating area.
+2. Expected: nothing is saved and the screen lists the reservations that block the change (date, time, party size). Adding tables is always allowed.
 
-## Check the flow in the browser
+## Production demo (T055)
 
-1. Open `/restaurantes/<id>` of a restaurant created through the app (or any of the seven fixture restaurants while the mock is in use) and press «Reservar mesa».
-2. Choose a date: past days cannot be picked. A day the restaurant does not open shows "Ese día el restaurante no atiende" (with the mock, Mondays).
-3. Choose the party size: until a date is chosen the stepper stays at 1, because the restaurant's cap arrives with the availability response. After that it cannot go above the maximum (with the mock, 4 people, the largest of its active tables) and the page shows "Máximo N personas". The slots refresh and a slot with no free table appears disabled and labelled «Ocupado» (with the mock, 20:30).
-4. Change the date or the time: the availability notice refreshes, and a time that is no longer available is cleared with a notice.
-5. Pick "Adentro" / "Afuera" / "Terraza" or "Sin preferencia" (with the mock: two indoor tables for 2, one outdoor and one terrace table for 4). The page tells you whether there is a free table for that preference; the table itself is assigned when the reservation is confirmed (US-13).
-6. To see a preference without tables, choose 21:00 and 4 people and then "Terraza" (with the mock, `Mesa 4` is taken): the chip shows «Sin mesas» and cannot be chosen, while the slot stays available for the other areas. A preference that loses its last table when the date, time or party size changes goes back to "Sin preferencia" with a notice, and "No hay mesas disponibles para esta fecha y horario" appears when the response has no table at all; the controls stay usable. The stepper never lets you ask for more people than the restaurant's maximum, and a restaurant without active tables shows "El restaurante todavía no tiene mesas disponibles".
-7. Reload the page: the date, time, party size and preference are still selected, because they live in the URL (`?fecha=&hora=&personas=&tipo=`). Edit the link to `personas=abc` and the page falls back to 1 person; set `personas=9` and it clamps to the restaurant's maximum with a notice; put an occupied `hora` and it is cleared with a notice. The URL holds no table, because US-11 does not choose one.
-
-With the mock the page shows «Datos de prueba». That pill and the fixture disappear in the PR that wires the real endpoints (T018).
+1. After the deploy of PR #29 (it runs migration `006_reservations`), make La Esquina de Palermo bookable: sign in as Laura (`laura@servido.demo` / `Servido2026`) and complete its location, shifts and table groups as above, or run the team's demo-data script, which fills only what is missing.
+2. Sign in as Martín (`martin@servido.demo` / `Servido2026`) at https://servido.discordia.fyi, open La Esquina de Palermo from the map and walk the two diner sections above, on a phone (360 px) and with the keyboard (T024).
+3. Record the result in `tasks.md` (T032).
 
 ## Prove the double-booking rule
 
-Insert two confirmed reservations with the same restaurant, table group and `table_number` and overlapping times by hand (psql), or run `test_us13_edge_database_rejects_a_double_booking`; the second one must fail with an `IntegrityError` raised by the exclusion constraint.
-
-## US-13: review and confirm
-
-1. As a restaurant, load the profile with an address, a shift and table groups with a seating area (the configuration screens of spec 004). The restaurant now shows on the diner's map.
-2. As a diner, open it from the map and press «Reservar mesa». Choose date, time, party size and preference, then «Siguiente».
-3. The review shows the restaurant, the date, the time range (90 minutes), the party size and «Mesa para N · Tipo» (S1, S2). Nothing exists in `reservations` yet (S4).
-4. «Volver» returns with everything selected (S3). «Siguiente» again, then «Confirmar reserva»: the reservation is confirmed and shown (S5).
-5. Book another overlapping time at any restaurant: the review warns «Ya tenés una reserva en … de … a …» and still lets you confirm (S6).
-6. With two browsers, book the last free table of a group at the same time: one confirms, the other gets «La mesa se ocupó mientras confirmabas…» and keeps its selection.
-7. As the restaurant, try to lower the quantity of that group: the tables screen lists the booked reservation and nothing changes.
-8. Let the session expire on the review (or delete the token in the browser's storage) and confirm: you sign in again and come back to the review with the selection kept.
+Insert two confirmed reservations with the same restaurant, table group and `table_number` and overlapping times by hand (psql), or run `test_us13_edge_database_rejects_a_double_booking`: the second one fails with an `IntegrityError` raised by the exclusion constraint.
 
 ## What this feature does not do yet
 
-- Cancel or modify a reservation (Sprint 3 and later).
+- Cancel or modify a reservation (Sprint 3 and later), or list the diner's reservations (US-23).
 - Notifications or a receipt of the reservation.

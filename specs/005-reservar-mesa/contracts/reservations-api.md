@@ -55,6 +55,9 @@ The response never includes `table_number`: which table of the group was taken i
 | `409` | The chosen group no longer exists, is unavailable or is too small | `"Esa mesa ya no está disponible. Elegí otro horario o tipo de mesa."` |
 | `409` | The group has no free table left for that block (or a concurrent confirmation took it) | `"La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa."` |
 | `409` | The restaurant stopped being bookable during the review | `"El restaurante ya no está tomando reservas."` |
+| `409` | The diner already has 20 confirmed reservations that day (D11) | `"Ya tenés 20 reservas para ese día. No podés sumar más."` |
+| `409` | The diner already has 5 confirmed reservations at this restaurant that day (D11) | `"Ya tenés 5 reservas en este restaurante para ese día. No podés sumar más."` |
+| `409` | The `request_id` belongs to another diner's reservation | `"No pudimos confirmar la reserva. Volvé a intentarlo."` (nothing about that reservation is revealed) |
 
 A repeated `request_id` is not an error: the endpoint answers `200` with the reservation it already created, so a double click or a retry after a lost response shows the confirmation once.
 

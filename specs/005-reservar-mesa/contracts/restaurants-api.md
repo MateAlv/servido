@@ -22,13 +22,15 @@ New code, so field names follow the glossary in English; the values come from th
       "neighborhood": "Palermo",
       "lat": -34.5885,
       "lng": -58.4265,
-      "photo_url": "/media/restaurants/….jpg"
+      "photo_url": "/media/restaurants/….jpg",
+      "has_menu": true
     }
   ]
 }
 ```
 
 - Ordered by `name`. Nullable profile fields come back as `null`.
+- `has_menu` says whether the restaurant loaded at least one dish: restaurants without a menu don't take part in the price filter (spec 002, US-7).
 - `price_tier` is the restaurant's `rango_precio` when it is one of `$`, `$$`, `$$$`, `$$$$`, and `null` otherwise (spec 004 stores free text up to 10 characters).
 - The frontend maps each one into the shape the map, the list and the detail already use (`RestaurantPublic` in `restaurants.fixture.ts`). What the database doesn't have yet is shown as missing, never invented:
   - **Price** (US-7): the tier comes from `price_tier` instead of `averageSpendPerPerson`. A restaurant with `price_tier: null` only appears when no price filter is selected.

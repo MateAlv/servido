@@ -95,4 +95,4 @@ Until the diner confirms, the selection lives in the URL of `/reservar/:restaura
 
 ## Real and test restaurants (D4)
 
-Only restaurants stored in the database can be booked. A restaurant is **bookable** when it has coordinates, at least one active shift and at least one available table group. The map and the detail show bookable restaurants next to the test restaurants of spec 002 (`frontend/src/data/restaurants.fixture.ts`), which keep their «Próximamente» booking card. The reservation fixture (`reservationAvailability.fixture.ts`) is deleted when the availability endpoints are wired.
+Only restaurants stored in the database can be booked. A restaurant is **bookable** when it has coordinates, at least one active shift and at least one available table group. The map and the detail show bookable restaurants next to the test restaurants of spec 002 (`frontend/src/data/restaurants.fixture.ts`), which keep their «Próximamente» booking card. The reservation fixture (`reservationAvailability.fixture.ts`) was deleted when the availability endpoints were wired (T018).
