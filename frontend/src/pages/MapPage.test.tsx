@@ -147,7 +147,7 @@ describe('MapPage (US-5)', () => {
     expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
   })
 
-  it('D4 shows a real restaurant without inventing occupancy or price', async () => {
+  it('D4 shows a real restaurant without any occupancy indicator', async () => {
     vi.mocked(fetchRestaurants).mockResolvedValueOnce([
       {
         id: '6f1c0000-0000-4000-8000-000000000001',
@@ -168,12 +168,12 @@ describe('MapPage (US-5)', () => {
 
     renderWithProviders(<MapPage />)
 
-    expect(await screen.findByTitle('Parrilla Real, concurrencia sin datos')).toBeInTheDocument()
+    // Without data nothing is said about occupancy: the pin shows only the name.
+    expect(await screen.findByTitle('Parrilla Real')).toBeInTheDocument()
     const list = screen.getByRole('region', { name: '1 restaurante' })
-    expect(within(list).getByRole('img', { name: 'Concurrencia sin datos' })).toBeInTheDocument()
+    expect(within(list).queryByRole('img', { name: /Concurrencia/ })).not.toBeInTheDocument()
     expect(within(list).queryByLabelText(/^Precio/)).not.toBeInTheDocument()
-    // The list's meter and the map legend both explain the neutral pin.
-    expect(screen.getAllByText('Sin datos')).toHaveLength(2)
+    expect(screen.queryByText(/sin datos/i)).not.toBeInTheDocument()
   })
 
   it('US-5 edge hides restaurants without a valid location (FR-011)', async () => {

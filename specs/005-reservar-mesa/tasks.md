@@ -110,7 +110,7 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 - [X] T043 [P] [US9] Tests in `backend/tests/test_public_restaurants.py`: `test_lists_only_bookable_restaurants`, `test_detail_includes_the_menu`, `test_price_tier_is_null_unless_it_is_a_known_tier`, `test_unknown_or_not_bookable_answers_404`
 - [X] T044 [US9] `GET /api/restaurants` and `/api/restaurants/{restaurant_id}` in `backend/app/api/public_restaurant.py` per `contracts/restaurants-api.md`
 - [X] T017 (above) `make api-types`
-- [X] T045 [US5] [US7] [US9] [US33] `frontend/src/api/restaurants.ts`: fetch the bookable restaurants and map them into `RestaurantPublic` (price tier from `price_tier`, occupancy `null`); the map, the list and the detail show them next to the fixtures; the pin, the list and the detail get a «Sin datos» occupancy state; «Reservar mesa» only for real restaurants (fixtures keep «Próximamente»); `ReservationPage` reads its header from `GET /api/restaurants/{id}` instead of the fixture's `fetchRestaurant`; tests in the map/list and detail test files
+- [X] T045 [US5] [US7] [US9] [US33] `frontend/src/api/restaurants.ts`: fetch the bookable restaurants and map them into `RestaurantPublic` (price tier from `price_tier`, occupancy `null`); the map, the list and the detail show them next to the fixtures; the pin, the list and the detail show no occupancy indicator without data; «Reservar mesa» only for real restaurants (fixtures keep «Próximamente»); `ReservationPage` reads its header from `GET /api/restaurants/{id}` instead of the fixture's `fetchRestaurant`; tests in the map/list and detail test files
 - [X] T018 (above) Swap `frontend/src/api/availability.ts` to the typed client for the group response, delete the fixture and the «Datos de prueba» label, update `ReservationPage.test.tsx`
 
 ### 3. US-13
@@ -123,7 +123,7 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 - [X] T051 [US13] Review step (`paso=revision`, pushed in history), confirmation with `request_id`, overlap warning, and the 409/401/404 states in `frontend/src/pages/ReservationPage.tsx` and its CSS module, per the plan's US-13 design
 - [X] T052 [US13] `?volver=` in `frontend/src/pages/LoginPage.tsx` (same-site paths only) and in the visitor redirect of the reservation page
 - [X] T053 [US10] `TableInventoryPage` lists the reservations of a `409` (date, time, party size)
-- [X] T054 Docs: `AGENTS.md` (endpoints, routes, the reservation flow), `docs/design/README.md` (the «Sin datos» occupancy state and anything else that changes), `specs/README.md` (005 row), and tell the owner of spec 003 that US-4 S3 can be tested
+- [X] T054 Docs: `AGENTS.md` (endpoints, routes, the reservation flow), `docs/design/README.md` (hiding the occupancy indicator without data and anything else that changes), `specs/README.md` (005 row), and tell the owner of spec 003 that US-4 S3 can be tested
 
 ### After the merge
 

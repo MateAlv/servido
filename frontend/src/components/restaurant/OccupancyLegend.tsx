@@ -6,13 +6,8 @@ import styles from './OccupancyLegend.module.css'
 
 const LEVELS: OccupancyLevel[] = ['low', 'medium', 'high']
 
-type OccupancyLegendProps = {
-  /** Adds the neutral pin, when the map shows a restaurant without occupancy data. */
-  withNoData?: boolean
-}
-
 /** Explains the pin shapes: how full each restaurant is right now. */
-export function OccupancyLegend({ withNoData = false }: OccupancyLegendProps) {
+export function OccupancyLegend() {
   return (
     <div className={styles.legend}>
       <span className={styles.title}>Concurrencia ahora</span>
@@ -23,12 +18,6 @@ export function OccupancyLegend({ withNoData = false }: OccupancyLegendProps) {
             {OCCUPANCY_LABELS[level]}
           </li>
         ))}
-        {withNoData && (
-          <li className={styles.item}>
-            <PinGlyph status="unknown" />
-            Sin datos
-          </li>
-        )}
       </ul>
     </div>
   )

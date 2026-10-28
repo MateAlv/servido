@@ -18,7 +18,7 @@ import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../l
 import { OCCUPANCY_LABELS } from '../../lib/occupancy'
 import { Button, IconStar } from '../ui'
 import { MapPin } from './MapPin'
-import { pinStatusFor } from './pinStatus'
+import { PIN_STATUS_BY_OCCUPANCY } from './pinStatus'
 import { OccupancyMeter } from './OccupancyMeter'
 import styles from './RestaurantMap.module.css'
 
@@ -97,15 +97,19 @@ export function RestaurantMap({
         const selected = restaurant.id === selectedId
         const distKm = isValidPoint(diner) ? distanceKm(diner, restaurant.location) : null
         const rating = averageRating(restaurant)
+        // Without occupancy data the pin shows only the name: nothing is said about it.
         const statusLabel = restaurant.occupancy
           ? `concurrencia ${OCCUPANCY_LABELS[restaurant.occupancy].toLowerCase()}`
-          : 'concurrencia sin datos'
+          : undefined
+        const markerLabel = statusLabel ? `${restaurant.name}, ${statusLabel}` : restaurant.name
         const icon = divIcon({
           className: styles.pinWrapper,
           html: renderToStaticMarkup(
             <MapPin
               name={restaurant.name}
-              status={pinStatusFor(restaurant.occupancy)}
+              status={
+                restaurant.occupancy ? PIN_STATUS_BY_OCCUPANCY[restaurant.occupancy] : undefined
+              }
               statusLabel={statusLabel}
               selected={selected}
               index={index}
@@ -121,8 +125,8 @@ export function RestaurantMap({
             key={restaurant.id}
             position={[restaurant.location.lat, restaurant.location.lng]}
             icon={icon}
-            alt={`${restaurant.name}, ${statusLabel}`}
-            title={`${restaurant.name}, ${statusLabel}`}
+            alt={markerLabel}
+            title={markerLabel}
             riseOnHover
             zIndexOffset={selected ? 1000 : 0}
             eventHandlers={{ click: () => onSelect(restaurant) }}
@@ -160,12 +164,22 @@ export function RestaurantMap({
                     )}
                     <span>{restaurant.cuisine}</span>
                   </p>
-                  <OccupancyMeter level={restaurant.occupancy} showLabel />
+                  {restaurant.occupancy && (
+                    <OccupancyMeter level={restaurant.occupancy} showLabel />
+                  )}
                   <dl className={styles.facts}>
-                    <dt>Barrio</dt>
-                    <dd>{restaurant.location.neighborhood}</dd>
-                    <dt>Dirección</dt>
-                    <dd>{restaurant.location.address}</dd>
+                    {restaurant.location.neighborhood && (
+                      <>
+                        <dt>Barrio</dt>
+                        <dd>{restaurant.location.neighborhood}</dd>
+                      </>
+                    )}
+                    {restaurant.location.address && (
+                      <>
+                        <dt>Dirección</dt>
+                        <dd>{restaurant.location.address}</dd>
+                      </>
+                    )}
                     {distKm !== null && (
                       <>
                         <dt>Distancia</dt>

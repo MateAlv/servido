@@ -3,7 +3,7 @@ import { cssVars } from '../../lib/cssVars'
 import type { PinStatus } from './pinStatus'
 import styles from './MapPin.module.css'
 
-const GLYPHS: Record<PinStatus, string> = { available: '●', few: '▲', full: '■', unknown: '○' }
+const GLYPHS: Record<PinStatus, string> = { available: '●', few: '▲', full: '■' }
 
 /** The colored shape of a pin, also used by the map legend. */
 export function PinGlyph({ status, className }: { status: PinStatus; className?: string }) {
@@ -17,9 +17,10 @@ export function PinGlyph({ status, className }: { status: PinStatus; className?:
 type MapPinProps = {
   /** Restaurant name, shown on the pin. */
   name: string
-  status: PinStatus
+  /** Absent when the restaurant has no occupancy data: the pin then shows only its name. */
+  status?: PinStatus
   /** What the status means, for screen readers (e.g. "concurrencia media"). */
-  statusLabel: string
+  statusLabel?: string
   selected?: boolean
   /** Position in the list; pins drop in one after another. */
   index?: number
@@ -51,7 +52,7 @@ export function MapPin({
         style={cssVars({ '--i': index })}
         aria-hidden="true"
       >
-        <PinGlyph status={status} />
+        {status && <PinGlyph status={status} />}
         <span className={styles.name}>{name}</span>
       </span>
     )
@@ -62,11 +63,11 @@ export function MapPin({
       type="button"
       className={cx(styles.pin, selected && styles.selected)}
       style={cssVars({ '--i': index })}
-      aria-label={`${name}: ${statusLabel}`}
+      aria-label={statusLabel ? `${name}: ${statusLabel}` : name}
       aria-pressed={selected}
       onClick={onClick}
     >
-      <PinGlyph status={status} />
+      {status && <PinGlyph status={status} />}
       <span className={styles.name} aria-hidden="true">
         {name}
       </span>

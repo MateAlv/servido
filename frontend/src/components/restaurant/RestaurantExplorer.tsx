@@ -178,12 +178,14 @@ export function RestaurantExplorer() {
                       ·{' '}
                     </span>
                   )}
-                  {restaurant.cuisine} · {restaurant.location.neighborhood}
+                  {[restaurant.cuisine, restaurant.location.neighborhood]
+                    .filter(Boolean)
+                    .join(' · ')}
                   {isValidPoint(diner) &&
                     ` · a ${formatDistance(distanceKm(diner, restaurant.location))}`}
                 </p>
                 <div className={styles.itemFoot}>
-                  <OccupancyMeter level={restaurant.occupancy} />
+                  {restaurant.occupancy && <OccupancyMeter level={restaurant.occupancy} />}
                   <span className={styles.itemActions}>
                     <Button
                       size="sm"
@@ -214,9 +216,7 @@ export function RestaurantExplorer() {
             detailState={backHere}
           />
           <div className={styles.legend}>
-            <OccupancyLegend
-              withNoData={visible.some((restaurant) => restaurant.occupancy === null)}
-            />
+            <OccupancyLegend />
           </div>
         </div>
       )}

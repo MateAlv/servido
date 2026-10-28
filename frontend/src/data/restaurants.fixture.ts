@@ -38,7 +38,8 @@ export type RestaurantPublic = {
   dietaryRestrictions: string[]
   /** Location must be valid so it appears on the map (FR-011). */
   location: GeoPoint & { address: string; neighborhood: string }
-  /** Concurrence indicator levels: low/medium/high (spec 002, FR-002); `null` without data. */
+  /** Concurrence indicator levels: low/medium/high (spec 002, FR-002); `null` without data,
+   * and then no indicator is shown at all. */
   occupancy: OccupancyLevel | null
   /** Dishes with their current prices (US-9 S3). Empty until the restaurant loads its menu. */
   menu: MenuSection[]

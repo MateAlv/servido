@@ -82,7 +82,7 @@ export function RestaurantDetailPage() {
         <div className={styles.main}>
           <Reveal>
             <p className={styles.eyebrow}>
-              {restaurant.cuisine} · {restaurant.location.neighborhood}
+              {[restaurant.cuisine, restaurant.location.neighborhood].filter(Boolean).join(' · ')}
             </p>
             <h1 className={styles.title}>{restaurant.name}</h1>
           </Reveal>
@@ -109,10 +109,12 @@ export function RestaurantDetailPage() {
                   <span className={styles.factNote}>{restaurant.reviews.length} reseñas</span>
                 </li>
               )}
-              <li className={styles.fact}>
-                <span className={styles.factLabel}>Concurrencia ahora</span>
-                <OccupancyMeter level={restaurant.occupancy} />
-              </li>
+              {restaurant.occupancy && (
+                <li className={styles.fact}>
+                  <span className={styles.factLabel}>Concurrencia ahora</span>
+                  <OccupancyMeter level={restaurant.occupancy} />
+                </li>
+              )}
               {restaurant.dietaryRestrictions.length > 0 && (
                 <li className={styles.fact}>
                   <span className={styles.factLabel}>Opciones declaradas por el local</span>
@@ -128,9 +130,14 @@ export function RestaurantDetailPage() {
             </ul>
           </Reveal>
           <Reveal delay={100}>
-            <p className={styles.description}>{restaurant.description}</p>
+            {restaurant.description && (
+              <p className={styles.description}>{restaurant.description}</p>
+            )}
             <p className={styles.address}>
-              <IconPin /> {restaurant.location.address}, {restaurant.location.neighborhood}
+              <IconPin />{' '}
+              {[restaurant.location.address, restaurant.location.neighborhood]
+                .filter(Boolean)
+                .join(', ')}
             </p>
           </Reveal>
 
