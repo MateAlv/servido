@@ -17,7 +17,12 @@ import { Button, Card, Chip, QuantityStepper, Skeleton, useToast } from '../comp
 import { fetchRestaurant } from '../api/restaurants'
 import { cx } from '../lib/cx'
 import { SEATING_AREA_LABELS, SEATING_AREA_OPTIONS } from '../lib/seating'
-import { timeInBuenosAires, todayInBuenosAires } from '../lib/date'
+import {
+  latestBookableDate,
+  MAX_DAYS_AHEAD,
+  timeInBuenosAires,
+  todayInBuenosAires,
+} from '../lib/date'
 import styles from './ReservationPage.module.css'
 import { ConfirmedStep } from './reservation/ConfirmedStep'
 import { ReviewStep } from './reservation/ReviewStep'
@@ -34,7 +39,8 @@ type Selection = { fecha: string; hora: string; personas: number; tipo: SeatingA
 function selectionFromParams(params: URLSearchParams): Selection {
   const today = todayInBuenosAires()
   const fecha = params.get('fecha') ?? ''
-  const validFecha = DATE_PATTERN.test(fecha) && fecha >= today ? fecha : ''
+  const validFecha =
+    DATE_PATTERN.test(fecha) && fecha >= today && fecha <= latestBookableDate() ? fecha : ''
   const hora = params.get('hora') ?? ''
   const personas = Number(params.get('personas') ?? '1')
   const tipo = params.get('tipo')
@@ -135,19 +141,23 @@ export function ReservationPage() {
     ((day !== undefined && !day.slots.some((slot) => slot.start_time === hora && slot.available)) ||
       (tablesForStart !== undefined && !tables.isFetching && !assignedTable))
   const handledStaleReview = useRef(false)
+  const handledDay = useRef<DayAvailability | undefined>(undefined)
+  const handledTables = useRef<TablesAvailability | undefined>(undefined)
   useEffect(() => {
     if (!reviewIsStale || handledStaleReview.current) return
     handledStaleReview.current = true
+    // These responses are answered here: the selection's own notices must not repeat them.
+    handledDay.current = day
+    handledTables.current = tablesForStart
     toast('La mesa que elegiste ya no está disponible. Elegí otro horario o tipo de mesa.')
     leaveReview()
-  }, [reviewIsStale, toast, leaveReview])
+  }, [reviewIsStale, day, tablesForStart, toast, leaveReview])
   useEffect(() => {
     if (!reviewing) handledStaleReview.current = false
   }, [reviewing])
 
   // Each response is handled once: FR-013 clamps the party size and S4 clears a time that
   // is no longer available, without repeating the notice on a re-render (StrictMode).
-  const handledDay = useRef<DayAvailability | undefined>(undefined)
   useEffect(() => {
     if (reviewing || !day || day === handledDay.current) return
     handledDay.current = day
@@ -168,7 +178,6 @@ export function ReservationPage() {
   useEffect(() => {
     tipoRef.current = tipo
   }, [tipo])
-  const handledTables = useRef<TablesAvailability | undefined>(undefined)
   useEffect(() => {
     if (reviewing || !tablesForStart || tablesForStart === handledTables.current) return
     handledTables.current = tablesForStart
@@ -220,6 +229,10 @@ export function ReservationPage() {
   const changeDate = (value: string) => {
     if (value && value < todayInBuenosAires()) {
       setPastDateError('No podés reservar en una fecha pasada.')
+      return
+    }
+    if (value && value > latestBookableDate()) {
+      setPastDateError(`Podés reservar hasta ${MAX_DAYS_AHEAD} días antes.`)
       return
     }
     setPastDateError('')
@@ -452,6 +465,7 @@ export function ReservationPage() {
                 id="fecha"
                 type="date"
                 min={todayInBuenosAires()}
+                max={latestBookableDate()}
                 value={fecha}
                 aria-invalid={pastDateError ? true : undefined}
                 className={cx(styles.date, pastDateError && styles.dateInvalid)}

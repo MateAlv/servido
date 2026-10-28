@@ -588,6 +588,45 @@ describe('ReservationPage (US-13)', () => {
     expect(screen.queryByRole('heading', { name: 'Revisá tu reserva' })).not.toBeInTheDocument()
   })
 
+  it('US-13 edge gives one notice when a reloaded review lost its time', async () => {
+    availabilityMock.mockResolvedValue(
+      dayAvailability({
+        slots: [
+          { start_time: '12:00', available: false },
+          { start_time: '13:00', available: true },
+        ],
+      }),
+    )
+    renderPage(`?fecha=${DATE}&hora=12:00&paso=revision`)
+
+    expect(
+      await screen.findByText(
+        'La mesa que elegiste ya no está disponible. Elegí otro horario o tipo de mesa.',
+      ),
+    ).toBeInTheDocument()
+    await screen.findByLabelText('Fecha')
+    expect(
+      screen.queryByText(/El horario de las 12:00 ya no está disponible/),
+    ).not.toBeInTheDocument()
+  })
+
+  it('US-13 edge only offers dates up to 60 days ahead (D10)', async () => {
+    const tooFar = new Intl.DateTimeFormat('en-CA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000))
+    renderPage(`?fecha=${tooFar}`)
+
+    const dateInput = await screen.findByLabelText('Fecha')
+    expect(dateInput).toHaveValue('')
+    expect(dateInput).toHaveAttribute('max')
+    chooseDateUsing(dateInput, tooFar)
+
+    expect(await screen.findByText('Podés reservar hasta 60 días antes.')).toBeInTheDocument()
+    expect(availabilityMock).not.toHaveBeenCalled()
+  })
+
   it("US-13 edge confirms only after checking the diner's other reservations", async () => {
     dayReservationsMock.mockRejectedValue(new Error('No pudimos ver tus reservas.'))
     await openReview()

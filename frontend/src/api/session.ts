@@ -72,5 +72,8 @@ export function signIn(queryClient: QueryClient, token: string, account: Account
 
 export function signOut(queryClient: QueryClient) {
   getSessionStorage()?.removeItem(TOKEN_KEY)
+  // Data read with the old session goes too: an expired session's 401 errors would otherwise
+  // sign the diner out again right after they sign back in.
+  queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== ACCOUNT_QUERY_KEY[0] })
   queryClient.setQueryData<Account | null>(ACCOUNT_QUERY_KEY, null)
 }

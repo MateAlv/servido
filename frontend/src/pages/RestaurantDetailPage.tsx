@@ -203,7 +203,7 @@ export function RestaurantDetailPage() {
                   Reservar mesa
                 </Button>
               </>
-            ) : restaurant.bookable && !account ? (
+            ) : restaurant.bookable && account === null ? (
               <>
                 <StatusPill tone="ok" className={styles.soon}>
                   Reservas abiertas

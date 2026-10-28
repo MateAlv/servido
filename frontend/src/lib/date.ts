@@ -38,3 +38,13 @@ const BA_TIME_FORMAT = new Intl.DateTimeFormat('es-AR', {
 export function timeInBuenosAires(isoDateTime: string): string {
   return BA_TIME_FORMAT.format(new Date(isoDateTime))
 }
+
+/** How far ahead a diner can book (decision D10 of spec 005, pending PO). */
+export const MAX_DAYS_AHEAD = 60
+
+/** The last date a diner can book (`YYYY-MM-DD`): today in Buenos Aires plus 60 days. */
+export function latestBookableDate(): string {
+  const [year, month, day] = todayInBuenosAires().split('-').map(Number)
+  const latest = new Date(Date.UTC(year, month - 1, day + MAX_DAYS_AHEAD))
+  return latest.toISOString().slice(0, 10)
+}
