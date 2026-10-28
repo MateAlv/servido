@@ -172,6 +172,7 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 ## Assumptions
 
 - Los datos del restaurante y su menú provienen de la carga realizada por el rol Restaurante.
+- *(Decisión del equipo, 28/10, D4; falta que la PO la valide)*: el mapa, el listado y el detalle muestran los restaurantes reales que se pueden reservar (con ubicación, turnos y mesas cargados, spec 004) junto con los de prueba. De los reales se muestra solo lo que existe: el rango de precios que cargó el restaurante, sin concurrencia («Sin datos») ni calificaciones hasta que existan. Solo los reales se pueden reservar (spec 005).
 
 - La distancia se calcula en línea recta, salvo que se defina otra métrica.
 

@@ -14,35 +14,36 @@ US-11 turns the restaurant detail into a booking flow: the diner picks a date, a
 
 ## Update of 28/10: US-13, the backend of US-11 and real restaurants
 
-Spec 004 (shifts and grouped tables) and the US-11 page are merged. US-13 needs three things that are not built yet: the `reservations` table, the real availability (the backend of US-11, deferred on 23/10) and a real restaurant the diner can reach (everything on the diner side still reads fixtures). The team took eight decisions on 28/10 before planning (D1–D8 in [research.md](research.md), pending PO). This section is the plan for all of it; the sections below keep describing US-11 as built.
+Spec 004 (shifts and grouped tables) and the US-11 page are merged. US-13 needs three things that are not built yet: the `reservations` table, the real availability (the backend of US-11, deferred on 23/10) and a real restaurant the diner can reach (everything on the diner side still reads fixtures). The team took eight decisions on 28/10 before planning (D1–D9 in [research.md](research.md), pending PO). This section is the plan for all of it; the sections below keep describing US-11 as built.
 
 ### What changes
 
-| # | Work | Why | Delivered in |
+| # | Work | Why | Order |
 | --- | --- | --- | --- |
-| 1 | `seating_area` on the table groups of spec 004 (D3, D6): migration, model, `PUT /api/restaurante/mesas`, the selector in `TableInventoryPage` | US-11 S6 filters by seating area | PR A |
-| 2 | `reservations` table (D1, D5, D7) in the same migration | Base of US-13 and of the rest of Sprint 3 | PR A |
-| 3 | The two availability endpoints of US-11 over groups ([contracts/availability-api.md](contracts/availability-api.md)), with the deferred backend tests | The page stops using the fixture | PR A |
-| 4 | Swap `frontend/src/api/availability.ts` to the typed client and delete the fixture (T017–T018) | No test data in the booking flow | PR A |
-| 5 | `GET /api/restaurants` and `/{id}` ([contracts/restaurants-api.md](contracts/restaurants-api.md)); the map, list and detail add the bookable restaurants (D4) | A diner can reach a real restaurant | PR B |
-| 6 | US-13 backend: `POST /api/reservations` and `GET /api/reservations?date=` ([contracts/reservations-api.md](contracts/reservations-api.md)) | The story | PR C |
-| 7 | US-13 frontend: review step, confirmation, overlap warning, `409` handling | The story | PR C |
-| 8 | Replace 004's conflict-check stub with the real rule (data-model, rule 11) | No future reservation left without a table | PR C |
-| 9 | Demo data in production: La Esquina de Palermo with location, shifts and table groups; a real reservation by Martín | Sprint 3 defense | After PR C |
+| 1 | `seating_area` on the table groups of spec 004 (D3, D6): migration, model, `PUT /api/restaurante/mesas`, the selector in `TableInventoryPage` | US-11 S6 filters by seating area | 1 |
+| 2 | `reservations` table (D1, D5, D7) in the same migration | Base of US-13 and of the rest of Sprint 3 | 1 |
+| 3 | The two availability endpoints of US-11 over groups ([contracts/availability-api.md](contracts/availability-api.md)), with the deferred backend tests | The page stops using the fixture | 1 |
+| 4 | Swap `frontend/src/api/availability.ts` to the typed client and delete the fixture (T017–T018) | No test data in the booking flow | 1 |
+| 5 | `GET /api/restaurants` and `/{id}` ([contracts/restaurants-api.md](contracts/restaurants-api.md)); the map, list and detail add the bookable restaurants (D4) | A diner can reach a real restaurant | 2 |
+| 6 | US-13 backend: `POST /api/reservations` and `GET /api/reservations?date=` ([contracts/reservations-api.md](contracts/reservations-api.md)) | The story | 3 |
+| 7 | US-13 frontend: review step, confirmation, overlap warning, `409` handling | The story | 3 |
+| 8 | Replace 004's conflict-check stub with the real rule (data-model, rule 11) | No future reservation left without a table | 3 |
+| 9 | Demo data in production: La Esquina de Palermo with location, shifts and table groups; a real reservation by Martín | Sprint 3 defense | After merge |
 
-PR A and PR B can go in parallel; PR C needs A (and B to be tried end to end).
+Everything ships in **one PR** (team decision, 28/10): no intermediate state reaches production, where `main` deploys on every merge. Inside the PR the commits follow the order column: backend foundations, real restaurants and the switch of the US-11 page to the API, then US-13.
 
 ### US-13 design
 
-- **Route**: the review is a step of the same page, `/reservar/:restauranteId?…&paso=revision`. «Siguiente» adds `paso=revision`; «Volver» removes it. The selection stays in the URL, so going back keeps everything (S3) and a reload stays in the review.
+- **Route**: the review is a step of the same page, `/reservar/:restauranteId?…&paso=revision`. «Siguiente» **pushes** `paso=revision` (so the phone's back button returns to the selection); «Volver» goes back. The selection stays in the URL, so going back keeps everything (S3) and a reload stays in the review. If on reload the chosen time or group is no longer offered, the page returns to the selection with the notice US-11 already shows.
 - **Review** (S1, S2): restaurant name, date (long Spanish format), time range (start and start + 90 minutes), party size and the assigned table («Mesa para 4 · Terraza», D2), computed from the tables response with rule 8 of [data-model.md](data-model.md). Built with the existing `Card`, `Ticket`-like rows from the design system and `Button`; no new shared component unless the review turns out to be reused.
 - **Overlap warning** (S6, D8): the review fetches `GET /api/reservations?date=` and shows a `StatusPill`/notice per overlapping reservation. The «Confirmar reserva» button stays enabled.
-- **Confirmation** (S4, S5): only «Confirmar reserva» calls `POST /api/reservations`; the button shows its loading state and is disabled while the request runs (double submit, also guarded by the unique index). On `201` the page shows the confirmed reservation with the same data and a link to the home; the selection params are cleared so a back navigation can't confirm twice. On `409` for a taken table, it shows the message, returns to the selection with every value kept and refetches availability. On `409` "Ya confirmaste esta reserva", it shows the confirmation.
-- **Backend**: `app/api/reservation.py` holds the four endpoints (two availability reads, the diner's day, the confirmation); `app/services/availability.py` holds rules 1–9 so reads and the confirmation share them; `app/services/reservation_conflicts.py` gets the real rule 11. Role checks use the diner role (403 for restaurants).
+- **Confirmation** (S4, S5): only «Confirmar reserva» calls `POST /api/reservations`, with a `request_id` generated when the review opens; the button shows its loading state and is disabled while the request runs, and a retry reuses the same `request_id` (a repeat returns the same reservation). On `201`/`200` the page shows the confirmed reservation with the same data and a link to the home, replacing the URL so going back can't confirm again. Every `409` shows its message, returns to the selection with every value kept and refetches availability. A `401` (expired session) goes to `/ingresar?volver=<review URL>`; the login page learns to return to `volver` (only same-site paths) instead of always `/`. The redirect for a visitor without a session uses the same parameter.
+- **Backend**: see the Design section below.
+- **Restaurant side**: when `PUT /api/restaurante/mesas` answers `409`, `TableInventoryPage` lists the affected reservations (date, time, party size) instead of a generic error.
 
 ### Migration
 
-One revision after `005_merge_feature_heads`: `CREATE EXTENSION IF NOT EXISTS btree_gist`; add `table_inventory.seating_area` (default `indoor` for existing rows, then the `CHECK`), swap the unique constraint to (restaurant, capacity, seating area); create `reservations` with its constraints and indexes. Production has no reservations yet, so nothing is backfilled.
+One revision after `005_merge_feature_heads`: `CREATE EXTENSION IF NOT EXISTS btree_gist` (a trusted extension, so the database owner can create it); add `table_inventory.seating_area` (default `indoor` for existing rows, then the `CHECK`), swap the unique constraint to (restaurant, capacity, seating area); create `reservations` with its constraints and indexes. The model declares the same constraints in `__table_args__`, so `alembic check` in CI sees no drift. Production has no reservations yet, so nothing is backfilled.
 
 ## Technical Context
 
@@ -102,29 +103,26 @@ US-11 **consumes** shifts and tables; it does not define, create or duplicate th
 
 ### Data model (details in [data-model.md](data-model.md))
 
-- `reservations` (new, English table name per glossary): `id`, `diner_id` → `comensales`, `restaurant_id` → `restaurantes`, `table_id` → `tables` (004), `starts_at` (timestamptz, UTC), `ends_at` (generated: `starts_at + 90 minutes`), `party_size`, `created_at`.
-- Anti-overbooking invariant in the database (risk 2): `EXCLUDE USING gist (table_id WITH =, tstzrange(starts_at, ends_at) WITH &&)`, which needs the `btree_gist` extension. A plain `UNIQUE (table_id, starts_at)` is not enough: with a 30-minute grid and a 90-minute duration, 12:00 and 12:30 overlap.
-- No `status` column yet: US-11 never writes a reservation and `status` only exists to distinguish confirmed/cancelled, which arrives with US-13. It is added in that migration, together with the write endpoint.
-- `seating_area` and `capacity` live in 004's `Table`; this feature only reads them.
-- The maximum party size is not stored: it is `max(capacity)` over the restaurant's `active` tables (`0` when there are none), computed by the service on each request. It is the largest group a single table can seat, and the spec assumes one table per reservation.
+*(Rewritten 28/10: spec 004 stores tables as groups.)*
 
-### API (details in [contracts/availability-api.md](contracts/availability-api.md))
+- `reservations`: `diner_id`, `restaurant_id`, the assigned group (`table_capacity`, `seating_area`) and `table_number` inside it (D1), `starts_at`, `ends_at` (set by the service, checked to be 90 minutes later), `party_size`, `status` (`confirmed` / `cancelled`), `request_id` (unique, double submit) and `created_at`.
+- Anti-overbooking invariant in the database (risk 2): an exclusion constraint over the group, the table number and `tstzrange(starts_at, ends_at)` for confirmed reservations, with `btree_gist`.
+- Table groups (spec 004) gain `seating_area`; their unique key becomes (restaurant, capacity, seating area).
+- The maximum party size is not stored: `max(capacity)` over the restaurant's available groups.
 
-Both endpoints are `GET`, require a diner token (`TokenClaimsDep`, role `diner`) and answer `403` to a restaurant account, `401` without a valid token, `404` for an unknown restaurant and `400` for invalid input (malformed query parameters, a past date or start, `party_size < 1`).
+### API
 
-1. `GET /api/restaurants/{restaurant_id}/availability?date=YYYY-MM-DD&party_size=N`
-   Returns `max_party_size` (the restaurant's cap, `0` when it has no active tables), `open` (whether that weekday has active shifts) and `slots`, one entry per 30-minute start with `start_time` and `available`. Past starts (today) are not returned; starts outside the shifts are not returned; a start whose 90-minute block does not fit inside the shift is not returned. A `party_size` above `max_party_size` is a valid read: the response carries the cap and no slots, and the page clamps the value and explains it, so the diner can never keep a group the restaurant cannot seat.
-2. `GET /api/restaurants/{restaurant_id}/availability/tables?date=YYYY-MM-DD&start_time=HH:MM&party_size=N`
-   Returns the tables that are `active`, have `capacity >= party_size` and have no overlapping reservation. Each entry carries `id`, `label`, `capacity` and `seating_area`. The seating preference filters this list in the UI, so the page needs one request per date and time, not one per preference. Above `max_party_size` the list is empty, as in S7.
-
-No write endpoint in US-11. The eventual `POST /api/reservations` (US-13) revalidates availability inside the same transaction, rejects `party_size > max_party_size` with `400` and relies on the exclusion constraint to answer `409` when the table was taken meanwhile.
+- US-11 reads ([contracts/availability-api.md](contracts/availability-api.md)): `GET /api/restaurants/{id}/availability` (slots, `max_party_size`) and `/availability/tables` (groups with their free count).
+- US-13 ([contracts/reservations-api.md](contracts/reservations-api.md)): `POST /api/reservations` (the confirmation) and `GET /api/reservations?date=` (the diner's reservations of a day, for the overlap warning).
+- Bookable restaurants ([contracts/restaurants-api.md](contracts/restaurants-api.md)): `GET /api/restaurants` and `/{id}`, public.
+- The diner endpoints require a diner token: `401` without one, `403` for a restaurant account (US-4 S3), `404` for an unknown restaurant, `400` for malformed input, `409` for whatever stopped being possible during the review.
 
 ### Backend
 
-- `backend/app/services/availability.py`: slot generation for a date, the restaurant's `max_party_size`, timezone handling (`ZoneInfo("America/Argentina/Buenos_Aires")` → UTC), and the "is this table free for this block" query. Rules outgrow the router, so they live in a service that the tests and US-13's confirmation share.
-- `backend/app/api/reservation.py`: the two endpoints, mounted in `app/api/__init__.py`.
-- `backend/app/schemas/reservation.py`: response models. Validation errors surface as `400` through the existing handler; messages are in Spanish.
-- Queries use `select()` with the overlap predicate `starts_at < :end AND ends_at > :start`, filtered by `table_id`/`restaurant_id` and ordered by start time.
+- `backend/app/services/availability.py`: rules 1–13 of `data-model.md` (window, slots, free tables per group, assigned group, confirmation, inventory conflicts, `now`), shared by the reads and the confirmation.
+- `backend/app/api/reservation.py`: the four diner endpoints; `backend/app/api/public_restaurant.py`: the two public ones; both mounted in `app/api/__init__.py`.
+- `backend/app/schemas/reservation.py`: request and response models; messages in Spanish.
+- `backend/app/services/reservation_conflicts.py`: the real inventory rule with the new interface (`session`, `seating_area`).
 
 ### Frontend
 
@@ -137,7 +135,7 @@ No write endpoint in US-11. The eventual `POST /api/reservations` (US-13) revali
   - The helpers are local functions in `ReservationPage.tsx` (`selectionFromParams` / `paramsFromSelection`), as `tiersFromParams` is in `RestaurantExplorer.tsx`; no new module or dependency.
 - Changing date or party size refetches the slots; changing date, time or party size refetches the tables (`TanStack Query`, keyed by the values each query uses). A time that is no longer available after a refetch is **cleared**, with a short notice (S5 and its edge case), and a seating preference with no table left in the new response goes back to "Sin preferencia" with a notice. Notices use the design system's `useToast`, not color alone.
 - Empty state "No hay mesas disponibles para esta fecha y horario" with the controls still enabled (S7). When `max_party_size` is `0` (the restaurant has no active tables), the page says "El restaurante todavía no tiene mesas disponibles", hides the stepper (there is no valid party size) and disables the table list instead of pretending the day is closed.
-- **Temporary mock**: `frontend/src/api/availability.ts` exposes `fetchAvailability()` and `fetchAvailableTables()`. While spec 004 is missing they answer from `frontend/src/data/reservationAvailability.fixture.ts`; when the endpoints exist, the same two functions call the typed client and the fixture file is deleted. The page imports only these functions, so the swap touches one file. The page shows a `StatusPill` «Datos de prueba» while the fixture is in use, so the demo never looks like real data.
+- **Temporary mock** *(removed in the US-13 PR, T018)*: `frontend/src/api/availability.ts` exposes `fetchAvailability()` and `fetchAvailableTables()`. While spec 004 is missing they answer from `frontend/src/data/reservationAvailability.fixture.ts`; when the endpoints exist, the same two functions call the typed client and the fixture file is deleted. The page imports only these functions, so the swap touches one file. The page shows a `StatusPill` «Datos de prueba» while the fixture is in use, so the demo never looks like real data.
 - A diner without a session is sent to `/ingresar`; a restaurant account is sent to its home (`/`), because the page is diner-only (the API would answer `403`). In the detail, the disabled "Reservar mesa" button becomes a link to this route only for a signed-in diner; visitors and restaurant accounts keep the "Próximamente" card (the detail belongs to 002; only that button changes).
 - Mobile first at 360 px, labelled inputs, visible focus, Spanish (voseo) text, tokens from `tokens.css`. No entrance animation is added, so no `data-entrance` and no reduced-motion work beyond the existing components.
 - Reuses the design system; no new shared component. The `Chip` row in `docs/design/README.md` is updated because it now also documents the single-choice slot and seating groups; no catalog entry or `/diseno` change is needed. If a component turns out to be shared, it is registered in both before the PR.
@@ -159,37 +157,41 @@ No write endpoint in US-11. The eventual `POST /api/reservations` (US-13) revali
 | Scenario | Test | Layer |
 | --- | --- | --- |
 | US-11 S1 — choose date, time and seating preference | `frontend/src/pages/ReservationPage.test.tsx` › `US-11 S1 offers date, time and seating preference` | Frontend |
-| US-11 S2 — past dates are not selectable | `ReservationPage.test.tsx` › `US-11 S2 does not allow a past date`; the backend twin `test_us11_s2_rejects_past_date` waits for the endpoints (spec 004 missing) | Frontend (backend deferred) |
-| US-11 S3 — only dates and times inside opening hours | `backend/tests/test_reservation.py::test_us11_s3_returns_only_slots_inside_shifts` and `test_us11_s3_returns_no_slots_on_a_closed_weekday` (deferred with the endpoints; the fixture already answers closed for Mondays) | Backend (deferred) |
-| US-11 S4 — an occupied slot cannot be selected | `ReservationPage.test.tsx` › `US-11 S4 disables an occupied time`; backend twin deferred | Frontend (backend deferred) |
+| US-11 S2 — past dates are not selectable | `ReservationPage.test.tsx` › `US-11 S2 does not allow a past date` · `backend/tests/test_reservation.py::test_us11_s2_rejects_past_date` | Both |
+| US-11 S3 — only dates and times inside opening hours | `backend/tests/test_reservation.py::test_us11_s3_returns_only_slots_inside_shifts` and `test_us11_s3_returns_no_slots_on_a_closed_weekday` | Backend |
+| US-11 S4 — an occupied slot cannot be selected | `ReservationPage.test.tsx` › `US-11 S4 disables an occupied time` · backend twin in `test_reservation.py` | Both |
 | US-11 S5 — changing date or time updates the tables | `ReservationPage.test.tsx` › `US-11 S5 asks again for the tables when the time changes` and `US-11 S5 clears a time that is no longer available and keeps the date` | Frontend |
-| US-11 S6 — the seating preference offers the tables of that type | `ReservationPage.test.tsx` › `US-11 S6 shows only the tables of the chosen seating area`; backend twin deferred | Frontend (backend deferred) |
-| US-11 S7 — no availability is informed and the choice can change | `ReservationPage.test.tsx` › `US-11 S7 informs there are no tables and keeps the controls usable`; backend twin deferred | Frontend (backend deferred) |
-| FR-013 — the restaurant defines the maximum party size | `ReservationPage.test.tsx` › `US-11 edge caps the party size at the restaurant maximum`; backend twins `test_us11_edge_returns_the_restaurant_max_party_size` and `test_us11_edge_returns_no_max_without_active_tables` deferred | Frontend (backend deferred) |
-| Edge — a party above the restaurant maximum is never offered | `backend/tests/test_reservation.py::test_us11_edge_offers_no_slots_above_the_restaurant_maximum` (deferred) | Backend (deferred) |
-| Edge — today with times already past | `test_us11_edge_does_not_offer_past_times_of_today` (deferred) | Backend (deferred) |
-| Edge — restaurant without shifts or tables | `test_us11_edge_returns_no_slots_without_shifts`, `test_us11_edge_returns_no_max_without_active_tables` (deferred) | Backend (deferred) |
-| Edge — two overlapping reservations for one table | `test_us11_edge_database_rejects_overlapping_reservations` (deferred with the `reservations` table) | Backend (deferred) |
-| Edge — wrong role, no token, unknown restaurant | `ReservationPage.test.tsx` › `US-11 edge sends a visitor to the sign-in page`, `US-11 edge sends a restaurant account back home` and `US-11 edge offers the reserve link to a diner only` (the API twins are deferred) | Frontend (backend deferred) |
-| Edge — invalid date, party size or start time | `backend/tests/test_reservation.py::test_us11_edge_rejects_an_invalid_request` (deferred) | Backend (deferred) |
+| US-11 S6 — the seating preference offers the tables of that type | `ReservationPage.test.tsx` › `US-11 S6 shows only the tables of the chosen seating area` · backend twin in `test_reservation.py` | Both |
+| US-11 S7 — no availability is informed and the choice can change | `ReservationPage.test.tsx` › `US-11 S7 informs there are no tables and keeps the controls usable` · backend twin in `test_reservation.py` | Both |
+| FR-013 — the restaurant defines the maximum party size | `ReservationPage.test.tsx` › `US-11 edge caps the party size at the restaurant maximum`; backend twins `test_us11_edge_returns_the_restaurant_max_party_size` and `test_us11_edge_returns_no_max_without_active_tables` in `test_reservation.py` | Both |
+| Edge — a party above the restaurant maximum is never offered | `backend/tests/test_reservation.py::test_us11_edge_offers_no_slots_above_the_restaurant_maximum` | Backend |
+| Edge — today with times already past | `test_us11_edge_does_not_offer_past_times_of_today` | Backend |
+| Edge — restaurant without shifts or tables | `test_us11_edge_returns_no_slots_without_shifts`, `test_us11_edge_returns_no_max_without_active_tables` | Backend |
+| Edge — two overlapping reservations for one table | `test_us11_edge_database_rejects_overlapping_reservations` → replaced by `test_us13_edge_database_rejects_a_double_booking` | Backend |
+| Edge — one table holding two reservations counts once | `test_reservation.py::test_us11_edge_one_table_with_two_reservations_counts_once` (a 19:00 and a 21:00 on table 1 leave a 20:00 slot free while table 2 is free) | Backend |
+| Edge — wrong role, no token, unknown restaurant | `ReservationPage.test.tsx` › `US-11 edge sends a visitor to the sign-in page`, `US-11 edge sends a restaurant account back home` and `US-11 edge offers the reserve link to a diner only` (the API twins are deferred) | Both |
+| Edge — invalid date, party size or start time | `backend/tests/test_reservation.py::test_us11_edge_rejects_an_invalid_request` | Backend |
 | Edge — the URL keeps the selection | `ReservationPage.test.tsx` › `US-11 edge keeps the selection when the page reloads` | Frontend |
 | Edge — invalid value in the URL | `ReservationPage.test.tsx` › `US-11 edge ignores an invalid value in the URL` | Frontend |
 | US-13 S1 — the selection can be reviewed before confirming | `frontend/src/pages/ReservationPage.test.tsx` › `US-13 S1 opens the review with the selection` | Frontend |
 | US-13 S2 — the review shows restaurant, date, time, party size and the assigned table | `ReservationPage.test.tsx` › `US-13 S2 shows every chosen value and the assigned table` · `backend/tests/test_reservation.py::test_us13_s2_tables_endpoint_lists_groups_smallest_first` | Both |
 | US-13 S3 — going back keeps the selection | `ReservationPage.test.tsx` › `US-13 S3 goes back with the selection kept` | Frontend |
-| US-13 S4 — no confirmation, no reservation | `ReservationPage.test.tsx` › `US-13 S4 creates nothing until the diner confirms` · `test_reservation.py::test_us13_s4_reading_availability_creates_no_reservation` | Both |
+| US-13 S4 — no confirmation, no reservation | `ReservationPage.test.tsx` › `US-13 S4 creates nothing until the diner confirms` (opening, reloading and leaving the review never call the POST) | Frontend |
 | US-13 S5 — explicit confirmation creates a confirmed reservation | `test_reservation.py::test_us13_s5_confirmation_creates_a_confirmed_reservation` · `ReservationPage.test.tsx` › `US-13 S5 confirms and shows the reservation` | Both |
-| US-13 S6 — an overlapping reservation of the diner is warned about | `test_reservation.py::test_us13_s6_lists_the_diner_reservations_of_the_day` · `ReservationPage.test.tsx` › `US-13 S6 warns about an overlapping reservation and still confirms` | Both |
+| US-13 S6 — an overlapping reservation is warned about and can still be confirmed | `test_reservation.py::test_us13_s6_lists_the_diner_reservations_of_the_day`, `test_us13_s6_overlapping_reservation_can_still_be_confirmed` (also at the same restaurant and start) · `ReservationPage.test.tsx` › `US-13 S6 warns about an overlapping reservation and still confirms` | Both |
 | Edge — a table taken meanwhile answers 409 and keeps the selection | `test_reservation.py::test_us13_edge_full_group_answers_409` · `ReservationPage.test.tsx` › `US-13 edge returns to the selection when the table was taken` | Both |
 | Edge — the database rejects a double booking | `test_reservation.py::test_us13_edge_database_rejects_a_double_booking` | Backend |
-| Edge — a double submit creates one reservation | `test_reservation.py::test_us13_edge_double_submit_creates_one_reservation` | Backend |
-| Edge — past, off-shift, too large or unavailable requests answer 400 | `test_reservation.py::test_us13_edge_rejects_invalid_requests` | Backend |
+| Edge — a repeated confirmation creates one reservation | `test_reservation.py::test_us13_edge_repeated_request_returns_the_same_reservation` | Backend |
+| Edge — a diner only sees their own reservations | `test_reservation.py::test_us13_edge_lists_only_the_diner_reservations` | Backend |
+| Edge — what changed during the review answers 409 | `test_reservation.py::test_us13_edge_changes_during_the_review_answer_409` (time passed, group disabled, shift removed, maximum lowered) | Backend |
+| Edge — an expired session returns to the review after signing in | `ReservationPage.test.tsx` › `US-13 edge returns to the review after signing in again` · `LoginPage.test.tsx` › `US-13 edge goes back to the page it came from` | Frontend |
+| Edge — malformed requests answer 400 | `test_reservation.py::test_us13_edge_rejects_malformed_requests` | Backend |
 | Edge — restaurants and other diners can't use the diner endpoints | `test_reservation.py::test_us13_edge_restaurant_token_gets_403` (also US-4 S3) | Backend |
-| Edge — a restaurant can't remove a booked table | `test_reservation.py::test_us13_edge_inventory_change_keeps_booked_tables` | Backend |
+| Edge — a restaurant can't remove, shrink or change a booked group (D9) | `test_reservation.py::test_us13_edge_inventory_change_keeps_booked_tables` · `TableInventoryPage.test.tsx` › `US-10 S3 lists the reservations that block the change` | Both |
 | D3 — table groups carry a seating area | `backend/tests/test_table_inventory.py::test_us10_s1_groups_have_a_seating_area` · `TableInventoryPage.test.tsx` › `US-10 S1 saves the seating area of each group` | Both |
 | D4 — only bookable restaurants are listed | `backend/tests/test_public_restaurants.py::test_lists_only_bookable_restaurants`, `test_detail_includes_the_menu` | Backend |
 
-**Deferred means**: spec 004 has no `Shift`/`Table` models yet, so the endpoints (T014–T016) and their backend tests (T006–T011) are on hold per the T001 checkpoint; they are the first thing to build once 004 merges. **Update (28/10)**: spec 004 is merged, so the deferred backend tests are written with PR A (see the update of 28/10).
+**Deferred means**: spec 004 has no `Shift`/`Table` models yet, so the endpoints (T014–T016) and their backend tests (T006–T011) are on hold per the T001 checkpoint; they are the first thing to build once 004 merges. **Update (28/10)**: spec 004 is merged, so these backend tests are written in the US-13 PR (T039; see the update of 28/10).
 
 Success criteria SC-001 (under 3 minutes) is checked in the PO demo; SC-002, SC-003, SC-004 and SC-005 are covered by the scenario and edge tests above (SC-005 by the absence of any write endpoint in US-11).
 
@@ -244,7 +246,7 @@ frontend/
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-No violations. The exclusion constraint is not extra complexity: it is the only way to enforce SC-003 and risk 2 at the database level with a 30-minute grid and a 90-minute duration. The simpler `UNIQUE (table_id, starts_at)` was rejected because it still allows a 12:00 and a 12:30 reservation on the same table.
+No violations. The exclusion constraint is not extra complexity: it is the only way to enforce SC-003 and risk 2 at the database level with a 30-minute grid and a 90-minute duration. A `UNIQUE` on the start was rejected because it still allows a 12:00 and a 12:30 reservation on the same table.
 
 ## Risks
 
@@ -257,6 +259,6 @@ No violations. The exclusion constraint is not extra complexity: it is the only 
 | The PO confirms 004 keeps table *groups* instead of individual tables | Individual tables stop being possible; while the PO answers, the fixture shows individual tables and the assumption is escalated before the real query is written |
 | The PO/PM expects the reservation to be created in Sprint 2 | Escalated; if they confirm, US-13 moves part of its scope into Sprint 2 and this plan is updated first. The mock never fakes a created reservation |
 | A diner asks for a group the restaurant cannot seat (an unbounded stepper) | `max_party_size` comes from the active tables in the availability response, the stepper's `max` uses it, the URL value is clamped with a notice, and US-13 rejects a larger `party_size` with `400` |
-| The PO rejects one of D1–D8 | Each decision is local: D2 is the review text, D8 one notice, D5 two constants; D1 and D3 are the only schema ones and are recorded before any data exists in production |
+| The PO rejects one of D1–D9 | Each decision is local: D2 is the review text, D8 one notice, D5 two constants; D1 and D3 are the only schema ones and are recorded before any data exists in production |
 | A restaurant re-saves its tables while a diner confirms | The confirmation reads the group `FOR SHARE`; the inventory update locks the groups `FOR UPDATE` and runs the conflict rule, so one waits for the other |
 | Availability rules drift between US-11 and US-13 | Both call `app/services/availability.py`; US-13 revalidates with the same function inside its transaction |

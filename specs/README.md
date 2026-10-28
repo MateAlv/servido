@@ -28,7 +28,7 @@ Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 solo est
 
 - El `plan.md` y el `tasks.md` de la spec 003 cubren solo lo de Google (25/10). Falta documentar ahí lo construido en el Sprint 1 (US-2 y US-4) para cumplir la [Definition of Done](../AGENTS.md#definition-of-done).
 - Spec 001: falta el test de frontend de US-3 S1 (ver `tasks.md`, T022).
-- El backend de la US-11 (tabla de reservas y endpoints de disponibilidad) quedó diferido el 23/10 porque faltaba la spec 004. La 004 ya está mergeada: se construye con la US-13 (PR A de la fase 3 del `tasks.md` de la 005).
+- El backend de la US-11 (tabla de reservas y endpoints de disponibilidad) quedó diferido el 23/10 porque faltaba la spec 004. La 004 ya está mergeada: se construye en el mismo PR que la US-13 (fase 3 del `tasks.md` de la 005).
 - La US-11 de la 005 sigue el camino mock del checkpoint T001 (frontend con `frontend/src/api/availability.ts` y `frontend/src/data/reservationAvailability.fixture.ts`, rotulado «Datos de prueba»): borrarlo cuando existan los endpoints de la 004 y la 005 (T018).
 - La US-11 quedó sin el pase visual de navegador (360 px, teclado y lector de pantalla, T024/T032); los tests automatizados pasan.
 
@@ -44,7 +44,7 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las de la spec 002 se
 | --- | --- | --- |
 | 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba; la demo refresca cada 30 s. Implementado así; falta que la PO lo confirme |
 | 002 | Ubicación denegada | Mapa centrado en Buenos Aires, sin distancias, con aviso y botón para reintentar. Implementado así; falta que la PO lo confirme |
-| 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Decididos por el equipo el 23/10 y el 28/10 (ver las decisiones D1–D8 abajo y `specs/005-reservar-mesa/research.md`). Falta que la PO los valide |
+| 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Decididos por el equipo el 23/10 y el 28/10 (ver las decisiones D1–D9 abajo y `specs/005-reservar-mesa/research.md`). Falta que la PO los valide |
 
 ## Decisiones del equipo
 
@@ -77,7 +77,9 @@ Dudas que no hacía falta llevar a la PO. Ya están incorporadas en cada spec.
 | 28/10 | 004 | D3 y D6: cada grupo de mesas tiene un tipo de un catálogo fijo (Adentro, Afuera, Terraza); los grupos existentes quedan «Adentro». Falta que la PO lo valide |
 | 28/10 | 002, 005 | D4: el mapa, el listado y el detalle suman los restaurantes reales que se pueden reservar (con ubicación, turnos y mesas) a los de prueba; solo los reales se reservan. Falta que la PO lo valide |
 | 28/10 | 005 | D5: las reservas duran 90 minutos y se ofrecen cada 30. D7: quedan confirmadas al crearse, sin aprobación del restaurante. Falta que la PO lo valide |
-| 28/10 | 005 | D8: si el comensal ya tiene una reserva confirmada que se superpone, la revisión se lo avisa y puede confirmar igual (US-13, escenario 6). Se sumó a la US-13 en la planilla. Falta que la PO lo valide |
+| 28/10 | 005 | D8: si el comensal ya tiene una reserva confirmada que se superpone, la revisión se lo avisa y puede confirmar igual (US-13, escenario 6). Un comensal puede tener dos mesas en el mismo restaurante y horario. Falta sumarlo a la US-13 en la planilla y que la PO lo valide |
+| 28/10 | 004, 005 | D9: si el restaurante baja, deshabilita o cambia (capacidad o tipo) un grupo de mesas con reservas que no terminaron, el cambio se rechaza y se le listan esas reservas. Es la advertencia de US-10 S3 sin la opción de guardar igual. Falta que la PO lo valide |
+| 28/10 | 005 | Si el restaurante cambia sus horarios, las reservas ya confirmadas se mantienen. Queda para la PO si ese cambio debería advertir como el de mesas |
 
 ## Notas de formato
 

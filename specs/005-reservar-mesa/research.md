@@ -146,10 +146,20 @@ Unchanged from the spec's proposal, which the US-11 page already uses.
 
 ### D8. Overlapping reservations of one diner: warn, don't block
 
-The review reads the diner's reservations of that day (`GET /api/reservations?date=`) and warns about any overlap; the diner can still confirm. Added to US-13 as scenario 6 and, in the backlog, as a criterion of US-13.
+The review reads the diner's reservations of that day (`GET /api/reservations?date=`) and warns about any overlap; the diner can still confirm. Added to US-13 as scenario 6. It still has to be added as a criterion of US-13 in the team workbook, then exported to `docs/product/backlog.md`.
+
+A diner may hold two reservations at the same restaurant and start (two tables for a big group). So the double-submit guard is a `request_id` the page generates per review, unique in the table, and a repeated one returns the existing reservation; a unique key on (diner, restaurant, start) was rejected because it would block that legitimate case and answer a real double submit with the wrong error.
 
 **Rationale**: blocking would invent a product rule; a warning prevents the obvious mistake (booking twice by accident) and leaves the decision to the diner.
 
-### Inventory changes stop at booked tables
+### Free tables are counted by table, not by reservation
 
-The conflict-check stub of spec 004 is replaced: lowering a group's quantity below the number of a future confirmed reservation of that group (or removing or disabling the group) answers `409` and lists the reservations. Renumbering reservations to make room was rejected: it would move a confirmed diner to another table behind their back, and the rule "you can't remove a booked table" is easy to explain.
+A group's free tables at a block are `quantity` minus the distinct table numbers held by overlapping reservations. Counting reservations would mark a slot as taken when one table holds a 19:00 and a 21:00 reservation that both overlap a 20:00 request.
+
+### Confirmation locks the group, and "no longer possible" is a 409
+
+The confirmation locks the chosen group `FOR UPDATE`: two concurrent confirmations on one group then take different tables instead of one of them failing while another table is free, and an inventory update waits. Anything that was valid when the diner chose it but changed during the review (time passed, shifts, the group, the maximum, the restaurant being bookable) answers `409`, so the page always reacts the same way: back to the selection with every value kept. `400` is only for malformed requests.
+
+### D9. Inventory changes stop at booked tables (team, pending PO)
+
+The conflict-check stub of spec 004 is replaced: lowering a group's quantity below the number of a future confirmed reservation of that group (or removing or disabling the group) answers `409` and lists the reservations. Changing a booked group's capacity or seating area counts as removing it. The check needs the inventory update's session, so its interface gains `session` and `seating_area` (the stub had neither). US-10 S3 says "advierte antes de proceder"; the team chose a warning without "save anyway", because saving would leave confirmed reservations without a table. Renumbering reservations to make room was rejected: it would move a confirmed diner to another table behind their back, and the rule "you can't remove a booked table" is easy to explain.

@@ -16,11 +16,14 @@ The only way a reservation is created: the diner presses «Confirmar reserva» i
   "date": "2026-11-02",
   "start_time": "20:00",
   "party_size": 3,
-  "table": { "capacity": 4, "seating_area": "terrace" }
+  "table": { "capacity": 4, "seating_area": "terrace" },
+  "request_id": "5c0e…"
 }
 ```
 
-### `201 Created`
+`request_id` is a UUID the page generates when it opens the review and reuses for every retry of that confirmation.
+
+### `201 Created` (or `200 OK` for a repeated `request_id`)
 
 ```json
 {
@@ -39,18 +42,28 @@ The response never includes `table_number`: which table of the group was taken i
 
 ### Errors
 
+`400` means the request itself is wrong; `409` means it was valid when the diner chose it but is no longer possible (spec edge case "Disponibilidad que cambia entre la revisión y la confirmación").
+
 | Status | When | `detail` |
 | --- | --- | --- |
-| `400` | Malformed body (standard validation shape) | list of errors |
-| `400` | Date or start in the past | `"Ese horario ya pasó."` |
-| `400` | Start off the 30-minute grid or its 90 minutes outside every shift of that day | `"El restaurante no atiende en ese horario."` |
-| `400` | `party_size` above the restaurant's maximum | `"El grupo supera la capacidad máxima del restaurante."` |
-| `400` | The chosen group doesn't exist, isn't available, or is smaller than `party_size` | `"Esa mesa no está disponible para tu grupo."` |
-| `404` | Unknown or not bookable restaurant | `"No encontramos ese restaurante."` |
-| `409` | No free table left in the group for that block, or a concurrent confirmation took it (exclusion constraint) | `"La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa."` |
-| `409` | The diner already has this exact reservation confirmed: same restaurant and start (double submit, unique index) | `"Ya confirmaste esta reserva."` |
+| `400` | Malformed body (standard validation shape), `party_size < 1`, or a start off the 30-minute grid | list of errors, or `"Ese horario no es válido."` |
+| `404` | Unknown restaurant id | `"No encontramos ese restaurante."` |
+| `409` | The start is past now | `"Ese horario ya pasó. Elegí otro."` |
+| `409` | Its 90 minutes are no longer inside a shift of that day | `"El restaurante ya no atiende en ese horario. Elegí otro."` |
+| `409` | `party_size` is above the restaurant's current maximum | `"El grupo supera la capacidad máxima del restaurante."` |
+| `409` | The chosen group no longer exists, is unavailable or is too small | `"Esa mesa ya no está disponible. Elegí otro horario o tipo de mesa."` |
+| `409` | The group has no free table left for that block (or a concurrent confirmation took it) | `"La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa."` |
+| `409` | The restaurant stopped being bookable during the review | `"El restaurante ya no está tomando reservas."` |
 
-After a `409` for a taken table, the page goes back to the selection with every value kept and refreshes the availability (spec edge cases).
+A repeated `request_id` is not an error: the endpoint answers `200` with the reservation it already created, so a double click or a retry after a lost response shows the confirmation once.
+
+### How the page reacts
+
+- `201` / `200`: shows the confirmed reservation and replaces the URL so going back can't confirm again.
+- `409`: shows the message, returns to the selection with every value kept and refetches the availability.
+- `400`: shows the message and stays in the review (it means the page built a wrong request).
+- `401` (the 1-hour session expired): sends the diner to `/ingresar?volver=<this URL>`, and after signing in comes back to the review with the selection kept.
+- `404`: shows "No encontramos ese restaurante" with a link to the map.
 
 ## `GET /reservations?date=YYYY-MM-DD` — the diner's reservations of a day (US-13 S6)
 

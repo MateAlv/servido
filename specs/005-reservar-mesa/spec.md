@@ -57,7 +57,13 @@ Como **Comensal**, quiero revisar los datos que seleccioné, para verificar que 
 - **Tipos de mesa** *(decisión del equipo, 28/10; falta que la PO la valide)*: catálogo fijo de tres tipos, Adentro, Afuera y Terraza. El restaurante le asigna uno a cada grupo de mesas (spec 004, FR-009), y el comensal también puede elegir «Sin preferencia».
 - **Estado al confirmar** *(decisión del equipo, 28/10; falta que la PO la valide)*: la reserva queda confirmada directamente, sin aprobación del restaurante.
 - **Reservas superpuestas del mismo comensal** *(decisión del equipo, 28/10; falta que la PO la valide)*: no se impiden. Si el comensal ya tiene una reserva confirmada que se superpone con el horario elegido, en cualquier restaurante, la revisión se lo avisa y puede confirmar igual (US-13, escenario 6).
-- **El restaurante reduce o deshabilita mesas con reservas futuras**: el cambio se rechaza si alguna reserva confirmada futura de ese grupo quedaría sin mesa (spec 004, US-10 S3).
+- **El restaurante reduce o deshabilita mesas con reservas futuras** *(decisión del equipo, 28/10, D9; falta que la PO la valide)*: el cambio se rechaza y se le muestran las reservas que quedarían sin mesa (fecha, horario y cantidad de personas). Es la advertencia de US-10 S3 (spec 004), sin la opción de guardar igual, porque esas reservas quedarían sin mesa. Cambiar la capacidad o el tipo de un grupo con reservas cuenta como sacarlo, así que también se rechaza mientras tenga reservas que no terminaron.
+- **El restaurante cambia sus horarios con reservas futuras**: las reservas ya confirmadas se mantienen aunque queden fuera del nuevo horario; las nuevas solo se ofrecen dentro de él. [Pendiente para la PO: si el cambio de horarios debería advertir como el de mesas.]
+- **Dos mesas en el mismo restaurante y horario**: el comensal puede confirmar dos reservas en el mismo restaurante y horario (por ejemplo, un grupo grande en dos mesas); la segunda muestra el aviso del escenario 6 de US-13.
+- **Doble envío de la confirmación**: si la misma confirmación llega dos veces (doble clic o reintento), se crea una sola reserva y el comensal ve la confirmación una vez.
+- **La sesión vence durante la revisión**: el comensal vuelve a ingresar y regresa a la revisión con su selección.
+- **Comensal sin email verificado**: puede reservar; la verificación solo restringe los pedidos (spec 007, US-51).
+- **"Ahora" y "hoy"**: siempre en la hora de Argentina, también para decidir qué horarios ya pasaron.
 - Fecha de hoy con horarios que ya pasaron: no son seleccionables.
 - Días en que el restaurante no atiende: no se ofrecen como seleccionables.
 - Cambio de fecha u horario: se actualiza la disponibilidad informada; si ya no hay mesa disponible, se informa al comensal.
@@ -82,10 +88,10 @@ Como **Comensal**, quiero revisar los datos que seleccioné, para verificar que 
 - **FR-010** *(US-13)*: El sistema MUST permitir volver atrás para modificar los datos antes de confirmar y MUST conservar los datos ya elegidos.
 - **FR-011** *(US-13)*: El sistema MUST confirmar la reserva únicamente cuando el comensal lo indique de forma explícita; sin esa acción MUST NOT crear la reserva.
 - **FR-012** *(US-13)*: Al confirmar, el sistema MUST revalidar la disponibilidad, MUST crear la reserva una única vez y, si la mesa o el horario ya no están disponibles, MUST informarlo sin crear la reserva.
-- **FR-014** *(US-13)*: La mesa asignada MUST ser una mesa del grupo más chico, del tipo elegido, cuya capacidad alcance para la cantidad de comensales; con «Sin preferencia», del grupo más chico de cualquier tipo. La revisión MUST mostrarla por su capacidad y su tipo.
+- **FR-013** *(US-11)*: El sistema MUST limitar la cantidad de comensales por reserva al máximo que acepta el restaurante, definido por la capacidad de su mesa habilitada más grande, y MUST NOT permitir una cantidad mayor. Si el restaurante no tiene mesas habilitadas, el sistema MUST NOT ofrecer reservas.
+- **FR-014** *(US-13)*: La revisión MUST proponer como mesa asignada una del grupo más chico, del tipo elegido, cuya capacidad alcance para la cantidad de comensales (con «Sin preferencia», del grupo más chico de cualquier tipo), y MUST mostrarla por su capacidad y su tipo. Al confirmar, el sistema MUST asignar una mesa libre de ese grupo y MUST rechazar un grupo sin capacidad suficiente.
 - **FR-015** *(US-13)*: La reserva MUST quedar confirmada al crearse, sin aprobación del restaurante.
 - **FR-016** *(US-13; decisión del equipo, 28/10)*: Si el comensal ya tiene una reserva confirmada que se superpone con el horario elegido, la revisión MUST avisárselo, indicando el restaurante y el horario de esa reserva, y MUST NOT impedirle confirmar.
-- **FR-013** *(US-11)*: El sistema MUST limitar la cantidad de comensales por reserva al máximo que acepta el restaurante, definido por la capacidad de su mesa habilitada más grande, y MUST NOT permitir una cantidad mayor. Si el restaurante no tiene mesas habilitadas, el sistema MUST NOT ofrecer reservas.
 
 ### Key Entities
 
@@ -96,7 +102,7 @@ Como **Comensal**, quiero revisar los datos que seleccioné, para verificar que 
 ## Límites de alcance *(MVP Boundaries)*
 
 - **Dentro**: selección de fecha, horario, preferencia de tipo de mesa y aviso de disponibilidad de mesa; revisión de los datos; confirmación explícita de la reserva.
-- **Fuera**: búsqueda y selección del restaurante, modificación o cancelación de la reserva, notificaciones o comprobante de la reserva, pedidos.
+- **Fuera**: búsqueda y selección del restaurante, modificación o cancelación de la reserva (incluido el criterio de US-11 en el backlog, «no puede modificar la reserva si faltan menos de 30 minutos», que corresponde a modificar una reserva existente), notificaciones o comprobante de la reserva, pedidos.
 
 ## Success Criteria *(mandatory)*
 

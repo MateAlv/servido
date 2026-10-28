@@ -5,7 +5,7 @@
 Two ways to try it, and the second one always works:
 
 1. **Real data** — spec 004 merged, plus a restaurant with at least one active shift and one active table. Without shifts the endpoints answer `{ "open": false, "slots": [] }`; without active tables they also answer `max_party_size: 0`. That is correct, not a bug.
-2. **Mock** — nothing else needed. While spec 004 or the endpoints are missing, `frontend/src/api/availability.ts` answers from `frontend/src/data/reservationAvailability.fixture.ts` and the page shows a «Datos de prueba» pill.
+2. **Mock** (only until the US-13 PR deletes it, T018) — nothing else needed. While spec 004 or the endpoints are missing, `frontend/src/api/availability.ts` answers from `frontend/src/data/reservationAvailability.fixture.ts` and the page shows a «Datos de prueba» pill.
 
 The seven restaurants of `frontend/src/data/restaurants.fixture.ts` are not in the database: with real data they cannot be booked, so use a restaurant created through the app (`/suma-tu-local`) with hours and tables loaded. With the mock, those same seven restaurants can be used to show the flow.
 
@@ -50,9 +50,9 @@ With the mock the page shows «Datos de prueba». That pill and the fixture disa
 
 ## Prove the double-booking rule
 
-Insert two overlapping reservations for the same table by hand (psql) or run `test_us11_edge_database_rejects_overlapping_reservations`; the second one must fail with an `IntegrityError` raised by the exclusion constraint.
+Insert two confirmed reservations with the same restaurant, table group and `table_number` and overlapping times by hand (psql), or run `test_us13_edge_database_rejects_a_double_booking`; the second one must fail with an `IntegrityError` raised by the exclusion constraint.
 
-## US-13: review and confirm (after PR C)
+## US-13: review and confirm
 
 1. As a restaurant, load the profile with an address, a shift and table groups with a seating area (the configuration screens of spec 004). The restaurant now shows on the diner's map.
 2. As a diner, open it from the map and press «Reservar mesa». Choose date, time, party size and preference, then «Siguiente».
@@ -60,7 +60,8 @@ Insert two overlapping reservations for the same table by hand (psql) or run `te
 4. «Volver» returns with everything selected (S3). «Siguiente» again, then «Confirmar reserva»: the reservation is confirmed and shown (S5).
 5. Book another overlapping time at any restaurant: the review warns «Ya tenés una reserva en … de … a …» and still lets you confirm (S6).
 6. With two browsers, book the last free table of a group at the same time: one confirms, the other gets «La mesa se ocupó mientras confirmabas…» and keeps its selection.
-7. As the restaurant, try to lower the quantity of that group: it answers with the booked reservation and changes nothing.
+7. As the restaurant, try to lower the quantity of that group: the tables screen lists the booked reservation and nothing changes.
+8. Let the session expire on the review (or delete the token in the browser's storage) and confirm: you sign in again and come back to the review with the selection kept.
 
 ## What this feature does not do yet
 

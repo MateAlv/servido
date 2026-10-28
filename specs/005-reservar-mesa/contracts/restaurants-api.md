@@ -29,11 +29,17 @@ New code, so field names follow the glossary in English; the values come from th
 ```
 
 - Ordered by `name`. Nullable profile fields come back as `null`.
-- The frontend maps each one into the shape the map, the list and the detail already use (`RestaurantPublic` in `restaurants.fixture.ts`), with neutral values for what the database doesn't have yet: no rating or reviews (US-24), occupancy unknown (spec 002), photo placeholder when `photo_url` is `null`.
+- `price_tier` is the restaurant's `rango_precio` when it is one of `$`, `$$`, `$$$`, `$$$$`, and `null` otherwise (spec 004 stores free text up to 10 characters).
+- The frontend maps each one into the shape the map, the list and the detail already use (`RestaurantPublic` in `restaurants.fixture.ts`). What the database doesn't have yet is shown as missing, never invented:
+  - **Price** (US-7): the tier comes from `price_tier` instead of `averageSpendPerPerson`. A restaurant with `price_tier: null` only appears when no price filter is selected.
+  - **Occupancy** (US-5): `null`, shown as «Sin datos» in the pin, the list and the detail, which need that neutral state.
+  - **Rating and reviews** (US-24): none; the detail says so.
+  - **Photo**: the placeholder when `photo_url` is `null`.
+- These are changes to spec 002 (US-5, US-7, US-9, US-33), recorded there as the decision D4 of 28/10.
 
 ## `GET /restaurants/{restaurant_id}`
 
-The same fields plus the menu the restaurant loaded (spec 006, US-12), for the detail and the header of the reservation page.
+The same fields plus the menu the restaurant loaded with spec 006 (US-12), for the detail (US-9 shows the menu) and the header of the reservation page.
 
 ```json
 {

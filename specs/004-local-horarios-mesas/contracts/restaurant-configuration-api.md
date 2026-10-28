@@ -117,9 +117,13 @@ replace the stub implementation as long as it preserves this contract; it
 must report group capacity and consumed quantity, not a physical table ID.
 
 **Replaced by spec 005 (US-13, 28/10).** Reservations exist now, so the check
-is real: lowering a group's `quantity`, marking it unavailable or removing it
-conflicts when a future confirmed reservation of that group (same `capacity`
-and `seating_area`) would be left without a table. See
+is real, and its interface changes to
+`check_reservation_conflict(session, restaurant_id, capacity, seating_area, new_quantity)`:
+it runs with the inventory update's own session, after the groups are locked,
+so it sees the same transaction. Lowering a group's `quantity`, marking it
+unavailable, removing it, or changing its capacity or seating area conflicts
+when a confirmed reservation of that group that hasn't ended would be left
+without a table (team decision D9, pending PO). See rule 11 of
 `specs/005-reservar-mesa/data-model.md`.
 
 ## Error shape
