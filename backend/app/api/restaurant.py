@@ -233,6 +233,7 @@ def table_inventory_response(group: TableInventoryGroup) -> TableInventoryGroupR
         id=group.id,
         capacity=group.capacity,
         quantity=group.quantity,
+        seating_area=group.seating_area,
         available=group.available,
         free_quantity=group.quantity if group.available else 0,
     )
@@ -246,7 +247,7 @@ def get_table_inventory(
     groups = session.scalars(
         select(TableInventoryGroup)
         .where(TableInventoryGroup.restaurant_id == restaurant.id_restaurante)
-        .order_by(TableInventoryGroup.capacity)
+        .order_by(TableInventoryGroup.capacity, TableInventoryGroup.seating_area)
     )
     return [table_inventory_response(group) for group in groups]
 

@@ -22,27 +22,29 @@ def eligible_quantity(session: Session, restaurant_id: UUID, party_size: int) ->
 def replace_inventory(
     session: Session,
     restaurant_id: UUID,
-    groups: list[dict[str, int | bool]],
+    groups: list[dict[str, int | bool | str]],
 ) -> list[TableInventoryGroup]:
-    capacities = [int(group["capacity"]) for group in groups]
-    if len(capacities) != len(set(capacities)):
-        raise ValueError("No puede haber dos grupos con la misma capacidad.")
+    # A group is identified by its capacity and seating area (spec 004, FR-009).
+    keys = [(int(group["capacity"]), str(group["seating_area"])) for group in groups]
+    if len(keys) != len(set(keys)):
+        raise ValueError(
+            "No puede haber dos grupos con la misma capacidad y el mismo tipo de mesa."
+        )
 
     existing = {
-        group.capacity: group
+        (group.capacity, group.seating_area): group
         for group in session.scalars(
             select(TableInventoryGroup)
             .where(TableInventoryGroup.restaurant_id == restaurant_id)
             .with_for_update()
         )
     }
-    incoming_capacities = {int(group["capacity"]) for group in groups}
-    removed = set(existing) - incoming_capacities
-    changed = set(incoming_capacities) | removed
-    for capacity in changed:
-        old_group = existing.get(capacity)
+    for key in set(existing) | set(keys):
+        old_group = existing.get(key)
         old_quantity = old_group.quantity if old_group is not None and old_group.available else 0
-        new_group = next((group for group in groups if int(group["capacity"]) == capacity), None)
+        new_group = next(
+            (group for group, group_key in zip(groups, keys, strict=True) if group_key == key), None
+        )
         new_quantity = (
             int(new_group["quantity"])
             if new_group is not None and bool(new_group["available"])
@@ -54,7 +56,7 @@ def replace_inventory(
         result = reservation_conflicts.check_reservation_conflict(
             reservation_conflicts.ReservationConflictRequest(
                 restaurant_id=restaurant_id,
-                group_capacity=capacity,
+                group_capacity=key[0],
                 date=date.today(),
                 start_time=time.min,
                 end_time=time.max,
@@ -72,6 +74,7 @@ def replace_inventory(
         group = TableInventoryGroup(
             restaurant_id=restaurant_id,
             capacity=int(payload["capacity"]),
+            seating_area=str(payload["seating_area"]),
             quantity=int(payload["quantity"]),
             available=bool(payload["available"]),
         )

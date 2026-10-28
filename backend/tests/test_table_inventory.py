@@ -121,3 +121,36 @@ def test_us10_edge_disabling_reserved_capacity_returns_conflict(
     )
     assert response.status_code == 409
     assert client.get("/api/restaurante/mesas", headers=headers).json()[0]["available"] is True
+
+
+def test_us10_s1_groups_have_a_seating_area(client: TestClient) -> None:
+    headers = _auth(client)
+    payload = [
+        {"capacity": 4, "quantity": 2, "seating_area": "indoor", "available": True},
+        {"capacity": 4, "quantity": 1, "seating_area": "terrace", "available": True},
+        {"capacity": 2, "quantity": 3, "available": True},
+    ]
+
+    response = client.put("/api/restaurante/mesas", json=payload, headers=headers)
+
+    assert response.status_code == 200
+    body = client.get("/api/restaurante/mesas", headers=headers).json()
+    assert [(item["capacity"], item["seating_area"], item["quantity"]) for item in body] == [
+        (2, "indoor", 3),
+        (4, "indoor", 2),
+        (4, "terrace", 1),
+    ]
+
+
+def test_us10_s1_two_groups_cannot_share_capacity_and_seating_area(client: TestClient) -> None:
+    headers = _auth(client)
+    duplicated = [
+        {"capacity": 4, "quantity": 2, "seating_area": "terrace"},
+        {"capacity": 4, "quantity": 1, "seating_area": "terrace"},
+    ]
+    unknown_area = [{"capacity": 4, "quantity": 2, "seating_area": "barra"}]
+
+    assert client.put("/api/restaurante/mesas", json=duplicated, headers=headers).status_code == 400
+    assert (
+        client.put("/api/restaurante/mesas", json=unknown_area, headers=headers).status_code == 400
+    )
