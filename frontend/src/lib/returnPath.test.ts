@@ -17,6 +17,10 @@ describe('returnPath', () => {
       '//evil.example.com',
       '/\t/evil.example.com',
       '/\\evil.example.com',
+      '/.//evil.example.com',
+      '/..//evil.example.com',
+      '/%2e//evil.example.com',
+      '/./\\evil.example.com',
     ]) {
       expect(returnPath(params(volver))).not.toContain('evil')
     }

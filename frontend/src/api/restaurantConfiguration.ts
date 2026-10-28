@@ -11,7 +11,13 @@ function token(): string | null {
 }
 
 /** A confirmed reservation that a change to the tables would leave without a table (US-10 S3). */
-export type BookedReservation = { date: string; start_time: string; party_size: number }
+export type BookedReservation = {
+  date: string
+  start_time: string
+  party_size: number
+  capacity: number
+  seating_area: SeatingArea
+}
 
 /** The restaurant tried to remove or shrink tables that future reservations hold (409). */
 export class BookedTablesError extends Error {

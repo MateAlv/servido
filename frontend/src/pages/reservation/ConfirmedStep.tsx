@@ -15,10 +15,12 @@ export function ConfirmedStep({ reservation }: { reservation: Reservation }) {
 
   return (
     <Card className={styles.step}>
-      <StatusPill tone="ok">Reserva confirmada</StatusPill>
       <h2 ref={title} tabIndex={-1} className={styles.stepTitle}>
         ¡Listo! Te esperamos.
       </h2>
+      <StatusPill tone="ok" className={styles.confirmedPill}>
+        Reserva confirmada
+      </StatusPill>
       <dl className={styles.summary}>
         <div>
           <dt>Restaurante</dt>

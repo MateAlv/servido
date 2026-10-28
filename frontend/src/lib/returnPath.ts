@@ -8,7 +8,9 @@ export function returnPath(params: URLSearchParams): string {
   // The URL parser resolves tricks like `/\tevil.com` the way the browser would.
   const target = new URL(volver, window.location.origin)
   if (target.origin !== window.location.origin) return '/'
-  return target.pathname + target.search + target.hash
+  const path = target.pathname + target.search + target.hash
+  // Dot segments can resolve to `//host`, which a router would read as another site.
+  return /^\/(?![/\\])/.test(path) ? path : '/'
 }
 
 /** Keeps `?volver=` when moving between the sign-in and sign-up pages. */

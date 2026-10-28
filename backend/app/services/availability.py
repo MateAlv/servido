@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.models.opening_shift import OpeningShift
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
-from app.models.table_inventory import TableInventoryGroup
+from app.models.table_inventory import SEATING_AREAS, TableInventoryGroup
 
 BUENOS_AIRES = ZoneInfo("America/Argentina/Buenos_Aires")
 SLOT_MINUTES = 30
@@ -52,6 +52,8 @@ class DayAvailability:
     open: bool
     max_party_size: int
     slots: list[Slot]
+    # The seating areas the restaurant has tables in, so the page offers only those.
+    seating_areas: list[str]
 
 
 @dataclass(frozen=True)
@@ -183,7 +185,7 @@ def check_start(
 ) -> datetime:
     """The start as a datetime, if it is on the grid, inside a shift and not past."""
     check_date(day, now)
-    if start.minute % SLOT_MINUTES or start.second or start.microsecond:
+    if start.tzinfo is not None or start.minute % SLOT_MINUTES or start.second or start.microsecond:
         raise UnavailableStartError(INVALID_START)
     if start not in starts_in(active_shifts(session, restaurant_id, day), day):
         raise UnavailableStartError(CLOSED_AT_START)
@@ -200,10 +202,11 @@ def day_availability(
     shifts = active_shifts(session, restaurant_id, day)
     groups = available_groups(session, restaurant_id)
     cap = max_party_size(groups)
+    areas = [area for area in SEATING_AREAS if any(g.seating_area == area for g in groups)]
     if not shifts:
-        return DayAvailability(open=False, max_party_size=cap, slots=[])
+        return DayAvailability(open=False, max_party_size=cap, slots=[], seating_areas=areas)
     if party_size > cap:
-        return DayAvailability(open=True, max_party_size=cap, slots=[])
+        return DayAvailability(open=True, max_party_size=cap, slots=[], seating_areas=areas)
     slots = []
     for start in starts_in(shifts, day):
         starts_at = local_datetime(day, start)
@@ -211,7 +214,7 @@ def day_availability(
             continue
         free = free_groups(session, restaurant_id, groups, party_size, starts_at)
         slots.append(Slot(start=start, available=bool(free)))
-    return DayAvailability(open=True, max_party_size=cap, slots=slots)
+    return DayAvailability(open=True, max_party_size=cap, slots=slots, seating_areas=areas)
 
 
 def groups_at(
@@ -254,6 +257,17 @@ ABOVE_MAXIMUM = "El grupo supera la capacidad máxima del restaurante."
 TABLE_GONE = "Esa mesa ya no está disponible. Elegí otro horario o tipo de mesa."
 TABLE_TAKEN = "La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa."
 NOT_BOOKABLE = "El restaurante ya no está tomando reservas."
+REQUEST_USED = "No pudimos confirmar la reserva. Volvé a intentarlo."
+# How many reservations one diner may hold for one day (decision D11 of 28/10, pending PO).
+MAX_RESERVATIONS_PER_DAY = 20
+MAX_RESERVATIONS_PER_RESTAURANT_AND_DAY = 5
+TOO_MANY_FOR_THE_DAY = (
+    f"Ya tenés {MAX_RESERVATIONS_PER_DAY} reservas para ese día. No podés sumar más."
+)
+TOO_MANY_AT_THE_RESTAURANT = (
+    f"Ya tenés {MAX_RESERVATIONS_PER_RESTAURANT_AND_DAY} reservas en este restaurante "
+    "para ese día. No podés sumar más."
+)
 
 
 @dataclass(frozen=True)
@@ -293,9 +307,27 @@ def repeated_request(
     existing = reservation_for_request(session, request_id)
     if existing is None:
         return None
+    # Another diner's request id: never reveal their reservation.
     if existing.diner_id != diner_id:
-        raise ConfirmationConflictError(TABLE_TAKEN)
+        raise ConfirmationConflictError(REQUEST_USED)
     return existing, False
+
+
+def check_daily_limits(session: Session, diner_id: UUID, choice: ReservationChoice) -> None:
+    """One diner can't hold the tables of a whole day (decision D11)."""
+    day_start = local_datetime(choice.day, time.min)
+    restaurants = session.scalars(
+        select(Reservation.restaurant_id).where(
+            Reservation.diner_id == diner_id,
+            Reservation.status == "confirmed",
+            Reservation.starts_at >= day_start,
+            Reservation.starts_at < day_start + timedelta(days=1),
+        )
+    ).all()
+    if len(restaurants) >= MAX_RESERVATIONS_PER_DAY:
+        raise ConfirmationConflictError(TOO_MANY_FOR_THE_DAY)
+    if restaurants.count(choice.restaurant_id) >= MAX_RESERVATIONS_PER_RESTAURANT_AND_DAY:
+        raise ConfirmationConflictError(TOO_MANY_AT_THE_RESTAURANT)
 
 
 def confirm_reservation(
@@ -329,6 +361,7 @@ def confirm_reservation(
         raise ConfirmationConflictError(NOT_BOOKABLE)
     if choice.party_size > max_party_size(available_groups(session, choice.restaurant_id)):
         raise ConfirmationConflictError(ABOVE_MAXIMUM)
+    check_daily_limits(session, diner_id, choice)
 
     group = locked_group(session, choice)
     # A request with the same id may have been waiting for the same lock.
@@ -347,8 +380,10 @@ def confirm_reservation(
     taken = taken_tables(session, choice.restaurant_id, starts_at).get(
         (group.capacity, group.seating_area), set()
     )
-    free = [number for number in range(1, group.quantity + 1) if number not in taken]
-    if not free:
+    table_number = next(
+        (number for number in range(1, group.quantity + 1) if number not in taken), None
+    )
+    if table_number is None:
         raise ConfirmationConflictError(TABLE_TAKEN)
 
     reservation = Reservation(
@@ -356,7 +391,7 @@ def confirm_reservation(
         restaurant_id=choice.restaurant_id,
         table_capacity=group.capacity,
         seating_area=group.seating_area,
-        table_number=free[0],
+        table_number=table_number,
         party_size=choice.party_size,
         starts_at=starts_at,
         ends_at=starts_at + DURATION,

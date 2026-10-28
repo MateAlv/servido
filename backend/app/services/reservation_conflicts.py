@@ -17,6 +17,8 @@ class AffectedReservation:
     date: date
     start_time: time
     party_size: int
+    capacity: int
+    seating_area: str
 
 
 @dataclass(frozen=True)
@@ -56,6 +58,8 @@ def check_reservation_conflict(
                 date=starts_at.date(),
                 start_time=starts_at.time(),
                 party_size=reservation.party_size,
+                capacity=reservation.table_capacity,
+                seating_area=reservation.seating_area,
             )
         )
     return ReservationConflictResult(has_conflict=bool(affected), affected_reservations=affected)

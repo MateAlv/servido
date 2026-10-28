@@ -17,3 +17,10 @@ export const SEATING_AREA_OPTIONS = (Object.keys(SEATING_AREA_LABELS) as Seating
 export function tableLabel(table: { capacity: number; seating_area: SeatingArea }) {
   return `Mesa para ${table.capacity} · ${SEATING_AREA_LABELS[table.seating_area]}`
 }
+
+/** Where the table is, inside a sentence: «Hay mesa disponible en la terraza». */
+export const SEATING_AREA_PHRASES: Record<SeatingArea, string> = {
+  indoor: 'adentro',
+  outdoor: 'afuera',
+  terrace: 'en la terraza',
+}

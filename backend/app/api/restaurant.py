@@ -1,8 +1,9 @@
 import secrets
 from pathlib import Path
+from typing import Annotated
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Body, File, HTTPException, UploadFile, status
 from sqlalchemy import delete, or_, select
 from sqlalchemy.exc import IntegrityError
 
@@ -23,7 +24,11 @@ from app.schemas.restaurant import (
     RestaurantRegistrationRequest,
     RestaurantResponse,
 )
-from app.schemas.table_inventory import TableInventoryGroupPayload, TableInventoryGroupResponse
+from app.schemas.table_inventory import (
+    MAX_GROUPS,
+    TableInventoryGroupPayload,
+    TableInventoryGroupResponse,
+)
 from app.services import availability
 from app.services.auth import hash_password, normalize_email
 from app.services.geocoding import GeocodingError, geocode_address
@@ -264,7 +269,9 @@ def get_table_inventory(
 
 @router.put("/restaurante/mesas", response_model=list[TableInventoryGroupResponse])
 def replace_table_inventory(
-    payload: list[TableInventoryGroupPayload], claims: TokenClaimsDep, session: SessionDep
+    payload: Annotated[list[TableInventoryGroupPayload], Body(max_length=MAX_GROUPS)],
+    claims: TokenClaimsDep,
+    session: SessionDep,
 ) -> list[TableInventoryGroupResponse]:
     restaurant = restaurant_from_claims(claims, session)
     try:
@@ -282,6 +289,8 @@ def replace_table_inventory(
                 "date": item.date.isoformat(),
                 "start_time": item.start_time.strftime("%H:%M"),
                 "party_size": item.party_size,
+                "capacity": item.capacity,
+                "seating_area": item.seating_area,
             }
             for item in error.result.affected_reservations
         ]

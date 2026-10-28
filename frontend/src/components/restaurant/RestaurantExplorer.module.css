@@ -100,6 +100,15 @@
   background: var(--color-surface-sunken);
 }
 
+.monogram {
+  display: grid;
+  place-items: center;
+  background: var(--color-primary);
+  color: var(--color-on-primary, #fff);
+  font-size: var(--text-xl, 28px);
+  font-weight: 900;
+}
+
 .stars {
   white-space: nowrap;
 }

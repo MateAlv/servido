@@ -19,6 +19,8 @@ class PublicRestaurant(BaseModel):
     lat: float
     lng: float
     photo_url: str | None
+    # Restaurants without a menu don't take part in the price filter (spec 002, US-7).
+    has_menu: bool
 
 
 class PublicRestaurantList(BaseModel):

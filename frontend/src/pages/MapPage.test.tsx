@@ -147,7 +147,7 @@ describe('MapPage (US-5)', () => {
     expect(screen.getByTitle(marker('La Esquina de Palermo', 'media'))).toBeInTheDocument()
   })
 
-  it('D4 shows a real restaurant without any occupancy indicator', async () => {
+  it('US-5 edge shows a real restaurant without any occupancy indicator', async () => {
     vi.mocked(fetchRestaurants).mockResolvedValueOnce([
       {
         id: '6f1c0000-0000-4000-8000-000000000001',

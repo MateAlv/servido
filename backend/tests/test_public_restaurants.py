@@ -14,7 +14,7 @@ from app.models.dish import Dish
 from tests.reservations import add_bookable_restaurant
 
 
-def test_lists_only_bookable_restaurants(client: TestClient, session: Session) -> None:
+def test_us9_edge_lists_only_bookable_restaurants(client: TestClient, session: Session) -> None:
     bookable = add_bookable_restaurant(session)
     no_location = add_bookable_restaurant(session, cuit="30711111111")
     no_location.latitud = None
@@ -33,7 +33,7 @@ def test_lists_only_bookable_restaurants(client: TestClient, session: Session) -
     assert restaurants[0]["lng"] == -58.4265
 
 
-def test_detail_includes_the_menu(client: TestClient, session: Session) -> None:
+def test_us9_edge_detail_includes_the_menu(client: TestClient, session: Session) -> None:
     restaurant = add_bookable_restaurant(session)
     session.add(
         Dish(
@@ -58,7 +58,9 @@ def test_detail_includes_the_menu(client: TestClient, session: Session) -> None:
     assert dish["dietary_restrictions"] == ["sin_tacc"]
 
 
-def test_price_tier_is_null_unless_it_is_a_known_tier(client: TestClient, session: Session) -> None:
+def test_us9_edge_price_tier_is_null_unless_it_is_a_known_tier(
+    client: TestClient, session: Session
+) -> None:
     restaurant = add_bookable_restaurant(session)
     restaurant.rango_precio = "$$"
     session.flush()
@@ -69,8 +71,29 @@ def test_price_tier_is_null_unless_it_is_a_known_tier(client: TestClient, sessio
     assert client.get(f"/api/restaurants/{restaurant.id_restaurante}").json()["price_tier"] is None
 
 
-def test_unknown_or_not_bookable_answers_404(client: TestClient, session: Session) -> None:
+def test_us9_edge_unknown_or_not_bookable_answers_404(client: TestClient, session: Session) -> None:
     without_tables = add_bookable_restaurant(session, groups=[])
 
     assert client.get(f"/api/restaurants/{uuid4()}").status_code == 404
     assert client.get(f"/api/restaurants/{without_tables.id_restaurante}").status_code == 404
+
+
+def test_us7_edge_list_says_whether_the_restaurant_has_a_menu(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    assert client.get("/api/restaurants").json()["restaurants"][0]["has_menu"] is False
+
+    session.add(
+        Dish(
+            id_restaurante=restaurant.id_restaurante,
+            nombre="Flan",
+            categoria="postre",
+            precio=Decimal("6000.00"),
+            restricciones_alimenticias=[],
+            creado_en=datetime.now(UTC),
+        )
+    )
+    session.flush()
+
+    assert client.get("/api/restaurants").json()["restaurants"][0]["has_menu"] is True

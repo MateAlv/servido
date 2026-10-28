@@ -15,6 +15,7 @@ class TableInventoryGroup(Base):
     __table_args__ = (
         CheckConstraint("capacity > 0", name="capacity_positive"),
         CheckConstraint("quantity > 0", name="quantity_positive"),
+        CheckConstraint("capacity <= 100 AND quantity <= 200", name="within_bounds"),
         CheckConstraint(
             "seating_area IN ('indoor', 'outdoor', 'terrace')", name="seating_area_known"
         ),

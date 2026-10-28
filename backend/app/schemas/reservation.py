@@ -3,10 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from app.schemas.table_inventory import SeatingArea
-
-# No table seats more than this; larger numbers are typing mistakes, not reservations.
-MAX_TABLE_CAPACITY = 100
+from app.schemas.table_inventory import MAX_TABLE_CAPACITY, SeatingArea
 
 
 class SlotResponse(BaseModel):
@@ -23,6 +20,8 @@ class AvailabilityResponse(BaseModel):
     duration_minutes: int
     max_party_size: int
     slots: list[SlotResponse]
+    # The seating areas the restaurant has available tables in, in catalog order.
+    seating_areas: list[SeatingArea]
 
 
 class FreeGroupResponse(BaseModel):

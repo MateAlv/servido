@@ -139,9 +139,12 @@ export function ReviewStep({
         </p>
       )}
       {overlapping.map((reservation) => (
-        <p key={reservation.id} className={styles.notice} role="status">
-          Ya tenés una reserva en {reservation.restaurant.nombre} de {reservation.start_time} a{' '}
-          {reservation.end_time}. Podés confirmar igual.
+        <p key={reservation.id} className={`${styles.notice} ${styles.warn}`} role="status">
+          Ya tenés una reserva{' '}
+          {reservation.restaurant.id === restaurant.id
+            ? 'acá'
+            : `en ${reservation.restaurant.nombre}`}{' '}
+          de {reservation.start_time} a {reservation.end_time}. Podés confirmar igual.
         </p>
       ))}
       {error && (
@@ -149,12 +152,12 @@ export function ReviewStep({
           {error}
         </p>
       )}
-      <div className={styles.actions}>
-        <Button variant="ghost" onClick={onBack} disabled={confirming}>
-          Volver
-        </Button>
+      <div className={styles.reviewActions}>
         <Button onClick={confirm} loading={confirming || dayReservations.isPending}>
           Confirmar reserva
+        </Button>
+        <Button variant="ghost" onClick={onBack} disabled={confirming}>
+          Cambiar datos
         </Button>
       </div>
     </Card>

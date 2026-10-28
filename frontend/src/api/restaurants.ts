@@ -16,9 +16,6 @@ import type { components } from './schema'
 type BookableRestaurant = components['schemas']['PublicRestaurant']
 type BookableRestaurantDetail = components['schemas']['PublicRestaurantDetail']
 
-/** Shown while a real restaurant has no photo of its own. */
-const PHOTO_PLACEHOLDER = '/servido-logo.png'
-
 const CATEGORY_LABELS: Record<string, string> = {
   entrada: 'Entradas',
   plato_principal: 'Principales',
@@ -41,9 +38,9 @@ function menuSections(dishes: BookableRestaurantDetail['menu']): MenuSection[] {
   return [...sections.values()]
 }
 
-/** What the database doesn't know yet stays empty: no occupancy, rating or reviews. */
+/** What the database doesn't know yet stays empty, and the UI leaves it out. */
 function fromApi(restaurant: BookableRestaurant, menu: MenuSection[] = []): RestaurantPublic {
-  const photo = restaurant.photo_url ?? PHOTO_PLACEHOLDER
+  const photo = restaurant.photo_url
   return {
     id: restaurant.id,
     name: restaurant.name,
@@ -61,7 +58,8 @@ function fromApi(restaurant: BookableRestaurant, menu: MenuSection[] = []): Rest
     occupancy: null,
     menu,
     reviews: [],
-    photo: { cover: photo, thumb: photo },
+    photo: photo ? { cover: photo, thumb: photo } : null,
+    hasMenu: restaurant.has_menu,
     bookable: true,
   }
 }

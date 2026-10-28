@@ -16,13 +16,12 @@ import {
   type TableGroup,
 } from '../api/restaurantConfiguration'
 import { longDate } from '../lib/date'
-import { SEATING_AREA_OPTIONS } from '../lib/seating'
+import { SEATING_AREA_OPTIONS, tableLabel } from '../lib/seating'
 import styles from './RestaurantProfilePage.module.css'
 
 export function TableInventoryPage() {
   const [groups, setGroups] = useState<TableGroup[]>([])
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
   const [booked, setBooked] = useState<BookedReservation[]>([])
   const navigate = useNavigate()
   const toast = useToast()
@@ -52,13 +51,11 @@ export function TableInventoryPage() {
       )
     ) {
       setError('La capacidad y la cantidad deben ser números enteros mayores a cero.')
-      setMessage('')
       return
     }
     const keys = groups.map((group) => `${group.capacity}-${group.seating_area}`)
     if (new Set(keys).size !== groups.length) {
       setError('No puede haber dos grupos con la misma capacidad y el mismo tipo de mesa.')
-      setMessage('')
       return
     }
     setBooked([])
@@ -69,9 +66,7 @@ export function TableInventoryPage() {
       setError('')
     } catch (requestError) {
       if (requestError instanceof BookedTablesError) {
-        setError(
-          'No guardamos los cambios: estas reservas confirmadas se quedarían sin mesa. Podés sumar mesas, pero no sacar ni cambiar las que tienen reservas.',
-        )
+        setError('')
         setBooked(requestError.reservations)
         return
       }
@@ -88,14 +83,14 @@ export function TableInventoryPage() {
         <p className={styles.eyebrow}>Configuración del local</p>
         <h1 className={styles.title}>Inventario de mesas</h1>
         <p className={styles.lead}>
-          Registrá grupos: por ejemplo, 4 mesas de capacidad 2 adentro. No hay Mesa 1 ni Mesa 2.
+          Cargá grupos de mesas iguales, por ejemplo: 4 mesas para 2 personas, adentro.
         </p>
       </header>
       <Card>
         <div className={styles.form}>
           {groups.map((group, index) => (
-            <fieldset key={index} className={styles.form}>
-              <legend>Grupo de mesas</legend>
+            <fieldset key={index} className={styles.fieldset}>
+              <legend>Grupo de mesas {index + 1}</legend>
               <TextField
                 label="Cantidad"
                 type="number"
@@ -127,7 +122,7 @@ export function TableInventoryPage() {
                 }
               />
               <SegmentedControl
-                label="Tipo de mesa"
+                label={`Tipo de mesa del grupo ${index + 1}`}
                 options={SEATING_AREA_OPTIONS}
                 value={group.seating_area}
                 onChange={(seatingArea) =>
@@ -138,7 +133,7 @@ export function TableInventoryPage() {
                   )
                 }
               />
-              <label>
+              <label className={styles.checkbox}>
                 <input
                   type="checkbox"
                   checked={group.available}
@@ -166,19 +161,22 @@ export function TableInventoryPage() {
             </p>
           )}
           {booked.length > 0 && (
-            <ul className={styles.bookedList} aria-label="Reservas que bloquean el cambio">
-              {booked.map((reservation, index) => (
-                <li key={index}>
-                  {longDate(reservation.date)}, {reservation.start_time} · {reservation.party_size}{' '}
-                  {reservation.party_size === 1 ? 'persona' : 'personas'}
-                </li>
-              ))}
-            </ul>
-          )}
-          {message && (
-            <p className={styles.success} role="status">
-              {message}
-            </p>
+            // One alert, so screen readers hear the message together with the reservations.
+            <div className={styles.blocked} role="alert">
+              <p>
+                No pudimos guardar: estas reservas confirmadas se quedarían sin mesa. Podés agregar
+                mesas, pero no quitar ni achicar las que ya están reservadas.
+              </p>
+              <ul className={styles.bookedList} aria-label="Reservas que bloquean el cambio">
+                {booked.map((reservation, index) => (
+                  <li key={index}>
+                    {tableLabel(reservation)} — {longDate(reservation.date)},{' '}
+                    {reservation.start_time} ({reservation.party_size}{' '}
+                    {reservation.party_size === 1 ? 'persona' : 'personas'})
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </Card>

@@ -458,6 +458,8 @@ export interface components {
             max_party_size: number;
             /** Slots */
             slots: components["schemas"]["SlotResponse"][];
+            /** Seating Areas */
+            seating_areas: ("indoor" | "outdoor" | "terrace")[];
         };
         /** Body_create_dish_api_restaurantes_me_platos_post */
         Body_create_dish_api_restaurantes_me_platos_post: {
@@ -706,6 +708,8 @@ export interface components {
             lng: number;
             /** Photo Url */
             photo_url: string | null;
+            /** Has Menu */
+            has_menu: boolean;
         };
         /** PublicRestaurantDetail */
         PublicRestaurantDetail: {
@@ -734,6 +738,8 @@ export interface components {
             lng: number;
             /** Photo Url */
             photo_url: string | null;
+            /** Has Menu */
+            has_menu: boolean;
             /** Menu */
             menu: components["schemas"]["PublicDish"][];
         };

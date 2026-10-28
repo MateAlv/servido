@@ -45,8 +45,11 @@ export type RestaurantPublic = {
   menu: MenuSection[]
   /** Opinions of past diners shown in the detail (US-9); real reviews arrive with US-24. */
   reviews: RestaurantReview[]
-  /** Cover photo, and a square version for lists (`frontend/public/restaurants`). */
-  photo: { cover: string; thumb: string }
+  /** Cover photo, and a square version for lists (`frontend/public/restaurants`); `null` for a
+   * real restaurant without a photo, which then shows none. */
+  photo: { cover: string; thumb: string } | null
+  /** Whether it has a menu; the price filter leaves out restaurants without one (US-7). */
+  hasMenu?: boolean
   foto_url?: string | null
   /** True for restaurants stored in the database with shifts and tables (decision D4 of 28/10):
    * only those can be booked. The test restaurants below are not. */

@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import exists, select
 
 from app.db import SessionDep
 from app.models.dish import Dish
@@ -20,7 +20,7 @@ PRICE_TIERS = {"$", "$$", "$$$", "$$$$"}
 RESTAURANT_NOT_FOUND = "No encontramos ese restaurante."
 
 
-def public_fields(restaurant: Restaurant) -> dict:
+def public_fields(restaurant: Restaurant, session: SessionDep) -> dict:
     assert restaurant.latitud is not None and restaurant.longitud is not None
     return {
         "id": restaurant.id_restaurante,
@@ -34,6 +34,9 @@ def public_fields(restaurant: Restaurant) -> dict:
         "lat": float(restaurant.latitud),
         "lng": float(restaurant.longitud),
         "photo_url": restaurant.foto_url,
+        "has_menu": session.scalar(
+            select(exists().where(Dish.id_restaurante == restaurant.id_restaurante))
+        ),
     }
 
 
@@ -43,7 +46,9 @@ def list_bookable_restaurants(session: SessionDep) -> PublicRestaurantList:
         select(Restaurant).where(bookable_condition()).order_by(Restaurant.nombre)
     )
     return PublicRestaurantList(
-        restaurants=[PublicRestaurant(**public_fields(restaurant)) for restaurant in restaurants]
+        restaurants=[
+            PublicRestaurant(**public_fields(restaurant, session)) for restaurant in restaurants
+        ]
     )
 
 
@@ -62,7 +67,7 @@ def get_bookable_restaurant(restaurant_id: UUID, session: SessionDep) -> PublicR
         select(Dish).where(Dish.id_restaurante == restaurant_id).order_by(Dish.nombre)
     )
     return PublicRestaurantDetail(
-        **public_fields(restaurant),
+        **public_fields(restaurant, session),
         menu=[
             PublicDish(
                 id=dish.id_plato,

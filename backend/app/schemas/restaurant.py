@@ -90,7 +90,8 @@ class RestaurantLoginResponse(BaseModel):
 
 class RestaurantProfileUpdate(BaseModel):
     nombre: str = Field(min_length=1, max_length=150)
-    descripcion: str | None = None
+    # It is public on the diner's map: bounded like a dish description.
+    descripcion: str | None = Field(default=None, max_length=2000)
     tipo_cocina: str | None = Field(default=None, max_length=60)
     rango_precio: str | None = Field(default=None, max_length=10)
     foto_url: str | None = None

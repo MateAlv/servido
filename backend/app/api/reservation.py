@@ -4,12 +4,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
-from app.api.deps import TokenClaimsDep
+from app.api.deps import SESSION_EXPIRED_DETAIL, TokenClaimsDep
 from app.db import SessionDep
+from app.models.diner import Diner
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.reservation import (
-    MAX_TABLE_CAPACITY,
     AvailabilityResponse,
     DayReservationsResponse,
     FreeGroupResponse,
@@ -20,6 +20,7 @@ from app.schemas.reservation import (
     TableChoice,
     TablesAvailabilityResponse,
 )
+from app.schemas.table_inventory import MAX_TABLE_CAPACITY
 from app.services import availability
 from app.services.roles import DINER
 
@@ -31,10 +32,14 @@ RESTAURANT_NOT_FOUND = "No encontramos ese restaurante."
 PartySize = Annotated[int, Query(ge=1, le=MAX_TABLE_CAPACITY)]
 
 
-def require_diner(claims: TokenClaimsDep) -> UUID:
+def require_diner(claims: TokenClaimsDep, session: SessionDep) -> UUID:
     if claims.get("rol") != DINER:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=DINERS_ONLY)
-    return UUID(str(claims["sub"]))
+    diner_id = UUID(str(claims["sub"]))
+    # A token can outlive its account: treat it as an expired session.
+    if session.get(Diner, diner_id) is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=SESSION_EXPIRED_DETAIL)
+    return diner_id
 
 
 def existing_restaurant(session: SessionDep, restaurant_id: UUID) -> Restaurant:
@@ -65,7 +70,7 @@ def get_availability(
     claims: TokenClaimsDep,
     session: SessionDep,
 ) -> AvailabilityResponse:
-    require_diner(claims)
+    require_diner(claims, session)
     existing_restaurant(session, restaurant_id)
     try:
         day = availability.day_availability(
@@ -79,6 +84,7 @@ def get_availability(
         open=day.open,
         duration_minutes=RESERVATION_MINUTES,
         max_party_size=day.max_party_size,
+        seating_areas=day.seating_areas,
         slots=[
             SlotResponse(start_time=hour_and_minute(slot.start), available=slot.available)
             for slot in day.slots
@@ -104,7 +110,7 @@ def get_available_tables(
     claims: TokenClaimsDep,
     session: SessionDep,
 ) -> TablesAvailabilityResponse:
-    require_diner(claims)
+    require_diner(claims, session)
     existing_restaurant(session, restaurant_id)
     try:
         starts_at, groups = availability.groups_at(
@@ -159,7 +165,7 @@ def reservation_response(reservation: Reservation, restaurant: Restaurant) -> Re
 def confirm_reservation(
     payload: ReservationRequest, claims: TokenClaimsDep, session: SessionDep, response: Response
 ) -> ReservationResponse:
-    diner_id = require_diner(claims)
+    diner_id = require_diner(claims, session)
     existing_restaurant(session, payload.restaurant_id)
     choice = availability.ReservationChoice(
         restaurant_id=payload.restaurant_id,
@@ -198,7 +204,7 @@ def confirm_reservation(
 def list_day_reservations(
     date: date, claims: TokenClaimsDep, session: SessionDep
 ) -> DayReservationsResponse:
-    diner_id = require_diner(claims)
+    diner_id = require_diner(claims, session)
     today = availability.current_time().date()
     if (
         not today - timedelta(days=366)

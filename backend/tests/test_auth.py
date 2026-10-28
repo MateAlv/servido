@@ -137,3 +137,25 @@ def test_us3_s5_login_does_not_return_password_or_hash(client: TestClient) -> No
     response = client.post("/api/auth/comensal", json=registration_payload())
     assert "password" not in response.text
     assert "password_hash" not in response.text
+
+
+def test_us4_s3_restaurant_gets_403_on_diner_endpoints(client: TestClient) -> None:
+    client.post(
+        "/api/restaurantes",
+        json={
+            "nombre": "Local",
+            "email": "local403@example.com",
+            "cuit": "30711111111",
+            "telefono": "1155554444",
+            "password": "Segura123",
+        },
+    )
+    token = client.post(
+        "/api/auth/restaurante", json={"email": "local403@example.com", "password": "Segura123"}
+    ).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    reservations = client.get("/api/reservations", params={"date": "2026-11-03"}, headers=headers)
+
+    assert reservations.status_code == 403
+    assert reservations.json()["detail"] == "Esta acción es solo para comensales."

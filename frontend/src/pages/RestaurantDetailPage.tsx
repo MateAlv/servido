@@ -71,19 +71,23 @@ export function RestaurantDetailPage() {
   return (
     <main className={styles.container}>
       {back}
-      <img
-        className={styles.cover}
-        src={restaurant.photo.cover}
-        alt={`Foto de ${restaurant.name}`}
-        width={1200}
-        height={600}
-      />
+      {restaurant.photo && (
+        <img
+          className={styles.cover}
+          src={restaurant.photo.cover}
+          alt={`Foto de ${restaurant.name}`}
+          width={1200}
+          height={600}
+        />
+      )}
       <div className={styles.layout}>
         <div className={styles.main}>
           <Reveal>
-            <p className={styles.eyebrow}>
-              {[restaurant.cuisine, restaurant.location.neighborhood].filter(Boolean).join(' · ')}
-            </p>
+            {(restaurant.cuisine || restaurant.location.neighborhood) && (
+              <p className={styles.eyebrow}>
+                {[restaurant.cuisine, restaurant.location.neighborhood].filter(Boolean).join(' · ')}
+              </p>
+            )}
             <h1 className={styles.title}>{restaurant.name}</h1>
           </Reveal>
           <Reveal delay={60}>
@@ -133,21 +137,19 @@ export function RestaurantDetailPage() {
             {restaurant.description && (
               <p className={styles.description}>{restaurant.description}</p>
             )}
-            <p className={styles.address}>
-              <IconPin />{' '}
-              {[restaurant.location.address, restaurant.location.neighborhood]
-                .filter(Boolean)
-                .join(', ')}
-            </p>
+            {restaurant.location.address && (
+              <p className={styles.address}>
+                <IconPin /> {restaurant.location.address}
+              </p>
+            )}
           </Reveal>
 
-          <Reveal delay={140}>
-            <Card className={styles.menu}>
-              <h2 className={styles.sectionTitle}>Menú</h2>
-              {restaurant.menu.length === 0 ? (
-                <p className={styles.muted}>Este restaurante todavía no cargó su menú.</p>
-              ) : (
-                restaurant.menu.map((section) => (
+          {/* Sections without content are left out instead of announcing they are empty. */}
+          {restaurant.menu.length > 0 && (
+            <Reveal delay={140}>
+              <Card className={styles.menu}>
+                <h2 className={styles.sectionTitle}>Menú</h2>
+                {restaurant.menu.map((section) => (
                   <section key={section.category} className={styles.menuSection}>
                     <h3 className={styles.category}>{section.category}</h3>
                     <ul className={styles.dishes}>
@@ -164,17 +166,15 @@ export function RestaurantDetailPage() {
                       ))}
                     </ul>
                   </section>
-                ))
-              )}
-            </Card>
-          </Reveal>
+                ))}
+              </Card>
+            </Reveal>
+          )}
 
-          <Reveal delay={180}>
-            <Card className={styles.reviews}>
-              <h2 className={styles.sectionTitle}>Opiniones</h2>
-              {restaurant.reviews.length === 0 ? (
-                <p className={styles.muted}>Todavía nadie dejó su opinión.</p>
-              ) : (
+          {restaurant.reviews.length > 0 && (
+            <Reveal delay={180}>
+              <Card className={styles.reviews}>
+                <h2 className={styles.sectionTitle}>Opiniones</h2>
                 <ul className={styles.reviewList}>
                   {restaurant.reviews.map((review) => (
                     <li key={`${review.author}-${review.date}`} className={styles.review}>
@@ -189,40 +189,42 @@ export function RestaurantDetailPage() {
                     </li>
                   ))}
                 </ul>
-              )}
-            </Card>
-          </Reveal>
+              </Card>
+            </Reveal>
+          )}
         </div>
 
         <aside className={styles.side}>
           <Card className={styles.reserve}>
-            {restaurant.bookable && account?.rol === 'diner' ? (
+            {restaurant.bookable ? (
               <>
                 <StatusPill tone="ok" className={styles.soon}>
                   Reservas abiertas
                 </StatusPill>
-                <h2 className={styles.sectionTitle}>Reservá con tu pedido</h2>
-                <p className={styles.muted}>
-                  Elegí la fecha, el horario y cuántos van a ser. Después revisás los datos y
-                  confirmás.
-                </p>
-                <Button fullWidth to={`/reservar/${restaurant.id}`}>
-                  Reservar mesa
-                </Button>
-              </>
-            ) : restaurant.bookable && account === null ? (
-              <>
-                <StatusPill tone="ok" className={styles.soon}>
-                  Reservas abiertas
-                </StatusPill>
-                <h2 className={styles.sectionTitle}>Reservá con tu pedido</h2>
-                <p className={styles.muted}>Ingresá con tu cuenta de comensal para reservar.</p>
-                <Button
-                  fullWidth
-                  to={`/ingresar?rol=comensal&volver=${encodeURIComponent(`/reservar/${restaurant.id}`)}`}
-                >
-                  Ingresá para reservar
-                </Button>
+                <h2 className={styles.sectionTitle}>Reservá tu mesa</h2>
+                {account === null ? (
+                  <>
+                    <p className={styles.muted}>Ingresá con tu cuenta de comensal para reservar.</p>
+                    <Button
+                      fullWidth
+                      to={`/ingresar?rol=comensal&volver=${encodeURIComponent(`/reservar/${restaurant.id}`)}`}
+                    >
+                      Ingresá para reservar
+                    </Button>
+                  </>
+                ) : account?.rol === 'restaurant' ? (
+                  <p className={styles.muted}>Los comensales reservan desde acá.</p>
+                ) : (
+                  <>
+                    <p className={styles.muted}>
+                      Elegí la fecha, el horario y cuántos van a ser. Después revisás los datos y
+                      confirmás.
+                    </p>
+                    <Button fullWidth to={`/reservar/${restaurant.id}`}>
+                      Reservar mesa
+                    </Button>
+                  </>
+                )}
               </>
             ) : (
               <>

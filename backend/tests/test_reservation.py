@@ -532,6 +532,7 @@ def test_us13_edge_inventory_change_keeps_booked_tables(
     changes = [
         [{"capacity": 2, "quantity": 1, "seating_area": "indoor"}],
         [{"capacity": 2, "quantity": 2, "seating_area": "terrace"}],
+        [{"capacity": 3, "quantity": 2, "seating_area": "indoor"}],
         [{"capacity": 2, "quantity": 2, "seating_area": "indoor", "available": False}],
         [],
     ]
@@ -539,11 +540,14 @@ def test_us13_edge_inventory_change_keeps_booked_tables(
         response = client.put("/api/restaurante/mesas", json=change, headers=owner)
         assert response.status_code == 409
         [booked] = response.json()["detail"]["reservations"]
-        assert (booked["date"], booked["start_time"], booked["party_size"]) == (
-            TOMORROW.isoformat(),
-            "20:00",
-            2,
-        )
+        assert booked == {
+            "reservation_id": booked["reservation_id"],
+            "date": TOMORROW.isoformat(),
+            "start_time": "20:00",
+            "party_size": 2,
+            "capacity": 2,
+            "seating_area": "indoor",
+        }
     stored = client.get("/api/restaurante/mesas", headers=owner).json()
     assert [(item["quantity"], item["seating_area"]) for item in stored] == [(2, "indoor")]
     # Adding tables is always fine.
@@ -637,3 +641,164 @@ def test_us13_edge_too_far_ahead_or_out_of_range_answers_400(
     assert huge.status_code == 400
     with_offset = confirm(client, headers, restaurant.id_restaurante, start="20:00:00+05:00")
     assert with_offset.status_code == 400
+
+
+def test_us13_edge_group_too_small_or_missing_answers_409(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(2, 2, "indoor"), (4, 1, "terrace")])
+    headers = diner_headers(client)
+
+    too_small = confirm(
+        client, headers, restaurant.id_restaurante, party_size=3, table=(2, "indoor")
+    )
+    missing = confirm(client, headers, restaurant.id_restaurante, table=(6, "indoor"))
+
+    for response in (too_small, missing):
+        assert response.status_code == 409
+        assert response.json()["detail"] == (
+            "Esa mesa ya no está disponible. Elegí otro horario o tipo de mesa."
+        )
+
+
+def test_us13_edge_two_diners_for_the_last_table(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(4, 1, "terrace")])
+    martin = diner_headers(client)
+    laura = diner_headers(client, email="laura@example.com")
+
+    first = confirm(client, martin, restaurant.id_restaurante, table=(4, "terrace"))
+    second = confirm(client, laura, restaurant.id_restaurante, table=(4, "terrace"))
+
+    assert first.status_code == 201
+    assert second.status_code == 409
+    assert day_reservations(client, laura).json()["reservations"] == []
+
+
+def test_us13_edge_database_guard_answers_409(
+    client: TestClient, session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """If the lowest free table was taken between the check and the insert, the exclusion
+    constraint stops the second reservation and the diner gets the usual 409."""
+    restaurant = add_bookable_restaurant(session, groups=[(2, 1, "indoor")])
+    headers = diner_headers(client)
+    assert confirm(client, headers, restaurant.id_restaurante).status_code == 201
+    monkeypatch.setattr(availability, "taken_tables", lambda *args: {})
+
+    response = confirm(client, headers, restaurant.id_restaurante)
+
+    assert response.status_code == 409
+    assert response.json()["detail"].startswith("La mesa se ocupó")
+
+
+def test_us13_edge_another_diners_request_id_reveals_nothing(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    request_id = uuid4()
+    confirm(client, diner_headers(client), restaurant.id_restaurante, request_id=request_id)
+
+    response = confirm(
+        client,
+        diner_headers(client, email="laura@example.com"),
+        restaurant.id_restaurante,
+        request_id=request_id,
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "No pudimos confirmar la reserva. Volvé a intentarlo."}
+
+
+def test_us13_edge_shift_change_keeps_confirmed_reservations(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    assert confirm(client, headers, restaurant.id_restaurante).status_code == 201
+
+    session.execute(delete(OpeningShift).where(OpeningShift.start_time == time(20)))
+    session.commit()
+
+    assert len(day_reservations(client, headers).json()["reservations"]) == 1
+
+
+def test_us13_edge_books_exactly_60_days_ahead(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    last_day = TODAY + timedelta(days=availability.MAX_DAYS_AHEAD)
+
+    assert slots(client, headers, restaurant.id_restaurante, day=last_day).status_code == 200
+    assert confirm(client, headers, restaurant.id_restaurante, day=last_day).status_code == 201
+
+
+def test_us13_edge_today_is_the_date_in_buenos_aires(
+    client: TestClient, session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """At 22:30 in Buenos Aires it is already the next day in UTC: today is still bookable."""
+    monkeypatch.setattr(
+        availability,
+        "current_time",
+        lambda: datetime.combine(TODAY, time(22, 30), tzinfo=BUENOS_AIRES),
+    )
+    restaurant = add_bookable_restaurant(session, shifts=((time(20), time(23, 59)),))
+    headers = diner_headers(client)
+
+    response = slots(client, headers, restaurant.id_restaurante, day=TODAY)
+
+    assert response.status_code == 200
+    assert list(offered(response)) == ["22:00"] or list(offered(response)) == []
+
+
+def test_us13_edge_at_most_5_reservations_per_restaurant_and_day(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(2, 10, "indoor")])
+    headers = diner_headers(client)
+    for _ in range(5):
+        assert confirm(client, headers, restaurant.id_restaurante).status_code == 201
+
+    sixth = confirm(client, headers, restaurant.id_restaurante, start="12:00")
+    other_day = confirm(
+        client, headers, restaurant.id_restaurante, day=TOMORROW + timedelta(days=1)
+    )
+
+    assert sixth.status_code == 409
+    assert sixth.json()["detail"] == (
+        "Ya tenés 5 reservas en este restaurante para ese día. No podés sumar más."
+    )
+    assert other_day.status_code == 201
+
+
+def test_us13_edge_at_most_20_reservations_per_day(client: TestClient, session: Session) -> None:
+    cuits = ["30712345671", "30711111111", "30722222225", "30733333339", "20111111112"]
+    restaurants = [
+        add_bookable_restaurant(session, cuit=cuit, groups=[(2, 10, "indoor")]) for cuit in cuits
+    ]
+    headers = diner_headers(client)
+    for restaurant in restaurants[:4]:
+        for _ in range(5):
+            assert confirm(client, headers, restaurant.id_restaurante).status_code == 201
+
+    response = confirm(client, headers, restaurants[4].id_restaurante)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == ("Ya tenés 20 reservas para ese día. No podés sumar más.")
+
+
+def test_us11_s6_lists_only_the_seating_areas_the_restaurant_has(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(2, 2, "indoor"), (4, 1, "terrace")])
+    disabled = TableInventoryGroup(
+        restaurant_id=restaurant.id_restaurante,
+        capacity=6,
+        quantity=1,
+        seating_area="outdoor",
+        available=False,
+    )
+    session.add(disabled)
+    session.flush()
+    headers = diner_headers(client)
+
+    body = slots(client, headers, restaurant.id_restaurante).json()
+
+    assert body["seating_areas"] == ["indoor", "terrace"]

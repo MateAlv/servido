@@ -4,6 +4,7 @@ import { useLocation, useSearchParams } from 'react-router'
 
 import { fetchRestaurants } from '../../api/restaurants'
 import { averageRating, type RestaurantPublic } from '../../data/restaurants.fixture'
+import { cx } from '../../lib/cx'
 import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../lib/geo'
 import { OCCUPANCY_REFRESH_MS } from '../../lib/occupancy'
 import { useGeolocation } from '../../lib/useGeolocation'
@@ -25,7 +26,11 @@ function tiersFromParams(params: URLSearchParams): PriceTier[] {
 }
 
 function updatedAtLabel(at: number): string {
-  return new Date(at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+  return new Date(at).toLocaleTimeString('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  })
 }
 
 function byDistanceThenName(diner: GeoPoint | null) {
@@ -63,7 +68,11 @@ export function RestaurantExplorer() {
   // The filter applies to the markers and to the list alike (FR-012).
   const visible = located
     .filter((restaurant) =>
-      matchesPriceFilter(restaurant.priceTier, restaurant.menu.length > 0, selectedTiers),
+      matchesPriceFilter(
+        restaurant.priceTier,
+        restaurant.hasMenu ?? restaurant.menu.length > 0,
+        selectedTiers,
+      ),
     )
     .sort(byDistanceThenName(diner))
 
@@ -152,14 +161,20 @@ export function RestaurantExplorer() {
                 className={styles.item}
                 data-selected={restaurant.id === selectedId || undefined}
               >
-                <img
-                  className={styles.thumb}
-                  src={restaurant.foto_url ?? restaurant.photo.thumb}
-                  alt=""
-                  width={64}
-                  height={64}
-                  loading="lazy"
-                />
+                {restaurant.foto_url || restaurant.photo ? (
+                  <img
+                    className={styles.thumb}
+                    src={restaurant.foto_url ?? restaurant.photo?.thumb}
+                    alt=""
+                    width={64}
+                    height={64}
+                    loading="lazy"
+                  />
+                ) : (
+                  <span className={cx(styles.thumb, styles.monogram)} aria-hidden="true">
+                    {restaurant.name.charAt(0)}
+                  </span>
+                )}
                 <div className={styles.itemHead}>
                   <h3 className={styles.itemName}>{restaurant.name}</h3>
                   {restaurant.priceTier && (
@@ -174,15 +189,21 @@ export function RestaurantExplorer() {
                       <IconStar className={styles.star} />
                       {averageRating(restaurant)?.toLocaleString('es-AR', {
                         maximumFractionDigits: 1,
-                      })}{' '}
-                      ·{' '}
+                      })}
+                      {(restaurant.cuisine ||
+                        restaurant.location.neighborhood ||
+                        isValidPoint(diner)) &&
+                        ' · '}
                     </span>
                   )}
-                  {[restaurant.cuisine, restaurant.location.neighborhood]
+                  {[
+                    restaurant.cuisine,
+                    restaurant.location.neighborhood,
+                    isValidPoint(diner) &&
+                      `a ${formatDistance(distanceKm(diner, restaurant.location))}`,
+                  ]
                     .filter(Boolean)
                     .join(' · ')}
-                  {isValidPoint(diner) &&
-                    ` · a ${formatDistance(distanceKm(diner, restaurant.location))}`}
                 </p>
                 <div className={styles.itemFoot}>
                   {restaurant.occupancy && <OccupancyMeter level={restaurant.occupancy} />}

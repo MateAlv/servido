@@ -139,13 +139,15 @@ export function RestaurantMap({
               autoPanPaddingBottomRight={[16, 16]}
             >
               <article className={styles.card}>
-                <img
-                  className={styles.cover}
-                  src={restaurant.foto_url ?? restaurant.photo.cover}
-                  alt=""
-                  width={POPUP_WIDTH}
-                  height={120}
-                />
+                {(restaurant.foto_url || restaurant.photo) && (
+                  <img
+                    className={styles.cover}
+                    src={restaurant.foto_url ?? restaurant.photo?.cover}
+                    alt=""
+                    width={POPUP_WIDTH}
+                    height={120}
+                  />
+                )}
                 <div className={styles.cardBody}>
                   <div className={styles.cardHead}>
                     <h3 className={styles.popupTitle}>{restaurant.name}</h3>
@@ -162,7 +164,7 @@ export function RestaurantMap({
                         {rating.toLocaleString('es-AR', { maximumFractionDigits: 1 })}
                       </span>
                     )}
-                    <span>{restaurant.cuisine}</span>
+                    {restaurant.cuisine && <span>{restaurant.cuisine}</span>}
                   </p>
                   {restaurant.occupancy && (
                     <OccupancyMeter level={restaurant.occupancy} showLabel />

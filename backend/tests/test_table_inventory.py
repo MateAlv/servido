@@ -149,7 +149,7 @@ def test_us10_s1_two_groups_cannot_share_capacity_and_seating_area(client: TestC
     )
 
 
-def test_us10_free_quantity_counts_tables_in_use_right_now(
+def test_us10_edge_free_quantity_counts_tables_in_use_right_now(
     client: TestClient, session: Session
 ) -> None:
     from tests.reservations import NOW
@@ -166,3 +166,17 @@ def test_us10_free_quantity_counts_tables_in_use_right_now(
     body = client.get("/api/restaurante/mesas", headers=headers).json()
 
     assert body[0]["free_quantity"] == 2
+
+
+def test_us10_edge_rejects_impossible_table_counts(client: TestClient) -> None:
+    headers = _auth(client)
+    huge = [{"capacity": 2, "quantity": 2_000_000_000, "seating_area": "indoor"}]
+    too_many_groups = [
+        {"capacity": capacity, "quantity": 1, "seating_area": "indoor"} for capacity in range(1, 52)
+    ]
+
+    assert client.put("/api/restaurante/mesas", json=huge, headers=headers).status_code == 400
+    assert (
+        client.put("/api/restaurante/mesas", json=too_many_groups, headers=headers).status_code
+        == 400
+    )

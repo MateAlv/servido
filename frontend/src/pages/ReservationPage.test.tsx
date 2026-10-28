@@ -12,7 +12,7 @@ import {
 import { SessionExpiredError } from '../api/errors'
 import { confirmReservation, fetchDayReservations, type Reservation } from '../api/reservations'
 import { signOut, useAccount } from '../api/session'
-import { todayInBuenosAires } from '../lib/date'
+import { longDate, todayInBuenosAires } from '../lib/date'
 import { renderWithProviders } from '../test/renderWithProviders'
 import { ReservationPage } from './ReservationPage'
 import { RestaurantDetailPage } from './RestaurantDetailPage'
@@ -27,11 +27,30 @@ vi.mock('../api/availability', async (importOriginal) => {
 // RESTAURANT_ID is a real (bookable) restaurant; TEST_RESTAURANT_ID is one of the test
 // restaurants of spec 002, which can't be booked (decision D4).
 const TEST_RESTAURANT_ID = 'r-bodegon'
+// A real restaurant that loaded only its name, location, shifts and tables.
+const PARTIAL_RESTAURANT_ID = 'parcial'
 vi.mock('../api/restaurants', async () => {
   const { testRestaurant } = await import('../data/restaurants.fixture')
   return {
     fetchRestaurant: vi.fn(async (id: string) => {
       if (id === TEST_RESTAURANT_ID) return testRestaurant(id)
+      if (id === PARTIAL_RESTAURANT_ID) {
+        return {
+          id,
+          name: 'Parrilla Nueva',
+          description: '',
+          cuisine: '',
+          averageSpendPerPerson: null,
+          priceTier: null,
+          dietaryRestrictions: [],
+          location: { lat: -34.58, lng: -58.43, address: '', neighborhood: '' },
+          occupancy: null,
+          menu: [],
+          reviews: [],
+          photo: null,
+          bookable: true,
+        }
+      }
       const restaurant = testRestaurant('r-la-esquina')
       return restaurant && { ...restaurant, id, bookable: true }
     }),
@@ -77,6 +96,7 @@ function dayAvailability(overrides: Partial<DayAvailability> = {}): DayAvailabil
     open: true,
     duration_minutes: 90,
     max_party_size: 4,
+    seating_areas: ['indoor', 'outdoor', 'terrace'],
     slots: [
       { start_time: '12:00', available: true },
       { start_time: '12:30', available: false },
@@ -115,6 +135,7 @@ function renderPage(query = '') {
 /** Picks a date the way the native input reports it: a change event with the new value. */
 function chooseDateUsing(input: HTMLElement, value = DATE) {
   fireEvent.change(input, { target: { value } })
+  fireEvent.blur(input)
 }
 
 function partySize() {
@@ -240,7 +261,7 @@ describe('ReservationPage (US-11)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Afuera' }))
 
-    expect(await screen.findByText(/hay mesa disponible en afuera/i)).toBeInTheDocument()
+    expect(await screen.findByText(/hay mesa disponible afuera/i)).toBeInTheDocument()
 
     // The terrace has no free table at this start, so the preference itself is not offered (S7).
     expect(screen.getByRole('button', { name: 'Terraza Sin mesas' })).toBeDisabled()
@@ -248,6 +269,23 @@ describe('ReservationPage (US-11)', () => {
     // The controls stay usable: the diner can go back to «Sin preferencia».
     await user.click(screen.getByRole('button', { name: 'Sin preferencia' }))
     expect(await screen.findByText(/hay mesa disponible para ese día/i)).toBeInTheDocument()
+  })
+
+  it('US-11 S6 offers only the seating areas the restaurant has', async () => {
+    availabilityMock.mockResolvedValue(dayAvailability({ seating_areas: ['indoor', 'terrace'] }))
+    renderPage(`?fecha=${DATE}&hora=12:00`)
+
+    expect(await screen.findByRole('button', { name: /Adentro/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Afuera/ })).not.toBeInTheDocument()
+  })
+
+  it('US-11 edge says when the restaurant has no tables yet', async () => {
+    availabilityMock.mockResolvedValue(dayAvailability({ max_party_size: 0, slots: [] }))
+    renderPage(`?fecha=${DATE}`)
+
+    expect(
+      await screen.findByText('El restaurante todavía no tiene mesas disponibles.'),
+    ).toBeInTheDocument()
   })
 
   it('US-11 S7 informs there are no tables and keeps the controls usable', async () => {
@@ -364,7 +402,24 @@ describe('ReservationPage (US-11)', () => {
     )
   })
 
-  it('D4 keeps the test restaurants out of the booking flow', async () => {
+  it('US-9 edge leaves out what a real restaurant has not loaded', async () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/restaurantes/:id" element={<RestaurantDetailPage />} />
+      </Routes>,
+      { route: `/restaurantes/${PARTIAL_RESTAURANT_ID}` },
+    )
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Parrilla Nueva' })).toBeVisible()
+    expect(screen.queryByRole('img', { name: /Foto de/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Menú' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Opiniones' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Concurrencia/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/todavía no|sin datos/i)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Reservar mesa' })).toBeInTheDocument()
+  })
+
+  it('US-9 edge keeps the test restaurants out of the booking flow', async () => {
     const { unmount } = renderWithProviders(
       <Routes>
         <Route path="/restaurantes/:id" element={<RestaurantDetailPage />} />
@@ -436,6 +491,7 @@ describe('ReservationPage (US-13)', () => {
       screen.getByRole('heading', { name: 'Revisá tu reserva' }).parentElement!,
     )
     expect(summary.getByText('La Esquina de Palermo')).toBeInTheDocument()
+    expect(summary.getByText(longDate(DATE))).toBeInTheDocument()
     expect(summary.getByText('12:00 a 13:30')).toBeInTheDocument()
     expect(summary.getByText('2')).toBeInTheDocument()
     // The smallest group of the chosen area that seats the party (decision D2).
@@ -445,7 +501,7 @@ describe('ReservationPage (US-13)', () => {
   it('US-13 S3 goes back with the selection kept', async () => {
     const user = await openReview(`?fecha=${DATE}&hora=12:00&personas=2&tipo=outdoor`)
 
-    await user.click(screen.getByRole('button', { name: 'Volver' }))
+    await user.click(screen.getByRole('button', { name: 'Cambiar datos' }))
 
     expect(await screen.findByLabelText('Fecha')).toHaveValue(DATE)
     expect(screen.getByRole('button', { name: '12:00' })).toHaveAttribute('aria-pressed', 'true')
@@ -456,7 +512,7 @@ describe('ReservationPage (US-13)', () => {
   it('US-13 S4 creates nothing until the diner confirms', async () => {
     const user = await openReview()
 
-    await user.click(screen.getByRole('button', { name: 'Volver' }))
+    await user.click(screen.getByRole('button', { name: 'Cambiar datos' }))
     await screen.findByLabelText('Fecha')
 
     expect(confirmMock).not.toHaveBeenCalled()
@@ -478,6 +534,29 @@ describe('ReservationPage (US-13)', () => {
       request_id: expect.any(String),
     })
     expect(screen.getByText('Mesa para 2 · Adentro')).toBeInTheDocument()
+    expect(screen.getByText(longDate(DATE))).toBeInTheDocument()
+  })
+
+  it('US-13 S5 keeps showing the confirmation after a reload', async () => {
+    dayReservationsMock.mockResolvedValue([reservation({ id: 'res-9' })])
+    renderPage(`?confirmada=res-9&fecha=${DATE}`)
+
+    expect(await screen.findByText('Reserva confirmada')).toBeInTheDocument()
+    expect(screen.getByText('Mesa para 2 · Adentro')).toBeInTheDocument()
+  })
+
+  it('US-13 S6 warns only about reservations that overlap', async () => {
+    dayReservationsMock.mockResolvedValue([
+      reservation({ id: 'before', start_time: '10:00', end_time: '11:30' }),
+      reservation({ id: 'right-after', start_time: '13:30', end_time: '15:00' }),
+      reservation({ id: 'overlaps', start_time: '13:00', end_time: '14:30' }),
+    ])
+    await openReview()
+
+    expect(
+      await screen.findByText('Ya tenés una reserva acá de 13:00 a 14:30. Podés confirmar igual.'),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText(/Ya tenés una reserva/)).toHaveLength(1)
   })
 
   it('US-13 S6 warns about an overlapping reservation and still confirms', async () => {
@@ -519,6 +598,49 @@ describe('ReservationPage (US-13)', () => {
     ).toBeInTheDocument()
     expect(await screen.findByLabelText('Fecha')).toHaveValue(DATE)
     expect(screen.queryByRole('heading', { name: 'Revisá tu reserva' })).not.toBeInTheDocument()
+  })
+
+  it('US-13 edge keeps every value and refreshes availability after a 409', async () => {
+    confirmMock.mockResolvedValue({
+      ok: false,
+      status: 409,
+      message: 'La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa.',
+    })
+    const user = await openReview(`?fecha=${DATE}&hora=12:00&personas=2&tipo=outdoor`)
+    const callsBefore = availabilityMock.mock.calls.length
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    const notice = await screen.findByText(
+      'La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa.',
+    )
+    // The explanation stays on screen and takes the focus.
+    expect(notice).toHaveFocus()
+    expect(screen.getByRole('button', { name: '12:00' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /Afuera/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(partySize()).toContain('2')
+    await waitFor(() => expect(availabilityMock.mock.calls.length).toBeGreaterThan(callsBefore))
+  })
+
+  it('US-13 edge disables confirming while the request runs', async () => {
+    let finish: (value: Awaited<ReturnType<typeof confirmReservation>>) => void = () => {}
+    confirmMock.mockReturnValue(new Promise((resolve) => (finish = resolve)))
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    expect(screen.getByRole('button', { name: /Confirmar reserva/ })).toBeDisabled()
+    finish({ ok: true, reservation: reservation() })
+    expect(await screen.findByText('Reserva confirmada')).toBeInTheDocument()
+    expect(confirmMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('US-13 edge focuses «Siguiente» after changing the data', async () => {
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar datos' }))
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Siguiente' })).toHaveFocus())
   })
 
   it('US-13 edge signs out when the session expired at confirmation', async () => {
@@ -581,7 +703,7 @@ describe('ReservationPage (US-13)', () => {
 
     expect(
       await screen.findByText(
-        'La mesa que elegiste ya no está disponible. Elegí otro horario o tipo de mesa.',
+        'Ese horario ya no tiene mesa libre. Elegí otro horario o tipo de mesa.',
       ),
     ).toBeInTheDocument()
     expect(await screen.findByLabelText('Fecha')).toHaveValue(DATE)
@@ -601,7 +723,7 @@ describe('ReservationPage (US-13)', () => {
 
     expect(
       await screen.findByText(
-        'La mesa que elegiste ya no está disponible. Elegí otro horario o tipo de mesa.',
+        'Ese horario ya no tiene mesa libre. Elegí otro horario o tipo de mesa.',
       ),
     ).toBeInTheDocument()
     await screen.findByLabelText('Fecha')

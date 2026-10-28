@@ -765,6 +765,7 @@
                   "$ref": "#/components/schemas/TableInventoryGroupPayload"
                 },
                 "type": "array",
+                "maxItems": 50,
                 "title": "Payload"
               }
             }
@@ -1530,6 +1531,18 @@
             },
             "type": "array",
             "title": "Slots"
+          },
+          "seating_areas": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "indoor",
+                "outdoor",
+                "terrace"
+              ]
+            },
+            "type": "array",
+            "title": "Seating Areas"
           }
         },
         "type": "object",
@@ -1539,7 +1552,8 @@
           "open",
           "duration_minutes",
           "max_party_size",
-          "slots"
+          "slots",
+          "seating_areas"
         ],
         "title": "AvailabilityResponse"
       },
@@ -2183,6 +2197,10 @@
               }
             ],
             "title": "Photo Url"
+          },
+          "has_menu": {
+            "type": "boolean",
+            "title": "Has Menu"
           }
         },
         "type": "object",
@@ -2197,7 +2215,8 @@
           "neighborhood",
           "lat",
           "lng",
-          "photo_url"
+          "photo_url",
+          "has_menu"
         ],
         "title": "PublicRestaurant",
         "description": "A bookable restaurant as the diner's map, list and detail show it (decision D4)."
@@ -2294,6 +2313,10 @@
             ],
             "title": "Photo Url"
           },
+          "has_menu": {
+            "type": "boolean",
+            "title": "Has Menu"
+          },
           "menu": {
             "items": {
               "$ref": "#/components/schemas/PublicDish"
@@ -2315,6 +2338,7 @@
           "lat",
           "lng",
           "photo_url",
+          "has_menu",
           "menu"
         ],
         "title": "PublicRestaurantDetail"
@@ -2543,7 +2567,8 @@
           "descripcion": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 2000
               },
               {
                 "type": "null"
@@ -2652,7 +2677,8 @@
           "descripcion": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 2000
               },
               {
                 "type": "null"
@@ -2896,11 +2922,13 @@
         "properties": {
           "capacity": {
             "type": "integer",
+            "maximum": 100.0,
             "exclusiveMinimum": 0.0,
             "title": "Capacity"
           },
           "quantity": {
             "type": "integer",
+            "maximum": 200.0,
             "exclusiveMinimum": 0.0,
             "title": "Quantity"
           },
@@ -2931,11 +2959,13 @@
         "properties": {
           "capacity": {
             "type": "integer",
+            "maximum": 100.0,
             "exclusiveMinimum": 0.0,
             "title": "Capacity"
           },
           "quantity": {
             "type": "integer",
+            "maximum": 200.0,
             "exclusiveMinimum": 0.0,
             "title": "Quantity"
           },

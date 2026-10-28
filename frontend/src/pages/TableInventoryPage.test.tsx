@@ -82,7 +82,13 @@ describe('TableInventoryPage (US-10)', () => {
     ])
     api.updateTables.mockRejectedValue(
       new BookedTablesError('La modificación afecta reservas confirmadas.', [
-        { date: '2026-11-03', start_time: '20:00', party_size: 2 },
+        {
+          date: '2026-11-03',
+          start_time: '20:00',
+          party_size: 2,
+          capacity: 2,
+          seating_area: 'indoor',
+        },
       ]),
     )
     const user = userEvent.setup()
@@ -91,8 +97,10 @@ describe('TableInventoryPage (US-10)', () => {
     await user.click(await screen.findByRole('checkbox', { name: /Disponible para reservar/ }))
     await user.click(screen.getByRole('button', { name: 'Guardar mesas' }))
 
-    expect(await screen.findByText(/se quedarían sin mesa/)).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('se quedarían sin mesa')
     const list = screen.getByRole('list', { name: 'Reservas que bloquean el cambio' })
-    expect(list).toHaveTextContent('martes, 3 de noviembre, 20:00 · 2 personas')
+    expect(list).toHaveTextContent(
+      'Mesa para 2 · Adentro — martes, 3 de noviembre, 20:00 (2 personas)',
+    )
   })
 })
