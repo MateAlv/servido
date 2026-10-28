@@ -15,10 +15,8 @@ import {
 
 import { averageRating, type RestaurantPublic } from '../../data/restaurants.fixture'
 import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../lib/geo'
-import { OCCUPANCY_LABELS } from '../../lib/occupancy'
 import { Button, IconStar } from '../ui'
 import { MapPin } from './MapPin'
-import { PIN_STATUS_BY_OCCUPANCY } from './pinStatus'
 import { OccupancyMeter } from './OccupancyMeter'
 import styles from './RestaurantMap.module.css'
 
@@ -97,21 +95,13 @@ export function RestaurantMap({
         const selected = restaurant.id === selectedId
         const distKm = isValidPoint(diner) ? distanceKm(diner, restaurant.location) : null
         const rating = averageRating(restaurant)
-        const statusLabel = `concurrencia ${OCCUPANCY_LABELS[restaurant.occupancy].toLowerCase()}`
         const icon = divIcon({
           className: styles.pinWrapper,
           html: renderToStaticMarkup(
-            <MapPin
-              name={restaurant.name}
-              status={PIN_STATUS_BY_OCCUPANCY[restaurant.occupancy]}
-              statusLabel={statusLabel}
-              selected={selected}
-              index={index}
-              interactive={false}
-            />,
+            <MapPin name={restaurant.name} selected={selected} index={index} interactive={false} />,
           ),
           iconSize: [0, 0],
-          popupAnchor: [0, -44],
+          popupAnchor: [0, -36],
         })
 
         return (
@@ -119,8 +109,8 @@ export function RestaurantMap({
             key={restaurant.id}
             position={[restaurant.location.lat, restaurant.location.lng]}
             icon={icon}
-            alt={`${restaurant.name}, ${statusLabel}`}
-            title={`${restaurant.name}, ${statusLabel}`}
+            alt={restaurant.name}
+            title={restaurant.name}
             riseOnHover
             zIndexOffset={selected ? 1000 : 0}
             eventHandlers={{ click: () => onSelect(restaurant) }}
@@ -133,19 +123,23 @@ export function RestaurantMap({
               autoPanPaddingBottomRight={[16, 16]}
             >
               <article className={styles.card}>
-                <img
-                  className={styles.cover}
-                  src={restaurant.foto_url ?? restaurant.photo.cover}
-                  alt=""
-                  width={POPUP_WIDTH}
-                  height={120}
-                />
+                {(restaurant.foto_url || restaurant.photo) && (
+                  <img
+                    className={styles.cover}
+                    src={restaurant.foto_url ?? restaurant.photo?.cover}
+                    alt=""
+                    width={POPUP_WIDTH}
+                    height={120}
+                  />
+                )}
                 <div className={styles.cardBody}>
                   <div className={styles.cardHead}>
                     <h3 className={styles.popupTitle}>{restaurant.name}</h3>
-                    <span className={styles.tier} aria-label={`Precio ${restaurant.priceTier}`}>
-                      {restaurant.priceTier}
-                    </span>
+                    {restaurant.priceTier && (
+                      <span className={styles.tier} aria-label={`Precio ${restaurant.priceTier}`}>
+                        {restaurant.priceTier}
+                      </span>
+                    )}
                   </div>
                   <p className={styles.popupMeta}>
                     {rating !== null && (
@@ -154,14 +148,25 @@ export function RestaurantMap({
                         {rating.toLocaleString('es-AR', { maximumFractionDigits: 1 })}
                       </span>
                     )}
-                    <span>{restaurant.cuisine}</span>
+                    {restaurant.cuisine && <span>{restaurant.cuisine}</span>}
                   </p>
-                  <OccupancyMeter level={restaurant.occupancy} showLabel />
+                  {/* Occupancy shows only here, on click, and only when there is data. */}
+                  {restaurant.occupancy && (
+                    <OccupancyMeter level={restaurant.occupancy} showLabel />
+                  )}
                   <dl className={styles.facts}>
-                    <dt>Barrio</dt>
-                    <dd>{restaurant.location.neighborhood}</dd>
-                    <dt>Dirección</dt>
-                    <dd>{restaurant.location.address}</dd>
+                    {restaurant.location.neighborhood && (
+                      <>
+                        <dt>Barrio</dt>
+                        <dd>{restaurant.location.neighborhood}</dd>
+                      </>
+                    )}
+                    {restaurant.location.address && (
+                      <>
+                        <dt>Dirección</dt>
+                        <dd>{restaurant.location.address}</dd>
+                      </>
+                    )}
                     {distKm !== null && (
                       <>
                         <dt>Distancia</dt>

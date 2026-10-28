@@ -52,12 +52,14 @@ Use these English names in code. Add a row when a new domain concept appears. Ex
 | Turno | `Shift` | Opening period on a weekday, e.g. 12:00–15:00 |
 | Horarios de atención | `OpeningHours` | The shifts of each weekday |
 | Bloqueo de horario | `Closure` | Blocked date or time range |
-| Mesa | `Table` | Stored as groups: capacity × count |
-| Tipo de mesa (adentro, afuera, terraza) | `SeatingArea` | |
+| Mesa | `Table` | Stored as groups: capacity × count × seating area. A reservation takes one table of a group by an internal number (spec 005, D1) |
+| Tipo de mesa (adentro, afuera, terraza) | `SeatingArea` | `indoor` / `outdoor` / `terrace`, a fixed catalog (spec 004, FR-009) |
 | Capacidad | `capacity` | |
 | Concurrencia (bajo / medio / alto) | `OccupancyLevel` (`low` / `medium` / `high`) | |
-| Rango de precios ($ – $$$$) | `PriceTier` | Derived from `averageSpendPerPerson` |
-| Gasto promedio por persona | `averageSpendPerPerson` | Fixture field until the restaurants API exists |
+| Rango de precios ($ – $$$$) | `PriceTier` | Derived from `averageSpendPerPerson` for test restaurants, or the declared `price_tier` of real restaurants |
+| Restaurante reservable | `bookable` | Has coordinates, an active shift and an available table group (spec 005, D4) |
+| Id de confirmación | `request_id` | One per review; a repeated confirmation returns the same reservation (spec 005) |
+| Gasto promedio por persona | `averageSpendPerPerson` | Only the test restaurants have it; real ones declare a `price_tier` (spec 005, D4) |
 | Restricción alimenticia (sin TACC, vegetariano…) | `DietaryRestriction` (`gluten_free`, `vegetarian`…) | Always shown as declared by the restaurant (risk 5) |
 | Tiempo estimado de preparación | `prep_time_minutes` | |
 | Hora de llegada | `arrival_time` | |
@@ -91,16 +93,18 @@ frontend/           React + TypeScript SPA (Vite)
   src/api/          openapi.json (contract), schema.d.ts (generated types), client.ts,
                     session.ts (token in sessionStorage, current account), errors.ts
   src/pages/        One component per route; routes in src/router.tsx, shell in src/AppLayout.tsx;
-                    pages/home/ holds the home page variants per role (not routes)
+                    pages/home/ holds the home page variants per role and pages/reservation/
+                    the review and confirmed steps of the booking page (not routes)
   src/components/   Design system, imported from each folder's index.ts:
                     brand/ (logo, splash, spinner) · ui/ (buttons, fields, modal, toasts…)
                     layout/ (header, footer) · access/ (login form, redirects, roles)
                     order/ · reservation/ · restaurant/ (animated domain pieces, map,
                     list, price filter) · dev/ (API status badge)
   src/lib/          Small helpers: cx (class names), cssVars, reduced-motion detection,
-                    geo (distances), occupancy, useGeolocation
-  src/data/         Temporary fixtures while the backend endpoint does not exist yet
-                    (restaurants.fixture.ts feeds the map, list and detail)
+                    geo (distances), occupancy, useGeolocation, date (Buenos Aires dates),
+                    seating (tipos de mesa), returnPath (?volver=), requestId
+  src/data/         Test data that has no backend yet
+                    (restaurants.fixture.ts: the test restaurants shown next to the real ones)
   src/styles/       tokens.css (design tokens) and global.css
   src/test/         Test setup, polyfills and renderWithProviders
 specs/              Spec Kit features: NNN-name/spec.md, plan.md, tasks.md…
@@ -142,7 +146,7 @@ Run `make format lint test` before considering a task done.
 - **Error messages** that the UI shows are in Spanish. Login failures use one generic message that does not reveal which field was wrong.
 - **Money** is `Decimal` / `Numeric(10, 2)`, never float. **Datetimes** are timezone-aware, stored in UTC; business rules (shifts, "30 minutes before") use `America/Argentina/Buenos_Aires`.
 - **Passwords** are hashed with Argon2 and never logged or returned.
-- **Auth**: email and password are built in-house (spec 001); Google is only an optional way in for diners. Login returns a stateless JWT (HS256, 1 hour) signed with `JWT_SECRET` (SSM in production); the frontend keeps it in `sessionStorage` and sends it as a Bearer token. Protected routes use `TokenClaimsDep` from `app/api/deps.py`; `GET /api/me` returns the current account. Endpoints exclusive to one role answer 403 to the other role (US-4 S3, pending until such endpoints exist). Diners can also sign in with Google (spec 007, US-52): the browser gets an ID token from Google Identity Services and `POST /api/auth/comensal/google` checks it in `app/services/google.py` before opening the usual session. They can also create their account with Google (US-58): `POST /api/comensales/google` creates a verified diner from the same token, with no usable password. Restaurants can do both too (spec 003, US-28 and US-2 S5): `POST /api/auth/restaurante/google` signs in, and `POST /api/restaurantes/google` creates the restaurant from the token plus its name, CUIT and phone. A diner registered with email and password gets a verification mail (US-51); `email_verificado` in `/me` says whether it was confirmed. Mail goes through `app/services/mail.py` (`MAIL_BACKEND`: `ses` in production, or `smtp` through the team Gmail while SES is in the sandbox; `console` locally, `memory` in tests).
+- **Auth**: email and password are built in-house (spec 001); Google is only an optional way in for diners. Login returns a stateless JWT (HS256, 1 hour) signed with `JWT_SECRET` (SSM in production); the frontend keeps it in `sessionStorage` and sends it as a Bearer token. Protected routes use `TokenClaimsDep` from `app/api/deps.py`; `GET /api/me` returns the current account. Endpoints exclusive to one role answer 403 to the other role (US-4 S3, tested in `backend/tests/test_auth.py`). Diners can also sign in with Google (spec 007, US-52): the browser gets an ID token from Google Identity Services and `POST /api/auth/comensal/google` checks it in `app/services/google.py` before opening the usual session. They can also create their account with Google (US-58): `POST /api/comensales/google` creates a verified diner from the same token, with no usable password. Restaurants can do both too (spec 003, US-28 and US-2 S5): `POST /api/auth/restaurante/google` signs in, and `POST /api/restaurantes/google` creates the restaurant from the token plus its name, CUIT and phone. A diner registered with email and password gets a verification mail (US-51); `email_verificado` in `/me` says whether it was confirmed. Mail goes through `app/services/mail.py` (`MAIL_BACKEND`: `ses` in production, or `smtp` through the team Gmail while SES is in the sandbox; `console` locally, `memory` in tests).
 
 ## Frontend conventions
 
@@ -204,5 +208,5 @@ Commit spec, plan and tasks together with the code. Their history is the evidenc
 - Which specs exist and how far each one got: [specs/README.md](specs/README.md).
 - Open questions for the PO: [specs/README.md](specs/README.md#pendientes-de-aclarar-con-la-po). Do not resolve them yourself.
 - What each sprint delivered: [docs/sprints/](docs/sprints/).
-- Built so far (Sprint 1: US 1, 2, 3, 4, 5, 7, 9, 33). Sprint 2 adds US-52, US-51 and US-58 (spec 007), and US-28 plus Google sign-up for US-2 (spec 003). Routes: `/`, `/ingresar`, `/registrarme`, `/suma-tu-local`, `/mapa`, `/restaurantes/:id`, `/verificar-email`, `/privacidad`, `/terminos`, `/diseno`. Endpoints: `POST /api/comensales`, `POST /api/comensales/google`, `POST /api/restaurantes`, `POST /api/restaurantes/google`, `POST /api/auth/comensal`, `POST /api/auth/comensal/google`, `POST /api/auth/restaurante`, `POST /api/auth/restaurante/google`, `POST /api/comensales/verificacion`, `POST /api/comensales/verificacion/reenvio`, `GET /api/me`, `GET /api/health`. Restaurants, the map and the detail still read `src/data/restaurants.fixture.ts`.
+- Built so far (Sprint 1: US 1, 2, 3, 4, 5, 7, 9, 33). Sprint 2 adds US-52, US-51 and US-58 (spec 007), and US-28 plus Google sign-up for US-2 (spec 003). Sprint 3 adds US-13 (spec 005) with the real backend of US-11: the reservations table, availability, the review and the confirmation, with bookings up to 60 days ahead and at most 20 per diner per day, 5 of them at one restaurant (D10, D11). Routes: `/`, `/ingresar` (`?volver=` returns to a path of the site after signing in), `/registrarme`, `/suma-tu-local`, `/mapa`, `/restaurantes/:id`, `/reservar/:restauranteId` (`?paso=revision` is the US-13 review), `/verificar-email`, `/privacidad`, `/terminos`, `/diseno`. Endpoints: `POST /api/comensales`, `POST /api/comensales/google`, `POST /api/restaurantes`, `POST /api/restaurantes/google`, `POST /api/auth/comensal`, `POST /api/auth/comensal/google`, `POST /api/auth/restaurante`, `POST /api/auth/restaurante/google`, `POST /api/comensales/verificacion`, `POST /api/comensales/verificacion/reenvio`, `GET /api/me`, `GET /api/health`, the restaurant configuration of spec 004 (`/api/restaurante/perfil`, `/horarios`, `/mesas`), `GET /api/restaurants` and `/{id}` (bookable restaurants, public), `GET /api/restaurants/{id}/availability` and `/availability/tables`, `POST /api/reservations` and `GET /api/reservations?date=`. The map, the list and the detail show the bookable restaurants from the API next to the test restaurants of `src/data/restaurants.fixture.ts`; only the real ones can be booked.
 - Hosting is defined in [ADR 0008](docs/decisions/0008-aws-free-plan-hosting.md) and `infra/`. Production is live at <https://servido.discordia.fyi>; merges to `main` deploy automatically. `main` is protected: PR, one approval and green CI. Terraform changes (for example a new secret) are applied by hand before merging the code that needs them.

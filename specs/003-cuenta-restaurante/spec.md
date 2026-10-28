@@ -35,7 +35,7 @@ Como **Responsable del restaurante**, quiero Ingresar a Servido! utilizando mi u
 
 1. **Dado** que ingreso un email no registrado o una contraseña incorrecta, **Cuando** intento iniciar sesión, **Entonces** el sistema retorna HTTP 401 Unauthorized con un mensaje genérico ("Credenciales inválidas") sin revelar cuál dato falló.
 2. **Dado** que ingreso credenciales válidas, **Cuando** inicio sesión, **Entonces** accedo al panel del restaurante.
-3. **Dado** que poseo una sesión activa con rol Restaurante, **Cuando** intento invocar endpoints exclusivos del rol Comensal o de otros restaurantes, **Entonces** se responde HTTP 403 Forbidden.
+3. **Dado** que poseo una sesión activa con rol Restaurante, **Cuando** intento invocar endpoints exclusivos del rol Comensal o de otros restaurantes, **Entonces** se responde HTTP 403 Forbidden. *(Probado desde el 28/10, cuando existieron los endpoints de reservas solo para comensales: `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`.)*
 
 ### US-28 — Ingresar con Google (Prioridad: -, Estimación: 1)
 
@@ -89,7 +89,7 @@ Como **Responsable del restaurante**, quiero Ingresar a Servido! utilizando mi c
 
 - **Dentro**: registro con nombre, mail, CUIT, teléfono y contraseña, o con Google en vez de mail y contraseña; ingreso con mail y contraseña o con Google.
 
-- **Fuera** *(decisión del equipo, 21/10)*: el escenario 3 de US-4 (HTTP 403 con el rol equivocado) se prueba cuando existan endpoints exclusivos de cada rol (Sprint 2, specs 004 y 006). Rate limiting y sanitización de los edge cases quedan para después del MVP.
+- **Fuera** *(decisión del equipo, 21/10)*: el escenario 3 de US-4 (HTTP 403 con el rol equivocado) se probaba cuando existieran endpoints exclusivos de cada rol; ya se prueba desde el 28/10 (spec 005). Rate limiting y sanitización de los edge cases quedan para después del MVP.
 
 ## Success Criteria *(mandatory)*
 

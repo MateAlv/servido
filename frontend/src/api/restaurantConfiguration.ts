@@ -1,3 +1,5 @@
+import type { SeatingArea } from '../lib/seating'
+
 const TOKEN_KEY = 'servido-access-token'
 
 function token(): string | null {
@@ -5,6 +7,25 @@ function token(): string | null {
     return typeof window === 'undefined' ? null : window.sessionStorage.getItem(TOKEN_KEY)
   } catch {
     return null
+  }
+}
+
+/** A confirmed reservation that a change to the tables would leave without a table (US-10 S3). */
+export type BookedReservation = {
+  date: string
+  start_time: string
+  party_size: number
+  capacity: number
+  seating_area: SeatingArea
+}
+
+/** The restaurant tried to remove or shrink tables that future reservations hold (409). */
+export class BookedTablesError extends Error {
+  readonly reservations: BookedReservation[]
+
+  constructor(message: string, reservations: BookedReservation[]) {
+    super(message)
+    this.reservations = reservations
   }
 }
 
@@ -17,9 +38,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init?.headers,
     },
   })
-  const body = (await response.json()) as T | { detail?: string | { message?: string } }
+  const body = (await response.json()) as
+    T | { detail?: string | { message?: string; reservations?: BookedReservation[] } }
   if (!response.ok) {
-    const detail = (body as { detail?: string | { message?: string } }).detail
+    const detail = (
+      body as { detail?: string | { message?: string; reservations?: BookedReservation[] } }
+    ).detail
+    if (response.status === 409 && typeof detail === 'object' && detail.reservations) {
+      throw new BookedTablesError(detail.message ?? '', detail.reservations)
+    }
     throw new Error(
       typeof detail === 'string' ? detail : (detail?.message ?? 'No pudimos guardar los cambios.'),
     )
@@ -63,6 +90,7 @@ export type OpeningShift = {
 export type TableGroup = {
   capacity: number
   quantity: number
+  seating_area: SeatingArea
   available: boolean
   free_quantity?: number
 }

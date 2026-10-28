@@ -100,6 +100,15 @@
   background: var(--color-surface-sunken);
 }
 
+.monogram {
+  display: grid;
+  place-items: center;
+  background: var(--color-primary);
+  color: var(--color-on-primary, #fff);
+  font-size: var(--text-xl, 28px);
+  font-weight: 900;
+}
+
 .stars {
   white-space: nowrap;
 }
@@ -161,19 +170,6 @@
   min-width: 0;
 }
 
-.legend {
-  position: absolute;
-  z-index: 500;
-  bottom: 14px;
-  left: 14px;
-  max-width: calc(100% - 28px);
-  padding: 8px 12px;
-  border: 2px solid var(--color-line);
-  border-radius: var(--radius-field);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-card);
-}
-
 @media (max-width: 960px) {
   .explorer {
     grid-template-areas:
@@ -187,13 +183,5 @@
   .mapArea {
     position: relative;
     top: 0;
-  }
-}
-
-@media (max-width: 560px) {
-  .legend {
-    bottom: 10px;
-    left: 10px;
-    padding: 6px 10px;
   }
 }

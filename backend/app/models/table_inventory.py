@@ -1,10 +1,13 @@
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
+
+# Glossary: tipo de mesa. A fixed catalog (spec 004, FR-009; decision D6 of 28/10).
+SEATING_AREAS = ("indoor", "outdoor", "terrace")
 
 
 class TableInventoryGroup(Base):
@@ -12,8 +15,15 @@ class TableInventoryGroup(Base):
     __table_args__ = (
         CheckConstraint("capacity > 0", name="capacity_positive"),
         CheckConstraint("quantity > 0", name="quantity_positive"),
+        CheckConstraint("capacity <= 100 AND quantity <= 200", name="within_bounds"),
+        CheckConstraint(
+            "seating_area IN ('indoor', 'outdoor', 'terrace')", name="seating_area_known"
+        ),
         UniqueConstraint(
-            "restaurant_id", "capacity", name="uq_table_inventory_restaurant_capacity"
+            "restaurant_id",
+            "capacity",
+            "seating_area",
+            name="uq_table_inventory_restaurant_capacity_area",
         ),
     )
 
@@ -23,6 +33,9 @@ class TableInventoryGroup(Base):
     )
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    seating_area: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="indoor", server_default="indoor"
+    )
     available: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )

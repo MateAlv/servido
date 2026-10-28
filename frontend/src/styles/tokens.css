@@ -7,6 +7,8 @@
   /* Brand colors that do not change with the theme. */
   --color-primary: #d2441c;
   --color-primary-dark: #8f2d10;
+  /* Brand red for small text (eyebrows): --color-primary is below 4.5:1 at 15 px. */
+  --color-primary-text: var(--color-primary-dark);
   --color-primary-soft: #d2441c26;
   --color-accent: #ff8d66;
   --color-ink: #3b1f18;
@@ -86,6 +88,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
+    --color-primary-text: var(--color-accent);
     --color-text: #fbeee0;
     --color-text-muted: #cdb5a6;
     --color-bg: #1d110d;
@@ -109,6 +112,7 @@
 }
 
 :root[data-theme='dark'] {
+  --color-primary-text: var(--color-accent);
   --color-text: #fbeee0;
   --color-text-muted: #cdb5a6;
   --color-bg: #1d110d;

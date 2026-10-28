@@ -30,29 +30,41 @@ export type RestaurantPublic = {
   name: string
   description: string
   cuisine: string
-  /** Mock average spend per person in pesos (spec 002); later it comes from reviews (US-50). */
-  averageSpendPerPerson: number
-  /** Derived from the average spend with priceTierFromAverageSpend. */
-  priceTier: RestaurantPriceTier
+  /** Mock average spend per person in pesos (spec 002); later it comes from reviews (US-50).
+   * `null` for real restaurants, which declare their price tier instead. */
+  averageSpendPerPerson: number | null
+  /** Derived from the average spend, or declared by a real restaurant; `null` when unknown. */
+  priceTier: RestaurantPriceTier | null
   dietaryRestrictions: string[]
   /** Location must be valid so it appears on the map (FR-011). */
   location: GeoPoint & { address: string; neighborhood: string }
-  /** Concurrence indicator levels: low/medium/high (spec 002, FR-002). */
-  occupancy: OccupancyLevel
+  /** Concurrence indicator levels: low/medium/high (spec 002, FR-002); `null` without data,
+   * and then no indicator is shown at all. */
+  occupancy: OccupancyLevel | null
   /** Dishes with their current prices (US-9 S3). Empty until the restaurant loads its menu. */
   menu: MenuSection[]
   /** Opinions of past diners shown in the detail (US-9); real reviews arrive with US-24. */
   reviews: RestaurantReview[]
-  /** Cover photo, and a square version for lists (`frontend/public/restaurants`). */
-  photo: { cover: string; thumb: string }
+  /** Cover photo, and a square version for lists (`frontend/public/restaurants`); `null` for a
+   * real restaurant without a photo, which then shows none. */
+  photo: { cover: string; thumb: string } | null
+  /** Whether it has a menu; the price filter leaves out restaurants without one (US-7). */
+  hasMenu?: boolean
   foto_url?: string | null
+  /** True for restaurants stored in the database with shifts and tables (decision D4 of 28/10):
+   * only those can be booked. The test restaurants below are not. */
+  bookable: boolean
 }
 
 /**
  * Small fixture with valid locations in Buenos Aires (used on the home map).
  * Distances are not a problem to check by eye: these are around Palermo/Ciudad.
  */
-const TEST_RESTAURANTS: Omit<RestaurantPublic, 'priceTier' | 'photo'>[] = [
+type TestRestaurant = Omit<RestaurantPublic, 'priceTier' | 'photo' | 'bookable'> & {
+  averageSpendPerPerson: number
+}
+
+const TEST_RESTAURANTS: TestRestaurant[] = [
   {
     id: 'r-la-esquina',
     name: 'La Esquina de Palermo',
@@ -353,6 +365,7 @@ const TEST_RESTAURANTS: Omit<RestaurantPublic, 'priceTier' | 'photo'>[] = [
 export const RESTAURANTS_FIXTURE: RestaurantPublic[] = TEST_RESTAURANTS.map((restaurant) => ({
   ...restaurant,
   priceTier: priceTierFromAverageSpend(restaurant.averageSpendPerPerson),
+  bookable: false,
   photo: {
     cover: `/restaurants/${restaurant.id}.webp`,
     thumb: `/restaurants/${restaurant.id}-thumb.webp`,
@@ -366,15 +379,7 @@ export function averageRating(restaurant: RestaurantPublic): number | null {
   return total / restaurant.reviews.length
 }
 
-/**
- * Simulates `GET /api/restaurants` until spec 004 adds the real endpoint.
- * The map queries it again on a timer to refresh occupancy (US-5, S5).
- */
-export async function fetchRestaurants(): Promise<RestaurantPublic[]> {
-  return RESTAURANTS_FIXTURE
-}
-
-/** Simulates `GET /api/restaurants/{id}`; `undefined` when it does not exist. */
-export async function fetchRestaurant(id: string): Promise<RestaurantPublic | undefined> {
+/** The test restaurant with this id; real restaurants come from `src/api/restaurants.ts`. */
+export function testRestaurant(id: string): RestaurantPublic | undefined {
   return RESTAURANTS_FIXTURE.find((restaurant) => restaurant.id === id)
 }

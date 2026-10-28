@@ -1,42 +1,34 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, Navigate, useParams, useSearchParams } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import {
   fetchAvailability,
   fetchAvailableTables,
-  isUsingMockData,
   type DayAvailability,
   type SeatingArea,
   type TablesAvailability,
 } from '../api/availability'
-import { useAccount } from '../api/session'
+import { fetchDayReservations, type Reservation } from '../api/reservations'
+import { retryUnlessSessionExpired, SessionExpiredError } from '../api/errors'
+import { signOut, useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
-import {
-  Button,
-  Card,
-  Chip,
-  QuantityStepper,
-  Skeleton,
-  StatusPill,
-  useToast,
-} from '../components/ui'
-import { fetchRestaurant } from '../data/restaurants.fixture'
+import { Button, Card, Chip, QuantityStepper, Skeleton, useToast } from '../components/ui'
+import { fetchRestaurant } from '../api/restaurants'
 import { cx } from '../lib/cx'
-import { todayInBuenosAires } from '../lib/date'
+import { SEATING_AREA_OPTIONS, SEATING_AREA_PHRASES } from '../lib/seating'
+import {
+  latestBookableDate,
+  MAX_DAYS_AHEAD,
+  timeInBuenosAires,
+  todayInBuenosAires,
+} from '../lib/date'
 import styles from './ReservationPage.module.css'
+import { ConfirmedStep } from './reservation/ConfirmedStep'
+import { ReviewStep } from './reservation/ReviewStep'
 
-const SEATING_AREAS: { value: SeatingArea; label: string }[] = [
-  { value: 'indoor', label: 'Adentro' },
-  { value: 'outdoor', label: 'Afuera' },
-  { value: 'terrace', label: 'Terraza' },
-]
-
-const AREA_LABEL: Record<SeatingArea, string> = {
-  indoor: 'Adentro',
-  outdoor: 'Afuera',
-  terrace: 'Terraza',
-}
+const SEATING_AREAS = SEATING_AREA_OPTIONS
+const STALE_REVIEW = 'Ese horario ya no tiene mesa libre. Elegí otro horario o tipo de mesa.'
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
@@ -47,7 +39,8 @@ type Selection = { fecha: string; hora: string; personas: number; tipo: SeatingA
 function selectionFromParams(params: URLSearchParams): Selection {
   const today = todayInBuenosAires()
   const fecha = params.get('fecha') ?? ''
-  const validFecha = DATE_PATTERN.test(fecha) && fecha >= today ? fecha : ''
+  const validFecha =
+    DATE_PATTERN.test(fecha) && fecha >= today && fecha <= latestBookableDate() ? fecha : ''
   const hora = params.get('hora') ?? ''
   const personas = Number(params.get('personas') ?? '1')
   const tipo = params.get('tipo')
@@ -70,15 +63,32 @@ function paramsFromSelection(selection: Selection): URLSearchParams {
 }
 
 /**
- * Create a reservation (US-11, spec 005): date, time, party size and seating preference.
- * The selection lives in the URL, so reloading or going back keeps it (nothing is written).
- * The reservation itself is created in US-13, after the explicit confirmation.
+ * Create a reservation (US-11, spec 005): date, time, party size and seating preference, then
+ * the review and the explicit confirmation (US-13, `?paso=revision`). The selection lives in the
+ * URL, so reloading or going back keeps it; nothing is written until the diner confirms.
  */
 export function ReservationPage() {
   const { restauranteId = '' } = useParams<{ restauranteId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const queryClient = useQueryClient()
   const { data: account, isPending: accountPending } = useAccount()
+  const [confirmed, setConfirmed] = useState<Reservation | null>(null)
+  // Why the diner is back at the selection (a 409 or a stale review). It stays, focused, until
+  // they change something: a toast would vanish before some people read it.
+  const [returnNotice, setReturnNotice] = useState('')
+  const returnNoticeRef = useRef<HTMLParagraphElement>(null)
+  const nextButton = useRef<HTMLButtonElement>(null)
+  const focusNext = useRef(false)
+  // After a 409 the refreshed availability may clear the time or the preference: quietly,
+  // since the notice above already explains it.
+  const quietNotices = useRef(false)
+  const confirmedId = searchParams.get('confirmada')
+  const reviewing = searchParams.get('paso') === 'revision'
+  // True when «Siguiente» added the review to the history, so «Volver» can go back to it.
+  const reviewPushed = useRef(false)
   const { data: restaurant, isPending: restaurantPending } = useQuery({
     queryKey: ['restaurants', restauranteId],
     queryFn: () => fetchRestaurant(restauranteId),
@@ -87,6 +97,22 @@ export function ReservationPage() {
   const selection = selectionFromParams(searchParams)
   const { fecha, hora, personas, tipo } = selection
   const [pastDateError, setPastDateError] = useState('')
+  // What is typed in the date field until it is a whole date in range: typing goes through
+  // partial values (year 0002…) that must not be rejected one by one.
+  const [dateDraft, setDateDraft] = useState<string | null>(null)
+
+  // Reloading the confirmation reads the reservation back from the diner's day.
+  const confirmedReload = useQuery({
+    queryKey: ['reservations', fecha],
+    queryFn: () => fetchDayReservations(fecha),
+    enabled: confirmedId !== null && confirmed?.id !== confirmedId && fecha !== '',
+  })
+  const shownConfirmation =
+    confirmedId === null
+      ? null
+      : confirmed?.id === confirmedId
+        ? confirmed
+        : (confirmedReload.data?.find((reservation) => reservation.id === confirmedId) ?? null)
 
   const update = useCallback(
     (patch: Partial<Selection>) => {
@@ -95,11 +121,18 @@ export function ReservationPage() {
     },
     [searchParams, setSearchParams],
   )
+  // A change made by the diner: the notice about why they came back has done its job.
+  const choose = (patch: Partial<Selection>) => {
+    setReturnNotice('')
+    quietNotices.current = false
+    update(patch)
+  }
 
   const availability = useQuery({
     queryKey: ['availability', restauranteId, fecha, personas],
     queryFn: () => fetchAvailability(restauranteId, fecha, personas),
     enabled: fecha !== '',
+    retry: retryUnlessSessionExpired,
   })
   const day: DayAvailability | undefined = availability.data
   const maxPartySize = day?.max_party_size
@@ -111,25 +144,86 @@ export function ReservationPage() {
       fecha !== '' &&
       hora !== '' &&
       (maxPartySize === undefined || (maxPartySize > 0 && personas <= maxPartySize)),
+    retry: retryUnlessSessionExpired,
   })
   const tablesForStart: TablesAvailability | undefined = tables.data
+  // The review proposes the smallest group of the chosen area that seats the party (D2): the
+  // API lists the groups smallest first.
+  const assignedTable = tablesForStart?.tables.find((table) => !tipo || table.seating_area === tipo)
+
+  const leaveReview = useCallback(() => {
+    setSearchParams(paramsFromSelection(selectionFromParams(searchParams)), { replace: true })
+  }, [searchParams, setSearchParams])
+
+  // An expired session (the token lasts an hour) sends the diner to sign in again; the
+  // redirect below brings them back here with the selection.
+  const sessionExpired = [availability.error, tables.error].some(
+    (error) => error instanceof SessionExpiredError,
+  )
+  useEffect(() => {
+    if (sessionExpired) signOut(queryClient)
+  }, [sessionExpired, queryClient])
+
+  // A reloaded or stale review whose time or table is gone goes back to the selection, with
+  // one notice. The selection's own notices below wait until then.
+  const reviewIsStale =
+    reviewing &&
+    ((day !== undefined && !day.slots.some((slot) => slot.start_time === hora && slot.available)) ||
+      (tablesForStart !== undefined && !tables.isFetching && !assignedTable))
+  const handledStaleReview = useRef(false)
+  const handledDay = useRef<DayAvailability | undefined>(undefined)
+  const handledTables = useRef<TablesAvailability | undefined>(undefined)
+  useEffect(() => {
+    if (!reviewIsStale || handledStaleReview.current) return
+    handledStaleReview.current = true
+    // These responses are answered here: the selection's own notices must not repeat them.
+    handledDay.current = day
+    handledTables.current = tablesForStart
+    quietNotices.current = true
+    setReturnNotice(STALE_REVIEW)
+    leaveReview()
+  }, [reviewIsStale, day, tablesForStart, toast, leaveReview])
+  useEffect(() => {
+    if (!reviewing) handledStaleReview.current = false
+  }, [reviewing])
+
+  // The tab title says which step this is.
+  useEffect(() => {
+    document.title = confirmedId
+      ? 'Tu reserva · Servido!'
+      : reviewing
+        ? 'Revisá tu reserva · Servido!'
+        : 'Reservar mesa · Servido!'
+  }, [confirmedId, reviewing])
+
+  // Back at the selection, focus lands on what explains it or on where the diner left off.
+  useEffect(() => {
+    if (returnNotice && !reviewing) returnNoticeRef.current?.focus()
+  }, [returnNotice, reviewing])
+  useEffect(() => {
+    if (reviewing || !focusNext.current) return
+    focusNext.current = false
+    nextButton.current?.focus()
+  }, [reviewing])
 
   // Each response is handled once: FR-013 clamps the party size and S4 clears a time that
   // is no longer available, without repeating the notice on a re-render (StrictMode).
-  const handledDay = useRef<DayAvailability | undefined>(undefined)
   useEffect(() => {
-    if (!day || day === handledDay.current) return
+    if (reviewing || !day || day === handledDay.current) return
     handledDay.current = day
     if (day.max_party_size > 0 && personas > day.max_party_size) {
-      toast(`La capacidad máxima de este restaurante es de ${day.max_party_size} personas.`)
+      if (!quietNotices.current) {
+        toast(`La capacidad máxima de este restaurante es de ${day.max_party_size} personas.`)
+      }
       update({ personas: day.max_party_size })
       return
     }
     if (hora && !day.slots.some((slot) => slot.start_time === hora && slot.available)) {
-      toast(`El horario de las ${hora} ya no está disponible. Elegí otro.`)
+      if (!quietNotices.current)
+        toast(`El horario de las ${hora} ya no está disponible. Elegí otro.`)
       update({ hora: '' })
     }
-  }, [day, hora, personas, toast, update])
+  }, [day, hora, personas, reviewing, toast, update])
 
   // S6/S7: when the tables change, a preference with no table left goes back to «Sin preferencia».
   // Changing the preference alone never resets it: that is what the empty state of S7 is for.
@@ -137,45 +231,83 @@ export function ReservationPage() {
   useEffect(() => {
     tipoRef.current = tipo
   }, [tipo])
-  const handledTables = useRef<TablesAvailability | undefined>(undefined)
   useEffect(() => {
-    if (!tablesForStart || tablesForStart === handledTables.current) return
+    if (reviewing || !tablesForStart || tablesForStart === handledTables.current) return
     handledTables.current = tablesForStart
     const preferred = tipoRef.current
     if (!preferred) return
     if (tablesForStart.tables.some((table) => table.seating_area === preferred)) return
-    toast(
-      `No quedan mesas en ${AREA_LABEL[preferred].toLowerCase()} para ese horario. Volvimos a «Sin preferencia».`,
-    )
+    if (!quietNotices.current) {
+      toast(
+        `No quedan mesas ${SEATING_AREA_PHRASES[preferred]} para ese horario. Volvimos a «Sin preferencia».`,
+      )
+    }
     update({ tipo: null })
-  }, [tablesForStart, toast, update])
+  }, [reviewing, tablesForStart, toast, update])
 
-  if (accountPending || restaurantPending) {
+  if (
+    accountPending ||
+    restaurantPending ||
+    (reviewing && hora && (availability.isLoading || tables.isLoading)) ||
+    (confirmedId !== null && !shownConfirmation && confirmedReload.isLoading)
+  ) {
     return (
       <main className={styles.loading}>
         <LogoSpinner />
       </main>
     )
   }
-  // The page (and the API behind it) is diner-only: a visitor signs in, a restaurant goes home.
-  if (account?.rol !== 'diner') return <Navigate to={account ? '/' : '/ingresar'} replace />
+  // The page (and the API behind it) is diner-only: a visitor signs in and comes back here, a
+  // restaurant goes home.
+  const backHere = `/ingresar?volver=${encodeURIComponent(location.pathname + location.search)}`
+  if (account?.rol !== 'diner') return <Navigate to={account ? '/' : backHere} replace />
 
   if (!restaurant) {
     return (
       <main className={styles.container}>
         <h1 className={styles.title}>Restaurante no encontrado</h1>
         <p className={styles.muted}>El restaurante no existe o no está disponible.</p>
+        <div className={styles.actions}>
+          <Button to="/mapa">Ver restaurantes</Button>
+        </div>
       </main>
     )
   }
 
-  const changeDate = (value: string) => {
-    if (value && value < todayInBuenosAires()) {
-      setPastDateError('No podés reservar en una fecha pasada.')
+  // The test restaurants of spec 002 aren't in the database: only real ones take reservations.
+  if (!restaurant.bookable) {
+    return (
+      <main className={styles.container}>
+        <h1 className={styles.title}>{restaurant.name}</h1>
+        <p className={styles.muted}>Este restaurante todavía no toma reservas.</p>
+        <div className={styles.actions}>
+          <Button to={`/restaurantes/${restaurant.id}`}>Volver al restaurante</Button>
+        </div>
+      </main>
+    )
+  }
+
+  function dateError(value: string) {
+    if (value < todayInBuenosAires()) return 'No podés reservar en una fecha pasada.'
+    if (value > latestBookableDate()) return `Podés reservar hasta ${MAX_DAYS_AHEAD} días antes.`
+    return ''
+  }
+
+  // A date in range is taken as soon as it is complete; one out of range is only reported
+  // when the diner leaves the field, so typing isn't interrupted.
+  const typeDate = (value: string) => {
+    if (value && dateError(value)) {
+      setDateDraft(value)
       return
     }
+    setDateDraft(null)
     setPastDateError('')
-    update({ fecha: value })
+    choose({ fecha: value })
+  }
+  const leaveDate = () => {
+    if (dateDraft === null) return
+    setPastDateError(dateError(dateDraft))
+    setDateDraft(null)
   }
 
   // Until the first response gives the cap, the stepper stays at 1 and its "+" is disabled.
@@ -193,9 +325,8 @@ export function ReservationPage() {
       !tablesForStart.tables.some((table) => table.seating_area === area),
     )
 
-  // «Siguiente» (US-11 → US-13, following prototipo-us11.html): it only lights up with a
-  // complete selection that has a free table. It does not navigate yet: the review step of
-  // US-13 is built in Sprint 3.
+  // «Siguiente» (US-11 → US-13, following prototipo-us11.html) opens the review; it only
+  // lights up with a complete selection that has a free table.
   const freeTables = tablesForStart
     ? tablesForStart.tables.filter((table) => !tipo || table.seating_area === tipo).length
     : 0
@@ -245,7 +376,7 @@ export function ReservationPage() {
                 selected={hora === slot.start_time}
                 disabled={!slot.available}
                 className={styles.slotChip}
-                onClick={() => update({ hora: slot.start_time })}
+                onClick={() => choose({ hora: slot.start_time })}
               >
                 {slot.start_time}{' '}
                 {!slot.available && <small className={styles.chipNote}>Ocupado</small>}
@@ -293,8 +424,8 @@ export function ReservationPage() {
             </p>
           ) : (
             <p className={cx(styles.notice, styles.ok)} role="status">
-              Hay mesa disponible{tipo ? ` en ${AREA_LABEL[tipo].toLowerCase()}` : ''} para ese día
-              y horario. Te asignamos una automáticamente.
+              Hay mesa disponible{tipo ? ` ${SEATING_AREA_PHRASES[tipo]}` : ''} para ese día y
+              horario. Te asignamos una automáticamente.
             </p>
           )}
         </>
@@ -302,25 +433,115 @@ export function ReservationPage() {
     </>
   )
 
-  return (
-    <main className={styles.container}>
+  // «Siguiente» adds a history entry, so the phone's back button returns to the selection.
+  function openReview() {
+    const params = paramsFromSelection(selection)
+    params.set('paso', 'revision')
+    reviewPushed.current = true
+    setReturnNotice('')
+    quietNotices.current = false
+    setSearchParams(params)
+  }
+
+  function backToSelection() {
+    focusNext.current = true
+    if (reviewPushed.current) {
+      reviewPushed.current = false
+      navigate(-1)
+      return
+    }
+    leaveReview()
+  }
+
+  function refreshAvailability() {
+    void queryClient.invalidateQueries({ queryKey: ['availability'] })
+    void queryClient.invalidateQueries({ queryKey: ['availability-tables'] })
+    void queryClient.invalidateQueries({ queryKey: ['reservations'] })
+  }
+
+  const header = (eyebrow: string) => (
+    <>
       <Link to={`/restaurantes/${restauranteId}`} className={styles.back}>
         ← Volver al restaurante
       </Link>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Reservar mesa</p>
+          <p className={styles.eyebrow}>{eyebrow}</p>
           <h1 className={styles.title}>{restaurant.name}</h1>
-          <p className={styles.muted}>
-            {restaurant.cuisine} · {restaurant.location.neighborhood}
-          </p>
+          {(restaurant.cuisine || restaurant.location.neighborhood) && (
+            <p className={styles.muted}>
+              {[restaurant.cuisine, restaurant.location.neighborhood].filter(Boolean).join(' · ')}
+            </p>
+          )}
         </div>
-        {isUsingMockData && (
-          <StatusPill tone="warn" className={styles.mockPill}>
-            Datos de prueba
-          </StatusPill>
-        )}
       </header>
+    </>
+  )
+
+  if (confirmedId !== null && !shownConfirmation) {
+    return (
+      <main className={styles.container}>
+        {header('Tu reserva')}
+        <p className={styles.muted}>No encontramos esa reserva.</p>
+        <div className={styles.actions}>
+          <Button to="/">Ir al inicio</Button>
+        </div>
+      </main>
+    )
+  }
+
+  if (shownConfirmation) {
+    return (
+      <main className={styles.container}>
+        {header('Tu reserva')}
+        <ConfirmedStep reservation={shownConfirmation} />
+      </main>
+    )
+  }
+
+  if (reviewing && hora && tablesForStart && assignedTable) {
+    return (
+      <main className={styles.container}>
+        {header('Reservar mesa')}
+        <ReviewStep
+          restaurant={{ id: restaurant.id, name: restaurant.name }}
+          fecha={fecha}
+          hora={hora}
+          endTime={timeInBuenosAires(tablesForStart.ends_at)}
+          personas={personas}
+          table={assignedTable}
+          onBack={backToSelection}
+          onConfirmed={(reservation) => {
+            setConfirmed(reservation)
+            // The review leaves the history: going back can't confirm the same review again.
+            reviewPushed.current = false
+            setSearchParams(
+              { confirmada: reservation.id, fecha: reservation.date },
+              { replace: true },
+            )
+            refreshAvailability()
+          }}
+          onConflict={(message) => {
+            quietNotices.current = true
+            setReturnNotice(message)
+            refreshAvailability()
+            leaveReview()
+          }}
+          // Signing out is enough: the redirect for visitors sends the diner to sign in and back.
+          onSessionExpired={() => signOut(queryClient)}
+        />
+      </main>
+    )
+  }
+
+  return (
+    <main className={styles.container}>
+      {header('Reservar mesa')}
+      {returnNotice && (
+        <p ref={returnNoticeRef} tabIndex={-1} className={styles.returnNotice} role="alert">
+          {returnNotice}
+        </p>
+      )}
 
       <div className={styles.steps}>
         <Card className={styles.step}>
@@ -339,13 +560,16 @@ export function ReservationPage() {
                 id="fecha"
                 type="date"
                 min={todayInBuenosAires()}
-                value={fecha}
+                max={latestBookableDate()}
+                value={dateDraft ?? fecha}
                 aria-invalid={pastDateError ? true : undefined}
+                aria-describedby={pastDateError ? 'fecha-error' : undefined}
                 className={cx(styles.date, pastDateError && styles.dateInvalid)}
-                onChange={(event) => changeDate(event.target.value)}
+                onChange={(event) => typeDate(event.target.value)}
+                onBlur={leaveDate}
               />
               {pastDateError && (
-                <p className={styles.error} role="alert">
+                <p id="fecha-error" className={styles.error} role="alert">
                   {pastDateError}
                 </p>
               )}
@@ -362,7 +586,7 @@ export function ReservationPage() {
                   value={shownParty}
                   min={1}
                   max={stepperMax}
-                  onChange={(value) => update({ personas: value })}
+                  onChange={(value) => choose({ personas: value })}
                 />
                 <p className={styles.hint}>
                   {maxPartySize !== undefined && maxPartySize > 0
@@ -392,10 +616,11 @@ export function ReservationPage() {
             ¿Dónde querés sentarte?
           </h2>
           <div className={styles.chips} role="group" aria-label="Preferencia de tipo de mesa">
-            <Chip selected={tipo === null} onClick={() => update({ tipo: null })}>
+            <Chip selected={tipo === null} onClick={() => choose({ tipo: null })}>
               Sin preferencia
             </Chip>
-            {SEATING_AREAS.map((area) => {
+            {/* Only the areas the restaurant has: never offer an area that doesn't exist. */}
+            {SEATING_AREAS.filter((area) => day?.seating_areas.includes(area.value)).map((area) => {
               const full = areaIsFull(area.value)
               return (
                 <Chip
@@ -403,7 +628,7 @@ export function ReservationPage() {
                   selected={tipo === area.value}
                   disabled={full}
                   className={styles.slotChip}
-                  onClick={() => update({ tipo: area.value })}
+                  onClick={() => choose({ tipo: area.value })}
                 >
                   {area.label} {full && <small className={styles.chipNote}>Sin mesas</small>}
                 </Chip>
@@ -414,7 +639,13 @@ export function ReservationPage() {
         </Card>
 
         <div className={styles.actions}>
-          <Button disabled={!canContinue}>Siguiente</Button>
+          <Button
+            ref={nextButton}
+            disabled={!canContinue || dateDraft !== null}
+            onClick={openReview}
+          >
+            Siguiente
+          </Button>
         </div>
       </div>
     </main>

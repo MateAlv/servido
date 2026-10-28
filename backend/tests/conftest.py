@@ -13,7 +13,8 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.db import engine, get_session
 from app.main import app
-from app.services import google, mail
+from app.services import availability, google, mail
+from tests.reservations import NOW
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -77,3 +78,10 @@ def google_token(monkeypatch: pytest.MonkeyPatch) -> GoogleTokenFactory:
         return jwt.encode(payload, key, algorithm="RS256", headers={"kid": "test"})
 
     return sign
+
+
+@pytest.fixture(autouse=True)
+def fixed_now(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reservations depend on the clock: every test runs on Monday 2 November 2026, 09:00 in
+    Buenos Aires (tests/reservations.py)."""
+    monkeypatch.setattr(availability, "current_time", lambda: NOW)

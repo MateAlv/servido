@@ -10,6 +10,16 @@
 }
 
 /* Leaflet anchors the icon at its coordinate; center the pin above it. */
+/* Leaflet makes this 0×0 wrapper the focusable marker: show the ring around the pin instead. */
+.pinWrapper:focus-visible {
+  outline: none;
+}
+
+.pinWrapper:focus-visible > * {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
 .pinWrapper {
   display: flex;
   align-items: flex-end;

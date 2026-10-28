@@ -1,8 +1,9 @@
 import secrets
 from pathlib import Path
+from typing import Annotated
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Body, File, HTTPException, UploadFile, status
 from sqlalchemy import delete, or_, select
 from sqlalchemy.exc import IntegrityError
 
@@ -23,7 +24,12 @@ from app.schemas.restaurant import (
     RestaurantRegistrationRequest,
     RestaurantResponse,
 )
-from app.schemas.table_inventory import TableInventoryGroupPayload, TableInventoryGroupResponse
+from app.schemas.table_inventory import (
+    MAX_GROUPS,
+    TableInventoryGroupPayload,
+    TableInventoryGroupResponse,
+)
+from app.services import availability
 from app.services.auth import hash_password, normalize_email
 from app.services.geocoding import GeocodingError, geocode_address
 from app.services.opening_hours import validate_shifts
@@ -228,14 +234,23 @@ def replace_opening_hours(
     return shifts
 
 
-def table_inventory_response(group: TableInventoryGroup) -> TableInventoryGroupResponse:
+def table_inventory_response(
+    group: TableInventoryGroup, taken_now: dict[tuple[int, str], set[int]]
+) -> TableInventoryGroupResponse:
+    """`free_quantity` counts the tables of the group not held by a reservation right now."""
+    taken = taken_now.get((group.capacity, group.seating_area), set())
     return TableInventoryGroupResponse(
         id=group.id,
         capacity=group.capacity,
         quantity=group.quantity,
+        seating_area=group.seating_area,
         available=group.available,
-        free_quantity=group.quantity if group.available else 0,
+        free_quantity=group.quantity - len(taken) if group.available else 0,
     )
+
+
+def tables_taken_now(session: SessionDep, restaurant_id: UUID) -> dict[tuple[int, str], set[int]]:
+    return availability.tables_in_use(session, restaurant_id, availability.current_time())
 
 
 @router.get("/restaurante/mesas", response_model=list[TableInventoryGroupResponse])
@@ -246,14 +261,17 @@ def get_table_inventory(
     groups = session.scalars(
         select(TableInventoryGroup)
         .where(TableInventoryGroup.restaurant_id == restaurant.id_restaurante)
-        .order_by(TableInventoryGroup.capacity)
+        .order_by(TableInventoryGroup.capacity, TableInventoryGroup.seating_area)
     )
-    return [table_inventory_response(group) for group in groups]
+    taken_now = tables_taken_now(session, restaurant.id_restaurante)
+    return [table_inventory_response(group, taken_now) for group in groups]
 
 
 @router.put("/restaurante/mesas", response_model=list[TableInventoryGroupResponse])
 def replace_table_inventory(
-    payload: list[TableInventoryGroupPayload], claims: TokenClaimsDep, session: SessionDep
+    payload: Annotated[list[TableInventoryGroupPayload], Body(max_length=MAX_GROUPS)],
+    claims: TokenClaimsDep,
+    session: SessionDep,
 ) -> list[TableInventoryGroupResponse]:
     restaurant = restaurant_from_claims(claims, session)
     try:
@@ -269,8 +287,10 @@ def replace_table_inventory(
             {
                 "reservation_id": str(item.reservation_id),
                 "date": item.date.isoformat(),
-                "start_time": item.start_time.isoformat(),
-                "quantity": item.quantity,
+                "start_time": item.start_time.strftime("%H:%M"),
+                "party_size": item.party_size,
+                "capacity": item.capacity,
+                "seating_area": item.seating_area,
             }
             for item in error.result.affected_reservations
         ]
@@ -284,4 +304,5 @@ def replace_table_inventory(
     except ValueError as error:
         session.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
-    return [table_inventory_response(group) for group in groups]
+    taken_now = tables_taken_now(session, restaurant.id_restaurante)
+    return [table_inventory_response(group, taken_now) for group in groups]

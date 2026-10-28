@@ -6,7 +6,7 @@ import {
   type RestaurantProfile,
   type TableGroup,
 } from '../../api/restaurantConfiguration'
-import type { Account } from '../../api/session'
+import { sessionHeaders, type Account } from '../../api/session'
 import {
   Button,
   Card,
@@ -54,6 +54,7 @@ export function RestaurantHome({ account }: { account: Account }) {
   const [profile, setProfile] = useState<RestaurantProfile>()
   const [hours, setHours] = useState<OpeningShift[]>([])
   const [tables, setTables] = useState<TableGroup[]>([])
+  const [dishCount, setDishCount] = useState<number>()
   const [dashboardError, setDashboardError] = useState('')
 
   useEffect(() => {
@@ -61,6 +62,9 @@ export function RestaurantHome({ account }: { account: Account }) {
       configurationApi.getProfile().then(setProfile),
       configurationApi.getHours().then(setHours),
       configurationApi.getTables().then(setTables),
+      fetch('/api/restaurantes/me/platos', { headers: sessionHeaders() })
+        .then((response) => (response.ok ? response.json() : []))
+        .then((dishes: unknown[]) => setDishCount(dishes.length)),
     ]).catch((requestError: Error) => setDashboardError(requestError.message))
   }, [])
 
@@ -70,6 +74,8 @@ export function RestaurantHome({ account }: { account: Account }) {
     .reduce((total, group) => total + group.quantity, 0)
   const totalTables = tables.reduce((total, group) => total + group.quantity, 0)
   const configuredProfile = Boolean(profile?.nombre && profile.latitud !== null)
+  // The same rule as GET /api/restaurants (spec 005, D4): location, an active shift and tables.
+  const takesReservations = configuredProfile && activeHours.length > 0 && availableTables > 0
 
   return (
     <main className={styles.page}>
@@ -144,8 +150,8 @@ export function RestaurantHome({ account }: { account: Account }) {
                 </Button>
               }
             >
-              <p>{profile?.tipo_cocina ?? 'Tipo de cocina sin cargar'}</p>
-              <p>{profile?.direccion ?? 'Dirección pendiente de verificar'}</p>
+              {profile?.tipo_cocina && <p>{profile.tipo_cocina}</p>}
+              {profile?.direccion && <p>{profile.direccion}</p>}
               <StatusPill tone={configuredProfile ? 'ok' : 'warn'}>
                 {configuredProfile ? 'Perfil completo' : 'Falta configurar'}
               </StatusPill>
@@ -196,7 +202,7 @@ export function RestaurantHome({ account }: { account: Account }) {
               </p>
               <p className={styles.muted}>
                 {tables.length > 0
-                  ? `${tables.length} grupos por capacidad`
+                  ? `${tables.length} ${tables.length === 1 ? 'grupo de mesas' : 'grupos de mesas'}`
                   : 'Agregá grupos de mesas'}
               </p>
             </DashboardCard>
@@ -213,7 +219,11 @@ export function RestaurantHome({ account }: { account: Account }) {
                 </Button>
               }
             >
-              <p>Tu menú todavía está vacío.</p>
+              {dishCount !== undefined && dishCount > 0 && (
+                <p>
+                  {dishCount} {dishCount === 1 ? 'plato cargado' : 'platos cargados'}
+                </p>
+              )}
               <p className={styles.muted}>Agregá platos, precios y tiempos de preparación.</p>
             </DashboardCard>
           </Reveal>
@@ -229,8 +239,11 @@ export function RestaurantHome({ account }: { account: Account }) {
                 </Button>
               }
             >
-              <p>Todavía no hay reservas recientes.</p>
-              <p className={styles.muted}>Cuando tu local esté listo, las vas a ver acá.</p>
+              <p>
+                {takesReservations
+                  ? 'Los comensales ya pueden reservar en tu local.'
+                  : 'Completá tus datos con la dirección, tus horarios y tus mesas para recibir reservas.'}
+              </p>
             </DashboardCard>
           </Reveal>
         </div>

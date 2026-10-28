@@ -37,7 +37,7 @@
 
 .eyebrow {
   margin: 0;
-  color: var(--color-primary);
+  color: var(--color-primary-text);
   font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -193,14 +193,42 @@
   white-space: nowrap;
 }
 
-.mockPill {
-  white-space: nowrap;
-}
-
 /* Siguiente (prototipo-us11.html): right-aligned under the three steps. */
 .actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 12px;
+}
+
+/* US-13: the review and the confirmed reservation, one row per value. */
+.summary {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.summary > div {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.summary dt {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.summary dd {
+  margin: 0;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.summary dd::first-letter {
+  text-transform: uppercase;
 }
 
 @media (max-width: 560px) {
@@ -215,4 +243,37 @@
   .fields {
     grid-template-columns: 1fr;
   }
+}
+
+/* Why the diner is back at the selection (US-13: 409 or a stale review). */
+.returnNotice {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-field);
+  background: var(--color-warn-bg);
+  color: var(--color-text);
+  font-weight: 800;
+}
+
+/* The overlap warning of the review (US-13 S6). */
+.warn {
+  border-color: var(--color-warn);
+  background: var(--color-warn-bg);
+}
+
+/* Review and confirmation: the main action first and full width on phones. */
+.reviewActions {
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 560px) {
+  .reviewActions {
+    display: flex;
+    justify-content: flex-start;
+  }
+}
+
+.confirmedPill {
+  justify-self: start;
 }

@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react'
-import { Navigate } from 'react-router'
+import { Navigate, useSearchParams } from 'react-router'
 
 import { useAccount } from '../../api/session'
+import { returnPath } from '../../lib/returnPath'
 
-/** Sign-in and sign-up pages make no sense with an open session: go home instead. */
+/** Sign-in and sign-up pages make no sense with an open session: go back where the person was
+ * (`?volver=`), or home. */
 export function RedirectIfSignedIn({ children }: { children: ReactNode }) {
   const { data: account } = useAccount()
-  return account ? <Navigate to="/" replace /> : children
+  const [searchParams] = useSearchParams()
+  return account ? <Navigate to={returnPath(searchParams)} replace /> : children
 }

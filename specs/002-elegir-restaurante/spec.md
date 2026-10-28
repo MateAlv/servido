@@ -20,7 +20,7 @@ Como **Comensal**, quiero ver la ubicación y características de cada restauran
 
 1. **Dado** que habilité mi ubicación, **Cuando** abro el mapa, **Entonces** veo mi posición actual y los restaurantes como marcadores.
 
-2. **Dado** que el mapa está visible, **Cuando** miro cada restaurante, **Entonces** se muestra un indicador de concurrencia (bajo / medio / alto).
+2. **Dado** que el mapa está visible, **Cuando** miro cada restaurante, **Entonces** se muestra un indicador de concurrencia (bajo / medio / alto). *(Decisión del equipo, 28/10, falta que la PO la valide: el indicador aparece al tocar el marcador, en la tarjeta del restaurante; el marcador muestra solo el nombre y el mapa no lleva leyenda. Los restaurantes reales sin datos de concurrencia no muestran el indicador: D4.)*
 
 3. **Dado** que el mapa está visible, **Cuando** miro un restaurante, **Entonces** puedo ver la distancia desde mi posición hasta él.
 
@@ -79,7 +79,7 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 
 1. **Dado** que habilité mi ubicación, **Cuando** veo el listado, **Entonces** cada restaurante muestra la distancia desde mi posición.
 
-2. **Dado** que veo el listado, **Cuando** miro un restaurante, **Entonces** veo su indicador de concurrencia (bajo / medio / alto).
+2. **Dado** que veo el listado, **Cuando** miro un restaurante, **Entonces** veo su indicador de concurrencia (bajo / medio / alto). *(Salvo los restaurantes reales sin datos de concurrencia, que no muestran el indicador: D4, 28/10, falta que la PO lo valide.)*
 
 3. **Dado** que el listado permanece abierto, **Cuando** transcurre el período de actualización, **Entonces** la concurrencia se actualiza sin recargar.
 
@@ -113,7 +113,7 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 
 - **FR-001**  *(US-5)*: El sistema MUST mostrar un mapa interactivo con la posición actual del comensal y la ubicación de cada restaurante.
 
-- **FR-002**  *(US-5)*: El sistema MUST mostrar para cada restaurante un indicador de concurrencia de tres niveles: bajo, medio, alto.
+- **FR-002**  *(US-5)*: El sistema MUST mostrar para cada restaurante un indicador de concurrencia de tres niveles: bajo, medio, alto. *(Salvo los restaurantes reales sin datos de concurrencia, que no muestran el indicador: D4, 28/10, falta que la PO lo valide.)*
 
 - **FR-003**  *(US-5)*: El sistema MUST mostrar la distancia desde la posición del comensal hasta cada restaurante.
 
@@ -135,7 +135,7 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 
 - **FR-012**: El filtro MUST aplicarse sobre los marcadores del mapa.
 
-- **FR-014**  *(US-33)*: El sistema MUST mostrar, junto al mapa, el listado de los mismos restaurantes con distancia y concurrencia; el filtro de precio MUST aplicarse también al listado.
+- **FR-014**  *(US-33)*: El sistema MUST mostrar, junto al mapa, el listado de los mismos restaurantes con distancia y concurrencia; el filtro de precio MUST aplicarse también al listado. *(Salvo los restaurantes reales sin datos de concurrencia, que no muestran el indicador: D4, 28/10, falta que la PO lo valide.)*
 
 - **FR-013**  *(US-9)*: El detalle MUST mostrar la descripción, al menos una foto y las opiniones del restaurante. Mientras no existan reseñas reales (US-24, US-27), las opiniones son datos de prueba.
 
@@ -172,6 +172,7 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 ## Assumptions
 
 - Los datos del restaurante y su menú provienen de la carga realizada por el rol Restaurante.
+- *(Decisión del equipo, 28/10, D4; falta que la PO la valide)*: el mapa, el listado y el detalle muestran los restaurantes reales que se pueden reservar (con ubicación, turnos y mesas cargados, spec 004) junto con los de prueba. De los reales se muestra solo lo que existe: el rango de precios que cargó el restaurante, sin indicador de concurrencia ni calificaciones hasta que existan (cuando no hay datos no se muestra nada, en vez de avisar que faltan; tampoco se muestran la foto, el menú, las opiniones, la dirección o el barrio si el restaurante no los cargó). Solo los reales se pueden reservar (spec 005).
 
 - La distancia se calcula en línea recta, salvo que se defina otra métrica.
 
