@@ -127,6 +127,26 @@ def taken_tables(
     return taken
 
 
+def tables_in_use(
+    session: Session, restaurant_id: UUID, now: datetime
+) -> dict[tuple[int, str], set[int]]:
+    """Table numbers of each group held by a confirmed reservation at this moment."""
+    in_use = session.execute(
+        select(
+            Reservation.table_capacity, Reservation.seating_area, Reservation.table_number
+        ).where(
+            Reservation.restaurant_id == restaurant_id,
+            Reservation.status == "confirmed",
+            Reservation.starts_at <= now,
+            Reservation.ends_at > now,
+        )
+    )
+    taken: dict[tuple[int, str], set[int]] = {}
+    for capacity, seating_area, table_number in in_use:
+        taken.setdefault((capacity, seating_area), set()).add(table_number)
+    return taken
+
+
 def free_groups(
     session: Session,
     restaurant_id: UUID,

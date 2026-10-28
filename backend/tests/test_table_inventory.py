@@ -147,3 +147,22 @@ def test_us10_s1_two_groups_cannot_share_capacity_and_seating_area(client: TestC
     assert (
         client.put("/api/restaurante/mesas", json=unknown_area, headers=headers).status_code == 400
     )
+
+
+def test_us10_free_quantity_counts_tables_in_use_right_now(
+    client: TestClient, session: Session
+) -> None:
+    from tests.reservations import NOW
+
+    headers = _auth(client)
+    groups = [{"capacity": 2, "quantity": 3, "seating_area": "indoor"}]
+    assert client.put("/api/restaurante/mesas", json=groups, headers=headers).status_code == 200
+    restaurant = session.scalar(select(Restaurant).where(Restaurant.email == "profile@example.com"))
+    diner = diner_id(client, diner_headers(client))
+    # One reservation is under way now; another starts in 80 minutes and doesn't count yet.
+    add_reservation(session, restaurant, diner, NOW.date(), time(8, 30), 2, "indoor", 1)
+    add_reservation(session, restaurant, diner, NOW.date(), time(10, 20), 2, "indoor", 2)
+
+    body = client.get("/api/restaurante/mesas", headers=headers).json()
+
+    assert body[0]["free_quantity"] == 2

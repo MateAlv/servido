@@ -245,7 +245,7 @@ def table_inventory_response(
 
 
 def tables_taken_now(session: SessionDep, restaurant_id: UUID) -> dict[tuple[int, str], set[int]]:
-    return availability.taken_tables(session, restaurant_id, availability.current_time())
+    return availability.tables_in_use(session, restaurant_id, availability.current_time())
 
 
 @router.get("/restaurante/mesas", response_model=list[TableInventoryGroupResponse])
