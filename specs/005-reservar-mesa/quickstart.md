@@ -52,8 +52,17 @@ With the mock the page shows «Datos de prueba». That pill and the fixture disa
 
 Insert two overlapping reservations for the same table by hand (psql) or run `test_us11_edge_database_rejects_overlapping_reservations`; the second one must fail with an `IntegrityError` raised by the exclusion constraint.
 
+## US-13: review and confirm (after PR C)
+
+1. As a restaurant, load the profile with an address, a shift and table groups with a seating area (the configuration screens of spec 004). The restaurant now shows on the diner's map.
+2. As a diner, open it from the map and press «Reservar mesa». Choose date, time, party size and preference, then «Siguiente».
+3. The review shows the restaurant, the date, the time range (90 minutes), the party size and «Mesa para N · Tipo» (S1, S2). Nothing exists in `reservations` yet (S4).
+4. «Volver» returns with everything selected (S3). «Siguiente» again, then «Confirmar reserva»: the reservation is confirmed and shown (S5).
+5. Book another overlapping time at any restaurant: the review warns «Ya tenés una reserva en … de … a …» and still lets you confirm (S6).
+6. With two browsers, book the last free table of a group at the same time: one confirms, the other gets «La mesa se ocupó mientras confirmabas…» and keeps its selection.
+7. As the restaurant, try to lower the quantity of that group: it answers with the booked reservation and changes nothing.
+
 ## What this feature does not do yet
 
-- No reservation is created and nothing is confirmed: that is US-13.
-- No restaurant hours or tables screens: spec 004.
-- The mock is a demo aid, not a feature: it is removed as soon as the endpoints exist (T018).
+- Cancel or modify a reservation (Sprint 3 and later).
+- Notifications or a receipt of the reservation.

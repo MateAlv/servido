@@ -86,13 +86,44 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 
 ---
 
-## Phase 3: US-13 — Confirmar datos.
+## Phase 3: US-13 — Confirmar datos (and the pieces it needs), planned 28/10
 
-- [ ] T025 [US13] Update `plan.md`, `data-model.md` and `contracts/` with the review screen and the confirmation endpoint, and get the PO's answer on the sprint-scope question recorded in `plan.md`
-- [ ] T026 [US13] New migration adding `status` to `reservations` (`confirmed` / `cancelled`) in `backend/migrations/versions/`
-- [ ] T027 [US13] `POST /api/reservations` in `backend/app/api/reservation.py`: revalidate with `app/services/availability.py` inside the transaction, reject `party_size > max_party_size` with `400`, answer `409` when the table was taken meanwhile, and rely on the exclusion constraint for the double submit
-- [ ] T028 [US13] Review step in `frontend/src/pages/ReservationPage.tsx` showing restaurant, date, time, party size and the table assigned by the confirmation endpoint (US-11 informs availability but never picks a table, decision of 23/10), with "Volver" keeping the selections (`Ticket` is read; do not extend it here). This step is never mocked: it must persist a real reservation
-- [ ] T029 [US13] Tests `test_us13_s1_…` to `test_us13_s5_…` in `backend/tests/test_reservation.py` plus the UI-only review tests in `frontend/src/pages/ReservationPage.test.tsx`
+**Status note (28/10)**: spec 004 is merged with grouped tables, and the team took decisions D1–D8 (`research.md`). They replace the earlier foundational and backend tasks: T002–T005 become T034–T037 (groups instead of a `tables` FK, `status` included), T006–T011 and T014–T016 become T038–T041, T017–T018 stay as they are, and T025–T029 become the tasks below. The superseded tasks are left unchecked on purpose and are not done separately.
+
+- [X] T033 [US13] Take decisions D1–D8, update `spec.md` (US-13 S2 and S6, FR-014–FR-016, edge cases), `plan.md`, `research.md`, `data-model.md`, `contracts/` and spec 004 (`seating_area`, FR-009), record them in `specs/README.md`, and add the overlap warning to US-13 in the team workbook
+
+### PR A — seating area, reservations table, real availability (US-11 backend)
+
+- [ ] T034 [P] [US13] Tests first in `backend/tests/test_table_inventory.py`: `test_us10_s1_groups_have_a_seating_area` (existing groups default to `indoor`, two groups with the same capacity and area answer `400`)
+- [ ] T035 [US13] `seating_area` on `TableInventoryGroup` (`backend/app/models/table_inventory.py`), its schema, `replace_inventory` and the unique key (restaurant, capacity, seating area)
+- [ ] T036 [US13] `Reservation` model in `backend/app/models/reservation.py` per `data-model.md` (group identity + `table_number`, `ends_at` set by the service, `status`), imported in `backend/app/models/__init__.py`
+- [ ] T037 [US13] Migration `backend/migrations/versions/006_reservations.py` after `005_merge_feature_heads`: `btree_gist`, `table_inventory.seating_area` with default `indoor`, the new unique key, `reservations` with the exclusion constraint, the unique index for double submits and both indexes; `downgrade()` drops them
+- [ ] T038 [P] [US13] Pytest helpers in `backend/tests/conftest.py`: a bookable restaurant (coordinates, a shift, table groups) and a confirmed reservation at a given start
+- [ ] T039 [P] [US11] The deferred US-11 backend tests in `backend/tests/test_reservation.py` (T006–T011), rewritten for groups: past date, slots inside shifts, closed weekday, occupied slot, groups with enough capacity, empty list, max party size, past times of today
+- [ ] T040 [US11] `backend/app/services/availability.py` with rules 1–8 of `data-model.md`, and `backend/app/schemas/reservation.py`
+- [ ] T041 [US11] `GET /api/restaurants/{restaurant_id}/availability` and `/availability/tables` in `backend/app/api/reservation.py`, mounted in `app/api/__init__.py`; diner role only
+- [ ] T042 [US10] Seating area selector per group in `frontend/src/pages/TableInventoryPage.tsx` with «Adentro», «Afuera» and «Terraza», and its test
+- [ ] T017 and T018 (above): `make api-types`, swap `frontend/src/api/availability.ts` to the typed client for the group response, delete the fixture and the «Datos de prueba» label, update `ReservationPage.test.tsx`
+
+### PR B — bookable restaurants for the diner (D4)
+
+- [ ] T043 [P] Tests in `backend/tests/test_public_restaurants.py`: only bookable restaurants are listed, the detail includes the menu, unknown or not bookable answers `404`
+- [ ] T044 `GET /api/restaurants` and `/api/restaurants/{restaurant_id}` in `backend/app/api/public_restaurant.py` per `contracts/restaurants-api.md`
+- [ ] T045 `frontend/src/api/restaurants.ts`: fetch the bookable restaurants and map them into `RestaurantPublic`; the map, the list and the detail show them next to the fixtures; «Reservar mesa» only for real ones; tests in the map/list and detail test files
+
+### PR C — US-13
+
+- [ ] T046 [P] [US13] Backend tests in `backend/tests/test_reservation.py`: `test_us13_s2_…`, `test_us13_s4_…`, `test_us13_s5_…`, `test_us13_s6_…` and the edge tests of the plan's test map (409 for a full group, double booking in the database, double submit, invalid requests, 403 for restaurants, inventory change keeps booked tables)
+- [ ] T047 [US13] `POST /api/reservations` and `GET /api/reservations?date=` in `backend/app/api/reservation.py` with rule 9 of `data-model.md`
+- [ ] T048 [US13] Replace the stub in `backend/app/services/reservation_conflicts.py` with rule 11 (future reservations with `table_number` above the new quantity), keeping 004's interface plus `seating_area`
+- [ ] T049 [US13] `make api-types`
+- [ ] T050 [P] [US13] Frontend tests in `frontend/src/pages/ReservationPage.test.tsx`: `US-13 S1` to `S6` and the `409` edge, mocking `src/api/client`
+- [ ] T051 [US13] Review step (`paso=revision`), confirmation, overlap warning and `409` handling in `frontend/src/pages/ReservationPage.tsx` and its CSS module, per the plan's US-13 design
+- [ ] T052 Docs: `AGENTS.md` (endpoints, routes, the reservation flow), `docs/design/README.md` if a component changes, `specs/README.md` (005 row), and tell the owner of spec 003 that US-4 S3 can be tested
+
+### After PR C
+
+- [ ] T053 Production demo data: La Esquina de Palermo (Laura) with location, shifts and table groups; book a table as Martín and check it end to end ([quickstart.md](quickstart.md))
 
 ---
 
@@ -113,7 +144,7 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 - **Page**: T019 depends on T012 and blocks T020; T021 and T022 need the page; T023 needs T019–T022.
 - **Party-size cap (FR-013)**: T011 writes the backend cap tests, T015 computes `max_party_size`, T016 returns it, T019–T020 bound the input, and T023 proves the UI cap.
 - **Swapping the mock**: T018 needs the endpoints (T016), the regenerated types (T017) and the page (T019–T023) so nothing breaks while it changes.
-- **US-13** depends on US-11 and on the PO answer.
+- **US-13 (28/10)**: PR A (T034–T042, T017–T018) and PR B (T043–T045) can run in parallel; PR C (T046–T052) needs PR A and, to be tried end to end, PR B. T053 needs everything merged and deployed.
 - **Wrap-up** runs after the stories of the sprint are done.
 
 ## Notes

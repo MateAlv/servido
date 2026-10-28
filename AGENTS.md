@@ -52,7 +52,7 @@ Use these English names in code. Add a row when a new domain concept appears. Ex
 | Turno | `Shift` | Opening period on a weekday, e.g. 12:00–15:00 |
 | Horarios de atención | `OpeningHours` | The shifts of each weekday |
 | Bloqueo de horario | `Closure` | Blocked date or time range |
-| Mesa | `Table` | Stored as groups: capacity × count |
+| Mesa | `Table` | Stored as groups: capacity × count × seating area. A reservation takes one table of a group by an internal number (spec 005, D1) |
 | Tipo de mesa (adentro, afuera, terraza) | `SeatingArea` | |
 | Capacidad | `capacity` | |
 | Concurrencia (bajo / medio / alto) | `OccupancyLevel` (`low` / `medium` / `high`) | |

@@ -1,6 +1,6 @@
 # Implementation Plan: Reservar Mesa (Crear Reserva y Confirmar Datos)
 
-**Feature**: `specs/005-reservar-mesa` | **Date**: 2026-10-23 | **Spec**: [spec.md](spec.md) | **US**: US-11 (this sprint)| **Sprint**: 2
+**Feature**: `specs/005-reservar-mesa` | **Date**: 2026-10-23, updated 2026-10-28 | **Spec**: [spec.md](spec.md) | **US**: US-11 (Sprint 2), US-13 (Sprint 3) | **Sprint**: 2–3
 
 **Input**: Feature specification from `/specs/005-reservar-mesa/spec.md`
 
@@ -11,6 +11,38 @@
 US-11 turns the restaurant detail into a booking flow: the diner picks a date, a time inside the restaurant's opening hours and a party size, sees the available time slots, picks a seating preference and the page reports whether a table is free for it (team decision of 23/10, following `prototipo-us11.html`: US-11 does not choose a concrete table; the table is assigned when the reservation is confirmed, in US-13). The party size is capped by the restaurant itself: the availability response reports `max_party_size`, the largest capacity among the restaurant's active tables (spec 004), so no one can select a group the restaurant cannot seat. The backend exposes two read-only availability endpoints; availability is computed live from the shifts and tables that spec 004 (US-8, US-10) owns, and from the reservations table, which is created here because availability must know which tables are taken. US-11 does not create reservations: per FR-011 and SC-005 a reservation exists only after the explicit confirmation of US-13. No caching, no background jobs, no new dependencies.
 
 **Mock policy**: whenever a piece this flow needs is not implemented yet (shifts and tables from spec 004, an occupied slot that only US-13 could create), the screen is shown anyway with a **temporary mock** in `frontend/src/data/`, following the precedent of the seven fixture restaurants of spec 002. The mock mirrors the real contract in `contracts/availability-api.md`, is labelled «Datos de prueba» in the UI, is registered as a team decision in `specs/README.md`, and has its own removal task. Mocks live in the frontend only: no fake tables in the database, no fixture inside the backend, and nothing is mocked in production's data path once the real source exists.
+
+## Update of 28/10: US-13, the backend of US-11 and real restaurants
+
+Spec 004 (shifts and grouped tables) and the US-11 page are merged. US-13 needs three things that are not built yet: the `reservations` table, the real availability (the backend of US-11, deferred on 23/10) and a real restaurant the diner can reach (everything on the diner side still reads fixtures). The team took eight decisions on 28/10 before planning (D1–D8 in [research.md](research.md), pending PO). This section is the plan for all of it; the sections below keep describing US-11 as built.
+
+### What changes
+
+| # | Work | Why | Delivered in |
+| --- | --- | --- | --- |
+| 1 | `seating_area` on the table groups of spec 004 (D3, D6): migration, model, `PUT /api/restaurante/mesas`, the selector in `TableInventoryPage` | US-11 S6 filters by seating area | PR A |
+| 2 | `reservations` table (D1, D5, D7) in the same migration | Base of US-13 and of the rest of Sprint 3 | PR A |
+| 3 | The two availability endpoints of US-11 over groups ([contracts/availability-api.md](contracts/availability-api.md)), with the deferred backend tests | The page stops using the fixture | PR A |
+| 4 | Swap `frontend/src/api/availability.ts` to the typed client and delete the fixture (T017–T018) | No test data in the booking flow | PR A |
+| 5 | `GET /api/restaurants` and `/{id}` ([contracts/restaurants-api.md](contracts/restaurants-api.md)); the map, list and detail add the bookable restaurants (D4) | A diner can reach a real restaurant | PR B |
+| 6 | US-13 backend: `POST /api/reservations` and `GET /api/reservations?date=` ([contracts/reservations-api.md](contracts/reservations-api.md)) | The story | PR C |
+| 7 | US-13 frontend: review step, confirmation, overlap warning, `409` handling | The story | PR C |
+| 8 | Replace 004's conflict-check stub with the real rule (data-model, rule 11) | No future reservation left without a table | PR C |
+| 9 | Demo data in production: La Esquina de Palermo with location, shifts and table groups; a real reservation by Martín | Sprint 3 defense | After PR C |
+
+PR A and PR B can go in parallel; PR C needs A (and B to be tried end to end).
+
+### US-13 design
+
+- **Route**: the review is a step of the same page, `/reservar/:restauranteId?…&paso=revision`. «Siguiente» adds `paso=revision`; «Volver» removes it. The selection stays in the URL, so going back keeps everything (S3) and a reload stays in the review.
+- **Review** (S1, S2): restaurant name, date (long Spanish format), time range (start and start + 90 minutes), party size and the assigned table («Mesa para 4 · Terraza», D2), computed from the tables response with rule 8 of [data-model.md](data-model.md). Built with the existing `Card`, `Ticket`-like rows from the design system and `Button`; no new shared component unless the review turns out to be reused.
+- **Overlap warning** (S6, D8): the review fetches `GET /api/reservations?date=` and shows a `StatusPill`/notice per overlapping reservation. The «Confirmar reserva» button stays enabled.
+- **Confirmation** (S4, S5): only «Confirmar reserva» calls `POST /api/reservations`; the button shows its loading state and is disabled while the request runs (double submit, also guarded by the unique index). On `201` the page shows the confirmed reservation with the same data and a link to the home; the selection params are cleared so a back navigation can't confirm twice. On `409` for a taken table, it shows the message, returns to the selection with every value kept and refetches availability. On `409` "Ya confirmaste esta reserva", it shows the confirmation.
+- **Backend**: `app/api/reservation.py` holds the four endpoints (two availability reads, the diner's day, the confirmation); `app/services/availability.py` holds rules 1–9 so reads and the confirmation share them; `app/services/reservation_conflicts.py` gets the real rule 11. Role checks use the diner role (403 for restaurants).
+
+### Migration
+
+One revision after `005_merge_feature_heads`: `CREATE EXTENSION IF NOT EXISTS btree_gist`; add `table_inventory.seating_area` (default `indoor` for existing rows, then the `CHECK`), swap the unique constraint to (restaurant, capacity, seating area); create `reservations` with its constraints and indexes. Production has no reservations yet, so nothing is backfilled.
 
 ## Technical Context
 
@@ -47,7 +79,7 @@ US-11 turns the restaurant detail into a booking flow: the diner picks a date, a
 
 US-11 **consumes** shifts and tables; it does not define, create or duplicate them.
 
-**Status (23/10)**: spec 004 has no `plan.md` and no `Shift`/`Table` models in `backend/app/models/`, so the checkpoint of `tasks.md` (T001) blocks the model, the migration and the two backend endpoints: they cannot query tables that do not exist and creating a second `tables` model would fork 004's scope. US-11 is therefore built on the mock path (T012–T013 and T019–T024); T014–T018 wait for 004, and the gap is recorded in `specs/README.md`.
+**Status (28/10)**: spec 004 is merged with grouped tables; see the update of 28/10 above. **Status (23/10)**: spec 004 had no `plan.md` and no `Shift`/`Table` models in `backend/app/models/`, so the checkpoint of `tasks.md` (T001) blocks the model, the migration and the two backend endpoints: they cannot query tables that do not exist and creating a second `tables` model would fork 004's scope. US-11 is therefore built on the mock path (T012–T013 and T019–T024); T014–T018 wait for 004, and the gap is recorded in `specs/README.md`.
 
 | US-11 needs | Provided by | If it is not there yet |
 | --- | --- | --- |
@@ -142,8 +174,22 @@ No write endpoint in US-11. The eventual `POST /api/reservations` (US-13) revali
 | Edge — invalid date, party size or start time | `backend/tests/test_reservation.py::test_us11_edge_rejects_an_invalid_request` (deferred) | Backend (deferred) |
 | Edge — the URL keeps the selection | `ReservationPage.test.tsx` › `US-11 edge keeps the selection when the page reloads` | Frontend |
 | Edge — invalid value in the URL | `ReservationPage.test.tsx` › `US-11 edge ignores an invalid value in the URL` | Frontend |
+| US-13 S1 — the selection can be reviewed before confirming | `frontend/src/pages/ReservationPage.test.tsx` › `US-13 S1 opens the review with the selection` | Frontend |
+| US-13 S2 — the review shows restaurant, date, time, party size and the assigned table | `ReservationPage.test.tsx` › `US-13 S2 shows every chosen value and the assigned table` · `backend/tests/test_reservation.py::test_us13_s2_tables_endpoint_lists_groups_smallest_first` | Both |
+| US-13 S3 — going back keeps the selection | `ReservationPage.test.tsx` › `US-13 S3 goes back with the selection kept` | Frontend |
+| US-13 S4 — no confirmation, no reservation | `ReservationPage.test.tsx` › `US-13 S4 creates nothing until the diner confirms` · `test_reservation.py::test_us13_s4_reading_availability_creates_no_reservation` | Both |
+| US-13 S5 — explicit confirmation creates a confirmed reservation | `test_reservation.py::test_us13_s5_confirmation_creates_a_confirmed_reservation` · `ReservationPage.test.tsx` › `US-13 S5 confirms and shows the reservation` | Both |
+| US-13 S6 — an overlapping reservation of the diner is warned about | `test_reservation.py::test_us13_s6_lists_the_diner_reservations_of_the_day` · `ReservationPage.test.tsx` › `US-13 S6 warns about an overlapping reservation and still confirms` | Both |
+| Edge — a table taken meanwhile answers 409 and keeps the selection | `test_reservation.py::test_us13_edge_full_group_answers_409` · `ReservationPage.test.tsx` › `US-13 edge returns to the selection when the table was taken` | Both |
+| Edge — the database rejects a double booking | `test_reservation.py::test_us13_edge_database_rejects_a_double_booking` | Backend |
+| Edge — a double submit creates one reservation | `test_reservation.py::test_us13_edge_double_submit_creates_one_reservation` | Backend |
+| Edge — past, off-shift, too large or unavailable requests answer 400 | `test_reservation.py::test_us13_edge_rejects_invalid_requests` | Backend |
+| Edge — restaurants and other diners can't use the diner endpoints | `test_reservation.py::test_us13_edge_restaurant_token_gets_403` (also US-4 S3) | Backend |
+| Edge — a restaurant can't remove a booked table | `test_reservation.py::test_us13_edge_inventory_change_keeps_booked_tables` | Backend |
+| D3 — table groups carry a seating area | `backend/tests/test_table_inventory.py::test_us10_s1_groups_have_a_seating_area` · `TableInventoryPage.test.tsx` › `US-10 S1 saves the seating area of each group` | Both |
+| D4 — only bookable restaurants are listed | `backend/tests/test_public_restaurants.py::test_lists_only_bookable_restaurants`, `test_detail_includes_the_menu` | Backend |
 
-**Deferred means**: spec 004 has no `Shift`/`Table` models yet, so the endpoints (T014–T016) and their backend tests (T006–T011) are on hold per the T001 checkpoint; they are the first thing to build once 004 merges.
+**Deferred means**: spec 004 has no `Shift`/`Table` models yet, so the endpoints (T014–T016) and their backend tests (T006–T011) are on hold per the T001 checkpoint; they are the first thing to build once 004 merges. **Update (28/10)**: spec 004 is merged, so the deferred backend tests are written with PR A (see the update of 28/10).
 
 Success criteria SC-001 (under 3 minutes) is checked in the PO demo; SC-002, SC-003, SC-004 and SC-005 are covered by the scenario and edge tests above (SC-005 by the absence of any write endpoint in US-11).
 
@@ -160,7 +206,9 @@ specs/005-reservar-mesa/
 ├── research.md              # Decisions and rejected alternatives
 ├── data-model.md            # Entities, columns, constraints
 ├── quickstart.md            # How to try the flow locally
-├── contracts/availability-api.md  # Endpoints, payloads, status codes
+├── contracts/availability-api.md  # US-11 reads
+├── contracts/reservations-api.md  # US-13 confirmation and the diner's day
+├── contracts/restaurants-api.md   # Bookable restaurants (D4)
 └── tasks.md                 # /speckit-tasks output
 ```
 
@@ -170,17 +218,22 @@ specs/005-reservar-mesa/
 backend/
 ├── app/models/reservation.py           # + Reservation model
 ├── app/models/__init__.py              # ~ import it so Alembic sees it
-├── migrations/versions/003_add_reservations.py  # + make migration m="add reservations"
+├── migrations/versions/006_reservations.py  # + seating_area on table groups, reservations, btree_gist
 ├── app/schemas/reservation.py          # + availability responses
 ├── app/services/availability.py        # + slots and free tables
-├── app/api/reservation.py              # + the two GET endpoints
+├── app/api/reservation.py              # + availability reads, the diner's day, POST /reservations
+├── app/api/public_restaurant.py        # + GET /restaurants and /restaurants/{id} (D4)
+├── app/services/reservation_conflicts.py  # ~ real inventory conflict rule (replaces 004's stub)
+├── app/models/table_inventory.py       # ~ seating_area
 ├── app/api/__init__.py                 # ~ mount the router
 └── tests/test_reservation.py           # + US-11 scenarios and edge cases
 frontend/
 ├── src/api/openapi.json, schema.d.ts   # ~ make api-types
 ├── src/api/availability.ts             # + fetches availability (fixture while 004 is missing)
 ├── src/data/reservationAvailability.fixture.ts  # + temporary mock of the contract, deleted when 004 merges
-├── src/pages/ReservationPage.tsx       # + with ReservationPage.module.css and .test.tsx
+├── src/pages/ReservationPage.tsx       # + with ReservationPage.module.css and .test.tsx; ~ review and confirmation (US-13)
+├── src/pages/TableInventoryPage.tsx    # ~ seating area per group (D3)
+├── src/api/restaurants.ts              # + bookable restaurants, mapped to the map's shape (D4)
 ├── src/pages/RestaurantDetailPage.tsx  # ~ enable the "Reservar mesa" button
 └── src/router.tsx                      # ~ add /reservar/:restauranteId
 ```
@@ -204,4 +257,6 @@ No violations. The exclusion constraint is not extra complexity: it is the only 
 | The PO confirms 004 keeps table *groups* instead of individual tables | Individual tables stop being possible; while the PO answers, the fixture shows individual tables and the assumption is escalated before the real query is written |
 | The PO/PM expects the reservation to be created in Sprint 2 | Escalated; if they confirm, US-13 moves part of its scope into Sprint 2 and this plan is updated first. The mock never fakes a created reservation |
 | A diner asks for a group the restaurant cannot seat (an unbounded stepper) | `max_party_size` comes from the active tables in the availability response, the stepper's `max` uses it, the URL value is clamped with a notice, and US-13 rejects a larger `party_size` with `400` |
+| The PO rejects one of D1–D8 | Each decision is local: D2 is the review text, D8 one notice, D5 two constants; D1 and D3 are the only schema ones and are recorded before any data exists in production |
+| A restaurant re-saves its tables while a diner confirms | The confirmation reads the group `FOR SHARE`; the inventory update locks the groups `FOR UPDATE` and runs the conflict rule, so one waits for the other |
 | Availability rules drift between US-11 and US-13 | Both call `app/services/availability.py`; US-13 revalidates with the same function inside its transaction |

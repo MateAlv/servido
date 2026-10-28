@@ -18,13 +18,17 @@ US-11's scenarios end with "elegir una preferencia de tipo de mesa y completar l
 
 ## Decision: block overlaps in the database with an exclusion constraint
 
-`EXCLUDE USING gist (table_id WITH =, tstzrange(starts_at, ends_at) WITH &&)`, with `ends_at` a generated column.
+*(Revised 28/10: tables are groups, see D1 below.)*
 
-**Rationale**: risk 2 and SC-003 require the database itself to reject a double booking, and the constitution makes that invariant a constraint, not a Python check. With a 30-minute grid and a 90-minute duration, a `UNIQUE (table_id, starts_at)` still accepts 12:00 and 12:30 on the same table.
+`EXCLUDE USING gist (restaurant_id WITH =, table_capacity WITH =, seating_area WITH =, table_number WITH =, tstzrange(starts_at, ends_at) WITH &&) WHERE (status = 'confirmed')`, with `ends_at` set by the service to `starts_at + 90 minutes` and checked to be after `starts_at`.
+
+**Rationale**: risk 2 and SC-003 require the database itself to reject a double booking, and the constitution makes that invariant a constraint, not a Python check. With a 30-minute grid and a 90-minute duration, a `UNIQUE` on the start still accepts 12:00 and 12:30 on the same table.
+
+**Why `ends_at` is not a generated column**: PostgreSQL only accepts immutable expressions in generated columns, and `timestamptz + interval` is not immutable. The service sets it and a `CHECK` keeps it after the start.
 
 **Cost**: the migration runs `CREATE EXTENSION IF NOT EXISTS btree_gist` (shipped with PostgreSQL, no cost, no new service).
 
-**Alternatives considered**: a Python check before insert (racy, and the constitution requires the constraint); storing a fixed slot number (forces a 90-minute grid without overlaps, which contradicts the 30-minute grid of the spec's edge case); a partial unique index (cannot express a range).
+**Alternatives considered**: a Python check before insert (racy, and the constitution requires the constraint); storing a fixed slot number (forces a 90-minute grid); a partial unique index (cannot express a range).
 
 ## Decision: 30-minute starts, 90-minute duration, block must fit inside the shift
 
@@ -101,3 +105,51 @@ The page reports whether a table is free for the chosen date, time, party size a
 ## Dependency: spec 004 owns shifts and tables
 
 US-11 reads `tables` (capacity, seating area, active) and the shifts from 004. Duplicating them here — or falling back to a fixture — would create two sources of truth for the same product rule. If 004 is not merged, this feature waits.
+
+## Decisions of 28/10 for US-13 (team, pending PO)
+
+Taken by the team before planning US-13, once spec 004 and US-11 were merged. They are recorded in `specs/README.md` and wait for the PO.
+
+### D1. A reservation names its table as (group, number), not by id
+
+The table groups of spec 004 are deleted and recreated every time the restaurant saves them, so their `id` is not stable. A reservation stores the group's identity (`restaurant_id`, `table_capacity`, `seating_area`) plus `table_number`, which of the group's `quantity` tables it takes. The number is internal: spec 004 says tables have no visible identity, and the diner never sees it.
+
+**Rationale**: the exclusion constraint needs something to compare per table; the number gives it without changing 004 into individual tables, and it survives the restaurant re-saving its groups.
+
+**Alternatives considered**: counting the overlapping reservations of a group under a row lock (works, but the "no double booking" rule would live in Python, against AGENTS.md); one row per physical table in 004 (rewrites 004's model, API and screen).
+
+### D2. "La mesa asignada" is the group: «Mesa para 4 · Terraza»
+
+The review shows the smallest group of the chosen seating area that seats the party; with «Sin preferencia», the smallest of any area (ties: indoor, outdoor, terrace). The confirmation sends that group and the service takes its lowest free table number.
+
+**Rationale**: the review can show the assigned table before confirming (US-13 S2) while the concrete table is picked at confirmation (decision of 23/10). The smallest fitting group keeps big tables for big parties.
+
+### D3 and D6. Table groups get a seating area from a fixed catalog
+
+`seating_area` in `indoor`, `outdoor`, `terrace` (the glossary's `SeatingArea`), one per group; existing groups become `indoor`. The unique key of a group becomes (restaurant, capacity, seating area).
+
+**Rationale**: US-11 S6 filters by seating area, which real data could not answer. A fixed catalog keeps the filter, the labels and the constraint simple; free text per restaurant would make all three dynamic.
+
+### D4. Real restaurants reach the diner next to the test ones
+
+`GET /api/restaurants` and `GET /api/restaurants/{id}` list the bookable restaurants (coordinates, an active shift, an available table group). The map, the list and the detail add them to the fixtures of spec 002; only real ones can be booked.
+
+**Rationale**: without it no diner can reach a restaurant that has shifts and tables, so no real reservation can exist. Replacing every fixture needs ratings, occupancy and reviews that don't exist yet; that stays with spec 002.
+
+### D5. 90-minute reservations, offered every 30 minutes
+
+Unchanged from the spec's proposal, which the US-11 page already uses.
+
+### D7. A reservation is confirmed on creation
+
+`status` starts as `confirmed`; `cancelled` arrives with cancellations (Sprint 3). No story asks the restaurant to approve.
+
+### D8. Overlapping reservations of one diner: warn, don't block
+
+The review reads the diner's reservations of that day (`GET /api/reservations?date=`) and warns about any overlap; the diner can still confirm. Added to US-13 as scenario 6 and, in the backlog, as a criterion of US-13.
+
+**Rationale**: blocking would invent a product rule; a warning prevents the obvious mistake (booking twice by accident) and leaves the decision to the diner.
+
+### Inventory changes stop at booked tables
+
+The conflict-check stub of spec 004 is replaced: lowering a group's quantity below the number of a future confirmed reservation of that group (or removing or disabling the group) answers `409` and lists the reservations. Renumbering reservations to make room was rejected: it would move a confirmed diner to another table behind their back, and the rule "you can't remove a booked table" is easy to explain.

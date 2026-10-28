@@ -57,14 +57,17 @@ Success returns `200` with the normalized saved configuration.
 
 ### `GET /api/restaurante/mesas`
 
-Returns all table groups as `quantity` tables of `capacity` seats, together
-with the number of free tables by capacity. Groups do not expose identifiers
+Returns all table groups as `quantity` tables of `capacity` seats in one
+`seating_area` (`indoor`, `outdoor` or `terrace`), together with the number of
+free tables by group. Groups do not expose identifiers
 for individual physical tables; no “Mesa 1” or “Mesa 2” exists.
 
 ### `PUT /api/restaurante/mesas`
 
 Replaces table groups atomically. Each group requires positive per-table
-`capacity` and `quantity`, plus `available`. A reservation for `N` people may
+`capacity` and `quantity`, a `seating_area` (`indoor`, `outdoor` or `terrace`;
+team decision of 28/10), plus `available`. Two groups with the same `capacity`
+and `seating_area` answer `400`. A reservation for `N` people may
 consume one available quantity slot only when the group's capacity is at least
 `N`; capacities from separate groups are never combined. If the requested
 state would compromise a confirmed reservation consuming quantity from an
@@ -81,6 +84,7 @@ MUST provide a stub/mock implementing this request and response contract:
 {
   "restaurant_id": "uuid",
   "group_capacity": 4,
+  "seating_area": "terrace",
   "date": "2026-11-20",
   "start_time": "20:00:00",
   "end_time": "22:00:00",
@@ -111,6 +115,12 @@ locking the affected group rows and before mutation. A conflict returns HTTP
 `409` and preserves the previous inventory. The future reservation feature may
 replace the stub implementation as long as it preserves this contract; it
 must report group capacity and consumed quantity, not a physical table ID.
+
+**Replaced by spec 005 (US-13, 28/10).** Reservations exist now, so the check
+is real: lowering a group's `quantity`, marking it unavailable or removing it
+conflicts when a future confirmed reservation of that group (same `capacity`
+and `seating_area`) would be left without a table. See
+`specs/005-reservar-mesa/data-model.md`.
 
 ## Error shape
 
