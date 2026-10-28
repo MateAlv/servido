@@ -1,11 +1,10 @@
-from datetime import date, time
 from uuid import UUID
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.models.table_inventory import TableInventoryGroup
-from app.services import reservation_conflicts
+from app.services import availability, reservation_conflicts
 
 
 def eligible_quantity(session: Session, restaurant_id: UUID, party_size: int) -> int:
@@ -50,18 +49,15 @@ def replace_inventory(
             if new_group is not None and bool(new_group["available"])
             else 0
         )
-        delta = new_quantity - old_quantity
-        if delta >= 0:
+        if new_quantity >= old_quantity:
             continue
         result = reservation_conflicts.check_reservation_conflict(
-            reservation_conflicts.ReservationConflictRequest(
-                restaurant_id=restaurant_id,
-                group_capacity=key[0],
-                date=date.today(),
-                start_time=time.min,
-                end_time=time.max,
-                quantity_delta=delta,
-            )
+            session,
+            restaurant_id,
+            capacity=key[0],
+            seating_area=key[1],
+            new_quantity=new_quantity,
+            now=availability.current_time(),
         )
         if result.has_conflict:
             raise ReservationConflictError(result)

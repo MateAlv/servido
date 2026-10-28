@@ -10,6 +10,7 @@ from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import and_, exists, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.opening_shift import OpeningShift
@@ -214,4 +215,128 @@ def bookable_condition():
             TableInventoryGroup.restaurant_id == Restaurant.id_restaurante,
             TableInventoryGroup.available.is_(True),
         ),
+    )
+
+
+class ConfirmationConflictError(Exception):
+    """The selection was valid when the diner chose it but isn't anymore (409)."""
+
+
+START_PASSED = "Ese horario ya pasó. Elegí otro."
+NO_LONGER_OPEN = "El restaurante ya no atiende en ese horario. Elegí otro."
+ABOVE_MAXIMUM = "El grupo supera la capacidad máxima del restaurante."
+TABLE_GONE = "Esa mesa ya no está disponible. Elegí otro horario o tipo de mesa."
+TABLE_TAKEN = "La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa."
+NOT_BOOKABLE = "El restaurante ya no está tomando reservas."
+
+
+@dataclass(frozen=True)
+class ReservationChoice:
+    restaurant_id: UUID
+    day: date
+    start: time
+    party_size: int
+    capacity: int
+    seating_area: str
+    request_id: UUID
+
+
+def locked_group(session: Session, choice: ReservationChoice) -> TableInventoryGroup | None:
+    query = (
+        select(TableInventoryGroup)
+        .where(
+            TableInventoryGroup.restaurant_id == choice.restaurant_id,
+            TableInventoryGroup.capacity == choice.capacity,
+            TableInventoryGroup.seating_area == choice.seating_area,
+        )
+        .with_for_update()
+    )
+    # If the restaurant re-saved its tables while we waited for the lock, the row we waited on
+    # is gone and its replacement only shows up in a new query.
+    return session.scalar(query) or session.scalar(query)
+
+
+def confirm_reservation(
+    session: Session, diner_id: UUID, choice: ReservationChoice, now: datetime
+) -> tuple[Reservation, bool]:
+    """Creates the reservation, or returns the one this request already created (rule 9).
+
+    Returns the reservation and whether it is new. Raises UnavailableStartError for a malformed
+    start (400) and ConfirmationConflictError for whatever changed during the review (409).
+    """
+    existing = session.scalar(
+        select(Reservation).where(Reservation.request_id == choice.request_id)
+    )
+    if existing is not None:
+        if existing.diner_id != diner_id:
+            raise ConfirmationConflictError(TABLE_TAKEN)
+        return existing, False
+
+    if choice.start.minute % SLOT_MINUTES or choice.start.second or choice.start.microsecond:
+        raise UnavailableStartError(INVALID_START)
+    if (
+        session.scalar(
+            select(Restaurant.id_restaurante).where(
+                Restaurant.id_restaurante == choice.restaurant_id, bookable_condition()
+            )
+        )
+        is None
+    ):
+        raise ConfirmationConflictError(NOT_BOOKABLE)
+
+    group = locked_group(session, choice)
+    if group is None or not group.available or group.capacity < choice.party_size:
+        raise ConfirmationConflictError(TABLE_GONE)
+
+    starts_at = local_datetime(choice.day, choice.start)
+    if starts_at <= now:
+        raise ConfirmationConflictError(START_PASSED)
+    shifts = active_shifts(session, choice.restaurant_id, choice.day)
+    if choice.start not in starts_in(shifts, choice.day):
+        raise ConfirmationConflictError(NO_LONGER_OPEN)
+    if choice.party_size > max_party_size(available_groups(session, choice.restaurant_id)):
+        raise ConfirmationConflictError(ABOVE_MAXIMUM)
+
+    taken = taken_tables(session, choice.restaurant_id, starts_at).get(
+        (group.capacity, group.seating_area), set()
+    )
+    free = [number for number in range(1, group.quantity + 1) if number not in taken]
+    if not free:
+        raise ConfirmationConflictError(TABLE_TAKEN)
+
+    reservation = Reservation(
+        diner_id=diner_id,
+        restaurant_id=choice.restaurant_id,
+        table_capacity=group.capacity,
+        seating_area=group.seating_area,
+        table_number=free[0],
+        party_size=choice.party_size,
+        starts_at=starts_at,
+        ends_at=starts_at + DURATION,
+        request_id=choice.request_id,
+    )
+    session.add(reservation)
+    try:
+        # The exclusion constraint is the last guard against a concurrent confirmation.
+        with session.begin_nested():
+            session.flush()
+    except IntegrityError as error:
+        raise ConfirmationConflictError(TABLE_TAKEN) from error
+    return reservation, True
+
+
+def diner_reservations_of_day(session: Session, diner_id: UUID, day: date) -> list[Reservation]:
+    """The diner's confirmed reservations whose block touches that Buenos Aires day."""
+    day_start = local_datetime(day, time.min)
+    return list(
+        session.scalars(
+            select(Reservation)
+            .where(
+                Reservation.diner_id == diner_id,
+                Reservation.status == "confirmed",
+                Reservation.starts_at < day_start + timedelta(days=1),
+                Reservation.ends_at > day_start,
+            )
+            .order_by(Reservation.starts_at)
+        )
     )

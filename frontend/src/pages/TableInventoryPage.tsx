@@ -9,7 +9,13 @@ import {
   TextField,
   useToast,
 } from '../components/ui'
-import { configurationApi, type TableGroup } from '../api/restaurantConfiguration'
+import {
+  BookedTablesError,
+  configurationApi,
+  type BookedReservation,
+  type TableGroup,
+} from '../api/restaurantConfiguration'
+import { longDate } from '../lib/date'
 import { SEATING_AREA_OPTIONS } from '../lib/seating'
 import styles from './RestaurantProfilePage.module.css'
 
@@ -17,6 +23,7 @@ export function TableInventoryPage() {
   const [groups, setGroups] = useState<TableGroup[]>([])
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [booked, setBooked] = useState<BookedReservation[]>([])
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -54,12 +61,20 @@ export function TableInventoryPage() {
       setMessage('')
       return
     }
+    setBooked([])
     try {
       setGroups(await configurationApi.updateTables(groups))
       toast('Guardaste el inventario de mesas.', { tone: 'ok' })
       navigate('/')
       setError('')
     } catch (requestError) {
+      if (requestError instanceof BookedTablesError) {
+        setError(
+          'No guardamos los cambios: estas reservas confirmadas se quedarían sin mesa. Podés sumar mesas, pero no sacar ni cambiar las que tienen reservas.',
+        )
+        setBooked(requestError.reservations)
+        return
+      }
       setError((requestError as Error).message)
     }
   }
@@ -149,6 +164,16 @@ export function TableInventoryPage() {
             <p className={styles.error} role="alert">
               {error}
             </p>
+          )}
+          {booked.length > 0 && (
+            <ul aria-label="Reservas que bloquean el cambio">
+              {booked.map((reservation) => (
+                <li key={`${reservation.date}-${reservation.start_time}-${reservation.party_size}`}>
+                  {longDate(reservation.date)}, {reservation.start_time} · {reservation.party_size}{' '}
+                  personas
+                </li>
+              ))}
+            </ul>
           )}
           {message && (
             <p className={styles.success} role="status">

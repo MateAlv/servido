@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { Route, Routes, useLocation } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { api } from '../api/client'
@@ -159,5 +160,73 @@ describe('LoginPage', () => {
     expect(
       screen.queryByRole('button', { name: 'Crear cuenta con Google' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('US-13 edge goes back to the page it came from', async () => {
+    post.mockResolvedValue({
+      data: {
+        comensal: {
+          id: 'c-1',
+          nombre: 'Martín',
+          email: 'martin@example.com',
+          email_verificado: true,
+        },
+        access_token: 'session-token',
+        token_type: 'bearer',
+      },
+      error: undefined,
+      response: new Response(null, { status: 200 }),
+    })
+    function Here() {
+      const location = useLocation()
+      return <p>En {location.pathname + location.search}</p>
+    }
+    const review = '/reservar/abc?fecha=2026-11-03&hora=20:00&paso=revision'
+    const user = userEvent.setup()
+    renderWithProviders(
+      <Routes>
+        <Route path="/ingresar" element={<LoginPage />} />
+        <Route path="/reservar/:restauranteId" element={<Here />} />
+        <Route path="/" element={<p>Inicio</p>} />
+      </Routes>,
+      { route: `/ingresar?volver=${encodeURIComponent(review)}` },
+    )
+
+    await user.type(screen.getByLabelText('Email'), 'martin@example.com')
+    await user.type(screen.getByLabelText('Contraseña'), 'Segura123')
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+
+    expect(await screen.findByText(`En ${review}`)).toBeInTheDocument()
+  })
+
+  it('US-13 edge never returns to another site after signing in', async () => {
+    post.mockResolvedValue({
+      data: {
+        comensal: {
+          id: 'c-1',
+          nombre: 'Martín',
+          email: 'martin@example.com',
+          email_verificado: true,
+        },
+        access_token: 'session-token',
+        token_type: 'bearer',
+      },
+      error: undefined,
+      response: new Response(null, { status: 200 }),
+    })
+    const user = userEvent.setup()
+    renderWithProviders(
+      <Routes>
+        <Route path="/ingresar" element={<LoginPage />} />
+        <Route path="/" element={<p>Inicio</p>} />
+      </Routes>,
+      { route: `/ingresar?volver=${encodeURIComponent('//evil.example.com')}` },
+    )
+
+    await user.type(screen.getByLabelText('Email'), 'martin@example.com')
+    await user.type(screen.getByLabelText('Contraseña'), 'Segura123')
+    await user.click(screen.getByRole('button', { name: 'Ingresar' }))
+
+    expect(await screen.findByText('Inicio')).toBeInTheDocument()
   })
 })

@@ -2,6 +2,7 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { BookedTablesError } from '../api/restaurantConfiguration'
 import { renderWithProviders } from '../test/renderWithProviders'
 import { TableInventoryPage } from './TableInventoryPage'
 
@@ -10,7 +11,10 @@ const api = vi.hoisted(() => ({
   updateTables: vi.fn(),
 }))
 
-vi.mock('../api/restaurantConfiguration', () => ({ configurationApi: api }))
+vi.mock('../api/restaurantConfiguration', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/restaurantConfiguration')>()),
+  configurationApi: api,
+}))
 
 describe('TableInventoryPage (US-10)', () => {
   beforeEach(() => {
@@ -70,5 +74,25 @@ describe('TableInventoryPage (US-10)', () => {
       'href',
       '/',
     )
+  })
+
+  it('US-10 S3 lists the reservations that block the change', async () => {
+    api.getTables.mockResolvedValue([
+      { capacity: 2, quantity: 2, seating_area: 'indoor', available: true },
+    ])
+    api.updateTables.mockRejectedValue(
+      new BookedTablesError('La modificación afecta reservas confirmadas.', [
+        { date: '2026-11-03', start_time: '20:00', party_size: 2 },
+      ]),
+    )
+    const user = userEvent.setup()
+    renderWithProviders(<TableInventoryPage />)
+
+    await user.click(await screen.findByRole('checkbox', { name: /Disponible para reservar/ }))
+    await user.click(screen.getByRole('button', { name: 'Guardar mesas' }))
+
+    expect(await screen.findByText(/se quedarían sin mesa/)).toBeInTheDocument()
+    const list = screen.getByRole('list', { name: 'Reservas que bloquean el cambio' })
+    expect(list).toHaveTextContent('martes, 3 de noviembre, 20:00 · 2 personas')
   })
 })

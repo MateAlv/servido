@@ -113,11 +113,11 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 
 | Componente | Para qué | US |
 | --- | --- | --- |
-| `MapPin` | Marcador del mapa: el nombre del restaurante y la forma de su concurrencia (● baja, ▲ media, ■ alta). Caen uno tras otro y el seleccionado late. Con Leaflet va dentro de un `divIcon` con `interactive={false}`, porque el marcador ya es el botón | 5 |
-| `PinGlyph` | Solo la forma de concurrencia de un marcador (● ▲ ■); la usan `MapPin` y `OccupancyLegend` | 5 |
-| `OccupancyLegend` | Leyenda de las formas y colores de concurrencia; en el mapa flota abajo a la izquierda | 5 |
+| `MapPin` | Marcador del mapa: el nombre del restaurante y la forma de su concurrencia (● baja, ▲ media, ■ alta, ○ sin datos para los restaurantes reales que todavía no informan concurrencia). Caen uno tras otro y el seleccionado late. Con Leaflet va dentro de un `divIcon` con `interactive={false}`, porque el marcador ya es el botón | 5 |
+| `PinGlyph` | Solo la forma de concurrencia de un marcador (● ▲ ■ ○); la usan `MapPin` y `OccupancyLegend` | 5 |
+| `OccupancyLegend` | Leyenda de las formas y colores de concurrencia; en el mapa flota abajo a la izquierda. Con `withNoData` suma «Sin datos», cuando el mapa muestra un restaurante real sin concurrencia | 5 |
 | `RestaurantMap` | Mapa Leaflet + OpenStreetMap con la posición del comensal, los marcadores y el popup de cada restaurante: una tarjeta con foto, precio, calificación, concurrencia, barrio, dirección, distancia y el botón al detalle | 5 |
-| `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal | 5, 33 |
+| `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal; con `level={null}` muestra «Sin datos» y las barras apagadas | 5, 33 |
 | `PriceFilter` | Chips de precio (`$` … `$$$$`) y "Quitar filtro de precio"; avisa cuando no hay coincidencias | 7 |
 | `RestaurantExplorer` | Elegir restaurante: filtro de precio, mapa con leyenda y la misma lista en tarjetas con su concurrencia, que se actualiza sola. El filtro vive en la URL (`?precio=$$`), así que se conserva al ir al detalle y volver. Lo usan el inicio del comensal y `/mapa`. Todavía no hay API de restaurantes: los datos salen de `frontend/src/data/restaurants.fixture.ts` | 5, 7, 9, 33 |
 

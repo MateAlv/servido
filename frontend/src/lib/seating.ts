@@ -12,3 +12,8 @@ export const SEATING_AREA_LABELS: Record<SeatingArea, string> = {
 export const SEATING_AREA_OPTIONS = (Object.keys(SEATING_AREA_LABELS) as SeatingArea[]).map(
   (value) => ({ value, label: SEATING_AREA_LABELS[value] }),
 )
+
+/** «Mesa para 4 · Terraza»: the table group a reservation takes (decision D2 of spec 005). */
+export function tableLabel(table: { capacity: number; seating_area: SeatingArea }) {
+  return `Mesa para ${table.capacity} · ${SEATING_AREA_LABELS[table.seating_area]}`
+}

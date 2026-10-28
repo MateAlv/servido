@@ -2,16 +2,21 @@ from datetime import date, time
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 
 from app.api.deps import TokenClaimsDep
 from app.db import SessionDep
-from app.models.reservation import RESERVATION_MINUTES
+from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.reservation import (
     AvailabilityResponse,
+    DayReservationsResponse,
     FreeGroupResponse,
+    ReservationRequest,
+    ReservationResponse,
+    ReservationRestaurant,
     SlotResponse,
+    TableChoice,
     TablesAvailabilityResponse,
 )
 from app.services import availability
@@ -116,5 +121,87 @@ def get_available_tables(
                 capacity=group.capacity, seating_area=group.seating_area, free=group.free
             )
             for group in groups
+        ],
+    )
+
+
+def reservation_response(reservation: Reservation, restaurant: Restaurant) -> ReservationResponse:
+    starts_at = reservation.starts_at.astimezone(availability.BUENOS_AIRES)
+    ends_at = reservation.ends_at.astimezone(availability.BUENOS_AIRES)
+    return ReservationResponse(
+        id=reservation.id,
+        restaurant=ReservationRestaurant(id=restaurant.id_restaurante, nombre=restaurant.nombre),
+        date=starts_at.date(),
+        start_time=hour_and_minute(starts_at.time()),
+        end_time=hour_and_minute(ends_at.time()),
+        party_size=reservation.party_size,
+        table=TableChoice(
+            capacity=reservation.table_capacity, seating_area=reservation.seating_area
+        ),
+        status=reservation.status,
+    )
+
+
+@router.post(
+    "/reservations",
+    response_model=ReservationResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        200: {"description": "La misma confirmación ya había creado esta reserva."},
+        400: {"description": "Datos inválidos."},
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Solo para comensales."},
+        404: {"description": "El restaurante no existe."},
+        409: {"description": "Algo cambió durante la revisión: la reserva no se creó."},
+    },
+)
+def confirm_reservation(
+    payload: ReservationRequest, claims: TokenClaimsDep, session: SessionDep, response: Response
+) -> ReservationResponse:
+    diner_id = require_diner(claims)
+    restaurant = existing_restaurant(session, payload.restaurant_id)
+    choice = availability.ReservationChoice(
+        restaurant_id=payload.restaurant_id,
+        day=payload.date,
+        start=payload.start_time,
+        party_size=payload.party_size,
+        capacity=payload.table.capacity,
+        seating_area=payload.table.seating_area,
+        request_id=payload.request_id,
+    )
+    try:
+        reservation, created = availability.confirm_reservation(
+            session, diner_id, choice, availability.current_time()
+        )
+    except availability.UnavailableStartError as error:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    except availability.ConfirmationConflictError as error:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+    session.commit()
+    if not created:
+        response.status_code = status.HTTP_200_OK
+    return reservation_response(reservation, restaurant)
+
+
+@router.get(
+    "/reservations",
+    response_model=DayReservationsResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Solo para comensales."},
+    },
+)
+def list_day_reservations(
+    date: date, claims: TokenClaimsDep, session: SessionDep
+) -> DayReservationsResponse:
+    diner_id = require_diner(claims)
+    reservations = availability.diner_reservations_of_day(session, diner_id, date)
+    return DayReservationsResponse(
+        date=date,
+        reservations=[
+            reservation_response(reservation, session.get(Restaurant, reservation.restaurant_id))
+            for reservation in reservations
         ],
     )

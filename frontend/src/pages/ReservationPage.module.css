@@ -196,7 +196,38 @@
 /* Siguiente (prototipo-us11.html): right-aligned under the three steps. */
 .actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 12px;
+}
+
+/* US-13: the review and the confirmed reservation, one row per value. */
+.summary {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.summary > div {
+  display: grid;
+  grid-template-columns: minmax(96px, 30%) 1fr;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.summary dt {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.summary dd {
+  margin: 0;
+  font-weight: 800;
+}
+
+.summary dd::first-letter {
+  text-transform: uppercase;
 }
 
 @media (max-width: 560px) {

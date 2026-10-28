@@ -5,16 +5,22 @@ The restaurant opens every day 12:00–15:00 and 20:00–23:30 unless a test say
 """
 
 from datetime import datetime, time, timedelta
+from decimal import Decimal
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.models.opening_shift import OpeningShift
+from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
 from app.services import availability
 from tests.reservations import (
     BUENOS_AIRES,
+    NOW,
     TODAY,
     TOMORROW,
     add_bookable_restaurant,
@@ -269,3 +275,275 @@ def test_us11_edge_rejects_an_invalid_request(
     )
 
     assert response.status_code == 400
+
+
+# US-13 — Confirmar datos
+
+
+def confirm(
+    client: TestClient,
+    headers: dict,
+    restaurant_id,
+    start="20:00",
+    party_size=2,
+    table=(2, "indoor"),
+    day=TOMORROW,
+    request_id=None,
+):
+    return client.post(
+        "/api/reservations",
+        json={
+            "restaurant_id": str(restaurant_id),
+            "date": day.isoformat(),
+            "start_time": start,
+            "party_size": party_size,
+            "table": {"capacity": table[0], "seating_area": table[1]},
+            "request_id": str(request_id or uuid4()),
+        },
+        headers=headers,
+    )
+
+
+def day_reservations(client: TestClient, headers: dict, day=TOMORROW):
+    return client.get("/api/reservations", params={"date": day.isoformat()}, headers=headers)
+
+
+def test_us13_s2_tables_endpoint_lists_groups_smallest_first(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(
+        session, groups=[(6, 1, "indoor"), (4, 1, "terrace"), (4, 2, "indoor")]
+    )
+    headers = diner_headers(client)
+
+    groups = tables(client, headers, restaurant.id_restaurante, party_size=3).json()["tables"]
+
+    # The review proposes the first group of the chosen area: the smallest that seats the party.
+    assert [(group["capacity"], group["seating_area"]) for group in groups] == [
+        (4, "indoor"),
+        (4, "terrace"),
+        (6, "indoor"),
+    ]
+
+
+def test_us13_s5_confirmation_creates_a_confirmed_reservation(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(4, 1, "terrace")])
+    headers = diner_headers(client)
+
+    response = confirm(
+        client, headers, restaurant.id_restaurante, party_size=3, table=(4, "terrace")
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["restaurant"] == {
+        "id": str(restaurant.id_restaurante),
+        "nombre": "La Esquina de Palermo",
+    }
+    assert (body["date"], body["start_time"], body["end_time"]) == (
+        TOMORROW.isoformat(),
+        "20:00",
+        "21:30",
+    )
+    assert body["party_size"] == 3
+    assert body["table"] == {"capacity": 4, "seating_area": "terrace"}
+    assert body["status"] == "confirmed"
+    assert "table_number" not in body
+    # The table is now taken for that block.
+    assert (
+        offered(slots(client, headers, restaurant.id_restaurante, party_size=3))["20:00"] is False
+    )
+
+
+def test_us13_s6_lists_the_diner_reservations_of_the_day(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    confirm(client, headers, restaurant.id_restaurante, start="21:00")
+    confirm(client, headers, restaurant.id_restaurante, start="12:00")
+
+    response = day_reservations(client, headers)
+
+    assert response.status_code == 200
+    reservations = response.json()["reservations"]
+    assert [(item["start_time"], item["end_time"]) for item in reservations] == [
+        ("12:00", "13:30"),
+        ("21:00", "22:30"),
+    ]
+    assert reservations[0]["restaurant"]["nombre"] == "La Esquina de Palermo"
+    assert day_reservations(client, headers, day=TOMORROW + timedelta(days=1)).json() == {
+        "date": (TOMORROW + timedelta(days=1)).isoformat(),
+        "reservations": [],
+    }
+
+
+def test_us13_s6_overlapping_reservation_can_still_be_confirmed(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(2, 2, "indoor")])
+    other = add_bookable_restaurant(session, cuit="30711111111", groups=[(2, 1, "indoor")])
+    headers = diner_headers(client)
+    assert confirm(client, headers, restaurant.id_restaurante).status_code == 201
+
+    same_place_and_time = confirm(client, headers, restaurant.id_restaurante)
+    elsewhere = confirm(client, headers, other.id_restaurante, start="20:30")
+
+    assert same_place_and_time.status_code == 201
+    assert elsewhere.status_code == 201
+    assert len(day_reservations(client, headers).json()["reservations"]) == 3
+
+
+def test_us13_edge_full_group_answers_409(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(2, 1, "indoor"), (4, 1, "terrace")])
+    headers = diner_headers(client)
+    assert confirm(client, headers, restaurant.id_restaurante).status_code == 201
+
+    response = confirm(client, headers, restaurant.id_restaurante, start="20:30")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == (
+        "La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa."
+    )
+
+
+def test_us13_edge_database_rejects_a_double_booking(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(2, 1, "indoor")])
+    diner = diner_id(client, diner_headers(client))
+    add_reservation(session, restaurant, diner, TOMORROW, time(20), 2, "indoor")
+
+    with pytest.raises(IntegrityError):
+        add_reservation(session, restaurant, diner, TOMORROW, time(20, 30), 2, "indoor")
+
+
+def test_us13_edge_repeated_request_returns_the_same_reservation(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    request_id = uuid4()
+
+    first = confirm(client, headers, restaurant.id_restaurante, request_id=request_id)
+    again = confirm(client, headers, restaurant.id_restaurante, request_id=request_id)
+
+    assert first.status_code == 201
+    assert again.status_code == 200
+    assert again.json()["id"] == first.json()["id"]
+    assert len(day_reservations(client, headers).json()["reservations"]) == 1
+
+
+def test_us13_edge_lists_only_the_diner_reservations(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    martin = diner_headers(client)
+    laura = diner_headers(client, email="laura@example.com")
+    confirm(client, martin, restaurant.id_restaurante)
+
+    assert day_reservations(client, laura).json()["reservations"] == []
+
+
+def test_us13_edge_changes_during_the_review_answer_409(
+    client: TestClient, session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(2, 1, "indoor"), (4, 1, "indoor")])
+    headers = diner_headers(client)
+
+    # The start passed while the diner was reviewing.
+    monkeypatch.setattr(
+        availability,
+        "current_time",
+        lambda: datetime.combine(TOMORROW, time(20, 5), tzinfo=BUENOS_AIRES),
+    )
+    assert confirm(client, headers, restaurant.id_restaurante).json()["detail"] == (
+        "Ese horario ya pasó. Elegí otro."
+    )
+    monkeypatch.undo()
+    monkeypatch.setattr(availability, "current_time", lambda: NOW)
+
+    # The restaurant disabled the group the review showed.
+    group = session.scalar(
+        select(TableInventoryGroup).where(
+            TableInventoryGroup.restaurant_id == restaurant.id_restaurante,
+            TableInventoryGroup.capacity == 2,
+        )
+    )
+    group.available = False
+    session.flush()
+    gone = confirm(client, headers, restaurant.id_restaurante)
+    assert gone.status_code == 409
+    assert (
+        gone.json()["detail"]
+        == "Esa mesa ya no está disponible. Elegí otro horario o tipo de mesa."
+    )
+
+    # The restaurant closed that shift.
+    session.execute(delete(OpeningShift).where(OpeningShift.start_time == time(20)))
+    session.flush()
+    closed = confirm(client, headers, restaurant.id_restaurante, party_size=4, table=(4, "indoor"))
+    assert closed.status_code == 409
+    assert closed.json()["detail"] == "El restaurante ya no atiende en ese horario. Elegí otro."
+
+
+def test_us13_edge_rejects_malformed_requests(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+
+    assert confirm(client, headers, restaurant.id_restaurante, party_size=0).status_code == 400
+    assert confirm(client, headers, restaurant.id_restaurante, start="20:15").status_code == 400
+    assert confirm(client, headers, uuid4()).status_code == 404
+
+
+def test_us13_edge_restaurant_token_gets_403(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session, cuit="20123456786")
+    headers = _auth(client)
+
+    assert confirm(client, headers, restaurant.id_restaurante).status_code == 403
+    assert day_reservations(client, headers).status_code == 403
+    assert confirm(client, {}, restaurant.id_restaurante).status_code == 401
+
+
+def test_us13_edge_inventory_change_keeps_booked_tables(
+    client: TestClient, session: Session
+) -> None:
+    owner = _auth(client)
+    restaurant = session.scalar(select(Restaurant).where(Restaurant.email == "profile@example.com"))
+    restaurant.latitud, restaurant.longitud = Decimal("-34.58"), Decimal("-58.43")
+    groups = [{"capacity": 2, "quantity": 2, "seating_area": "indoor"}]
+    assert client.put("/api/restaurante/mesas", json=groups, headers=owner).status_code == 200
+    session.add(
+        OpeningShift(
+            restaurant_id=restaurant.id_restaurante,
+            day_of_week=TOMORROW.isoweekday(),
+            start_time=time(20),
+            end_time=time(23),
+        )
+    )
+    session.flush()
+    diner = diner_id(client, diner_headers(client))
+    add_reservation(session, restaurant, diner, TOMORROW, time(20), 2, "indoor", table_number=2)
+    # A reservation that already ended doesn't block anything.
+    add_reservation(session, restaurant, diner, TODAY, time(7), 2, "indoor", table_number=2)
+    # Committed like real reservations: a rejected change rolls back only its own work.
+    session.commit()
+
+    changes = [
+        [{"capacity": 2, "quantity": 1, "seating_area": "indoor"}],
+        [{"capacity": 2, "quantity": 2, "seating_area": "terrace"}],
+        [{"capacity": 2, "quantity": 2, "seating_area": "indoor", "available": False}],
+        [],
+    ]
+    for change in changes:
+        response = client.put("/api/restaurante/mesas", json=change, headers=owner)
+        assert response.status_code == 409
+        [booked] = response.json()["detail"]["reservations"]
+        assert (booked["date"], booked["start_time"], booked["party_size"]) == (
+            TOMORROW.isoformat(),
+            "20:00",
+            2,
+        )
+    stored = client.get("/api/restaurante/mesas", headers=owner).json()
+    assert [(item["quantity"], item["seating_area"]) for item in stored] == [(2, "indoor")]
+    # Adding tables is always fine.
+    more = [{"capacity": 2, "quantity": 3, "seating_area": "indoor"}]
+    assert client.put("/api/restaurante/mesas", json=more, headers=owner).status_code == 200

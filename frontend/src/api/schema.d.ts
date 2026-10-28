@@ -357,6 +357,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reservations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Day Reservations */
+        get: operations["list_day_reservations_api_reservations_get"];
+        put?: never;
+        /** Confirm Reservation */
+        post: operations["confirm_reservation_api_reservations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurants": {
         parameters: {
             query?: never;
@@ -472,6 +490,16 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** DayReservationsResponse */
+        DayReservationsResponse: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Reservations */
+            reservations: components["schemas"]["ReservationResponse"][];
         };
         /** DinerResponse */
         DinerResponse: {
@@ -723,6 +751,65 @@ export interface components {
             /** Nombre */
             nombre: string;
         };
+        /** ReservationRequest */
+        ReservationRequest: {
+            /**
+             * Restaurant Id
+             * Format: uuid
+             */
+            restaurant_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Start Time
+             * Format: time
+             */
+            start_time: string;
+            /** Party Size */
+            party_size: number;
+            table: components["schemas"]["TableChoice"];
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+        };
+        /** ReservationResponse */
+        ReservationResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            restaurant: components["schemas"]["ReservationRestaurant"];
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start Time */
+            start_time: string;
+            /** End Time */
+            end_time: string;
+            /** Party Size */
+            party_size: number;
+            table: components["schemas"]["TableChoice"];
+            /** Status */
+            status: string;
+        };
+        /** ReservationRestaurant */
+        ReservationRestaurant: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nombre */
+            nombre: string;
+        };
         /**
          * RestaurantGoogleRegistration
          * @description US-2 S5: the email comes from the Google ID token, and there is no password.
@@ -827,6 +914,19 @@ export interface components {
             start_time: string;
             /** Available */
             available: boolean;
+        };
+        /**
+         * TableChoice
+         * @description The table group the review showed: «Mesa para 4 · Terraza» (decision D2).
+         */
+        TableChoice: {
+            /** Capacity */
+            capacity: number;
+            /**
+             * Seating Area
+             * @enum {string}
+             */
+            seating_area: "indoor" | "outdoor" | "terrace";
         };
         /** TableInventoryGroupPayload */
         TableInventoryGroupPayload: {
@@ -1819,6 +1919,131 @@ export interface operations {
             };
             /** @description El restaurante no existe. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_day_reservations_api_reservations_get: {
+        parameters: {
+            query: {
+                date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayReservationsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    confirm_reservation_api_reservations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReservationRequest"];
+            };
+        };
+        responses: {
+            /** @description La misma confirmación ya había creado esta reserva. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservationResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description El restaurante no existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Algo cambió durante la revisión: la reserva no se creó. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

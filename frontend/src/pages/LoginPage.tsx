@@ -11,6 +11,7 @@ import {
 } from '../components/access'
 import type { Account } from '../api/session'
 import { Card, SegmentedControl, useToast } from '../components/ui'
+import { returnPath } from '../lib/returnPath'
 import styles from './AuthPage.module.css'
 
 export function LoginPage() {
@@ -23,10 +24,11 @@ export function LoginPage() {
     searchParams.get('rol') === 'restaurante' ? 'restaurant' : 'diner',
   )
   const createdEmail = (state as { email?: unknown } | null)?.email
+  const returnTo = returnPath(searchParams)
 
   function welcome(account: Account) {
     toast(`¡Hola, ${account.nombre ?? account.email}!`, { tone: 'ok' })
-    navigate('/')
+    navigate(returnTo)
   }
 
   return (

@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { Route, Routes } from 'react-router'
+import { Route, Routes, useLocation } from 'react-router'
 
 import {
   fetchAvailability,
@@ -9,6 +9,7 @@ import {
   type DayAvailability,
   type TablesAvailability,
 } from '../api/availability'
+import { confirmReservation, fetchDayReservations, type Reservation } from '../api/reservations'
 import { useAccount } from '../api/session'
 import { todayInBuenosAires } from '../lib/date'
 import { renderWithProviders } from '../test/renderWithProviders'
@@ -36,11 +37,18 @@ vi.mock('../api/restaurants', async () => {
   }
 })
 
+vi.mock('../api/reservations', () => ({
+  confirmReservation: vi.fn(),
+  fetchDayReservations: vi.fn(),
+}))
+
 vi.mock('../api/session', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/session')>()
   return { ...actual, useAccount: vi.fn() }
 })
 
+const confirmMock = vi.mocked(confirmReservation)
+const dayReservationsMock = vi.mocked(fetchDayReservations)
 const availabilityMock = vi.mocked(fetchAvailability)
 const tablesMock = vi.mocked(fetchAvailableTables)
 const useAccountMock = vi.mocked(useAccount)
@@ -113,6 +121,9 @@ function partySize() {
 }
 
 beforeEach(() => {
+  confirmMock.mockReset()
+  dayReservationsMock.mockReset()
+  dayReservationsMock.mockResolvedValue([])
   availabilityMock.mockReset()
   tablesMock.mockReset()
   availabilityMock.mockResolvedValue(dayAvailability())
@@ -363,5 +374,155 @@ describe('ReservationPage (US-11)', () => {
       await screen.findByText('Este restaurante todavía no toma reservas.'),
     ).toBeInTheDocument()
     expect(availabilityMock).not.toHaveBeenCalled()
+  })
+})
+
+/** Shows where the app navigated, with its query string. */
+function LocationProbe() {
+  const location = useLocation()
+  return <p>En {location.pathname + location.search}</p>
+}
+
+function reservation(overrides: Partial<Reservation> = {}): Reservation {
+  return {
+    id: 'res-1',
+    restaurant: { id: RESTAURANT_ID, nombre: 'La Esquina de Palermo' },
+    date: DATE,
+    start_time: '12:00',
+    end_time: '13:30',
+    party_size: 2,
+    table: { capacity: 2, seating_area: 'indoor' },
+    status: 'confirmed',
+    ...overrides,
+  }
+}
+
+async function openReview(query = `?fecha=${DATE}&hora=12:00`) {
+  const user = userEvent.setup()
+  renderPage(query)
+  const next = await screen.findByRole('button', { name: 'Siguiente' })
+  await waitFor(() => expect(next).toBeEnabled())
+  await user.click(next)
+  await screen.findByRole('heading', { name: 'Revisá tu reserva' })
+  return user
+}
+
+describe('ReservationPage (US-13)', () => {
+  it('US-13 S1 opens the review with the selection', async () => {
+    await openReview()
+
+    expect(screen.getByRole('button', { name: 'Confirmar reserva' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Fecha')).not.toBeInTheDocument()
+  })
+
+  it('US-13 S2 shows every chosen value and the assigned table', async () => {
+    await openReview(`?fecha=${DATE}&hora=12:00&personas=2&tipo=outdoor`)
+
+    const summary = within(
+      screen.getByRole('heading', { name: 'Revisá tu reserva' }).parentElement!,
+    )
+    expect(summary.getByText('La Esquina de Palermo')).toBeInTheDocument()
+    expect(summary.getByText('12:00 a 13:30')).toBeInTheDocument()
+    expect(summary.getByText('2')).toBeInTheDocument()
+    // The smallest group of the chosen area that seats the party (decision D2).
+    expect(summary.getByText('Mesa para 4 · Afuera')).toBeInTheDocument()
+  })
+
+  it('US-13 S3 goes back with the selection kept', async () => {
+    const user = await openReview(`?fecha=${DATE}&hora=12:00&personas=2&tipo=outdoor`)
+
+    await user.click(screen.getByRole('button', { name: 'Volver' }))
+
+    expect(await screen.findByLabelText('Fecha')).toHaveValue(DATE)
+    expect(screen.getByRole('button', { name: '12:00' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /Afuera/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(partySize()).toContain('2')
+  })
+
+  it('US-13 S4 creates nothing until the diner confirms', async () => {
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Volver' }))
+    await screen.findByLabelText('Fecha')
+
+    expect(confirmMock).not.toHaveBeenCalled()
+  })
+
+  it('US-13 S5 confirms and shows the reservation', async () => {
+    confirmMock.mockResolvedValue({ ok: true, reservation: reservation() })
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    expect(await screen.findByText('Reserva confirmada')).toBeInTheDocument()
+    expect(confirmMock).toHaveBeenCalledWith({
+      restaurant_id: RESTAURANT_ID,
+      date: DATE,
+      start_time: '12:00',
+      party_size: 1,
+      table: { capacity: 2, seating_area: 'indoor' },
+      request_id: expect.any(String),
+    })
+    expect(screen.getByText('Mesa para 2 · Adentro')).toBeInTheDocument()
+  })
+
+  it('US-13 S6 warns about an overlapping reservation and still confirms', async () => {
+    dayReservationsMock.mockResolvedValue([
+      reservation({
+        id: 'res-0',
+        restaurant: { id: 'otro', nombre: 'Bodegón Estudiantil' },
+        start_time: '11:30',
+        end_time: '13:00',
+      }),
+    ])
+    confirmMock.mockResolvedValue({ ok: true, reservation: reservation() })
+    const user = await openReview()
+
+    expect(
+      await screen.findByText(
+        'Ya tenés una reserva en Bodegón Estudiantil de 11:30 a 13:00. Podés confirmar igual.',
+      ),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    expect(await screen.findByText('Reserva confirmada')).toBeInTheDocument()
+  })
+
+  it('US-13 edge returns to the selection when the table was taken', async () => {
+    confirmMock.mockResolvedValue({
+      ok: false,
+      status: 409,
+      message: 'La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa.',
+    })
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    expect(
+      await screen.findByText(
+        'La mesa se ocupó mientras confirmabas. Elegí otro horario o tipo de mesa.',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByLabelText('Fecha')).toHaveValue(DATE)
+    expect(screen.queryByRole('heading', { name: 'Revisá tu reserva' })).not.toBeInTheDocument()
+  })
+
+  it('US-13 edge returns to the review after signing in again', async () => {
+    confirmMock.mockResolvedValue({ ok: false, status: 401, message: 'Tu sesión venció.' })
+    const user = userEvent.setup()
+    renderWithProviders(
+      <Routes>
+        <Route path="/reservar/:restauranteId" element={<ReservationPage />} />
+        <Route path="/ingresar" element={<LocationProbe />} />
+      </Routes>,
+      { route: `/reservar/${RESTAURANT_ID}?fecha=${DATE}&hora=12:00&paso=revision` },
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Confirmar reserva' }))
+
+    const back = `/reservar/${RESTAURANT_ID}?fecha=${DATE}&hora=12:00&paso=revision`
+    expect(
+      await screen.findByText(`En /ingresar?volver=${encodeURIComponent(back)}`),
+    ).toBeInTheDocument()
   })
 })

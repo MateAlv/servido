@@ -270,8 +270,8 @@ def replace_table_inventory(
             {
                 "reservation_id": str(item.reservation_id),
                 "date": item.date.isoformat(),
-                "start_time": item.start_time.isoformat(),
-                "quantity": item.quantity,
+                "start_time": item.start_time.strftime("%H:%M"),
+                "party_size": item.party_size,
             }
             for item in error.result.affected_reservations
         ]

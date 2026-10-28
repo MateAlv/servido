@@ -16,11 +16,11 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [002-elegir-restaurante](002-elegir-restaurante/spec.md) | Comensal | 5, 7, 9, 33 | 13 | 1 (US-33 adelantada del 4) | ✅ | ✅ | ✅ | ✅ US-5, US-7, US-9, US-33 (con datos de prueba) |
 | [003-cuenta-restaurante](003-cuenta-restaurante/spec.md) | Restaurante | 2, 4, 28 | 5 | 1 (US-28 adelantada del 4 al 2) | ✅ | ✅ (solo Google) | ✅ (solo Google) | ✅ US-2, US-4, US-28 (US-4 S3 pendiente) |
 | [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | ✅ | ✅ | ✅ US-6, US-8, US-10 (el tipo de mesa de los grupos, decidido el 28/10, entra con la US-13) |
-| [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | ✅ (US-11; US-13 planificada el 28/10) | ✅ | ✅ US-11 (solo frontend con datos de prueba); US-13 en curso |
+| [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | ✅ | ✅ | ✅ US-11 y US-13, con backend real (decisiones D1–D9 del 28/10, falta que la PO las valide) |
 | [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — | — |
 | [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17) |
 
-Arrastre de la spec 003: el HTTP 403 por rol de US-4 (escenario 3) se prueba cuando existan endpoints exclusivos de cada rol. El registro con Google de US-2 y US-28 se construyeron el 25/10. La spec 002 todavía lee los restaurantes de `frontend/src/data/restaurants.fixture.ts`; con la US-13, el mapa suma los restaurantes reales que se pueden reservar (decisión del 28/10, D4).
+Arrastre de la spec 003: el HTTP 403 por rol de US-4 (escenario 3) ya se puede probar en `backend/tests/test_auth.py`: los endpoints de reservas son solo para comensales y los de configuración solo para restaurantes (los tests de la 005 ya cubren el 403 de reservas). El registro con Google de US-2 y US-28 se construyeron el 25/10. La spec 002 todavía lee los restaurantes de `frontend/src/data/restaurants.fixture.ts`; con la US-13, el mapa suma los restaurantes reales que se pueden reservar (decisión del 28/10, D4).
 
 Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 solo está US-13, en la 005 (ver [backlog](../docs/product/backlog.md)). Según el riesgo 8, conviene tenerlas listas antes para poder adelantar US.
 
@@ -29,7 +29,6 @@ Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 solo est
 - El `plan.md` y el `tasks.md` de la spec 003 cubren solo lo de Google (25/10). Falta documentar ahí lo construido en el Sprint 1 (US-2 y US-4) para cumplir la [Definition of Done](../AGENTS.md#definition-of-done).
 - Spec 001: falta el test de frontend de US-3 S1 (ver `tasks.md`, T022).
 - El backend de la US-11 (tabla de reservas y endpoints de disponibilidad) quedó diferido el 23/10 porque faltaba la spec 004. La 004 ya está mergeada: se construye en el mismo PR que la US-13 (fase 3 del `tasks.md` de la 005).
-- La US-11 de la 005 sigue el camino mock del checkpoint T001 (frontend con `frontend/src/api/availability.ts` y `frontend/src/data/reservationAvailability.fixture.ts`, rotulado «Datos de prueba»): borrarlo cuando existan los endpoints de la 004 y la 005 (T018).
 - La US-11 quedó sin el pase visual de navegador (360 px, teclado y lector de pantalla, T024/T032); los tests automatizados pasan.
 
 ### Numeración

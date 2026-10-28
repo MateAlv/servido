@@ -101,8 +101,8 @@ The stub returns:
     {
       "reservation_id": "uuid",
       "date": "2026-11-20",
-      "start_time": "20:00:00",
-      "quantity": 1
+      "start_time": "20:00",
+      "party_size": 2
     }
   ]
 }

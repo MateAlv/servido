@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, Navigate, useParams, useSearchParams } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import {
   fetchAvailability,
@@ -9,14 +9,17 @@ import {
   type SeatingArea,
   type TablesAvailability,
 } from '../api/availability'
-import { useAccount } from '../api/session'
+import type { Reservation } from '../api/reservations'
+import { signOut, useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
 import { Button, Card, Chip, QuantityStepper, Skeleton, useToast } from '../components/ui'
 import { fetchRestaurant } from '../api/restaurants'
 import { cx } from '../lib/cx'
 import { SEATING_AREA_LABELS, SEATING_AREA_OPTIONS } from '../lib/seating'
-import { todayInBuenosAires } from '../lib/date'
+import { timeInBuenosAires, todayInBuenosAires } from '../lib/date'
 import styles from './ReservationPage.module.css'
+import { ConfirmedStep } from './reservation/ConfirmedStep'
+import { ReviewStep } from './reservation/ReviewStep'
 
 const SEATING_AREAS = SEATING_AREA_OPTIONS
 const AREA_LABEL = SEATING_AREA_LABELS
@@ -53,15 +56,20 @@ function paramsFromSelection(selection: Selection): URLSearchParams {
 }
 
 /**
- * Create a reservation (US-11, spec 005): date, time, party size and seating preference.
- * The selection lives in the URL, so reloading or going back keeps it (nothing is written).
- * The reservation itself is created in US-13, after the explicit confirmation.
+ * Create a reservation (US-11, spec 005): date, time, party size and seating preference, then
+ * the review and the explicit confirmation (US-13, `?paso=revision`). The selection lives in the
+ * URL, so reloading or going back keeps it; nothing is written until the diner confirms.
  */
 export function ReservationPage() {
   const { restauranteId = '' } = useParams<{ restauranteId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const queryClient = useQueryClient()
   const { data: account, isPending: accountPending } = useAccount()
+  const [confirmed, setConfirmed] = useState<Reservation | null>(null)
+  const reviewing = searchParams.get('paso') === 'revision'
   const { data: restaurant, isPending: restaurantPending } = useQuery({
     queryKey: ['restaurants', restauranteId],
     queryFn: () => fetchRestaurant(restauranteId),
@@ -96,6 +104,20 @@ export function ReservationPage() {
       (maxPartySize === undefined || (maxPartySize > 0 && personas <= maxPartySize)),
   })
   const tablesForStart: TablesAvailability | undefined = tables.data
+  // The review proposes the smallest group of the chosen area that seats the party (D2): the
+  // API lists the groups smallest first.
+  const assignedTable = tablesForStart?.tables.find((table) => !tipo || table.seating_area === tipo)
+
+  const leaveReview = useCallback(() => {
+    setSearchParams(paramsFromSelection(selectionFromParams(searchParams)), { replace: true })
+  }, [searchParams, setSearchParams])
+
+  // A reloaded or stale review whose table is gone goes back to the selection.
+  useEffect(() => {
+    if (!reviewing || !hora || tables.isPending || !tablesForStart || assignedTable) return
+    toast('La mesa que elegiste ya no está disponible. Elegí otro horario o tipo de mesa.')
+    leaveReview()
+  }, [reviewing, hora, tables.isPending, tablesForStart, assignedTable, toast, leaveReview])
 
   // Each response is handled once: FR-013 clamps the party size and S4 clears a time that
   // is no longer available, without repeating the notice on a re-render (StrictMode).
@@ -140,8 +162,10 @@ export function ReservationPage() {
       </main>
     )
   }
-  // The page (and the API behind it) is diner-only: a visitor signs in, a restaurant goes home.
-  if (account?.rol !== 'diner') return <Navigate to={account ? '/' : '/ingresar'} replace />
+  // The page (and the API behind it) is diner-only: a visitor signs in and comes back here, a
+  // restaurant goes home.
+  const backHere = `/ingresar?volver=${encodeURIComponent(location.pathname + location.search)}`
+  if (account?.rol !== 'diner') return <Navigate to={account ? '/' : backHere} replace />
 
   if (!restaurant) {
     return (
@@ -296,8 +320,21 @@ export function ReservationPage() {
     </>
   )
 
-  return (
-    <main className={styles.container}>
+  // «Siguiente» adds a history entry, so the phone's back button returns to the selection.
+  function openReview() {
+    const params = paramsFromSelection(selection)
+    params.set('paso', 'revision')
+    setSearchParams(params)
+  }
+
+  function refreshAvailability() {
+    void queryClient.invalidateQueries({ queryKey: ['availability'] })
+    void queryClient.invalidateQueries({ queryKey: ['availability-tables'] })
+    void queryClient.invalidateQueries({ queryKey: ['reservations'] })
+  }
+
+  const header = (
+    <>
       <Link to={`/restaurantes/${restauranteId}`} className={styles.back}>
         ← Volver al restaurante
       </Link>
@@ -310,6 +347,53 @@ export function ReservationPage() {
           </p>
         </div>
       </header>
+    </>
+  )
+
+  if (confirmed) {
+    return (
+      <main className={styles.container}>
+        {header}
+        <ConfirmedStep reservation={confirmed} />
+      </main>
+    )
+  }
+
+  if (reviewing && hora && tablesForStart && assignedTable) {
+    return (
+      <main className={styles.container}>
+        {header}
+        <ReviewStep
+          restaurant={{ id: restaurant.id, name: restaurant.name }}
+          fecha={fecha}
+          hora={hora}
+          endTime={timeInBuenosAires(tablesForStart.ends_at)}
+          personas={personas}
+          table={assignedTable}
+          onBack={leaveReview}
+          onConfirmed={(reservation) => {
+            setConfirmed(reservation)
+            // Going back can't confirm again: the selection leaves the URL.
+            setSearchParams(new URLSearchParams(), { replace: true })
+            refreshAvailability()
+          }}
+          onConflict={(message) => {
+            toast(message)
+            refreshAvailability()
+            leaveReview()
+          }}
+          onSessionExpired={() => {
+            signOut(queryClient)
+            navigate(backHere)
+          }}
+        />
+      </main>
+    )
+  }
+
+  return (
+    <main className={styles.container}>
+      {header}
 
       <div className={styles.steps}>
         <Card className={styles.step}>
@@ -403,7 +487,9 @@ export function ReservationPage() {
         </Card>
 
         <div className={styles.actions}>
-          <Button disabled={!canContinue}>Siguiente</Button>
+          <Button disabled={!canContinue} onClick={openReview}>
+            Siguiente
+          </Button>
         </div>
       </div>
     </main>
