@@ -17,6 +17,8 @@ def book_table(client: TestClient, session: Session, capacity: int, table_number
     add_reservation(
         session, restaurant, diner, TOMORROW, time(20), capacity, "indoor", table_number
     )
+    # Committed like a real reservation: the rejected change rolls back only its own work.
+    session.commit()
 
 
 def test_us10_s1_grouped_table_inventory_is_saved(client: TestClient) -> None:

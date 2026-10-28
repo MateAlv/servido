@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react'
+
 import type { Reservation } from '../../api/reservations'
 import { Button, Card, StatusPill } from '../../components/ui'
 import { longDate } from '../../lib/date'
@@ -6,10 +8,17 @@ import styles from '../ReservationPage.module.css'
 
 /** The reservation the diner just confirmed (US-13 S5). */
 export function ConfirmedStep({ reservation }: { reservation: Reservation }) {
+  const title = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    title.current?.focus()
+  }, [])
+
   return (
     <Card className={styles.step}>
       <StatusPill tone="ok">Reserva confirmada</StatusPill>
-      <h2 className={styles.stepTitle}>¡Listo! Te esperamos.</h2>
+      <h2 ref={title} tabIndex={-1} className={styles.stepTitle}>
+        ¡Listo! Te esperamos.
+      </h2>
       <dl className={styles.summary}>
         <div>
           <dt>Restaurante</dt>

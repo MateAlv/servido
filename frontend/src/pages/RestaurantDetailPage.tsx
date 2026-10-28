@@ -203,6 +203,20 @@ export function RestaurantDetailPage() {
                   Reservar mesa
                 </Button>
               </>
+            ) : restaurant.bookable && !account ? (
+              <>
+                <StatusPill tone="ok" className={styles.soon}>
+                  Reservas abiertas
+                </StatusPill>
+                <h2 className={styles.sectionTitle}>Reservá con tu pedido</h2>
+                <p className={styles.muted}>Ingresá con tu cuenta de comensal para reservar.</p>
+                <Button
+                  fullWidth
+                  to={`/ingresar?rol=comensal&volver=${encodeURIComponent(`/reservar/${restaurant.id}`)}`}
+                >
+                  Ingresá para reservar
+                </Button>
+              </>
             ) : (
               <>
                 <StatusPill tone="warn" className={styles.soon}>

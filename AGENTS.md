@@ -57,7 +57,7 @@ Use these English names in code. Add a row when a new domain concept appears. Ex
 | Capacidad | `capacity` | |
 | Concurrencia (bajo / medio / alto) | `OccupancyLevel` (`low` / `medium` / `high`) | |
 | Rango de precios ($ – $$$$) | `PriceTier` | Derived from `averageSpendPerPerson` |
-| Gasto promedio por persona | `averageSpendPerPerson` | Fixture field until the restaurants API exists |
+| Gasto promedio por persona | `averageSpendPerPerson` | Only the test restaurants have it; real ones declare a `price_tier` (spec 005, D4) |
 | Restricción alimenticia (sin TACC, vegetariano…) | `DietaryRestriction` (`gluten_free`, `vegetarian`…) | Always shown as declared by the restaurant (risk 5) |
 | Tiempo estimado de preparación | `prep_time_minutes` | |
 | Hora de llegada | `arrival_time` | |
@@ -91,16 +91,18 @@ frontend/           React + TypeScript SPA (Vite)
   src/api/          openapi.json (contract), schema.d.ts (generated types), client.ts,
                     session.ts (token in sessionStorage, current account), errors.ts
   src/pages/        One component per route; routes in src/router.tsx, shell in src/AppLayout.tsx;
-                    pages/home/ holds the home page variants per role (not routes)
+                    pages/home/ holds the home page variants per role and pages/reservation/
+                    the review and confirmed steps of the booking page (not routes)
   src/components/   Design system, imported from each folder's index.ts:
                     brand/ (logo, splash, spinner) · ui/ (buttons, fields, modal, toasts…)
                     layout/ (header, footer) · access/ (login form, redirects, roles)
                     order/ · reservation/ · restaurant/ (animated domain pieces, map,
                     list, price filter) · dev/ (API status badge)
   src/lib/          Small helpers: cx (class names), cssVars, reduced-motion detection,
-                    geo (distances), occupancy, useGeolocation
-  src/data/         Temporary fixtures while the backend endpoint does not exist yet
-                    (restaurants.fixture.ts feeds the map, list and detail)
+                    geo (distances), occupancy, useGeolocation, date (Buenos Aires dates),
+                    seating (tipos de mesa), returnPath (?volver=), requestId
+  src/data/         Test data that has no backend yet
+                    (restaurants.fixture.ts: the test restaurants shown next to the real ones)
   src/styles/       tokens.css (design tokens) and global.css
   src/test/         Test setup, polyfills and renderWithProviders
 specs/              Spec Kit features: NNN-name/spec.md, plan.md, tasks.md…

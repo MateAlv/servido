@@ -88,9 +88,9 @@ description: "Task list for reservar mesa (US-11 now, US-13 later)"
 
 ## Phase 3: US-13 — Confirmar datos (and the pieces it needs), planned 28/10
 
-**Status note (28/10)**: spec 004 is merged with grouped tables, and the team took decisions D1–D9 (`research.md`). They replace the earlier foundational and backend tasks: T002–T011 and T014–T016 are superseded (marked on their lines) by T034–T041; T017–T018 stay; T025–T029 become the tasks below. Everything goes in **one PR** (team decision of 28/10), with commits in this order, so production never sees an intermediate state.
+**Status note (28/10)**: spec 004 is merged with grouped tables, and the team took decisions D1–D10 (`research.md`). They replace the earlier foundational and backend tasks: T002–T011 and T014–T016 are superseded (marked on their lines) by T034–T041; T017–T018 stay; T025–T029 become the tasks below. Everything goes in **one PR** (team decision of 28/10), with commits in this order, so production never sees an intermediate state.
 
-- [X] T033 [US13] Take decisions D1–D9, update `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/`, spec 004 and spec 002, and record them in `specs/README.md`; review the result with an independent reviewer and fix its findings
+- [X] T033 [US13] Take decisions D1–D10, update `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/`, spec 004 and spec 002, and record them in `specs/README.md`; review the result with an independent reviewer and fix its findings
 - [ ] T033a [US13] Add the overlap warning (D8) as a criterion of US-13 in the team workbook and export `docs/product/backlog.md` with `scripts/export_backlog.py` — **needs the Google Sheets connector or a human**
 
 ### 1. Backend foundations

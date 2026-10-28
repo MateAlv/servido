@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 
 import { Button, Card, PasswordField, TextField, useToast } from '../components/ui'
 import { api } from '../api/client'
 import { getApiErrorMessage, getRequestErrorMessage } from '../api/errors'
 import { GoogleSignUpButton, RedirectIfSignedIn } from '../components/access'
+import { returnPath, withReturnPath } from '../lib/returnPath'
 import styles from './AuthPage.module.css'
 
 export function RegisterPage() {
   const navigate = useNavigate()
   const toast = useToast()
+  // A diner who came to book keeps where they were through sign-up and sign-in.
+  const [searchParams] = useSearchParams()
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -35,7 +38,7 @@ export function RegisterPage() {
       toast('¡Listo! Tu cuenta está creada. Te mandamos un mail para verificar tu email.', {
         tone: 'ok',
       })
-      navigate('/ingresar?rol=comensal', { state: { email } })
+      navigate(withReturnPath('/ingresar?rol=comensal', searchParams), { state: { email } })
     } catch (requestError) {
       setError(getRequestErrorMessage(requestError, 'No pudimos crear tu cuenta.'))
     } finally {
@@ -100,7 +103,7 @@ export function RegisterPage() {
           <GoogleSignUpButton
             onSignedIn={() => {
               toast('¡Listo! Tu cuenta está creada.', { tone: 'ok' })
-              navigate('/')
+              navigate(returnPath(searchParams), { replace: true })
             }}
           />
           <p className={styles.footer}>

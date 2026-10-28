@@ -14,7 +14,7 @@ US-11 turns the restaurant detail into a booking flow: the diner picks a date, a
 
 ## Update of 28/10: US-13, the backend of US-11 and real restaurants
 
-Spec 004 (shifts and grouped tables) and the US-11 page are merged. US-13 needs three things that are not built yet: the `reservations` table, the real availability (the backend of US-11, deferred on 23/10) and a real restaurant the diner can reach (everything on the diner side still reads fixtures). The team took eight decisions on 28/10 before planning (D1–D9 in [research.md](research.md), pending PO). This section is the plan for all of it; the sections below keep describing US-11 as built.
+Spec 004 (shifts and grouped tables) and the US-11 page are merged. US-13 needs three things that are not built yet: the `reservations` table, the real availability (the backend of US-11, deferred on 23/10) and a real restaurant the diner can reach (everything on the diner side still reads fixtures). The team took eight decisions on 28/10 before planning (D1–D10 in [research.md](research.md), pending PO). This section is the plan for all of it; the sections below keep describing US-11 as built.
 
 ### What changes
 
@@ -70,7 +70,7 @@ One revision after `005_merge_feature_heads`: `CREATE EXTENSION IF NOT EXISTS bt
 | Spec item | Plan handles it as | Status |
 | --- | --- | --- |
 | Party size (`spec.md:51`) | The diner enters it, from 1 to `max_party_size` (the restaurant's maximum); only tables with `capacity >= party_size` are offered | Pending PO |
-| **Maximum party size** (`spec.md` FR-013, added 23/10) | The restaurant defines it through its active tables: `max_party_size = max(capacity)` of its `active` tables (`0` if it has none). One reservation holds one table, so no group can be larger than the biggest table. No new column in `restaurantes`: a second restaurant-level number would duplicate what the tables already say and would need spec 004. The API reports the value and the UI caps the input; the write path (US-13) rejects a larger `party_size` with `400` | Team decision 23/10; PO informed |
+| **Maximum party size** (`spec.md` FR-013, added 23/10) | The restaurant defines it through its active tables: `max_party_size = max(capacity)` of its `active` tables (`0` if it has none). One reservation holds one table, so no group can be larger than the biggest table. No new column in `restaurantes`: a second restaurant-level number would duplicate what the tables already say and would need spec 004. The API reports the value and the UI caps the input; the confirmation (US-13) rejects a larger `party_size` with `409`, since the maximum can change during the review | Team decision 23/10; PO informed |
 | Concrete table (`spec.md` Edge Cases) | US-11 does not pick one: the page informs whether a table is free for the chosen preference and the table is assigned when the reservation is confirmed (US-13). This still requires spec 004 to store **one row per physical table**, because the assignment and US-13's review name a single table | Team decision 23/10 (prototype); PO pending + 004 plan |
 | Occupied slot (`spec.md:53`) | A slot is offered while at least one table with enough capacity is free for the whole 90-minute block; a slot with no free table is shown as not selectable | Pending PO |
 | Granularity/duration (`spec.md:54`) | Starts every 30 minutes, fixed duration of 90 minutes; a start is offered only if the whole block fits inside the shift | Pending PO |
@@ -258,7 +258,7 @@ No violations. The exclusion constraint is not extra complexity: it is the only 
 | The diner never learns which table was assigned | The assignment happens at confirmation (US-13); its review screen must show the assigned table before the diner commits |
 | The PO confirms 004 keeps table *groups* instead of individual tables | Individual tables stop being possible; while the PO answers, the fixture shows individual tables and the assumption is escalated before the real query is written |
 | The PO/PM expects the reservation to be created in Sprint 2 | Escalated; if they confirm, US-13 moves part of its scope into Sprint 2 and this plan is updated first. The mock never fakes a created reservation |
-| A diner asks for a group the restaurant cannot seat (an unbounded stepper) | `max_party_size` comes from the active tables in the availability response, the stepper's `max` uses it, the URL value is clamped with a notice, and US-13 rejects a larger `party_size` with `400` |
-| The PO rejects one of D1–D9 | Each decision is local: D2 is the review text, D8 one notice, D5 two constants; D1 and D3 are the only schema ones and are recorded before any data exists in production |
+| A diner asks for a group the restaurant cannot seat (an unbounded stepper) | `max_party_size` comes from the active tables in the availability response, the stepper's `max` uses it, the URL value is clamped with a notice, and US-13 rejects a larger `party_size` with `409` |
+| The PO rejects one of D1–D10 | Each decision is local: D2 is the review text, D8 one notice, D5 two constants; D1 and D3 are the only schema ones and are recorded before any data exists in production |
 | A restaurant re-saves its tables while a diner confirms | The confirmation reads the group `FOR SHARE`; the inventory update locks the groups `FOR UPDATE` and runs the conflict rule, so one waits for the other |
 | Availability rules drift between US-11 and US-13 | Both call `app/services/availability.py`; US-13 revalidates with the same function inside its transaction |

@@ -23,6 +23,10 @@ SLOT_MINUTES = 30
 DURATION = timedelta(minutes=RESERVATION_MINUTES)
 
 PAST_DATE = "No podés reservar en una fecha pasada."
+# How far ahead a diner can book (decision D10 of 28/10, pending PO). Without a limit, a
+# reservation years ahead would keep its table group frozen (decision D9).
+MAX_DAYS_AHEAD = 60
+TOO_FAR_AHEAD = f"Podés reservar hasta {MAX_DAYS_AHEAD} días antes."
 INVALID_START = "Ese horario no es válido."
 CLOSED_AT_START = "El restaurante no atiende en ese horario."
 PAST_START = "Ese horario ya pasó."
@@ -150,6 +154,8 @@ def free_groups(
 def check_date(day: date, now: datetime) -> None:
     if day < now.date():
         raise UnavailableStartError(PAST_DATE)
+    if day > now.date() + timedelta(days=MAX_DAYS_AHEAD):
+        raise UnavailableStartError(TOO_FAR_AHEAD)
 
 
 def check_start(
@@ -256,24 +262,42 @@ def locked_group(session: Session, choice: ReservationChoice) -> TableInventoryG
     return session.scalar(query) or session.scalar(query)
 
 
+def reservation_for_request(session: Session, request_id: UUID) -> Reservation | None:
+    return session.scalar(select(Reservation).where(Reservation.request_id == request_id))
+
+
+def repeated_request(
+    session: Session, diner_id: UUID, request_id: UUID
+) -> tuple[Reservation, bool] | None:
+    """The reservation this request already created, if any (a double click or a retry)."""
+    existing = reservation_for_request(session, request_id)
+    if existing is None:
+        return None
+    if existing.diner_id != diner_id:
+        raise ConfirmationConflictError(TABLE_TAKEN)
+    return existing, False
+
+
 def confirm_reservation(
     session: Session, diner_id: UUID, choice: ReservationChoice, now: datetime
 ) -> tuple[Reservation, bool]:
     """Creates the reservation, or returns the one this request already created (rule 9).
 
     Returns the reservation and whether it is new. Raises UnavailableStartError for a malformed
-    start (400) and ConfirmationConflictError for whatever changed during the review (409).
+    request (400) and ConfirmationConflictError for whatever changed during the review (409).
     """
-    existing = session.scalar(
-        select(Reservation).where(Reservation.request_id == choice.request_id)
-    )
-    if existing is not None:
-        if existing.diner_id != diner_id:
-            raise ConfirmationConflictError(TABLE_TAKEN)
-        return existing, False
-
-    if choice.start.minute % SLOT_MINUTES or choice.start.second or choice.start.microsecond:
+    if repeated := repeated_request(session, diner_id, choice.request_id):
+        return repeated
+    if (
+        choice.start.tzinfo is not None
+        or choice.start.minute % SLOT_MINUTES
+        or choice.start.second
+        or choice.start.microsecond
+    ):
         raise UnavailableStartError(INVALID_START)
+    # A start that passed during the review is a 409 below; only the horizon is a bad request.
+    if choice.day > now.date() + timedelta(days=MAX_DAYS_AHEAD):
+        raise UnavailableStartError(TOO_FAR_AHEAD)
     if (
         session.scalar(
             select(Restaurant.id_restaurante).where(
@@ -283,8 +307,13 @@ def confirm_reservation(
         is None
     ):
         raise ConfirmationConflictError(NOT_BOOKABLE)
+    if choice.party_size > max_party_size(available_groups(session, choice.restaurant_id)):
+        raise ConfirmationConflictError(ABOVE_MAXIMUM)
 
     group = locked_group(session, choice)
+    # A request with the same id may have been waiting for the same lock.
+    if repeated := repeated_request(session, diner_id, choice.request_id):
+        return repeated
     if group is None or not group.available or group.capacity < choice.party_size:
         raise ConfirmationConflictError(TABLE_GONE)
 
@@ -294,8 +323,6 @@ def confirm_reservation(
     shifts = active_shifts(session, choice.restaurant_id, choice.day)
     if choice.start not in starts_in(shifts, choice.day):
         raise ConfirmationConflictError(NO_LONGER_OPEN)
-    if choice.party_size > max_party_size(available_groups(session, choice.restaurant_id)):
-        raise ConfirmationConflictError(ABOVE_MAXIMUM)
 
     taken = taken_tables(session, choice.restaurant_id, starts_at).get(
         (group.capacity, group.seating_area), set()
@@ -315,13 +342,20 @@ def confirm_reservation(
         ends_at=starts_at + DURATION,
         request_id=choice.request_id,
     )
-    session.add(reservation)
     try:
-        # The exclusion constraint is the last guard against a concurrent confirmation.
         with session.begin_nested():
+            session.add(reservation)
             session.flush()
     except IntegrityError as error:
-        raise ConfirmationConflictError(TABLE_TAKEN) from error
+        constraint = getattr(getattr(error.orig, "diag", None), "constraint_name", None)
+        # The same request committed first while this one was running.
+        if constraint == "uq_reservations_request_id" and (
+            repeated := repeated_request(session, diner_id, choice.request_id)
+        ):
+            return repeated
+        if constraint == "ex_reservations_table_no_overlap":
+            raise ConfirmationConflictError(TABLE_TAKEN) from error
+        raise
     return reservation, True
 
 

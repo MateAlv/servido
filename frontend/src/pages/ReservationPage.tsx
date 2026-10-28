@@ -10,6 +10,7 @@ import {
   type TablesAvailability,
 } from '../api/availability'
 import type { Reservation } from '../api/reservations'
+import { retryUnlessSessionExpired, SessionExpiredError } from '../api/errors'
 import { signOut, useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
 import { Button, Card, Chip, QuantityStepper, Skeleton, useToast } from '../components/ui'
@@ -69,7 +70,11 @@ export function ReservationPage() {
   const queryClient = useQueryClient()
   const { data: account, isPending: accountPending } = useAccount()
   const [confirmed, setConfirmed] = useState<Reservation | null>(null)
+  // Shown only while the URL names it: going back from the confirmation leaves it.
+  const showConfirmed = confirmed && searchParams.get('confirmada') === confirmed.id
   const reviewing = searchParams.get('paso') === 'revision'
+  // True when «Siguiente» added the review to the history, so «Volver» can go back to it.
+  const reviewPushed = useRef(false)
   const { data: restaurant, isPending: restaurantPending } = useQuery({
     queryKey: ['restaurants', restauranteId],
     queryFn: () => fetchRestaurant(restauranteId),
@@ -91,6 +96,7 @@ export function ReservationPage() {
     queryKey: ['availability', restauranteId, fecha, personas],
     queryFn: () => fetchAvailability(restauranteId, fecha, personas),
     enabled: fecha !== '',
+    retry: retryUnlessSessionExpired,
   })
   const day: DayAvailability | undefined = availability.data
   const maxPartySize = day?.max_party_size
@@ -102,6 +108,7 @@ export function ReservationPage() {
       fecha !== '' &&
       hora !== '' &&
       (maxPartySize === undefined || (maxPartySize > 0 && personas <= maxPartySize)),
+    retry: retryUnlessSessionExpired,
   })
   const tablesForStart: TablesAvailability | undefined = tables.data
   // The review proposes the smallest group of the chosen area that seats the party (D2): the
@@ -112,18 +119,37 @@ export function ReservationPage() {
     setSearchParams(paramsFromSelection(selectionFromParams(searchParams)), { replace: true })
   }, [searchParams, setSearchParams])
 
-  // A reloaded or stale review whose table is gone goes back to the selection.
+  // An expired session (the token lasts an hour) sends the diner to sign in again; the
+  // redirect below brings them back here with the selection.
+  const sessionExpired = [availability.error, tables.error].some(
+    (error) => error instanceof SessionExpiredError,
+  )
   useEffect(() => {
-    if (!reviewing || !hora || tables.isPending || !tablesForStart || assignedTable) return
+    if (sessionExpired) signOut(queryClient)
+  }, [sessionExpired, queryClient])
+
+  // A reloaded or stale review whose time or table is gone goes back to the selection, with
+  // one notice. The selection's own notices below wait until then.
+  const reviewIsStale =
+    reviewing &&
+    ((day !== undefined && !day.slots.some((slot) => slot.start_time === hora && slot.available)) ||
+      (tablesForStart !== undefined && !tables.isFetching && !assignedTable))
+  const handledStaleReview = useRef(false)
+  useEffect(() => {
+    if (!reviewIsStale || handledStaleReview.current) return
+    handledStaleReview.current = true
     toast('La mesa que elegiste ya no está disponible. Elegí otro horario o tipo de mesa.')
     leaveReview()
-  }, [reviewing, hora, tables.isPending, tablesForStart, assignedTable, toast, leaveReview])
+  }, [reviewIsStale, toast, leaveReview])
+  useEffect(() => {
+    if (!reviewing) handledStaleReview.current = false
+  }, [reviewing])
 
   // Each response is handled once: FR-013 clamps the party size and S4 clears a time that
   // is no longer available, without repeating the notice on a re-render (StrictMode).
   const handledDay = useRef<DayAvailability | undefined>(undefined)
   useEffect(() => {
-    if (!day || day === handledDay.current) return
+    if (reviewing || !day || day === handledDay.current) return
     handledDay.current = day
     if (day.max_party_size > 0 && personas > day.max_party_size) {
       toast(`La capacidad máxima de este restaurante es de ${day.max_party_size} personas.`)
@@ -134,7 +160,7 @@ export function ReservationPage() {
       toast(`El horario de las ${hora} ya no está disponible. Elegí otro.`)
       update({ hora: '' })
     }
-  }, [day, hora, personas, toast, update])
+  }, [day, hora, personas, reviewing, toast, update])
 
   // S6/S7: when the tables change, a preference with no table left goes back to «Sin preferencia».
   // Changing the preference alone never resets it: that is what the empty state of S7 is for.
@@ -144,7 +170,7 @@ export function ReservationPage() {
   }, [tipo])
   const handledTables = useRef<TablesAvailability | undefined>(undefined)
   useEffect(() => {
-    if (!tablesForStart || tablesForStart === handledTables.current) return
+    if (reviewing || !tablesForStart || tablesForStart === handledTables.current) return
     handledTables.current = tablesForStart
     const preferred = tipoRef.current
     if (!preferred) return
@@ -153,9 +179,13 @@ export function ReservationPage() {
       `No quedan mesas en ${AREA_LABEL[preferred].toLowerCase()} para ese horario. Volvimos a «Sin preferencia».`,
     )
     update({ tipo: null })
-  }, [tablesForStart, toast, update])
+  }, [reviewing, tablesForStart, toast, update])
 
-  if (accountPending || restaurantPending) {
+  if (
+    accountPending ||
+    restaurantPending ||
+    (reviewing && hora && (availability.isLoading || tables.isLoading))
+  ) {
     return (
       <main className={styles.loading}>
         <LogoSpinner />
@@ -211,9 +241,8 @@ export function ReservationPage() {
       !tablesForStart.tables.some((table) => table.seating_area === area),
     )
 
-  // «Siguiente» (US-11 → US-13, following prototipo-us11.html): it only lights up with a
-  // complete selection that has a free table. It does not navigate yet: the review step of
-  // US-13 is built in Sprint 3.
+  // «Siguiente» (US-11 → US-13, following prototipo-us11.html) opens the review; it only
+  // lights up with a complete selection that has a free table.
   const freeTables = tablesForStart
     ? tablesForStart.tables.filter((table) => !tipo || table.seating_area === tipo).length
     : 0
@@ -324,7 +353,17 @@ export function ReservationPage() {
   function openReview() {
     const params = paramsFromSelection(selection)
     params.set('paso', 'revision')
+    reviewPushed.current = true
     setSearchParams(params)
+  }
+
+  function backToSelection() {
+    if (reviewPushed.current) {
+      reviewPushed.current = false
+      navigate(-1)
+      return
+    }
+    leaveReview()
   }
 
   function refreshAvailability() {
@@ -342,15 +381,17 @@ export function ReservationPage() {
         <div>
           <p className={styles.eyebrow}>Reservar mesa</p>
           <h1 className={styles.title}>{restaurant.name}</h1>
-          <p className={styles.muted}>
-            {restaurant.cuisine} · {restaurant.location.neighborhood}
-          </p>
+          {(restaurant.cuisine || restaurant.location.neighborhood) && (
+            <p className={styles.muted}>
+              {[restaurant.cuisine, restaurant.location.neighborhood].filter(Boolean).join(' · ')}
+            </p>
+          )}
         </div>
       </header>
     </>
   )
 
-  if (confirmed) {
+  if (showConfirmed) {
     return (
       <main className={styles.container}>
         {header}
@@ -370,11 +411,12 @@ export function ReservationPage() {
           endTime={timeInBuenosAires(tablesForStart.ends_at)}
           personas={personas}
           table={assignedTable}
-          onBack={leaveReview}
+          onBack={backToSelection}
           onConfirmed={(reservation) => {
             setConfirmed(reservation)
-            // Going back can't confirm again: the selection leaves the URL.
-            setSearchParams(new URLSearchParams(), { replace: true })
+            // The review leaves the history: going back can't confirm the same review again.
+            reviewPushed.current = false
+            setSearchParams({ confirmada: reservation.id }, { replace: true })
             refreshAvailability()
           }}
           onConflict={(message) => {
@@ -382,10 +424,8 @@ export function ReservationPage() {
             refreshAvailability()
             leaveReview()
           }}
-          onSessionExpired={() => {
-            signOut(queryClient)
-            navigate(backHere)
-          }}
+          // Signing out is enough: the redirect for visitors sends the diner to sign in and back.
+          onSessionExpired={() => signOut(queryClient)}
         />
       </main>
     )

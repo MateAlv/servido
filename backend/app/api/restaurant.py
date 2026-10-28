@@ -24,6 +24,7 @@ from app.schemas.restaurant import (
     RestaurantResponse,
 )
 from app.schemas.table_inventory import TableInventoryGroupPayload, TableInventoryGroupResponse
+from app.services import availability
 from app.services.auth import hash_password, normalize_email
 from app.services.geocoding import GeocodingError, geocode_address
 from app.services.opening_hours import validate_shifts
@@ -228,15 +229,23 @@ def replace_opening_hours(
     return shifts
 
 
-def table_inventory_response(group: TableInventoryGroup) -> TableInventoryGroupResponse:
+def table_inventory_response(
+    group: TableInventoryGroup, taken_now: dict[tuple[int, str], set[int]]
+) -> TableInventoryGroupResponse:
+    """`free_quantity` counts the tables of the group not held by a reservation right now."""
+    taken = taken_now.get((group.capacity, group.seating_area), set())
     return TableInventoryGroupResponse(
         id=group.id,
         capacity=group.capacity,
         quantity=group.quantity,
         seating_area=group.seating_area,
         available=group.available,
-        free_quantity=group.quantity if group.available else 0,
+        free_quantity=group.quantity - len(taken) if group.available else 0,
     )
+
+
+def tables_taken_now(session: SessionDep, restaurant_id: UUID) -> dict[tuple[int, str], set[int]]:
+    return availability.taken_tables(session, restaurant_id, availability.current_time())
 
 
 @router.get("/restaurante/mesas", response_model=list[TableInventoryGroupResponse])
@@ -249,7 +258,8 @@ def get_table_inventory(
         .where(TableInventoryGroup.restaurant_id == restaurant.id_restaurante)
         .order_by(TableInventoryGroup.capacity, TableInventoryGroup.seating_area)
     )
-    return [table_inventory_response(group) for group in groups]
+    taken_now = tables_taken_now(session, restaurant.id_restaurante)
+    return [table_inventory_response(group, taken_now) for group in groups]
 
 
 @router.put("/restaurante/mesas", response_model=list[TableInventoryGroupResponse])
@@ -285,4 +295,5 @@ def replace_table_inventory(
     except ValueError as error:
         session.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
-    return [table_inventory_response(group) for group in groups]
+    taken_now = tables_taken_now(session, restaurant.id_restaurante)
+    return [table_inventory_response(group, taken_now) for group in groups]

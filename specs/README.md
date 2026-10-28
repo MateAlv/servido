@@ -16,7 +16,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [002-elegir-restaurante](002-elegir-restaurante/spec.md) | Comensal | 5, 7, 9, 33 | 13 | 1 (US-33 adelantada del 4) | ✅ | ✅ | ✅ | ✅ US-5, US-7, US-9, US-33 (con datos de prueba) |
 | [003-cuenta-restaurante](003-cuenta-restaurante/spec.md) | Restaurante | 2, 4, 28 | 5 | 1 (US-28 adelantada del 4 al 2) | ✅ | ✅ (solo Google) | ✅ (solo Google) | ✅ US-2, US-4, US-28 (US-4 S3 pendiente) |
 | [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | ✅ | ✅ | ✅ US-6, US-8, US-10 (el tipo de mesa de los grupos, decidido el 28/10, entra con la US-13) |
-| [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | ✅ | ✅ | ✅ US-11 y US-13, con backend real (decisiones D1–D9 del 28/10, falta que la PO las valide) |
+| [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | ✅ | ✅ | ✅ US-11 y US-13, con backend real (decisiones D1–D10 del 28/10, falta que la PO las valide) |
 | [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — | — |
 | [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17) |
 
@@ -43,7 +43,7 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las de la spec 002 se
 | --- | --- | --- |
 | 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba; la demo refresca cada 30 s. Implementado así; falta que la PO lo confirme |
 | 002 | Ubicación denegada | Mapa centrado en Buenos Aires, sin distancias, con aviso y botón para reintentar. Implementado así; falta que la PO lo confirme |
-| 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Decididos por el equipo el 23/10 y el 28/10 (ver las decisiones D1–D9 abajo y `specs/005-reservar-mesa/research.md`). Falta que la PO los valide |
+| 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Decididos por el equipo el 23/10 y el 28/10 (ver las decisiones D1–D10 abajo y `specs/005-reservar-mesa/research.md`). Falta que la PO los valide |
 
 ## Decisiones del equipo
 
@@ -78,6 +78,7 @@ Dudas que no hacía falta llevar a la PO. Ya están incorporadas en cada spec.
 | 28/10 | 005 | D5: las reservas duran 90 minutos y se ofrecen cada 30. D7: quedan confirmadas al crearse, sin aprobación del restaurante. Falta que la PO lo valide |
 | 28/10 | 005 | D8: si el comensal ya tiene una reserva confirmada que se superpone, la revisión se lo avisa y puede confirmar igual (US-13, escenario 6). Un comensal puede tener dos mesas en el mismo restaurante y horario. Falta sumarlo a la US-13 en la planilla y que la PO lo valide |
 | 28/10 | 004, 005 | D9: si el restaurante baja, deshabilita o cambia (capacidad o tipo) un grupo de mesas con reservas que no terminaron, el cambio se rechaza y se le listan esas reservas. Es la advertencia de US-10 S3 sin la opción de guardar igual. Falta que la PO lo valide |
+| 28/10 | 005 | D10: se puede reservar hasta 60 días antes (valor provisorio). Sin un límite, una reserva a años de distancia bloquearía para siempre esas mesas (D9). Falta que la PO elija el plazo |
 | 28/10 | 005 | Si el restaurante cambia sus horarios, las reservas ya confirmadas se mantienen. Queda para la PO si ese cambio debería advertir como el de mesas |
 
 ## Notas de formato

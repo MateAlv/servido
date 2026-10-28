@@ -64,6 +64,7 @@ Como **Comensal**, quiero revisar los datos que seleccioné, para verificar que 
 - **La sesión vence durante la revisión**: el comensal vuelve a ingresar y regresa a la revisión con su selección.
 - **Comensal sin email verificado**: puede reservar; la verificación solo restringe los pedidos (spec 007, US-51).
 - **"Ahora" y "hoy"**: siempre en la hora de Argentina, también para decidir qué horarios ya pasaron.
+- **Hasta cuándo se puede reservar** *(decisión del equipo, 28/10, D10; falta que la PO la valide)*: hasta 60 días antes. Sin un límite, una reserva a años de distancia dejaría bloqueadas para siempre las mesas de ese grupo (D9).
 - Fecha de hoy con horarios que ya pasaron: no son seleccionables.
 - Días en que el restaurante no atiende: no se ofrecen como seleccionables.
 - Cambio de fecha u horario: se actualiza la disponibilidad informada; si ya no hay mesa disponible, se informa al comensal.

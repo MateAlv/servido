@@ -166,11 +166,11 @@ export function TableInventoryPage() {
             </p>
           )}
           {booked.length > 0 && (
-            <ul aria-label="Reservas que bloquean el cambio">
-              {booked.map((reservation) => (
-                <li key={`${reservation.date}-${reservation.start_time}-${reservation.party_size}`}>
+            <ul className={styles.bookedList} aria-label="Reservas que bloquean el cambio">
+              {booked.map((reservation, index) => (
+                <li key={index}>
                   {longDate(reservation.date)}, {reservation.start_time} · {reservation.party_size}{' '}
-                  personas
+                  {reservation.party_size === 1 ? 'persona' : 'personas'}
                 </li>
               ))}
             </ul>

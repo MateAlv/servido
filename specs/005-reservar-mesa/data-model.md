@@ -60,6 +60,7 @@ Not added yet: order links, deposit, payment, arrival or prep times (later specs
 
 ## Rules (single source: `backend/app/services/availability.py`)
 
+0. **Horizon** (D10, pending PO): a date more than 60 days after today in Buenos Aires answers `400` in the reads and the confirmation (`MAX_DAYS_AHEAD` in the service). Without it, a reservation years ahead would freeze its table group forever (rule 11).
 1. **Window**: the requested BA date becomes `[date 00:00, date+1 00:00)` in `America/Argentina/Buenos_Aires`, compared in UTC.
 2. **Open**: the weekday is open if it has an active shift; otherwise `open = false` and no slots.
 3. **Candidate starts** (D5): every 30 minutes from each shift's start while `start + 90 minutes <= end`. Starts already past (today) are dropped.

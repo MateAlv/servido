@@ -4,7 +4,7 @@
  * free at that start.
  */
 import { api } from './client'
-import { getApiErrorMessage } from './errors'
+import { getApiErrorMessage, SessionExpiredError } from './errors'
 import type { components } from './schema'
 import { sessionHeaders } from './session'
 
@@ -22,10 +22,11 @@ export async function fetchAvailability(
   date: string,
   partySize: number,
 ): Promise<DayAvailability> {
-  const { data, error } = await api.GET('/api/restaurants/{restaurant_id}/availability', {
+  const { data, error, response } = await api.GET('/api/restaurants/{restaurant_id}/availability', {
     params: { path: { restaurant_id: restaurantId }, query: { date, party_size: partySize } },
     headers: sessionHeaders(),
   })
+  if (response.status === 401) throw new SessionExpiredError()
   if (error || !data) throw new Error(getApiErrorMessage(error, LOAD_FAILED))
   return data
 }
@@ -37,13 +38,17 @@ export async function fetchAvailableTables(
   startTime: string,
   partySize: number,
 ): Promise<TablesAvailability> {
-  const { data, error } = await api.GET('/api/restaurants/{restaurant_id}/availability/tables', {
-    params: {
-      path: { restaurant_id: restaurantId },
-      query: { date, start_time: startTime, party_size: partySize },
+  const { data, error, response } = await api.GET(
+    '/api/restaurants/{restaurant_id}/availability/tables',
+    {
+      params: {
+        path: { restaurant_id: restaurantId },
+        query: { date, start_time: startTime, party_size: partySize },
+      },
+      headers: sessionHeaders(),
     },
-    headers: sessionHeaders(),
-  })
+  )
+  if (response.status === 401) throw new SessionExpiredError()
   if (error || !data) throw new Error(getApiErrorMessage(error, LOAD_FAILED))
   return data
 }

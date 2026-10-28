@@ -28,7 +28,7 @@ def upgrade() -> None:
         sa.Column("seating_area", sa.String(length=20), server_default="indoor", nullable=False),
     )
     op.create_check_constraint(
-        "ck_table_inventory_seating_area_known", "table_inventory", SEATING_AREA_KNOWN
+        op.f("ck_table_inventory_seating_area_known"), "table_inventory", SEATING_AREA_KNOWN
     )
     op.drop_constraint("uq_table_inventory_restaurant_capacity", "table_inventory", type_="unique")
     op.create_unique_constraint(
@@ -56,18 +56,21 @@ def upgrade() -> None:
             server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
-        sa.CheckConstraint("table_capacity > 0", name="ck_reservations_table_capacity_positive"),
-        sa.CheckConstraint("table_number > 0", name="ck_reservations_table_number_positive"),
+        sa.CheckConstraint(
+            "table_capacity > 0", name=op.f("ck_reservations_table_capacity_positive")
+        ),
+        sa.CheckConstraint("table_number > 0", name=op.f("ck_reservations_table_number_positive")),
         sa.CheckConstraint(
             "party_size > 0 AND party_size <= table_capacity",
-            name="ck_reservations_party_size_fits_table",
+            name=op.f("ck_reservations_party_size_fits_table"),
         ),
-        sa.CheckConstraint(SEATING_AREA_KNOWN, name="ck_reservations_seating_area_known"),
+        sa.CheckConstraint(SEATING_AREA_KNOWN, name=op.f("ck_reservations_seating_area_known")),
         sa.CheckConstraint(
-            "ends_at - starts_at = INTERVAL '90 minutes'", name="ck_reservations_lasts_90_minutes"
+            "ends_at - starts_at = INTERVAL '90 minutes'",
+            name=op.f("ck_reservations_lasts_90_minutes"),
         ),
         sa.CheckConstraint(
-            "status IN ('confirmed', 'cancelled')", name="ck_reservations_status_known"
+            "status IN ('confirmed', 'cancelled')", name=op.f("ck_reservations_status_known")
         ),
         postgresql.ExcludeConstraint(
             (sa.column("restaurant_id"), "="),
@@ -80,12 +83,16 @@ def upgrade() -> None:
             name="ex_reservations_table_no_overlap",
         ),
         sa.ForeignKeyConstraint(
-            ["diner_id"], ["comensales.id_comensal"], name="fk_reservations_diner_id_comensales"
+            ["diner_id"],
+            ["comensales.id_comensal"],
+            name="fk_reservations_diner_id_comensales",
+            ondelete="RESTRICT",
         ),
         sa.ForeignKeyConstraint(
             ["restaurant_id"],
             ["restaurantes.id_restaurante"],
             name="fk_reservations_restaurant_id_restaurantes",
+            ondelete="RESTRICT",
         ),
         sa.PrimaryKeyConstraint("id", name="pk_reservations"),
         sa.UniqueConstraint("request_id", name="uq_reservations_request_id"),
@@ -101,8 +108,12 @@ def downgrade() -> None:
     op.drop_constraint(
         "uq_table_inventory_restaurant_capacity_area", "table_inventory", type_="unique"
     )
-    op.drop_constraint("ck_table_inventory_seating_area_known", "table_inventory", type_="check")
+    op.drop_constraint(
+        op.f("ck_table_inventory_seating_area_known"), "table_inventory", type_="check"
+    )
     op.drop_column("table_inventory", "seating_area")
+    # Fails if a restaurant has two groups of one capacity in different seating areas: merge them
+    # by hand first, since the old key can't hold both.
     op.create_unique_constraint(
         "uq_table_inventory_restaurant_capacity", "table_inventory", ["restaurant_id", "capacity"]
     )

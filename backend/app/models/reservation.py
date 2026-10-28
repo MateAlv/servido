@@ -60,10 +60,14 @@ class Reservation(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     diner_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("comensales.id_comensal"), nullable=False
+        PGUUID(as_uuid=True),
+        ForeignKey("comensales.id_comensal", ondelete="RESTRICT"),
+        nullable=False,
     )
     restaurant_id: Mapped[UUID] = mapped_column(
-        PGUUID(as_uuid=True), ForeignKey("restaurantes.id_restaurante"), nullable=False
+        PGUUID(as_uuid=True),
+        ForeignKey("restaurantes.id_restaurante", ondelete="RESTRICT"),
+        nullable=False,
     )
     table_capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     seating_area: Mapped[str] = mapped_column(String(20), nullable=False)

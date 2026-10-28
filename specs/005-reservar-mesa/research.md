@@ -163,3 +163,7 @@ The confirmation locks the chosen group `FOR UPDATE`: two concurrent confirmatio
 ### D9. Inventory changes stop at booked tables (team, pending PO)
 
 The conflict-check stub of spec 004 is replaced: lowering a group's quantity below the number of a future confirmed reservation of that group (or removing or disabling the group) answers `409` and lists the reservations. Changing a booked group's capacity or seating area counts as removing it. The check needs the inventory update's session, so its interface gains `session` and `seating_area` (the stub had neither). US-10 S3 says "advierte antes de proceder"; the team chose a warning without "save anyway", because saving would leave confirmed reservations without a table. Renumbering reservations to make room was rejected: it would move a confirmed diner to another table behind their back, and the rule "you can't remove a booked table" is easy to explain.
+
+### D10. Reservations up to 60 days ahead (team, pending PO)
+
+The backend review of 28/10 found that a reservation for 9999-12-31 was accepted and, under D9, froze its table group forever (restaurants can't cancel yet). The reads and the confirmation reject dates more than 60 days after today in Buenos Aires. 60 is a conservative placeholder until the PO picks the horizon; it is one constant (`MAX_DAYS_AHEAD`).

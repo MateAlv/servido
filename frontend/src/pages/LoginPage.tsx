@@ -11,7 +11,7 @@ import {
 } from '../components/access'
 import type { Account } from '../api/session'
 import { Card, SegmentedControl, useToast } from '../components/ui'
-import { returnPath } from '../lib/returnPath'
+import { returnPath, withReturnPath } from '../lib/returnPath'
 import styles from './AuthPage.module.css'
 
 export function LoginPage() {
@@ -28,7 +28,7 @@ export function LoginPage() {
 
   function welcome(account: Account) {
     toast(`¡Hola, ${account.nombre ?? account.email}!`, { tone: 'ok' })
-    navigate(returnTo)
+    navigate(returnTo, { replace: true })
   }
 
   return (
@@ -50,7 +50,7 @@ export function LoginPage() {
             role={role}
             initialEmail={typeof createdEmail === 'string' ? createdEmail : ''}
             onSignedIn={welcome}
-            onRegister={() => navigate(registerPathFor(role))}
+            onRegister={() => navigate(withReturnPath(registerPathFor(role), searchParams))}
           />
           <p className={styles.divider}>o</p>
           <GoogleSignInButton role={role} onSignedIn={welcome} />

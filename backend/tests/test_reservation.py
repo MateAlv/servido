@@ -15,6 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.opening_shift import OpeningShift
+from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
 from app.services import availability
@@ -469,7 +470,8 @@ def test_us13_edge_changes_during_the_review_answer_409(
         )
     )
     group.available = False
-    session.flush()
+    # Committed like the restaurant's own change: the 409 rolls back only the confirmation.
+    session.commit()
     gone = confirm(client, headers, restaurant.id_restaurante)
     assert gone.status_code == 409
     assert (
@@ -479,7 +481,7 @@ def test_us13_edge_changes_during_the_review_answer_409(
 
     # The restaurant closed that shift.
     session.execute(delete(OpeningShift).where(OpeningShift.start_time == time(20)))
-    session.flush()
+    session.commit()
     closed = confirm(client, headers, restaurant.id_restaurante, party_size=4, table=(4, "indoor"))
     assert closed.status_code == 409
     assert closed.json()["detail"] == "El restaurante ya no atiende en ese horario. Elegí otro."
@@ -547,3 +549,91 @@ def test_us13_edge_inventory_change_keeps_booked_tables(
     # Adding tables is always fine.
     more = [{"capacity": 2, "quantity": 3, "seating_area": "indoor"}]
     assert client.put("/api/restaurante/mesas", json=more, headers=owner).status_code == 200
+
+
+def test_us13_edge_takes_the_lowest_free_table_of_the_group(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(2, 3, "indoor")])
+    headers = diner_headers(client)
+    add_reservation(
+        session, restaurant, diner_id(client, headers), TOMORROW, time(20), 2, "indoor", 1
+    )
+
+    confirm(client, headers, restaurant.id_restaurante)
+
+    numbers = session.scalars(
+        select(Reservation.table_number).where(
+            Reservation.restaurant_id == restaurant.id_restaurante
+        )
+    ).all()
+    assert sorted(numbers) == [1, 2]
+
+
+def test_us13_edge_restaurant_that_stopped_taking_reservations_answers_409(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    restaurant.latitud, restaurant.longitud = None, None
+    session.commit()
+
+    response = confirm(client, headers, restaurant.id_restaurante)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "El restaurante ya no está tomando reservas."
+
+
+def test_us13_edge_party_above_the_maximum_answers_409(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(4, 1, "indoor")])
+    headers = diner_headers(client)
+
+    response = confirm(
+        client, headers, restaurant.id_restaurante, party_size=5, table=(4, "indoor")
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "El grupo supera la capacidad máxima del restaurante."
+
+
+def test_us13_edge_request_that_committed_first_returns_its_reservation(
+    client: TestClient, session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Two identical confirmations at once: the second one only meets the first at the insert."""
+    restaurant = add_bookable_restaurant(session, groups=[(2, 2, "indoor")])
+    headers = diner_headers(client)
+    request_id = uuid4()
+    first = confirm(client, headers, restaurant.id_restaurante, request_id=request_id)
+    real_lookup = availability.reservation_for_request
+    calls = []
+
+    def unseen_until_the_insert(session, request_id):
+        calls.append(request_id)
+        # The concurrent request hasn't committed yet when it is looked up before the insert.
+        return None if len(calls) <= 2 else real_lookup(session, request_id)
+
+    monkeypatch.setattr(availability, "reservation_for_request", unseen_until_the_insert)
+
+    again = confirm(client, headers, restaurant.id_restaurante, request_id=request_id)
+
+    assert again.status_code == 200
+    assert again.json()["id"] == first.json()["id"]
+
+
+def test_us13_edge_too_far_ahead_or_out_of_range_answers_400(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    beyond = TODAY + timedelta(days=availability.MAX_DAYS_AHEAD + 1)
+
+    assert slots(client, headers, restaurant.id_restaurante, day=beyond).status_code == 400
+    assert confirm(client, headers, restaurant.id_restaurante, day=beyond).status_code == 400
+    far = client.get("/api/reservations", params={"date": "9999-12-31"}, headers=headers)
+    assert far.status_code == 400
+    huge = confirm(client, headers, restaurant.id_restaurante, table=(2**40, "indoor"))
+    assert huge.status_code == 400
+    with_offset = confirm(client, headers, restaurant.id_restaurante, start="20:00:00+05:00")
+    assert with_offset.status_code == 400

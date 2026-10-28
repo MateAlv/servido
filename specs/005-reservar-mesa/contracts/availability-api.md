@@ -12,7 +12,7 @@ Base path: `/api`. Both endpoints are read-only: the reservation is created only
 
 - `date` is a calendar date in `America/Argentina/Buenos_Aires`, format `YYYY-MM-DD`. A past date answers `400`.
 - `start_time` is a local time in `America/Argentina/Buenos_Aires`, format `HH:MM`. A start in the past (today) answers `400`.
-- `party_size` is an integer `>= 1`. The restaurant's maximum is `max_party_size`: the capacity of its largest `available` table group (`0` when it has none). The read endpoints report it; a group above it is never offered (see below), and the confirmation (`POST /api/reservations`) rejects it with `400`. `party_size < 1` answers `400`.
+- `party_size` is an integer `>= 1`. The restaurant's maximum is `max_party_size`: the capacity of its largest `available` table group (`0` when it has none). The read endpoints report it; a group above it is never offered (see below), and the confirmation (`POST /api/reservations`) answers `409`, because the maximum can change during the review. A `date` more than 60 days ahead answers `400` (decision D10). `party_size < 1` answers `400`.
 - Duration is fixed at 90 minutes; starts are on a 30-minute grid. A start is only offered if the whole block fits inside the shift (see `data-model.md`).
 - `404` when the restaurant does not exist: `{"detail": "No encontramos ese restaurante."}`.
 - `400` for invalid input. Two shapes:
@@ -22,7 +22,7 @@ Base path: `/api`. Both endpoints are read-only: the reservation is created only
 
 ## Maximum party size
 
-The restaurant defines the largest group it accepts through its tables: `max_party_size = max(capacity)` over the `available` table groups, `0` when there is none. One reservation holds one table, so this is also the largest group the flow can seat. The response of the slots endpoint always carries it, so the page can bound the party-size input before it asks for anything else. The read endpoint answers a larger `party_size` with `200`, the cap and no availability (it creates nothing); the UI clamps the value and explains it, and the US-13 confirmation answers `400`.
+The restaurant defines the largest group it accepts through its tables: `max_party_size = max(capacity)` over the `available` table groups, `0` when there is none. One reservation holds one table, so this is also the largest group the flow can seat. The response of the slots endpoint always carries it, so the page can bound the party-size input before it asks for anything else. The read endpoint answers a larger `party_size` with `200`, the cap and no availability (it creates nothing); the UI clamps the value and explains it, and the US-13 confirmation answers `409`.
 
 ## `GET /restaurants/{restaurant_id}/availability`
 

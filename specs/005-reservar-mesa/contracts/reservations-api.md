@@ -46,7 +46,8 @@ The response never includes `table_number`: which table of the group was taken i
 
 | Status | When | `detail` |
 | --- | --- | --- |
-| `400` | Malformed body (standard validation shape), `party_size < 1`, or a start off the 30-minute grid | list of errors, or `"Ese horario no es válido."` |
+| `400` | Malformed body (standard validation shape), `party_size` or `capacity` outside 1–100, a start off the 30-minute grid or with a time zone | list of errors, or `"Ese horario no es válido."` |
+| `400` | A date more than 60 days ahead (D10) | `"Podés reservar hasta 60 días antes."` |
 | `404` | Unknown restaurant id | `"No encontramos ese restaurante."` |
 | `409` | The start is past now | `"Ese horario ya pasó. Elegí otro."` |
 | `409` | Its 90 minutes are no longer inside a shift of that day | `"El restaurante ya no atiende en ese horario. Elegí otro."` |
@@ -90,4 +91,5 @@ The confirmed reservations of the signed-in diner whose block touches that BA da
 
 - Only the signed-in diner's reservations: never anyone else's.
 - An empty list is a valid answer.
+- A date more than a year back or more than 60 days ahead answers `400`.
 - The page flags an entry when `start_time < chosen end` and `end_time > chosen start`, and shows «Ya tenés una reserva en Bodegón Estudiantil de 19:30 a 21:00. Podés confirmar igual.»

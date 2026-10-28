@@ -23,3 +23,11 @@ export function getRequestErrorMessage(requestError: unknown, fallback: string) 
   if (requestError instanceof Error) return requestError.message
   return fallback
 }
+
+/** The API answered 401: the session expired (the token lasts an hour) or was altered. */
+export class SessionExpiredError extends Error {}
+
+/** Retry failed queries, except when the session expired: retrying can't fix that. */
+export function retryUnlessSessionExpired(failureCount: number, error: unknown) {
+  return !(error instanceof SessionExpiredError) && failureCount < 3
+}

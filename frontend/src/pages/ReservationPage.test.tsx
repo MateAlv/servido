@@ -9,8 +9,9 @@ import {
   type DayAvailability,
   type TablesAvailability,
 } from '../api/availability'
+import { SessionExpiredError } from '../api/errors'
 import { confirmReservation, fetchDayReservations, type Reservation } from '../api/reservations'
-import { useAccount } from '../api/session'
+import { signOut, useAccount } from '../api/session'
 import { todayInBuenosAires } from '../lib/date'
 import { renderWithProviders } from '../test/renderWithProviders'
 import { ReservationPage } from './ReservationPage'
@@ -44,7 +45,7 @@ vi.mock('../api/reservations', () => ({
 
 vi.mock('../api/session', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/session')>()
-  return { ...actual, useAccount: vi.fn() }
+  return { ...actual, useAccount: vi.fn(), signOut: vi.fn() }
 })
 
 const confirmMock = vi.mocked(confirmReservation)
@@ -300,14 +301,23 @@ describe('ReservationPage (US-11)', () => {
     expect(tablesMock).not.toHaveBeenCalled()
   })
 
-  it('US-11 edge sends a visitor to the sign-in page', async () => {
+  it('US-11 edge sends a visitor to the sign-in page and back', async () => {
     useAccountMock.mockReturnValue({ data: null, isPending: false } as unknown as ReturnType<
       typeof useAccount
     >)
 
-    renderPage()
+    renderWithProviders(
+      <Routes>
+        <Route path="/reservar/:restauranteId" element={<ReservationPage />} />
+        <Route path="/ingresar" element={<LocationProbe />} />
+      </Routes>,
+      { route: `/reservar/${RESTAURANT_ID}?fecha=${DATE}` },
+    )
 
-    expect(await screen.findByText('Pantalla de ingreso')).toBeInTheDocument()
+    const back = `/reservar/${RESTAURANT_ID}?fecha=${DATE}`
+    expect(
+      await screen.findByText(`En /ingresar?volver=${encodeURIComponent(back)}`),
+    ).toBeInTheDocument()
   })
 
   it('US-11 edge sends a restaurant account back home', async () => {
@@ -347,7 +357,11 @@ describe('ReservationPage (US-11)', () => {
 
     await screen.findByRole('heading', { level: 1, name: 'La Esquina de Palermo' })
     expect(screen.queryByRole('link', { name: 'Reservar mesa' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reservar mesa' })).toBeDisabled()
+    // A visitor is invited to sign in and comes back to the booking page.
+    expect(screen.getByRole('link', { name: 'Ingresá para reservar' })).toHaveAttribute(
+      'href',
+      `/ingresar?rol=comensal&volver=${encodeURIComponent(`/reservar/${RESTAURANT_ID}`)}`,
+    )
   })
 
   it('D4 keeps the test restaurants out of the booking flow', async () => {
@@ -507,22 +521,80 @@ describe('ReservationPage (US-13)', () => {
     expect(screen.queryByRole('heading', { name: 'Revisá tu reserva' })).not.toBeInTheDocument()
   })
 
-  it('US-13 edge returns to the review after signing in again', async () => {
+  it('US-13 edge signs out when the session expired at confirmation', async () => {
     confirmMock.mockResolvedValue({ ok: false, status: 401, message: 'Tu sesión venció.' })
-    const user = userEvent.setup()
-    renderWithProviders(
-      <Routes>
-        <Route path="/reservar/:restauranteId" element={<ReservationPage />} />
-        <Route path="/ingresar" element={<LocationProbe />} />
-      </Routes>,
-      { route: `/reservar/${RESTAURANT_ID}?fecha=${DATE}&hora=12:00&paso=revision` },
-    )
+    const user = await openReview()
 
-    await user.click(await screen.findByRole('button', { name: 'Confirmar reserva' }))
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
 
-    const back = `/reservar/${RESTAURANT_ID}?fecha=${DATE}&hora=12:00&paso=revision`
+    // Without a session the page sends the visitor to sign in and back (test above).
+    await waitFor(() => expect(signOut).toHaveBeenCalled())
+  })
+
+  it('US-13 edge signs out when the session expired while choosing', async () => {
+    availabilityMock.mockRejectedValue(new SessionExpiredError())
+    renderPage(`?fecha=${DATE}`)
+
+    await waitFor(() => expect(signOut).toHaveBeenCalled())
+    expect(availabilityMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('US-13 edge reuses the request id when the confirmation is retried', async () => {
+    confirmMock.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      message: 'No pudimos confirmar la reserva. Probá de nuevo.',
+    })
+    confirmMock.mockResolvedValueOnce({ ok: true, reservation: reservation() })
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
     expect(
-      await screen.findByText(`En /ingresar?volver=${encodeURIComponent(back)}`),
+      await screen.findByText('No pudimos confirmar la reserva. Probá de nuevo.'),
+    ).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    expect(await screen.findByText('Reserva confirmada')).toBeInTheDocument()
+    const [first, second] = confirmMock.mock.calls.map(([request]) => request.request_id)
+    expect(second).toBe(first)
+  })
+
+  it('US-13 edge says the restaurant was not found', async () => {
+    confirmMock.mockResolvedValue({
+      ok: false,
+      status: 404,
+      message: 'No encontramos ese restaurante.',
+    })
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'No encontramos ese restaurante' }),
     ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ir al mapa' })).toHaveAttribute('href', '/mapa')
+  })
+
+  it('US-13 edge returns a reloaded review whose table is gone to the selection', async () => {
+    tablesMock.mockResolvedValue(tablesAvailability({ tables: [] }))
+    renderPage(`?fecha=${DATE}&hora=12:00&paso=revision`)
+
+    expect(
+      await screen.findByText(
+        'La mesa que elegiste ya no está disponible. Elegí otro horario o tipo de mesa.',
+      ),
+    ).toBeInTheDocument()
+    expect(await screen.findByLabelText('Fecha')).toHaveValue(DATE)
+    expect(screen.queryByRole('heading', { name: 'Revisá tu reserva' })).not.toBeInTheDocument()
+  })
+
+  it("US-13 edge confirms only after checking the diner's other reservations", async () => {
+    dayReservationsMock.mockRejectedValue(new Error('No pudimos ver tus reservas.'))
+    await openReview()
+
+    expect(
+      await screen.findByText('No pudimos revisar tus otras reservas de ese día.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Confirmar reserva' })).toBeEnabled()
   })
 })

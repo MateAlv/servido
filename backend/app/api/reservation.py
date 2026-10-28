@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, time, timedelta
 from typing import Annotated
 from uuid import UUID
 
@@ -9,6 +9,7 @@ from app.db import SessionDep
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.reservation import (
+    MAX_TABLE_CAPACITY,
     AvailabilityResponse,
     DayReservationsResponse,
     FreeGroupResponse,
@@ -27,7 +28,7 @@ router = APIRouter(tags=["reservation"])
 DINERS_ONLY = "Esta acción es solo para comensales."
 RESTAURANT_NOT_FOUND = "No encontramos ese restaurante."
 
-PartySize = Annotated[int, Query(ge=1)]
+PartySize = Annotated[int, Query(ge=1, le=MAX_TABLE_CAPACITY)]
 
 
 def require_diner(claims: TokenClaimsDep) -> UUID:
@@ -159,7 +160,7 @@ def confirm_reservation(
     payload: ReservationRequest, claims: TokenClaimsDep, session: SessionDep, response: Response
 ) -> ReservationResponse:
     diner_id = require_diner(claims)
-    restaurant = existing_restaurant(session, payload.restaurant_id)
+    existing_restaurant(session, payload.restaurant_id)
     choice = availability.ReservationChoice(
         restaurant_id=payload.restaurant_id,
         day=payload.date,
@@ -182,7 +183,8 @@ def confirm_reservation(
     session.commit()
     if not created:
         response.status_code = status.HTTP_200_OK
-    return reservation_response(reservation, restaurant)
+    # A repeated request answers with its own reservation, whatever this payload says.
+    return reservation_response(reservation, session.get(Restaurant, reservation.restaurant_id))
 
 
 @router.get(
@@ -197,6 +199,15 @@ def list_day_reservations(
     date: date, claims: TokenClaimsDep, session: SessionDep
 ) -> DayReservationsResponse:
     diner_id = require_diner(claims)
+    today = availability.current_time().date()
+    if (
+        not today - timedelta(days=366)
+        <= date
+        <= today + timedelta(days=availability.MAX_DAYS_AHEAD)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Esa fecha no es válida."
+        )
     reservations = availability.diner_reservations_of_day(session, diner_id, date)
     return DayReservationsResponse(
         date=date,

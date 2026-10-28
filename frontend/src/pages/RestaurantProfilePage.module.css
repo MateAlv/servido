@@ -61,3 +61,12 @@
 .error {
   color: var(--color-danger, #b42318);
 }
+
+/* US-10 S3: the reservations that block a change to the tables. */
+.bookedList {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-4);
+  font-weight: 700;
+}
