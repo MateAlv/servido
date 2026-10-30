@@ -157,6 +157,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurante/reservas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Restaurant Reservations */
+        get: operations["list_restaurant_reservations_api_restaurante_reservas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurante/perfil": {
         parameters: {
             query?: never;
@@ -896,6 +913,38 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** RestaurantReservationResponse */
+        RestaurantReservationResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Start Time */
+            start_time: string;
+            /** End Time */
+            end_time: string;
+            /** Party Size */
+            party_size: number;
+            table: components["schemas"]["TableChoice"];
+            /** Status */
+            status: string;
+        };
+        /** RestaurantReservationsResponse */
+        RestaurantReservationsResponse: {
+            /**
+             * Restaurant Id
+             * Format: uuid
+             */
+            restaurant_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Reservations */
+            reservations: components["schemas"]["RestaurantReservationResponse"][];
+        };
         /** RestaurantResponse */
         RestaurantResponse: {
             /**
@@ -1413,6 +1462,55 @@ export interface operations {
             };
             /** @description El email de Google o el CUIT ya están registrados. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_restaurant_reservations_api_restaurante_reservas_get: {
+        parameters: {
+            query: {
+                date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantReservationsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Esta acción es solo para restaurantes. */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

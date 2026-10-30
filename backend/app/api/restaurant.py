@@ -1,4 +1,5 @@
 import secrets
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from typing import Annotated
 from uuid import UUID, uuid4
@@ -11,9 +12,15 @@ from app.api.auth import google_claims, restaurant_session
 from app.api.deps import TokenClaimsDep
 from app.db import SessionDep
 from app.models.opening_shift import OpeningShift
+from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
 from app.schemas.opening_hours import OpeningHoursResponse, OpeningShiftPayload
+from app.schemas.reservation import (
+    RestaurantReservationResponse,
+    RestaurantReservationsResponse,
+    TableChoice,
+)
 from app.schemas.restaurant import (
     GeocodingPreview,
     GeocodingRequest,
@@ -124,6 +131,50 @@ def restaurant_from_claims(claims: dict[str, object], session: SessionDep) -> Re
             status_code=status.HTTP_404_NOT_FOUND, detail="Restaurante no encontrado."
         )
     return restaurant
+
+
+@router.get(
+    "/restaurante/reservas",
+    response_model=RestaurantReservationsResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Esta acción es solo para restaurantes."},
+    },
+)
+def list_restaurant_reservations(
+    date: date, claims: TokenClaimsDep, session: SessionDep
+) -> RestaurantReservationsResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    start_local = datetime.combine(date, time.min, tzinfo=availability.BUENOS_AIRES)
+    end_local = start_local + timedelta(days=1)
+    reservations = session.scalars(
+        select(Reservation)
+        .where(Reservation.restaurant_id == restaurant.id_restaurante)
+        .where(Reservation.starts_at >= start_local)
+        .where(Reservation.starts_at < end_local)
+        .order_by(Reservation.starts_at)
+    ).all()
+    return RestaurantReservationsResponse(
+        restaurant_id=restaurant.id_restaurante,
+        date=date,
+        reservations=[
+            RestaurantReservationResponse(
+                id=reservation.id,
+                start_time=reservation.starts_at.astimezone(availability.BUENOS_AIRES).strftime(
+                    "%H:%M"
+                ),
+                end_time=reservation.ends_at.astimezone(availability.BUENOS_AIRES).strftime(
+                    "%H:%M"
+                ),
+                party_size=reservation.party_size,
+                table=TableChoice(
+                    capacity=reservation.table_capacity, seating_area=reservation.seating_area
+                ),
+                status=reservation.status,
+            )
+            for reservation in reservations
+        ],
+    )
 
 
 @router.get("/restaurante/perfil", response_model=RestaurantProfileResponse)
