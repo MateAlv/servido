@@ -24,11 +24,11 @@
 | 14 | Ver calendario de reservas | Restaurante | 3 SP | 3 | — |
 | 15 | Ver platos y precios | Comensal | 2 SP | 3 | — |
 | 16 | Ver cliente | Restaurante | 1 SP | 3 | — |
-| 17 | Crear pedido | Comensal | 3 SP | 3 | — |
+| 17 | Crear pedido | Comensal | 3 SP | 3 | [009-pedido-anticipado](../../specs/009-pedido-anticipado/spec.md) |
 | 18 | Ver cancelaciones | Restaurante | 1 SP | 3 | — |
-| 19 | Ver tiempo estimado | Comensal | 1 SP | 3 | — |
+| 19 | Ver tiempo estimado | Comensal | 1 SP | 3 | [009-pedido-anticipado](../../specs/009-pedido-anticipado/spec.md) |
 | 20 | Ver pedidos del turno actual | Restaurante | 2 SP | 3 | — |
-| 21 | Ver cuenta y total a pagar | Comensal | 1 SP | 3 | — |
+| 21 | Ver cuenta y total a pagar | Comensal | 1 SP | 3 | [009-pedido-anticipado](../../specs/009-pedido-anticipado/spec.md) |
 | 22 | Ver estado de pago | Restaurante | 2 SP | 3 | — |
 | 23 | Ver reserva activa | Comensal | 1 SP | 4 | — |
 | 24 | Ver Reseñas | Restaurante | 1 SP | 4 | — |
@@ -325,7 +325,7 @@ comensales por mesa | Comensal | 1 SP | 6 | — |
 
 ### US-17 — Crear pedido
 
-**Rol**: Comensal · **Estimación**: 3 SP · **Sprint**: 3 · **Asignada a**: Integrante 4
+**Rol**: Comensal · **Estimación**: 3 SP · **Sprint**: 3 · **Asignada a**: Integrante 4 · **Spec**: [009-pedido-anticipado](../../specs/009-pedido-anticipado/spec.md)
 
 > Como Comensal  
 > quiero Agregar platos a mi pedido  
@@ -362,7 +362,7 @@ comensales por mesa | Comensal | 1 SP | 6 | — |
 
 ### US-19 — Ver tiempo estimado
 
-**Rol**: Comensal · **Estimación**: 1 SP · **Sprint**: 3 · **Asignada a**: Integrante 5
+**Rol**: Comensal · **Estimación**: 1 SP · **Sprint**: 3 · **Asignada a**: Integrante 5 · **Spec**: [009-pedido-anticipado](../../specs/009-pedido-anticipado/spec.md)
 
 > Como Comensal  
 > quiero Conocer el tiempo estimado de preparación de mi pedido  
@@ -393,7 +393,7 @@ comensales por mesa | Comensal | 1 SP | 6 | — |
 
 ### US-21 — Ver cuenta y total a pagar
 
-**Rol**: Comensal · **Estimación**: 1 SP · **Sprint**: 3 · **Asignada a**: Integrante 5
+**Rol**: Comensal · **Estimación**: 1 SP · **Sprint**: 3 · **Asignada a**: Integrante 5 · **Spec**: [009-pedido-anticipado](../../specs/009-pedido-anticipado/spec.md)
 
 > Como Comensal  
 > quiero Ver el resumen de cuenta y el total a pagar  
