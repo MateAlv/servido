@@ -84,7 +84,7 @@ Everything runs inside the request: no queues or workers. US-52 is built first. 
 | US-51 S2 — the mail contains a verification link | `test_email_verification.py::test_us51_s2_mail_contains_the_verification_link` | Backend |
 | US-51 S3 — a valid link verifies the account | `test_email_verification.py::test_us51_s3_valid_link_verifies_the_account` · `VerifyEmailPage.test.tsx` › `US-51 S3 confirms the verification` | Both |
 | US-51 S4 — an invalid or expired link does not verify | `test_email_verification.py::test_us51_s4_invalid_or_expired_link_is_rejected` · `VerifyEmailPage.test.tsx` › `US-51 S4 says the link is not valid` | Both |
-| US-51 S5 — no orders until verified | Deferred to US-17 (orders): `test_us51_s5_unverified_diner_cannot_order` lands with the orders spec | Backend |
+| US-51 S5 — no orders until verified | `test_us51_s5_unverified_diner_cannot_order` in `backend/tests/test_order.py` (spec 009) | Backend |
 | US-51 S6 — no second account for an unverified email | `test_email_verification.py::test_us51_s6_unverified_email_cannot_register_again` | Backend |
 | US-51 S7 — resend sends a new link and voids the old one | `test_email_verification.py::test_us51_s7_resend_replaces_the_previous_link` · `UnverifiedNotice.test.tsx` › `US-51 S7 resends the verification mail` | Both |
 | Edge — a used link reports "ya verificado" | `test_email_verification.py::test_us51_edge_used_link_reports_already_verified` | Backend |

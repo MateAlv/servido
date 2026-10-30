@@ -3,6 +3,7 @@ import { UnverifiedNotice } from '../../components/access'
 import { RestaurantExplorer } from '../../components/restaurant'
 import { Reveal } from '../../components/ui'
 import styles from './DinerHome.module.css'
+import { UpcomingReservations } from './UpcomingReservations'
 
 function firstName(account: Account): string {
   return (account.nombre ?? '').trim().split(/\s+/)[0] || account.email
@@ -26,6 +27,7 @@ export function DinerHome({ account }: { account: Account }) {
           </p>
         </Reveal>
       </header>
+      <UpcomingReservations />
       <RestaurantExplorer />
     </main>
   )

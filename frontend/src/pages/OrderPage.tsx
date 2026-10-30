@@ -1,0 +1,631 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, Navigate, useLocation, useParams } from 'react-router'
+
+import { retryUnlessSessionExpired, SessionExpiredError } from '../api/errors'
+import {
+  fetchOrder,
+  ReservationNotFoundError,
+  SAVE_FAILED_MESSAGE,
+  type CartLine,
+  type MenuDish,
+  type OrderPage as OrderPageData,
+  type WriteFailure,
+} from '../api/orders'
+import { signOut, useAccount, type Account } from '../api/session'
+import { UnverifiedNotice } from '../components/access'
+import { LogoSpinner } from '../components/brand'
+import { AddToOrderButton } from '../components/order'
+import { Button, Card, Modal, QuantityStepper, RollingNumber, StatusPill } from '../components/ui'
+import { cx } from '../lib/cx'
+import { longDate, timeInBuenosAires } from '../lib/date'
+import { formatCents, formatPrice, orderSummary, subtotalCents } from '../lib/orderSummary'
+import { lineOf, linesOfCart, linesOfOrder, reconcile } from '../lib/orderLines'
+import { hasUnconfirmedChanges, useOrderCart } from '../lib/useOrderCart'
+import styles from './OrderPage.module.css'
+
+const MAX_UNITS = 20
+const ANNOUNCE_DELAY_MS = 600
+
+const CATEGORIES: [string, string][] = [
+  ['entrada', 'Entradas'],
+  ['plato_principal', 'Platos principales'],
+  ['postre', 'Postres'],
+  ['bebida', 'Bebidas'],
+]
+
+const RESTRICTIONS: Record<string, string> = {
+  sin_tacc: 'Sin TACC',
+  vegetariano: 'Vegetariano',
+  vegano: 'Vegano',
+}
+
+function dishCount(lines: CartLine[]): string {
+  const count = lines.reduce((total, line) => total + line.quantity, 0)
+  return count === 1 ? '1 plato' : `${count} platos`
+}
+
+/**
+ * The pre-order of a reservation (US-17, spec 009), with its estimated preparation time (US-19)
+ * and the bill (US-21). What the diner builds is saved as their cart; the restaurant only sees
+ * it once they confirm (P1).
+ */
+export function OrderPage() {
+  const { reservaId = '' } = useParams<{ reservaId: string }>()
+  const location = useLocation()
+  const queryClient = useQueryClient()
+  const { data: account, isPending: accountPending } = useAccount()
+  const isDiner = account?.rol === 'diner'
+  const order = useQuery({
+    queryKey: ['order', reservaId],
+    queryFn: () => fetchOrder(reservaId),
+    enabled: isDiner,
+    // The page owns the cart while it is open: a refetch would overwrite what the diner sees.
+    refetchOnWindowFocus: false,
+    retry: (count, error) =>
+      !(error instanceof ReservationNotFoundError) && retryUnlessSessionExpired(count, error),
+  })
+
+  useEffect(() => {
+    document.title = 'Tu pedido · Servido!'
+  }, [])
+  useEffect(() => {
+    if (order.error instanceof SessionExpiredError) signOut(queryClient)
+  }, [order.error, queryClient])
+
+  if (accountPending || (isDiner && order.isPending)) {
+    return (
+      <main className={styles.loading}>
+        <LogoSpinner />
+      </main>
+    )
+  }
+  // The page (and the API behind it) is diner-only: a visitor signs in and comes back here, a
+  // restaurant goes home.
+  const backHere = `/ingresar?volver=${encodeURIComponent(location.pathname + location.search)}`
+  if (!isDiner) return <Navigate to={account ? '/' : backHere} replace />
+
+  if (order.error instanceof ReservationNotFoundError) {
+    return (
+      <main className={styles.container}>
+        <h1 className={styles.title}>No encontramos esa reserva.</h1>
+        <div className={styles.actions}>
+          <Button to="/">Ir al inicio</Button>
+        </div>
+      </main>
+    )
+  }
+  if (!order.data) {
+    return (
+      <main className={styles.container}>
+        <p className={styles.notice} role="alert">
+          No pudimos cargar tu pedido.
+        </p>
+        <div className={styles.actions}>
+          <Button onClick={() => void order.refetch()}>Reintentar</Button>
+        </div>
+      </main>
+    )
+  }
+  return <OrderEditor reservationId={reservaId} initialPage={order.data} account={account} />
+}
+
+function OrderEditor({
+  reservationId,
+  initialPage,
+  account,
+}: {
+  reservationId: string
+  initialPage: OrderPageData
+  account: Account
+}) {
+  const queryClient = useQueryClient()
+  const [page, setPage] = useState(initialPage)
+  const confirmedLines = useMemo(() => linesOfOrder(page.order), [page.order])
+  const [initial] = useState(() => {
+    if (!initialPage.reservation.order_open) return { lines: [], changes: [] }
+    if (initialPage.cart) return reconcile(linesOfCart(initialPage.cart), initialPage.menu)
+    return { lines: linesOfOrder(initialPage.order) ?? [], changes: [] }
+  })
+  const [changes, setChanges] = useState<string[]>(initial.changes)
+  const [confirmedBanner, setConfirmedBanner] = useState(false)
+  const [unverified, setUnverified] = useState(false)
+  const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
+  const [confirming, setConfirming] = useState(false)
+  const [removing, setRemoving] = useState(false)
+  const [billOpen, setBillOpen] = useState(false)
+  const changesRef = useRef<HTMLDivElement>(null)
+  const bannerRef = useRef<HTMLHeadingElement>(null)
+  const closedRef = useRef<HTMLParagraphElement>(null)
+  const orderListRef = useRef<HTMLUListElement>(null)
+  const orderTitleRef = useRef<HTMLHeadingElement>(null)
+  const pendingFocus = useRef<string | null>(null)
+
+  const refreshLists = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['reservations'] })
+  }, [queryClient])
+
+  const reload = useRef<(failure: WriteFailure) => void>(() => undefined)
+  const cart = useOrderCart({
+    reservationId,
+    initialLines: initial.lines,
+    confirmedLines,
+    onSaveFailure: (failure) => reload.current(failure),
+    onSettled: refreshLists,
+  })
+  const { lines, setLines, resetLines } = cart
+
+  /** A write failed: sign in again, or reload and say why (data-model.md rules 6 and 7). */
+  async function handleFailure(failure: WriteFailure) {
+    if (failure.kind === 'session') {
+      signOut(queryClient)
+      return
+    }
+    if (failure.kind === 'unverified') {
+      setUnverified(true)
+      return
+    }
+    if (failure.kind === 'failed') {
+      setError(failure.message)
+      return
+    }
+    let fresh: OrderPageData
+    try {
+      fresh = await fetchOrder(reservationId)
+    } catch (reloadError) {
+      if (reloadError instanceof SessionExpiredError) signOut(queryClient)
+      else setError('No pudimos cargar tu pedido.')
+      return
+    }
+    setPage(fresh)
+    if (!fresh.reservation.order_open) {
+      resetLines([])
+      setChanges([])
+      return
+    }
+    const updated = reconcile(lines, fresh.menu)
+    setChanges(updated.changes)
+    setLines(() => updated.lines)
+  }
+  useEffect(() => {
+    reload.current = handleFailure
+  })
+
+  // A saved cart whose dishes changed is brought up to date and saved again.
+  useEffect(() => {
+    if (initial.changes.length) setLines(() => initial.lines)
+  }, [initial, setLines])
+
+  useEffect(() => {
+    if (changes.length) changesRef.current?.focus()
+  }, [changes])
+  useEffect(() => {
+    if (confirmedBanner) bannerRef.current?.focus()
+  }, [confirmedBanner])
+  useEffect(() => {
+    if (!page.reservation.order_open) closedRef.current?.focus()
+  }, [page.reservation.order_open])
+
+  // After a removal, focus goes to the next dish of «Tu pedido», or to its title.
+  useEffect(() => {
+    const target = pendingFocus.current
+    if (target === null) return
+    pendingFocus.current = null
+    const rows = Array.from(orderListRef.current?.querySelectorAll('li') ?? [])
+    const next = rows.find((row) => row.dataset.dish === target)
+    ;(next?.querySelector('button') ?? orderTitleRef.current)?.focus()
+  }, [lines])
+
+  const { totalCents, prepTimeMinutes } = orderSummary(lines)
+  const announcement = lines.length
+    ? `Total ${formatCents(totalCents)}.${prepTimeMinutes ? ` Preparación: unos ${prepTimeMinutes} min.` : ''}`
+    : ''
+  const [announced, setAnnounced] = useState('')
+  useEffect(() => {
+    const timer = window.setTimeout(() => setAnnounced(announcement), ANNOUNCE_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [announcement])
+
+  // Toasts rise above the bottom bar while this page is open.
+  useEffect(() => {
+    const root = document.documentElement
+    root.style.setProperty('--toast-bottom', '156px')
+    return () => {
+      root.style.removeProperty('--toast-bottom')
+    }
+  }, [])
+
+  const reservation = page.reservation
+  const deadline = timeInBuenosAires(reservation.order_deadline)
+  const unconfirmed = hasUnconfirmedChanges(lines, confirmedLines)
+
+  function clearMessages() {
+    setChanges([])
+    setConfirmedBanner(false)
+    setError('')
+    setInfo('')
+  }
+
+  function setQuantity(dish: { dishId: string } | MenuDish, quantity: number) {
+    clearMessages()
+    const dishId = 'dishId' in dish ? dish.dishId : dish.id
+    if (quantity <= 0) {
+      const index = lines.findIndex((line) => line.dishId === dishId)
+      const next = lines[index + 1] ?? lines[index - 1]
+      pendingFocus.current = next?.dishId ?? ''
+    }
+    setLines((current) => {
+      if (quantity <= 0) return current.filter((line) => line.dishId !== dishId)
+      if (current.some((line) => line.dishId === dishId)) {
+        return current.map((line) => (line.dishId === dishId ? { ...line, quantity } : line))
+      }
+      return 'dishId' in dish ? current : [...current, lineOf(dish, quantity)]
+    })
+  }
+
+  async function confirm() {
+    setRemoving(false)
+    clearMessages()
+    setUnverified(false)
+    setConfirming(true)
+    const result = await cart.confirm()
+    setConfirming(false)
+    if (!result.ok) {
+      if (result.kind === 'failed') setError(result.message)
+      else await handleFailure(result)
+      return
+    }
+    setPage(result.page)
+    refreshLists()
+    if (result.page.order) setConfirmedBanner(true)
+    else setInfo('Quitaste tu pedido. Tu reserva sigue en pie.')
+  }
+
+  async function discard() {
+    clearMessages()
+    const result = await cart.discard()
+    if (!result.ok && result.kind !== 'failed') {
+      await handleFailure(result)
+      return
+    }
+    resetLines(confirmedLines ?? [])
+    if (confirmedLines) setInfo('Volviste al pedido confirmado.')
+  }
+
+  const summary = (
+    <p className={styles.muted}>
+      {longDate(reservation.date)} · {reservation.start_time} ·{' '}
+      {reservation.party_size === 1 ? '1 persona' : `${reservation.party_size} personas`}
+    </p>
+  )
+  const header = (
+    <>
+      <Link to="/" className={styles.back}>
+        ← Ir al inicio
+      </Link>
+      <header className={styles.header}>
+        <p className={styles.eyebrow}>Tu pedido</p>
+        <h1 className={styles.title}>{reservation.restaurant.nombre}</h1>
+        {summary}
+      </header>
+    </>
+  )
+
+  if (!reservation.order_open) {
+    return (
+      <main className={styles.container}>
+        {header}
+        {page.order ? (
+          <>
+            <p ref={closedRef} tabIndex={-1} className={styles.notice} role="status">
+              Tu pedido ya está cerrado. Se podía cambiar hasta las {deadline}.
+            </p>
+            <Card className={styles.section}>
+              <h2 className={styles.sectionTitle}>Tu pedido</h2>
+              <ul className={styles.orderList}>
+                {page.order.items.map((item) => (
+                  <li key={`${item.dish_id}-${item.name}`} className={styles.orderRow}>
+                    <span className={styles.orderName}>{item.name}</span>
+                    <span className={styles.muted}>
+                      {item.quantity} × {formatPrice(item.unit_price)}
+                    </span>
+                    <span className={styles.price}>{formatPrice(item.subtotal)}</span>
+                  </li>
+                ))}
+              </ul>
+              {page.order.prep_time_minutes !== null && (
+                <p className={styles.estimate}>
+                  Preparación: unos {page.order.prep_time_minutes} min
+                </p>
+              )}
+              <p className={styles.total}>
+                <span>Total del pedido</span>
+                <strong>{formatPrice(page.order.total)}</strong>
+              </p>
+              <p className={styles.hint}>Impuestos incluidos</p>
+            </Card>
+          </>
+        ) : (
+          <p ref={closedRef} tabIndex={-1} className={styles.notice} role="status">
+            Ya no se pueden hacer pedidos para esta reserva. Igual te esperamos a las{' '}
+            {reservation.start_time}.
+          </p>
+        )}
+        <div className={styles.actions}>
+          <Button to="/">Ir al inicio</Button>
+        </div>
+      </main>
+    )
+  }
+
+  const primaryLabel =
+    lines.length === 0 ? 'Quitar pedido' : confirmedLines ? 'Confirmar cambios' : 'Confirmar pedido'
+  const showPrimary = unconfirmed
+
+  return (
+    <main className={cx(styles.container, styles.withBar)}>
+      {header}
+      <p className={styles.deadline}>Podés cambiarlo hasta las {deadline}.</p>
+
+      {confirmedBanner && (
+        <div className={cx(styles.notice, styles.ok)}>
+          <h2 ref={bannerRef} tabIndex={-1} className={styles.bannerTitle}>
+            ¡Pedido confirmado!
+          </h2>
+          <p>El restaurante ya lo tiene. Podés cambiarlo hasta las {deadline}.</p>
+          <Button to="/" variant="secondary" size="sm">
+            Ir al inicio
+          </Button>
+        </div>
+      )}
+      {changes.length > 0 && (
+        <div ref={changesRef} tabIndex={-1} className={styles.warn} role="alert">
+          <p>El menú cambió. Revisá tu pedido antes de confirmarlo.</p>
+          <ul>
+            {changes.map((change) => (
+              <li key={change}>{change}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {unverified && (
+        <div className={styles.warn} role="alert">
+          <p>Para confirmar, verificá tu email. Tus platos quedan guardados.</p>
+          <UnverifiedNotice account={{ ...account, email_verificado: false }} />
+        </div>
+      )}
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
+      {cart.saveFailed && !error && (
+        <p className={styles.notice} role="status">
+          {SAVE_FAILED_MESSAGE}
+        </p>
+      )}
+      {info && (
+        <p className={styles.notice} role="status">
+          {info}
+        </p>
+      )}
+
+      <div className={styles.layout}>
+        <section aria-labelledby="menu-title" className={styles.menu}>
+          <h2 id="menu-title" className={styles.sectionTitle}>
+            Menú
+          </h2>
+          {CATEGORIES.map(([category, label]) => {
+            const dishes = page.menu.filter((dish) => dish.category === category)
+            if (!dishes.length) return null
+            return (
+              <section key={category} className={styles.category}>
+                <h3 className={styles.categoryTitle}>{label}</h3>
+                <ul className={styles.dishes}>
+                  {dishes.map((dish) => {
+                    const inOrder = lines.find((line) => line.dishId === dish.id)
+                    return (
+                      <li key={dish.id} className={styles.dish}>
+                        {dish.photo_url && (
+                          <img src={dish.photo_url} alt="" className={styles.photo} />
+                        )}
+                        <div className={styles.dishInfo}>
+                          <span className={styles.dishName}>{dish.name}</span>
+                          {dish.description && (
+                            <span className={styles.muted}>{dish.description}</span>
+                          )}
+                          <span className={styles.dishMeta}>
+                            <span className={styles.price}>{formatPrice(dish.price)}</span>
+                            {dish.prep_time_minutes !== null && (
+                              <span aria-label={`Se prepara en ${dish.prep_time_minutes} min`}>
+                                {dish.prep_time_minutes} min
+                              </span>
+                            )}
+                            {dish.dietary_restrictions.map((restriction) => (
+                              <span key={restriction} className={styles.tag}>
+                                {RESTRICTIONS[restriction] ?? restriction}
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+                        <div className={styles.dishAction}>
+                          <AddToOrderButton
+                            size="sm"
+                            label={inOrder ? 'Agregar otro' : 'Agregar al pedido'}
+                            disabled={(inOrder?.quantity ?? 0) >= MAX_UNITS}
+                            onAdd={() => setQuantity(dish, (inOrder?.quantity ?? 0) + 1)}
+                          />
+                          {inOrder && (
+                            <span className={styles.inOrder}>{inOrder.quantity} en tu pedido</span>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            )
+          })}
+        </section>
+
+        <aside aria-labelledby="order-title" className={styles.side}>
+          <Card className={styles.section}>
+            <h2 id="order-title" ref={orderTitleRef} tabIndex={-1} className={styles.sectionTitle}>
+              Tu pedido
+            </h2>
+            {lines.length === 0 ? (
+              <p className={styles.muted}>
+                {confirmedLines
+                  ? 'Sacaste todos los platos. Confirmá para quitar el pedido, o descartá los cambios.'
+                  : 'Agregá platos del menú para armar tu pedido.'}
+              </p>
+            ) : (
+              <ul ref={orderListRef} className={styles.orderList}>
+                {lines.map((line) => (
+                  <li key={line.dishId} data-dish={line.dishId} className={styles.orderRow}>
+                    <span className={styles.orderName}>{line.name}</span>
+                    <QuantityStepper
+                      label={`Cantidad de ${line.name}`}
+                      value={line.quantity}
+                      min={0}
+                      max={MAX_UNITS}
+                      decreaseLabel={
+                        line.quantity === 1 ? `Sacar ${line.name} del pedido` : 'Quitar uno'
+                      }
+                      onChange={(quantity) => setQuantity(line, quantity)}
+                    />
+                    {line.quantity >= MAX_UNITS && (
+                      <span className="visually-hidden">Máximo {MAX_UNITS} por plato</span>
+                    )}
+                    <span className={styles.price}>{formatCents(subtotalCents(line))}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {prepTimeMinutes !== null && (
+              <div className={styles.estimate}>
+                <p>Preparación: unos {prepTimeMinutes} min</p>
+                <p className={styles.hint}>
+                  La cocina lo prepara para tu llegada a las {reservation.start_time}
+                </p>
+              </div>
+            )}
+
+            {lines.length > 0 && (
+              <>
+                <p className={styles.total}>
+                  <span>Total del pedido</span>
+                  <strong>
+                    <RollingNumber value={totalCents} format={formatCents} />
+                  </strong>
+                </p>
+                <p className={styles.hint}>Impuestos incluidos</p>
+                <button
+                  type="button"
+                  className={styles.disclosure}
+                  aria-expanded={billOpen}
+                  aria-controls="bill-detail"
+                  onClick={() => setBillOpen((open) => !open)}
+                >
+                  {billOpen ? 'Ocultar detalle' : 'Ver detalle de la cuenta'}
+                </button>
+                <table id="bill-detail" hidden={!billOpen} className={styles.bill}>
+                  <caption>Detalle de la cuenta</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Plato</th>
+                      <th scope="col">Cantidad</th>
+                      <th scope="col">Precio unitario</th>
+                      <th scope="col">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lines.map((line) => (
+                      <tr key={line.dishId}>
+                        <td>{line.name}</td>
+                        <td>{line.quantity}</td>
+                        <td>{formatPrice(line.unitPrice)}</td>
+                        <td>{formatCents(subtotalCents(line))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th scope="row" colSpan={3}>
+                        Total (impuestos incluidos)
+                      </th>
+                      <td>{formatCents(totalCents)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </>
+            )}
+          </Card>
+        </aside>
+      </div>
+
+      <span className="visually-hidden" aria-live="polite">
+        {announced}
+      </span>
+
+      {(lines.length > 0 || unconfirmed) && (
+        <div className={styles.bar}>
+          <div className={styles.barSummary}>
+            <button
+              type="button"
+              className={styles.barCount}
+              onClick={() => orderTitleRef.current?.focus()}
+            >
+              {dishCount(lines)} · {formatCents(totalCents)}
+            </button>
+            <span className={styles.hint}>Impuestos incluidos</span>
+            {unconfirmed && (
+              <span className={styles.unconfirmed}>
+                Sin confirmar: el restaurante todavía no lo ve
+              </span>
+            )}
+            {!unconfirmed && confirmedLines && <StatusPill tone="ok">Pedido confirmado</StatusPill>}
+          </div>
+          <div className={styles.barActions}>
+            {unconfirmed && (
+              <Button variant="ghost" size="sm" onClick={() => void discard()}>
+                Descartar cambios
+              </Button>
+            )}
+            {showPrimary && (
+              <Button
+                loading={confirming}
+                onClick={() => (lines.length === 0 ? setRemoving(true) : void confirm())}
+              >
+                {primaryLabel}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <Modal
+        open={removing}
+        onClose={() => setRemoving(false)}
+        title="¿Quitás tu pedido?"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setRemoving(false)}>
+              Volver
+            </Button>
+            <Button loading={confirming} onClick={() => void confirm()}>
+              Quitar pedido
+            </Button>
+          </>
+        }
+      >
+        <p>
+          Tu reserva sigue en pie, pero el restaurante no va a tener platos preparados para tu
+          llegada.
+        </p>
+      </Modal>
+    </main>
+  )
+}

@@ -10,6 +10,8 @@ type QuantityStepperProps = {
   label: string
   min?: number
   max?: number
+  /** Accessible name of the "−" button, e.g. "Sacar Provoleta del pedido" when it removes. */
+  decreaseLabel?: string
 }
 
 export function QuantityStepper({
@@ -18,11 +20,12 @@ export function QuantityStepper({
   label,
   min = 0,
   max = 20,
+  decreaseLabel = 'Quitar uno',
 }: QuantityStepperProps) {
   return (
     <div role="group" aria-label={label} className={styles.stepper}>
       <IconButton
-        label="Quitar uno"
+        label={decreaseLabel}
         variant="ghost"
         className={styles.button}
         disabled={value <= min}

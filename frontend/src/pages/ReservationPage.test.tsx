@@ -462,6 +462,10 @@ function reservation(overrides: Partial<Reservation> = {}): Reservation {
     party_size: 2,
     table: { capacity: 2, seating_area: 'indoor' },
     status: 'confirmed',
+    has_order: false,
+    has_cart: false,
+    order_open: false,
+    order_deadline: `${DATE}T11:15:00-03:00`,
     ...overrides,
   }
 }
@@ -535,6 +539,32 @@ describe('ReservationPage (US-13)', () => {
     })
     expect(screen.getByText('Mesa para 2 · Adentro')).toBeInTheDocument()
     expect(screen.getByText(longDate(DATE))).toBeInTheDocument()
+  })
+
+  it('US-17 edge offers to build the order after confirming the reservation', async () => {
+    confirmMock.mockResolvedValue({
+      ok: true,
+      reservation: reservation({ order_open: true }),
+    })
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    expect(await screen.findByRole('link', { name: 'Armar pedido' })).toHaveAttribute(
+      'href',
+      '/reservas/res-1/pedido',
+    )
+    expect(screen.getByText(/Podés cambiarlo hasta las 11:15/)).toBeInTheDocument()
+  })
+
+  it('US-17 edge offers no order when the reservation no longer takes one', async () => {
+    confirmMock.mockResolvedValue({ ok: true, reservation: reservation() })
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    await screen.findByText('Reserva confirmada')
+    expect(screen.queryByRole('link', { name: 'Armar pedido' })).not.toBeInTheDocument()
   })
 
   it('US-13 S5 says so when a reloaded confirmation is not found', async () => {

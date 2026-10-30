@@ -1,0 +1,46 @@
+.section {
+  margin-bottom: 28px;
+}
+
+.title {
+  margin: 0 0 12px;
+  font: 800 var(--text-xl) / 1.15 var(--font-display);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: 6px;
+  height: 100%;
+}
+
+.restaurant {
+  margin: 0;
+  font: 800 var(--text-lg) var(--font-display);
+}
+
+.when {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.when::first-letter {
+  text-transform: uppercase;
+}
+
+.order {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}

@@ -36,7 +36,7 @@ export function UnverifiedNotice({ account }: { account: Account }) {
   return (
     <section className={styles.notice} aria-label="Verificación de email">
       <p className={styles.text}>
-        Verificá tu email para poder hacer pedidos. Te mandamos un enlace a{' '}
+        Verificá tu email para confirmar pedidos. Te mandamos un enlace a{' '}
         <strong>{account.email}</strong>.
       </p>
       <Button size="sm" variant="secondary" loading={sending} onClick={resend}>

@@ -63,10 +63,10 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `Skeleton`, `SkeletonText` | Placeholders con brillo mientras carga una lista |
 | `Spinner` | Carga dentro de un botón o de un texto |
 | `Modal` | Diálogos (en el celular se abre como hoja desde abajo) |
-| `ToastProvider`, `useToast` | Avisos breves que se van solos |
+| `ToastProvider`, `useToast` | Avisos breves que se van solos. Una página con barra inferior (el pedido) los sube con la variable `--toast-bottom` |
 | `ThemeToggle` | Cambio de tema claro / oscuro |
 | `Reveal` | Animación de entrada al hacer scroll |
-| `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar |
+| `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido») |
 | `StarRating` | Calificación interactiva o de solo lectura |
 | `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, …) |
 
