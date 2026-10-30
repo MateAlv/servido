@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
+from app.config import settings
 from app.db import SessionDep
 from app.models.diner import Diner
 from app.models.restaurant import Restaurant
@@ -79,6 +80,8 @@ def register_diner(payload: RegistrationRequest, session: SessionDep) -> Diner:
         email=payload.email,
         password_hash=hash_password(payload.password),
     )
+    if settings.auto_verify_emails:
+        mark_verified(diner)
     session.add(diner)
     try:
         session.commit()
@@ -88,7 +91,8 @@ def register_diner(payload: RegistrationRequest, session: SessionDep) -> Diner:
             status_code=409, detail="Ya existe una cuenta asociada a ese email."
         ) from error
     session.refresh(diner)
-    send_verification_mail(session, diner)
+    if not settings.auto_verify_emails:
+        send_verification_mail(session, diner)
     return diner
 
 

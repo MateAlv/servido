@@ -1,7 +1,10 @@
-.PHONY: up down db logs test test-backend test-frontend lint format migrate migration api-types
+.PHONY: up up-local down db logs test test-backend test-frontend lint format migrate migration api-types
 
 up: ## Run db, backend and frontend in Docker (http://localhost:5173)
 	docker compose up --build
+
+up-local: ## Like up, plus demo data and sign-up without mail verification (compose.local.yml)
+	docker compose -f docker-compose.yml -f compose.local.yml up --build
 
 down:
 	docker compose down

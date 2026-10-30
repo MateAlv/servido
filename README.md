@@ -12,7 +12,10 @@ Requirements: Docker, [uv](https://docs.astral.sh/uv/), Node.js 22 and `make`.
 
 ```bash
 make up        # Postgres, API and web app in Docker
+make up-local  # the same, plus demo data and sign-up without mail verification
 ```
+
+`make up-local` adds a bookable restaurant with a menu and a verified diner: `restaurante@servido.local` and `comensal@servido.local`, both with password `Servido2026`. Diners who sign up there start verified, and no mail goes out.
 
 - Web app: http://localhost:5173
 - API docs: http://localhost:8000/api/docs
