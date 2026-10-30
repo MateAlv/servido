@@ -20,7 +20,13 @@ import { Button, Card, Modal, QuantityStepper, RollingNumber, StatusPill } from 
 import { cx } from '../lib/cx'
 import { longDate, timeInBuenosAires } from '../lib/date'
 import { formatCents, formatPrice, orderSummary, subtotalCents } from '../lib/orderSummary'
-import { lineOf, linesOfCart, linesOfOrder, reconcile } from '../lib/orderLines'
+import {
+  lineOf,
+  linesOfCart,
+  linesOfOrder,
+  reconcile,
+  withoutDeletedDishes,
+} from '../lib/orderLines'
 import { hasUnconfirmedChanges, useOrderCart } from '../lib/useOrderCart'
 import styles from './OrderPage.module.css'
 
@@ -62,6 +68,8 @@ export function OrderPage() {
     enabled: isDiner,
     // The page owns the cart while it is open: a refetch would overwrite what the diner sees.
     refetchOnWindowFocus: false,
+    // Coming back must load the cart and order again, never a copy from the last visit.
+    gcTime: 0,
     retry: (count, error) =>
       !(error instanceof ReservationNotFoundError) && retryUnlessSessionExpired(count, error),
   })
@@ -125,13 +133,14 @@ function OrderEditor({
   const [initial] = useState(() => {
     if (!initialPage.reservation.order_open) return { lines: [], changes: [] }
     if (initialPage.cart) return reconcile(linesOfCart(initialPage.cart), initialPage.menu)
-    return { lines: linesOfOrder(initialPage.order) ?? [], changes: [] }
+    return withoutDeletedDishes(linesOfOrder(initialPage.order) ?? [])
   })
   const [changes, setChanges] = useState<string[]>(initial.changes)
   const [confirmedBanner, setConfirmedBanner] = useState(false)
   const [unverified, setUnverified] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
+  const [removed, setRemoved] = useState('')
   const [confirming, setConfirming] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [billOpen, setBillOpen] = useState(false)
@@ -140,7 +149,16 @@ function OrderEditor({
   const closedRef = useRef<HTMLParagraphElement>(null)
   const orderListRef = useRef<HTMLUListElement>(null)
   const orderTitleRef = useRef<HTMLHeadingElement>(null)
-  const pendingFocus = useRef<string | null>(null)
+  const menuRef = useRef<HTMLElement>(null)
+  const infoRef = useRef<HTMLParagraphElement>(null)
+  const mainRef = useRef<HTMLElement>(null)
+  const barRef = useRef<HTMLDivElement>(null)
+  // Where focus goes once the next render is on screen (a removed dish, a disabled button).
+  const afterRender = useRef<(() => void) | null>(null)
+
+  function unconfirmedNow() {
+    return hasUnconfirmedChanges(lines, confirmedLines)
+  }
 
   const refreshLists = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['reservations'] })
@@ -184,9 +202,15 @@ function OrderEditor({
       setChanges([])
       return
     }
-    const updated = reconcile(lines, fresh.menu)
-    setChanges(updated.changes)
-    setLines(() => updated.lines)
+    // The diner may have changed something while the reload was on its way: reconcile what the
+    // page has now, not what it had when the request left.
+    let found: string[] = []
+    setLines((current) => {
+      const updated = reconcile(current, fresh.menu)
+      found = updated.changes
+      return updated.lines
+    })
+    setChanges(found)
   }
   useEffect(() => {
     reload.current = handleFailure
@@ -207,44 +231,56 @@ function OrderEditor({
     if (!page.reservation.order_open) closedRef.current?.focus()
   }, [page.reservation.order_open])
 
-  // After a removal, focus goes to the next dish of «Tu pedido», or to its title.
   useEffect(() => {
-    const target = pendingFocus.current
-    if (target === null) return
-    pendingFocus.current = null
-    const rows = Array.from(orderListRef.current?.querySelectorAll('li') ?? [])
-    const next = rows.find((row) => row.dataset.dish === target)
-    ;(next?.querySelector('button') ?? orderTitleRef.current)?.focus()
+    if (info) infoRef.current?.focus()
+  }, [info])
+  useEffect(() => {
+    const move = afterRender.current
+    afterRender.current = null
+    move?.()
   }, [lines])
 
   const { totalCents, prepTimeMinutes } = orderSummary(lines)
   const announcement = lines.length
     ? `Total ${formatCents(totalCents)}.${prepTimeMinutes ? ` Preparación: unos ${prepTimeMinutes} min.` : ''}`
     : ''
-  const [announced, setAnnounced] = useState('')
+  // Starts at the current summary, so opening the page announces nothing.
+  const [announced, setAnnounced] = useState(announcement)
   useEffect(() => {
     const timer = window.setTimeout(() => setAnnounced(announcement), ANNOUNCE_DELAY_MS)
     return () => window.clearTimeout(timer)
   }, [announcement])
 
-  // Toasts rise above the bottom bar while this page is open.
+  // The page keeps room for the bottom bar, and toasts rise above it, whatever its height (its
+  // actions wrap at 360 px).
+  const barShown = page.reservation.order_open && (lines.length > 0 || unconfirmedNow())
   useEffect(() => {
+    const bar = barRef.current
     const root = document.documentElement
-    root.style.setProperty('--toast-bottom', '156px')
+    if (!bar) return
+    const update = () => {
+      mainRef.current?.style.setProperty('--order-bar-height', `${bar.offsetHeight}px`)
+      root.style.setProperty('--toast-bottom', `${bar.offsetHeight + 16}px`)
+    }
+    update()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update)
+    observer?.observe(bar)
     return () => {
+      observer?.disconnect()
       root.style.removeProperty('--toast-bottom')
     }
-  }, [])
+  }, [barShown])
 
   const reservation = page.reservation
   const deadline = timeInBuenosAires(reservation.order_deadline)
-  const unconfirmed = hasUnconfirmedChanges(lines, confirmedLines)
+  const unconfirmed = unconfirmedNow()
 
   function clearMessages() {
     setChanges([])
     setConfirmedBanner(false)
     setError('')
     setInfo('')
+    setRemoved('')
   }
 
   function setQuantity(dish: { dishId: string } | MenuDish, quantity: number) {
@@ -253,7 +289,17 @@ function OrderEditor({
     if (quantity <= 0) {
       const index = lines.findIndex((line) => line.dishId === dishId)
       const next = lines[index + 1] ?? lines[index - 1]
-      pendingFocus.current = next?.dishId ?? ''
+      setRemoved(`${lines[index]?.name}: lo sacaste del pedido.`)
+      // Focus goes to the next dish of «Tu pedido», or back to this dish in the menu.
+      afterRender.current = () =>
+        (next
+          ? orderListRef.current?.querySelector<HTMLElement>(`[data-dish="${next.dishId}"] button`)
+          : menuRef.current?.querySelector<HTMLElement>(`[data-dish="${dishId}"] button`)
+        )?.focus()
+    } else if (quantity >= MAX_UNITS) {
+      // The "+" just pressed is disabled at the maximum: focus stays on this dish's "−".
+      afterRender.current = () =>
+        orderListRef.current?.querySelector<HTMLElement>(`[data-dish="${dishId}"] button`)?.focus()
     }
     setLines((current) => {
       if (quantity <= 0) return current.filter((line) => line.dishId !== dishId)
@@ -265,12 +311,12 @@ function OrderEditor({
   }
 
   async function confirm() {
-    setRemoving(false)
     clearMessages()
     setUnverified(false)
     setConfirming(true)
     const result = await cart.confirm()
     setConfirming(false)
+    setRemoving(false)
     if (!result.ok) {
       if (result.kind === 'failed') setError(result.message)
       else await handleFailure(result)
@@ -285,12 +331,15 @@ function OrderEditor({
   async function discard() {
     clearMessages()
     const result = await cart.discard()
-    if (!result.ok && result.kind !== 'failed') {
-      await handleFailure(result)
+    if (!result.ok) {
+      if (result.kind === 'failed') setError(result.message)
+      else await handleFailure(result)
       return
     }
-    resetLines(confirmedLines ?? [])
-    if (confirmedLines) setInfo('Volviste al pedido confirmado.')
+    resetLines(withoutDeletedDishes(confirmedLines ?? []).lines)
+    setInfo(
+      confirmedLines ? 'Volviste al pedido confirmado.' : 'Descartaste el pedido sin confirmar.',
+    )
   }
 
   const summary = (
@@ -364,7 +413,7 @@ function OrderEditor({
   const showPrimary = unconfirmed
 
   return (
-    <main className={cx(styles.container, styles.withBar)}>
+    <main ref={mainRef} className={cx(styles.container, styles.withBar)}>
       {header}
       <p className={styles.deadline}>Podés cambiarlo hasta las {deadline}.</p>
 
@@ -406,13 +455,13 @@ function OrderEditor({
         </p>
       )}
       {info && (
-        <p className={styles.notice} role="status">
+        <p ref={infoRef} tabIndex={-1} className={styles.notice} role="status">
           {info}
         </p>
       )}
 
       <div className={styles.layout}>
-        <section aria-labelledby="menu-title" className={styles.menu}>
+        <section ref={menuRef} aria-labelledby="menu-title" className={styles.menu}>
           <h2 id="menu-title" className={styles.sectionTitle}>
             Menú
           </h2>
@@ -426,7 +475,7 @@ function OrderEditor({
                   {dishes.map((dish) => {
                     const inOrder = lines.find((line) => line.dishId === dish.id)
                     return (
-                      <li key={dish.id} className={styles.dish}>
+                      <li key={dish.id} data-dish={dish.id} className={styles.dish}>
                         {dish.photo_url && (
                           <img src={dish.photo_url} alt="" className={styles.photo} />
                         )}
@@ -438,8 +487,11 @@ function OrderEditor({
                           <span className={styles.dishMeta}>
                             <span className={styles.price}>{formatPrice(dish.price)}</span>
                             {dish.prep_time_minutes !== null && (
-                              <span aria-label={`Se prepara en ${dish.prep_time_minutes} min`}>
-                                {dish.prep_time_minutes} min
+                              <span>
+                                <span aria-hidden="true">{dish.prep_time_minutes} min</span>
+                                <span className="visually-hidden">
+                                  Se prepara en {dish.prep_time_minutes} min
+                                </span>
                               </span>
                             )}
                             {dish.dietary_restrictions.map((restriction) => (
@@ -453,7 +505,8 @@ function OrderEditor({
                           <AddToOrderButton
                             size="sm"
                             label={inOrder ? 'Agregar otro' : 'Agregar al pedido'}
-                            disabled={(inOrder?.quantity ?? 0) >= MAX_UNITS}
+                            itemName={dish.name}
+                            disabled={confirming || (inOrder?.quantity ?? 0) >= MAX_UNITS}
                             onAdd={() => setQuantity(dish, (inOrder?.quantity ?? 0) + 1)}
                           />
                           {inOrder && (
@@ -493,11 +546,11 @@ function OrderEditor({
                       decreaseLabel={
                         line.quantity === 1 ? `Sacar ${line.name} del pedido` : 'Quitar uno'
                       }
+                      maxHint={`Máximo ${MAX_UNITS} por plato`}
+                      announce={false}
+                      disabled={confirming}
                       onChange={(quantity) => setQuantity(line, quantity)}
                     />
-                    {line.quantity >= MAX_UNITS && (
-                      <span className="visually-hidden">Máximo {MAX_UNITS} por plato</span>
-                    )}
                     <span className={styles.price}>{formatCents(subtotalCents(line))}</span>
                   </li>
                 ))}
@@ -567,11 +620,11 @@ function OrderEditor({
       </div>
 
       <span className="visually-hidden" aria-live="polite">
-        {announced}
+        {removed} {announced}
       </span>
 
-      {(lines.length > 0 || unconfirmed) && (
-        <div className={styles.bar}>
+      {barShown && (
+        <div ref={barRef} className={styles.bar}>
           <div className={styles.barSummary}>
             <button
               type="button"
@@ -590,7 +643,12 @@ function OrderEditor({
           </div>
           <div className={styles.barActions}>
             {unconfirmed && (
-              <Button variant="ghost" size="sm" onClick={() => void discard()}>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={confirming}
+                onClick={() => void discard()}
+              >
                 Descartar cambios
               </Button>
             )}
@@ -608,7 +666,9 @@ function OrderEditor({
 
       <Modal
         open={removing}
-        onClose={() => setRemoving(false)}
+        onClose={() => {
+          if (!confirming) setRemoving(false)
+        }}
         title="¿Quitás tu pedido?"
         footer={
           <>

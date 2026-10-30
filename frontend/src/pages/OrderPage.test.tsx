@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { Route, Routes, useLocation } from 'react-router'
+import { Link, Route, Routes, useLocation } from 'react-router'
 
 import {
   confirmOrder,
@@ -129,7 +129,12 @@ function pageData(overrides: Partial<OrderPageData> = {}, open = true): OrderPag
 
 function LocationProbe() {
   const location = useLocation()
-  return <p>En {location.pathname + location.search}</p>
+  return (
+    <>
+      <p>En {location.pathname + location.search}</p>
+      <Link to="/reservas/res-1/pedido">Volver al pedido</Link>
+    </>
+  )
 }
 
 function renderPage() {
@@ -386,7 +391,7 @@ describe('OrderPage', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Quitar pedido' }))
 
     expect(confirmMock).toHaveBeenCalledWith('res-1', [])
-    expect(await screen.findByText('Quitaste tu pedido. Tu reserva sigue en pie.')).toBeVisible()
+    expect(await screen.findByText('Quitaste tu pedido. Tu reserva sigue en pie.')).toHaveFocus()
   })
 
   it('US-17 edge asks an unverified diner to verify and keeps the dishes', async () => {
@@ -481,7 +486,7 @@ describe('OrderPage', () => {
     await user.click(screen.getByRole('button', { name: 'Descartar cambios' }))
 
     expect(discardMock).toHaveBeenCalledWith('res-1')
-    expect(await screen.findByText('Volviste al pedido confirmado.')).toBeVisible()
+    expect(await screen.findByText('Volviste al pedido confirmado.')).toHaveFocus()
     expect(within(orderRow('Provoleta')).getByRole('status')).toHaveTextContent('1')
   })
 
@@ -553,6 +558,163 @@ describe('OrderPage', () => {
     expect(saveMock).toHaveBeenCalled()
   })
 
+  it('US-17 edge loads the order again when the diner comes back', async () => {
+    const user = await openPage()
+    await add(user, 'Provoleta')
+    await waitFor(() => expect(saveMock).toHaveBeenCalled())
+    await user.click(screen.getByRole('link', { name: '← Ir al inicio' }))
+    fetchMock.mockResolvedValue(
+      pageData({
+        cart: {
+          updated_at: '2026-11-03T12:00:00-03:00',
+          items: [
+            {
+              dish_id: 'd-1',
+              quantity: 1,
+              name: 'Provoleta',
+              unit_price: '7500.00',
+              prep_time_minutes: 10,
+            },
+          ],
+        },
+      }),
+    )
+
+    await user.click(screen.getByRole('link', { name: 'Volver al pedido' }))
+
+    expect(await screen.findByRole('group', { name: 'Cantidad de Provoleta' })).toBeVisible()
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('US-17 edge keeps the latest dishes when a confirmation finds the menu changed', async () => {
+    confirmMock.mockResolvedValue({ ok: false, kind: 'conflict' })
+    let answer: (page: OrderPageData) => void = () => undefined
+    const user = await openPage()
+    await add(user, 'Provoleta')
+    fetchMock.mockImplementation(() => new Promise((resolve) => (answer = resolve)))
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    // The diner adds a dish while the menu is reloading.
+    await add(user, 'Flan')
+    answer(pageData({ menu: [{ ...PROVOLETA, price: '8000.00' }, BIFE, FLAN] }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Cambió el precio de Provoleta')
+    expect(orderRow('Flan')).toBeInTheDocument()
+    expect(within(yourOrder()).getByText('Total del pedido').nextSibling).toHaveTextContent(
+      money(14000),
+    )
+  })
+
+  it('US-17 edge locks the order while it is being confirmed', async () => {
+    confirmMock.mockImplementation(() => new Promise(() => undefined))
+    const user = await openPage()
+    await add(user, 'Provoleta')
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    await waitFor(() =>
+      expect(
+        within(orderRow('Provoleta')).getByRole('button', { name: 'Agregar uno' }),
+      ).toBeDisabled(),
+    )
+    expect(within(menuDish('Flan')).getByRole('button', { name: /Agrega/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Descartar cambios' })).toBeDisabled()
+  })
+
+  it('US-17 edge says when the confirmation could not be sent', async () => {
+    confirmMock.mockRejectedValue(new TypeError('Failed to fetch'))
+    const user = await openPage()
+    await add(user, 'Provoleta')
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+
+    expect(
+      await screen.findByText(
+        'No pudimos confirmar tu pedido. Tus platos siguen acá, probá de nuevo.',
+      ),
+    ).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeEnabled()
+  })
+
+  it('US-17 edge says when discarding failed and keeps the dishes', async () => {
+    discardMock.mockResolvedValue({ ok: false, kind: 'failed', message: 'No pudimos descartar.' })
+    const user = await openPage()
+    await add(user, 'Provoleta')
+
+    await user.click(screen.getByRole('button', { name: 'Descartar cambios' }))
+
+    expect(await screen.findByText('No pudimos descartar.')).toBeVisible()
+    expect(orderRow('Provoleta')).toBeInTheDocument()
+    expect(screen.queryByText('Volviste al pedido confirmado.')).not.toBeInTheDocument()
+  })
+
+  it('US-17 edge says a dish of the confirmed order left the menu', async () => {
+    const order = orderOf([
+      [PROVOLETA, 1],
+      [FLAN, 1],
+    ])
+    order.items[1].dish_id = null
+    await openPage(pageData({ order, menu: [PROVOLETA, BIFE] }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Flan ya no está en el menú, lo sacamos.')
+    expect(screen.getByText('Sin confirmar: el restaurante todavía no lo ve')).toBeVisible()
+    await waitFor(() =>
+      expect(saveMock).toHaveBeenCalledWith('res-1', [expect.objectContaining({ dishId: 'd-1' })], {
+        keepalive: false,
+      }),
+    )
+  })
+
+  it('US-17 edge updates a saved cart whose dishes changed and saves it', async () => {
+    await openPage(
+      pageData({
+        cart: {
+          updated_at: '2026-11-03T12:00:00-03:00',
+          items: [
+            {
+              dish_id: 'd-1',
+              quantity: 2,
+              name: 'Provoleta',
+              unit_price: '7000.00',
+              prep_time_minutes: 10,
+            },
+          ],
+        },
+      }),
+    )
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      `Cambió el precio de Provoleta: ${money(7000)} → ${money(7500)}.`,
+    )
+    await waitFor(() =>
+      expect(saveMock).toHaveBeenCalledWith(
+        'res-1',
+        [expect.objectContaining({ unitPrice: '7500.00', quantity: 2 })],
+        { keepalive: false },
+      ),
+    )
+  })
+
+  it('US-17 edge says a dish was removed and brings focus back to it in the menu', async () => {
+    const user = await openPage()
+    await add(user, 'Provoleta')
+
+    await user.click(
+      within(orderRow('Provoleta')).getByRole('button', { name: 'Sacar Provoleta del pedido' }),
+    )
+
+    expect(screen.getByText(/Provoleta: lo sacaste del pedido\./)).toBeInTheDocument()
+    expect(within(menuDish('Provoleta')).getByRole('button', { name: /Agrega/ })).toHaveFocus()
+  })
+
+  it('US-17 edge names each add button after its dish', async () => {
+    await openPage()
+
+    expect(screen.getByRole('button', { name: 'Agregar al pedido: Provoleta' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Agregar al pedido: Flan' })).toBeVisible()
+  })
+
   it('US-19 S1 shows the estimated time while building and once confirmed', async () => {
     confirmMock.mockResolvedValue({ ok: true, page: pageData({ order: orderOf([[BIFE, 1]]) }) })
     const user = await openPage()
@@ -562,7 +724,9 @@ describe('OrderPage', () => {
     expect(
       within(yourOrder()).getByText('La cocina lo prepara para tu llegada a las 21:00'),
     ).toBeVisible()
-    expect(within(menuDish('Bife de chorizo')).getByLabelText('Se prepara en 25 min')).toBeVisible()
+    expect(
+      within(menuDish('Bife de chorizo')).getByText('Se prepara en 25 min'),
+    ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
     await screen.findByRole('heading', { name: '¡Pedido confirmado!' })
@@ -598,6 +762,7 @@ describe('OrderPage', () => {
     await add(user, 'Provoleta')
     const toggle = screen.getByRole('button', { name: 'Ver detalle de la cuenta' })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('table', { name: 'Detalle de la cuenta' })).not.toBeInTheDocument()
 
     await user.click(toggle)
 

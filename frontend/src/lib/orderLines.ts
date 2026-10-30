@@ -13,21 +13,26 @@ export function lineOf(dish: MenuDish, quantity: number): CartLine {
   }
 }
 
+/** The confirmed order as lines. A dish deleted since has an empty `dishId`. */
 export function linesOfOrder(order: ConfirmedOrder | null | undefined): CartLine[] | null {
   if (!order) return null
-  return order.items.flatMap((item) =>
-    item.dish_id === null
-      ? []
-      : [
-          {
-            dishId: item.dish_id,
-            quantity: item.quantity,
-            name: item.name,
-            unitPrice: item.unit_price,
-            prepTimeMinutes: item.prep_time_minutes,
-          },
-        ],
-  )
+  return order.items.map((item) => ({
+    dishId: item.dish_id ?? '',
+    quantity: item.quantity,
+    name: item.name,
+    unitPrice: item.unit_price,
+    prepTimeMinutes: item.prep_time_minutes,
+  }))
+}
+
+/** Drops the dishes deleted from the menu, saying so (P9). */
+export function withoutDeletedDishes(lines: CartLine[]): { lines: CartLine[]; changes: string[] } {
+  return {
+    lines: lines.filter((line) => line.dishId !== ''),
+    changes: lines
+      .filter((line) => line.dishId === '')
+      .map((line) => `${line.name} ya no está en el menú, lo sacamos.`),
+  }
 }
 
 export function linesOfCart(cart: SavedCart): CartLine[] {

@@ -289,6 +289,40 @@
   text-align: right;
 }
 
+/* On a phone each row reads «Provoleta», then «2 × $ 7.500» and the subtotal. */
+@media (max-width: 480px) {
+  .bill thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .bill tbody tr {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 4px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .bill tbody td {
+    padding: 0;
+    border: 0;
+  }
+
+  .bill tbody td:first-child {
+    grid-column: 1 / -1;
+    font-weight: 800;
+  }
+
+  .bill tbody td:nth-child(2)::after {
+    content: ' ×';
+  }
+}
+
 .bar {
   position: fixed;
   right: 0;

@@ -5,6 +5,9 @@ import { confirmOrder, discardCart, saveCart, type CartLine } from '../api/order
 import { SAVE_DELAY_MS, useOrderCart } from './useOrderCart'
 
 vi.mock('../api/orders', () => ({
+  CONFIRM_FAILED_MESSAGE: 'No pudimos confirmar tu pedido.',
+  DISCARD_FAILED_MESSAGE: 'No pudimos descartar los cambios.',
+  SAVE_FAILED_MESSAGE: 'No pudimos guardar tus cambios.',
   confirmOrder: vi.fn(),
   discardCart: vi.fn(),
   saveCart: vi.fn(),
@@ -181,6 +184,71 @@ describe('useOrderCart', () => {
     await wait()
 
     expect(onSaveFailure).toHaveBeenCalledWith({ ok: false, kind: 'conflict' })
+  })
+
+  it('keeps a change made while the confirmation is on its way, and saves it', async () => {
+    let finish: (value: { ok: true; page: never }) => void = () => undefined
+    confirmMock.mockImplementation(() => new Promise((resolve) => (finish = resolve)))
+    const { result } = setup()
+    act(() => result.current.setLines(() => [PROVOLETA]))
+
+    let confirmation: Promise<unknown> = Promise.resolve()
+    act(() => {
+      confirmation = result.current.confirm()
+    })
+    await wait(0)
+    act(() => result.current.setLines((lines) => [...lines, FLAN]))
+    await act(async () => {
+      finish({ ok: true, page: {} as never })
+      await confirmation
+    })
+    await wait()
+
+    expect(saveMock).toHaveBeenLastCalledWith('res-1', [PROVOLETA, FLAN], { keepalive: false })
+  })
+
+  it('does not confirm when the save before it was refused', async () => {
+    saveMock.mockResolvedValueOnce({ ok: false, kind: 'conflict' })
+    const { result, onSaveFailure } = setup()
+    act(() => result.current.setLines(() => [PROVOLETA]))
+
+    let answer: unknown
+    await act(async () => {
+      answer = await result.current.confirm()
+    })
+
+    expect(answer).toEqual({ ok: false, kind: 'conflict' })
+    expect(confirmMock).not.toHaveBeenCalled()
+    // The page handles it once, from the confirmation's answer.
+    expect(onSaveFailure).not.toHaveBeenCalled()
+  })
+
+  it('answers a failure when the confirmation or the discard never reach the server', async () => {
+    confirmMock.mockRejectedValue(new TypeError('Failed to fetch'))
+    discardMock.mockRejectedValue(new TypeError('Failed to fetch'))
+    const { result } = setup()
+
+    let confirmed: unknown
+    let discarded: unknown
+    await act(async () => {
+      confirmed = await result.current.confirm()
+      discarded = await result.current.discard()
+    })
+
+    expect(confirmed).toMatchObject({ ok: false, kind: 'failed' })
+    expect(discarded).toMatchObject({ ok: false, kind: 'failed' })
+  })
+
+  it('sends the pending save when the tab is closed', async () => {
+    const { result } = setup()
+
+    act(() => result.current.setLines(() => [PROVOLETA]))
+    act(() => {
+      window.dispatchEvent(new Event('pagehide'))
+    })
+    await wait(0)
+
+    expect(saveMock).toHaveBeenCalledWith('res-1', [PROVOLETA], { keepalive: true })
   })
 
   it('sends the pending save when the page closes', async () => {

@@ -118,3 +118,5 @@ export async function fetchUpcomingReservations(): Promise<UpcomingReservation[]
 }
 
 export const SAVE_FAILED_MESSAGE = SAVE_FAILED
+export const CONFIRM_FAILED_MESSAGE = CONFIRM_FAILED
+export const DISCARD_FAILED_MESSAGE = 'No pudimos descartar los cambios. Probá de nuevo.'

@@ -66,7 +66,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `ToastProvider`, `useToast` | Avisos breves que se van solos. Una página con barra inferior (el pedido) los sube con la variable `--toast-bottom` |
 | `ThemeToggle` | Cambio de tema claro / oscuro |
 | `Reveal` | Animación de entrada al hacer scroll |
-| `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido») |
+| `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido»), `maxHint` explica el «+» deshabilitado en el máximo, `announce={false}` apaga su anuncio cuando la página ya anuncia el cambio y `disabled` bloquea los dos botones |
 | `StarRating` | Calificación interactiva o de solo lectura |
 | `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, …) |
 
@@ -95,7 +95,7 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 
 | Componente | Para qué | US |
 | --- | --- | --- |
-| `AddToOrderButton` | Agregar un plato: los cubiertos chocan, aparece un check y sube un "+1" | 17 |
+| `AddToOrderButton` | Agregar un plato: los cubiertos chocan, aparece un check y sube un "+1". `itemName` suma el plato al nombre accesible («Agregar al pedido: Provoleta») | 17 |
 | `OrderIndicator` | Botón del pedido en el encabezado: la tapa salta y el contador rebota al agregar | 17, 47 |
 | `PrepTimer` | Anillo de tiempo de preparación que se completa y termina en "¡Listo!" | 19, 20, 40 |
 | `Steam` | Vapor que sube: algo se está cocinando | 19, 20 |

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
+  CONFIRM_FAILED_MESSAGE,
   confirmOrder,
+  DISCARD_FAILED_MESSAGE,
   discardCart,
+  SAVE_FAILED_MESSAGE,
   saveCart,
   type CartLine,
   type OrderPage,
@@ -65,6 +68,8 @@ export function useOrderCart({
   const latest = useRef(lines)
   const confirmed = useRef(confirmedLines)
   const dirty = useRef(false)
+  // Bumped on every change: a request only settles the lines it actually sent.
+  const version = useRef(0)
   const timer = useRef<number | undefined>(undefined)
   const queue = useRef<Promise<unknown>>(Promise.resolve())
   const callbacks = useRef({ onSaveFailure, onSettled })
@@ -82,10 +87,13 @@ export function useOrderCart({
     return run
   }, [])
 
-  /** Sends the latest lines: a cart, or nothing when they match the confirmed order. */
+  /**
+   * Sends the latest lines: a cart, or a discard when they match the confirmed order. A failure
+   * the page must handle goes to `onSaveFailure`, unless the caller handles it (`report: false`).
+   */
   const writeLatest = useCallback(
-    async (keepalive = false) => {
-      if (!dirty.current) return
+    async ({ keepalive = false, report = true } = {}): Promise<Result<object> | null> => {
+      if (!dirty.current) return null
       dirty.current = false
       const current = latest.current
       const unconfirmed = hasUnconfirmedChanges(current, confirmed.current)
@@ -95,7 +103,7 @@ export function useOrderCart({
           ? await saveCart(reservationId, current, { keepalive })
           : await discardCart(reservationId)
       } catch {
-        result = { ok: false, kind: 'failed', message: '' }
+        result = { ok: false, kind: 'failed', message: SAVE_FAILED_MESSAGE }
       }
       if (result.ok) {
         setSaveFailed(false)
@@ -103,10 +111,11 @@ export function useOrderCart({
         // Kept for the next change or the confirmation, which sends the lines anyway.
         dirty.current = true
         setSaveFailed(true)
-      } else {
+      } else if (report) {
         callbacks.current.onSaveFailure(result)
       }
       callbacks.current.onSettled?.()
+      return result
     },
     [reservationId],
   )
@@ -115,6 +124,7 @@ export function useOrderCart({
     (update: (current: CartLine[]) => CartLine[]) => {
       const next = update(latest.current)
       latest.current = next
+      version.current += 1
       setLinesState(next)
       dirty.current = true
       window.clearTimeout(timer.current)
@@ -127,17 +137,32 @@ export function useOrderCart({
   const resetLines = useCallback((next: CartLine[]) => {
     window.clearTimeout(timer.current)
     dirty.current = false
+    version.current += 1
     latest.current = next
     setLinesState(next)
   }, [])
 
-  /** Sends the pending save, waits for it, then confirms what the page shows. */
+  /**
+   * Sends the pending save, waits for it, then confirms what the page shows. When that save is
+   * refused (an expired session, a 409) the confirmation isn't sent: its failure is the answer.
+   */
   const confirm = useCallback(async (): Promise<Result<{ page: OrderPage }>> => {
     window.clearTimeout(timer.current)
-    void enqueue(() => writeLatest())
-    return enqueue(async () => {
-      const result = await confirmOrder(reservationId, latest.current)
-      if (result.ok) dirty.current = false
+    return enqueue(async (): Promise<Result<{ page: OrderPage }>> => {
+      const saved = await writeLatest({ report: false })
+      if (saved && !saved.ok && saved.kind !== 'failed') return saved
+      const sent = version.current
+      let result: Result<{ page: OrderPage }>
+      try {
+        result = await confirmOrder(reservationId, latest.current)
+      } catch {
+        return { ok: false, kind: 'failed', message: CONFIRM_FAILED_MESSAGE }
+      }
+      // A change made while the confirmation was on its way is still unconfirmed: keep it.
+      if (result.ok && version.current === sent) {
+        dirty.current = false
+        setSaveFailed(false)
+      }
       return result
     })
   }, [enqueue, writeLatest, reservationId])
@@ -146,7 +171,14 @@ export function useOrderCart({
   const discard = useCallback(async (): Promise<Result<object>> => {
     window.clearTimeout(timer.current)
     dirty.current = false
-    const result = await enqueue(() => discardCart(reservationId))
+    const result = await enqueue(async (): Promise<Result<object>> => {
+      try {
+        return await discardCart(reservationId)
+      } catch {
+        return { ok: false, kind: 'failed', message: DISCARD_FAILED_MESSAGE }
+      }
+    })
+    if (result.ok) setSaveFailed(false)
     callbacks.current.onSettled?.()
     return result
   }, [enqueue, reservationId])
@@ -156,7 +188,7 @@ export function useOrderCart({
     const flush = () => {
       if (!dirty.current) return
       window.clearTimeout(timer.current)
-      void enqueue(() => writeLatest(true))
+      void enqueue(() => writeLatest({ keepalive: true }))
     }
     window.addEventListener('pagehide', flush)
     return () => {
