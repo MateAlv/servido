@@ -1,4 +1,5 @@
-"""Builders for the reservation tests (spec 005): a bookable restaurant, a diner, a reservation."""
+"""Builders for the reservation and order tests (specs 005 and 009): a bookable restaurant, a
+diner, a reservation, dishes, an order and a cart."""
 
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
@@ -8,7 +9,10 @@ from zoneinfo import ZoneInfo
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.models.diner import Diner
+from app.models.dish import Dish
 from app.models.opening_shift import OpeningShift
+from app.models.order import Cart, CartItem, Order, OrderItem
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
@@ -109,3 +113,80 @@ def add_reservation(
     session.add(reservation)
     session.flush()
     return reservation
+
+
+def verify_diner(session: Session, diner: UUID) -> None:
+    """Confirming an order requires a verified email (spec 007, US-51 S5)."""
+    session.get(Diner, diner).email_verified_at = NOW
+    session.flush()
+
+
+def add_dish(
+    session: Session,
+    restaurant: Restaurant,
+    name: str,
+    price: str,
+    prep_time_minutes: int | None = None,
+    category: str = "plato_principal",
+) -> Dish:
+    dish = Dish(
+        id_restaurante=restaurant.id_restaurante,
+        nombre=name,
+        categoria=category,
+        precio=Decimal(price),
+        tiempo_preparacion_minutos=prep_time_minutes,
+        restricciones_alimenticias=[],
+        creado_en=NOW,
+    )
+    session.add(dish)
+    session.flush()
+    return dish
+
+
+def item_of(dish: Dish, quantity: int = 1) -> dict:
+    """An order or cart item as the page sends it: the dish with the values it showed."""
+    return {
+        "dish_id": str(dish.id_plato),
+        "quantity": quantity,
+        "name": dish.nombre,
+        "unit_price": str(dish.precio),
+        "prep_time_minutes": dish.tiempo_preparacion_minutos,
+    }
+
+
+def add_order(session: Session, reservation: Reservation, dishes: list[tuple[Dish, int]]) -> Order:
+    order = Order(reservation_id=reservation.id, confirmed_at=NOW)
+    session.add(order)
+    session.flush()
+    for dish, quantity in dishes:
+        session.add(
+            OrderItem(
+                order_id=order.id,
+                dish_id=dish.id_plato,
+                dish_name=dish.nombre,
+                unit_price=dish.precio,
+                prep_time_minutes=dish.tiempo_preparacion_minutos,
+                quantity=quantity,
+            )
+        )
+    session.flush()
+    return order
+
+
+def add_cart(session: Session, reservation: Reservation, dishes: list[tuple[Dish, int]]) -> Cart:
+    cart = Cart(reservation_id=reservation.id, updated_at=NOW)
+    session.add(cart)
+    session.flush()
+    for dish, quantity in dishes:
+        session.add(
+            CartItem(
+                cart_id=cart.id,
+                dish_id=dish.id_plato,
+                dish_name=dish.nombre,
+                unit_price=dish.precio,
+                prep_time_minutes=dish.tiempo_preparacion_minutos,
+                quantity=quantity,
+            )
+        )
+    session.flush()
+    return cart
