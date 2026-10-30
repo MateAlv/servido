@@ -35,6 +35,32 @@ One dish of an order, with what the menu said when the diner confirmed (P8).
 
 The unique keys cover the lookups; no other index is needed. Every confirmation replaces the items, so nothing may reference `order_items.id`.
 
+### `carts` (new) — `Cart`
+
+The order a diner is building for one reservation and hasn't confirmed (P1). Never read by the restaurant-side stories. A row exists from the first saved change until the diner confirms or discards; a cart of a closed order stays but is ignored (research, technical choices).
+
+| Column | Type | Rules |
+| --- | --- | --- |
+| `id` | UUID | Primary key |
+| `reservation_id` | UUID, not null | FK `reservations.id` `ON DELETE CASCADE` (a cart is worthless without its reservation); **unique** (one cart per reservation) |
+| `updated_at` | timestamptz, not null | Last save (UTC) |
+
+### `cart_items` (new) — `CartItem`
+
+One dish of a cart, with the values the page showed when the diner added it. Same columns and constraints as `order_items`, with `cart_id` in place of `order_id`:
+
+| Column | Type | Rules |
+| --- | --- | --- |
+| `id` | UUID | Primary key |
+| `cart_id` | UUID, not null | FK `carts.id` `ON DELETE CASCADE` (`passive_deletes=True`) |
+| `dish_id` | UUID, nullable | FK `platos.id_plato` `ON DELETE SET NULL`; unique per cart (`cart_id`, `dish_id`) |
+| `dish_name` | varchar(150), not null | As shown; `CHECK (length(trim(dish_name)) > 0)` |
+| `unit_price` | numeric(10, 2), not null | As shown; `CHECK (unit_price > 0)` |
+| `prep_time_minutes` | integer, nullable | As shown; `CHECK (prep_time_minutes IS NULL OR prep_time_minutes > 0)` |
+| `quantity` | integer, not null | `CHECK (quantity BETWEEN 1 AND 20)` (P10) |
+
+A cart may have no items only while the reservation has an order: that is a confirmed order the diner emptied and hasn't confirmed yet (P11). An empty save with no order deletes the cart instead (rule 7).
+
 ### `platos` (specs 006 and 007-agregar-plato, unchanged)
 
 Read for the menu: `id_plato`, `id_restaurante`, `nombre`, `descripcion`, `categoria`, `precio`, `foto_url`, `restricciones_alimenticias`, `tiempo_preparacion_minutos`. "A dish on the menu" is decided by one helper (`menu_dishes(session, restaurant_id)`), so that availability (US-15, US-34) changes one place.
@@ -57,20 +83,22 @@ Each is one function in `app/services/orders.py`; every reader calls it instead 
 | Arrival time (for US-20) | `arrival_time` | `reservations.starts_at` (P7; US-43 changes this function) |
 | Suggested preparation start (for US-20) | `prep_start_time` | Arrival time − estimated preparation time; the arrival time when there is no estimate |
 | Order cancelled (for US-18) | — | The reservation is `cancelled` and has an order (P12) |
+| Has a cart | `has_cart` | A cart exists and the order is open; a cart of a closed order counts as none |
 
 For US-20, ordering the orders of a shift by arrival time, then by suggested preparation start (ascending), then by `confirmed_at` makes the list deterministic. Which reservations belong to the "turno actual" is for the US-20 spec to define (spec 008 already groups reservations by shift).
 
 ## Rules
 
-1. Through the diner endpoints of this feature, only the diner of the reservation reads or writes its order; for anyone else the reservation doesn't exist (404). A restaurant account gets 403 (US-4 S3). Restaurants read the orders of their own reservations through their own endpoints (US-20, US-22, US-36).
-2. Writing requires the order to be open (`order_open`); otherwise 409, and nothing changes.
-3. Writing requires a verified email (spec 007, US-51 S5; P13); otherwise 403 with its own message.
-4. A write is one transaction: lock the reservation row `FOR UPDATE`; read its order **after** the lock; check rules 2 and 3 on the locked row; check every item against the menu (rule 5); then delete the old items with one `DELETE` statement and flush before inserting the new ones, and set `confirmed_at`. With no items, delete the order (its items cascade).
-5. Each item must name a dish on the menu of the reservation's restaurant, with the name, price and preparation time the page showed. A dish that is missing, belongs to another restaurant or has a different value answers 409 and changes nothing (P9).
-6. Checks run in this order, and the first failure answers: request shape (400), reservation not the diner's (404), not open (409), email not verified (403), no items and no order to remove (400), menu changed (409).
-7. Input bounds: 0 to 50 items, unique dish ids, quantity 1 to 20, name 1 to 150 characters, price as a positive decimal with up to 10 digits and 2 decimals, preparation time null or a positive integer within the database `integer` range (400 otherwise).
-8. Cancelling a reservation only changes `reservations.status`; it never deletes or edits its order (P12; US-18, US-25 and US-38 rely on it).
-9. Nothing else writes orders; the restaurant-side stories only read them.
+1. Through the diner endpoints of this feature, only the diner of the reservation reads or writes its order and its cart; for anyone else the reservation doesn't exist (404). A restaurant account gets 403 (US-4 S3). Restaurants read the orders of their own reservations through their own endpoints (US-20, US-22, US-36), and never read carts.
+2. Writing an order or a cart requires the order to be open (`order_open`); otherwise 409, and nothing changes. Discarding a cart is always allowed.
+3. Confirming requires a verified email (spec 007, US-51 S5; P13); otherwise 403 with its own message. Saving a cart doesn't.
+4. A confirmation is one transaction: lock the reservation row `FOR UPDATE`; read its order **after** the lock; check rules 2 and 3 on the locked row; check every item against the menu (rule 5); then delete the old items with one `DELETE` statement and flush before inserting the new ones, and set `confirmed_at`. With no items, delete the order (its items cascade). In the same transaction, delete the reservation's cart.
+5. Each item of a confirmation must name a dish on the menu of the reservation's restaurant, with the name, price and preparation time the page showed. A dish that is missing, belongs to another restaurant or has a different value answers 409 and changes nothing (P9).
+6. Confirmation checks run in this order, and the first failure answers: request shape (400), reservation not the diner's (404), not open (409), email not verified (403), no items and no order to remove (400), menu changed (409).
+7. Saving a cart takes the same lock, reads the cart and the order **after** the lock, and replaces the cart the same way (bulk `DELETE` of its items, flush, insert; create the cart if there is none; set `updated_at`). An empty save when the reservation has no order deletes the cart and answers no cart. Each dish must be on the menu of the reservation's restaurant, or it answers the menu-changed 409; its values are stored as sent, not compared (that happens at confirmation). Checks: request shape (400), not the diner's (404), not open (409), dish not on the menu (409).
+8. Input bounds, for orders and carts: 0 to 50 items, unique dish ids, quantity 1 to 20, name 1 to 150 characters, price as a positive decimal with up to 10 digits and 2 decimals, preparation time null or a positive integer within the database `integer` range (400 otherwise).
+9. Cancelling a reservation only changes `reservations.status`; it never deletes or edits its order (P12; US-18, US-25 and US-38 rely on it).
+10. Nothing else writes orders or carts; the restaurant-side stories only read orders.
 
 ## Not in this model (on purpose)
 
@@ -80,4 +108,4 @@ For US-20, ordering the orders of a shift by arrival time, then by suggested pre
 
 ## Migration
 
-One Alembic migration after `006_reservations` creates both tables with their named constraints. No data changes: no order exists yet. If another branch adds a migration after `006_reservations` first, the second to merge rebases its `down_revision` instead of adding a merge migration.
+One Alembic migration after `006_reservations` creates the four tables with their named constraints. No data changes: no order exists yet. If another branch adds a migration after `006_reservations` first, the second to merge rebases its `down_revision` instead of adding a merge migration.

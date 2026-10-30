@@ -27,35 +27,36 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
 
 - [X] T001 Take decisions P1–P4 with the team before writing the spec (30/10); propose P5–P14 with them. Recorded in `specs/009-pedido-anticipado/research.md` and `specs/README.md`
 - [X] T002 Write `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/orders-api.md`, `quickstart.md` and this file; link US-17, US-19 and US-21 to spec 009 in `docs/product/backlog.md`
-- [X] T003 Independent review by four agents (backlog fidelity, technical design against the code, UX and accessibility, impact on the other stories); every finding applied or recorded as an open point in research.md
-- [ ] T004 Review of the spec PR by teammates: whoever took US-20 and US-22 in the Sprint 3 poll, and Ezequiel for US-18 (spec 008, PR #30). Each confirms (a) the model covers their reads, (b) `arrival_time`, `prep_start_time` and the ordering, (c) that payment fields wait for US-45, US-56 and US-60, (d) the derived cancellation with no order status. Merge before T006
+- [X] T003 Independent review by four agents (backlog fidelity, technical design against the code, UX and accessibility, impact on the other stories); every finding applied or recorded as an open point in research.md. Then P1 changed from a browser cart to a server cart in its own tables (Mateo, 30/10), across every document
+- [ ] T004 Review of the spec PR by teammates: whoever took US-20 and US-22 in the Sprint 3 poll, and Ezequiel for US-18 (spec 008, PR #30). Each confirms (a) the model covers their reads, (b) `arrival_time`, `prep_start_time` and the ordering, (c) that payment fields wait for US-45, US-56 and US-60, (d) the derived cancellation with no order status, (e) that carts are never read by the restaurant side. Merge before T006
 - [ ] T005 PO validation of P1–P14 and answers to the open points of research.md (sprint review); record them in `specs/README.md`
 
 ---
 
 ## Phase 1: Foundational (blocking)
 
-**Purpose**: the order tables, the rules that compute totals and the estimate, and the endpoints.
+**Purpose**: the order and cart tables, the rules that compute totals and the estimate, and the endpoints.
 
 - [ ] T006 Move `require_diner` and `DINERS_ONLY` from `backend/app/api/reservation.py` to `backend/app/api/deps.py` and update their imports
-- [ ] T007 Create `Order` and `OrderItem` in `backend/app/models/order.py` per `data-model.md` (unique `reservation_id`; unique (`order_id`, `dish_id`); `ON DELETE SET NULL` on the dish; `ON DELETE CASCADE` on the order with `passive_deletes=True`; quantity 1–20; non-blank name; positive price and time; `confirmed_at` not null) and import them in `backend/app/models/__init__.py`
-- [ ] T008 Generate the migration with `make migration m="orders"`, rename it to `backend/migrations/versions/007_orders.py` and set `revision = "007_orders"` by hand, as the earlier migrations did; review it: both tables, every constraint named, `down_revision = "006_reservations"`, no data changes
-- [ ] T009 Add `verify_diner`, `add_dish` and `add_order` builders to `backend/tests/reservations.py`, next to `diner_headers` and `add_reservation` (the existing diner builder leaves the email unverified, and confirming requires a verified one)
+- [ ] T007 Create `Order`, `OrderItem`, `Cart` and `CartItem` in `backend/app/models/order.py` per `data-model.md` (unique `reservation_id` on orders and carts; unique (`order_id`, `dish_id`) and (`cart_id`, `dish_id`); `ON DELETE SET NULL` on the dish; `ON DELETE CASCADE` on the order and the cart with `passive_deletes=True`, and from the reservation to its cart; quantity 1–20; non-blank name; positive price and time; `confirmed_at` and `updated_at` not null; item columns shared through a mixin) and import them in `backend/app/models/__init__.py`
+- [ ] T008 Generate the migration with `make migration m="orders"`, rename it to `backend/migrations/versions/007_orders.py` and set `revision = "007_orders"` by hand, as the earlier migrations did; review it: the four tables, every constraint named, `down_revision = "006_reservations"`, no data changes
+- [ ] T009 Add `verify_diner`, `add_dish`, `add_order` and `add_cart` builders to `backend/tests/reservations.py`, next to `diner_headers` and `add_reservation` (the existing diner builder leaves the email unverified, and confirming requires a verified one)
 - [ ] T010 Write `backend/app/services/orders.py`:
   - constants `ORDER_CUTOFF_MINUTES = 45`, `MAX_UNITS_PER_DISH = 20` and `MAX_DISHES = 50`;
-  - `menu_dishes`, `order_deadline`, `order_open`, `arrival_time`, `prep_start_time` and `order_summary`;
-  - `confirm_order`, which follows data-model.md rules 4–6: lock the reservation `FOR UPDATE` and read the order after the lock; check in order closed → unverified → nothing to remove → menu; then bulk-`DELETE` the old items and flush before inserting, or delete the order;
+  - `menu_dishes`, `order_deadline`, `order_open`, `has_cart`, `arrival_time`, `prep_start_time` and `order_summary`;
+  - `confirm_order`, which follows data-model.md rules 4–6: lock the reservation `FOR UPDATE` and read the order after the lock; check in order closed → unverified → nothing to remove → menu; then bulk-`DELETE` the old items and flush before inserting, or delete the order; and delete the cart in the same transaction;
+  - `save_cart` (data-model.md rule 7: same lock, closed → dish off the menu, replace the items) and `discard_cart`;
   - errors `OrderClosedError`, `EmailNotVerifiedError` and `MenuChangedError`.
 - [ ] T011 [P] Write `backend/app/schemas/order.py` per `contracts/orders-api.md`:
   - `OrderItemRequest`: `quantity` 1–20, `name` 1–150 characters, `unit_price` `Decimal(gt=0, max_digits=10, decimal_places=2)`, `prep_time_minutes` nullable, positive, within the database `integer` range.
   - `OrderRequest`: at most 50 items, unique `dish_id`.
-  - Responses: `OrderItemResponse` (nullable `dish_id`), `OrderResponse`, `OrderMenuDish` and `OrderPageResponse`.
-- [ ] T012 Add `has_order`, `order_open` and `order_deadline` to `ReservationResponse` in `backend/app/schemas/reservation.py`; change `reservation_response` in `backend/app/api/reservation.py` to `(session, reservation, restaurant, now)` and update its callers
-- [ ] T013 Write `backend/app/api/order.py` with `GET` and `PUT /reservations/{reservation_id}/order` (404 when the reservation isn't the diner's, 403/409 mapped from the service errors, `responses=` documented) and mount it in `backend/app/api/__init__.py`
+  - Responses: `OrderItemResponse` (nullable `dish_id`), `OrderResponse`, `CartResponse`, `OrderMenuDish` and `OrderPageResponse` (with `cart`).
+- [ ] T012 Add `has_order`, `has_cart`, `order_open` and `order_deadline` to `ReservationResponse` in `backend/app/schemas/reservation.py`; change `reservation_response` in `backend/app/api/reservation.py` to `(session, reservation, restaurant, now)` and update its callers
+- [ ] T013 Write `backend/app/api/order.py` with `GET` and `PUT /reservations/{reservation_id}/order`, and `PUT` and `DELETE /reservations/{reservation_id}/cart` (404 when the reservation isn't the diner's, 403/409 mapped from the service errors, `responses=` documented), and mount it in `backend/app/api/__init__.py`
 - [ ] T014 Add `GET /reservations/upcoming` to `backend/app/api/reservation.py` (confirmed, not started, soonest first, at most 20)
 - [ ] T015 Run `make api-types` and commit `frontend/src/api/openapi.json` and `schema.d.ts`
-- [ ] T016 [P] Write `frontend/src/api/orders.ts`: `fetchOrder`, `confirmOrder` and `fetchUpcomingReservations`, with the `SessionExpiredError` handling of `api/errors.ts`, and the order types from `schema.d.ts`
-- [ ] T017 [P] Write `frontend/src/lib/orderSummary.ts` (integer cents; subtotal, total, estimate with the backend's rules; money formatted with up to two decimals) and `frontend/src/lib/cart.ts` (`localStorage` key `servido:pedido:<reservationId>` holding `confirmedAt` and each item's id, quantity and shown name, price and time; read and write inside `try`/`catch`; clear; stale check), with `orderSummary.test.ts` and `cart.test.ts`
+- [ ] T016 [P] Write `frontend/src/api/orders.ts`: `fetchOrder`, `confirmOrder`, `saveCart`, `discardCart` and `fetchUpcomingReservations`, with the `SessionExpiredError` handling of `api/errors.ts`, and the order types from `schema.d.ts`
+- [ ] T017 [P] Write `frontend/src/lib/orderSummary.ts` (integer cents; subtotal, total, estimate with the backend's rules; money formatted with up to two decimals) and `frontend/src/lib/useOrderCart.ts` (items with each dish's id, quantity and shown name, price and time; saved with `saveCart` about 500 ms after the last change, one save in flight, the latest wins; saves, confirmation and discard in one queue, one request at a time: confirming sends the pending save, waits, then confirms; discarding drops it and waits; `discardCart` when the last item goes with no order or the items equal the order's; the pending save sent on unmount and on `pagehide` with `keepalive`; the menu-changed 409 keeps local items), with `orderSummary.test.ts` and `useOrderCart.test.ts`. T017 needs T016
 
 **Checkpoint**: the API answers every case of the contract; the page can start.
 
@@ -73,6 +74,7 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
   - `test_us17_s1_confirmed_order_lists_each_dish_and_quantity`
   - `test_us17_s2_order_of_an_unknown_or_foreign_reservation_is_not_found`
   - `test_us17_s6_confirmation_stores_the_order`
+  - `test_us17_s6_a_saved_cart_is_not_an_order`
   - `test_us17_s7_confirming_again_replaces_the_order` (keeps one dish, to cover the unique key)
   - `test_us17_s8_no_new_order_within_45_minutes`
   - `test_us17_s8_no_change_within_45_minutes`
@@ -83,15 +85,12 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
   - `test_us17_edge_closed_wins_over_unverified`
   - `test_us17_edge_restaurant_without_menu_takes_no_order`
   - `test_us17_edge_arrival_and_suggested_preparation_start`
+  - the saved-cart edges (P1), as named in the plan's test map, including `test_us17_edge_cart_of_a_closed_order_is_hidden` and `test_us17_edge_empty_cart_kept_only_with_an_order`
 - [ ] T020 [P] [US17] Frontend scenarios in `frontend/src/pages/OrderPage.test.tsx` (`US-17 S1` to `US-17 S9`, as named in the plan's test map) and `MapPage.test.tsx` › `US-17 S2 the restaurant detail offers no way to order`
-- [ ] T021 [P] [US17] Frontend edges in `frontend/src/pages/OrderPage.test.tsx`:
-  - the menu changed, with what changed;
-  - removing the whole order asks first;
-  - an unverified diner keeps the dishes;
-  - a visitor is sent to sign in;
-  - reloading keeps the order;
-  - a stale cart is dropped;
-  - an expired session keeps the order.
+- [ ] T021 [P] [US17] Frontend edges in `frontend/src/pages/OrderPage.test.tsx`, every `US-17 edge` name of the plan's test map exactly as written there:
+  - the menu changed, removing the whole order, the unverified diner, the visitor redirect;
+  - the saved-cart edges, including `US-17 edge does not recreate the cart when a save is in flight at confirmation`, `US-17 edge says when a change could not be saved` and `US-17 edge closes the order when a save arrives late`;
+  - the queue rules in `frontend/src/lib/useOrderCart.test.ts`.
 
   Also `ReservationPage.test.tsx` › `US-17 edge offers to build the order after confirming the reservation`, and `HomePage.test.tsx` › `US-17 edge lists the upcoming reservations with their order`. Mock the upcoming endpoint in the existing `HomePage.test.tsx` tests.
 
@@ -102,13 +101,13 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
   - focus management and the debounced live region;
   - the bottom bar, with its padding and `scroll-padding-bottom`;
   - the visitor and restaurant redirects inside the page;
-  - `signOut` on a 401 from the confirmation.
+  - `signOut` on a 401 from a save or the confirmation.
 - [ ] T023 [US17] Add the route `/reservas/:reservaId/pedido` in `frontend/src/router.tsx`
 - [ ] T024 [US17] Add «Armar pedido» (primary) and its hint to `frontend/src/pages/reservation/ConfirmedStep.tsx` when `order_open`
 - [ ] T025 [US17] Add «Tus próximas reservas» to `frontend/src/pages/home/DinerHome.tsx`:
   - hidden when there are none;
-  - per the plan's Entry points: a cart in this browser only counts while `order_open` («Seguir armando»); otherwise «Ver pedido», «Armar pedido» or nothing;
-  - refetched after confirming.
+  - per the plan's Entry points: `has_cart` gives «Seguir armando»; otherwise «Ver pedido», «Armar pedido» or nothing;
+  - refetched after a confirmation, a save or a discard settles.
 - [ ] T026 [P] [US17] Change `frontend/src/components/access/UnverifiedNotice.tsx` to say «para confirmar pedidos», and make `frontend/src/components/ui/Toast.module.css` read its bottom offset from `--toast-bottom` (default 24px, unchanged elsewhere), which `OrderPage` sets while mounted
 
 **Checkpoint**: US-17 works end to end and its scenario tests pass.
@@ -144,7 +143,7 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
 - [ ] T033 Run `make format lint test`, and check that every scenario of the plan's test map has its test
 - [ ] T034 Walk through [quickstart.md](quickstart.md) locally, at 360 px and with the keyboard
 - [ ] T035 Update the docs:
-  - `AGENTS.md`: "Where things stand", routes and endpoints, glossary row `OrderItem`;
+  - `AGENTS.md`: "Where things stand", routes and endpoints, glossary rows `OrderItem` and `Cart` / `CartItem` (Pedido en armado);
   - `specs/README.md`: index, implemented;
   - `docs/design/README.md`, if a component was added;
   - `specs/007-cuenta-comensal-google-verificacion/plan.md` and `specs/README.md`: US-51 S5 covered by `test_us51_s5_unverified_diner_cannot_order`;
@@ -163,11 +162,12 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
   - T012 needs T007 and T010;
   - T013 needs T006, T010 and T011;
   - T015 needs T012–T014;
-  - T016 needs T015.
+  - T016 needs T015;
+  - T017 needs T016.
 - Phase 2 goes before Phases 3 and 4, because they add to the same page. T027, T028, T030 and T031 can be written together with T018–T021.
 - Phase 5 goes last.
 
 ## Notes
 
-- The restaurant side of orders (US-20, US-22, US-36) belongs to other teammates. Nothing here writes orders for them; `data-model.md` lists the functions they call.
+- The restaurant side of orders (US-20, US-22, US-36) belongs to other teammates. Nothing here writes orders for them; `data-model.md` lists the functions they call. They never read carts.
 - Test names must match the plan's test map exactly (constitution, principle III).

@@ -34,7 +34,9 @@ Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 están U
   - Con un plato de más de 45 minutos, la cocina podría empezar antes de que venza el plazo para cambiar el pedido.
   - US-25 permite cancelar hasta 30 minutos antes, con el pedido ya cerrado.
   - Hay que reestimar US-47, porque «Ver pedido» ya cubre casi todo.
-  - US-15 quedó sin responsable.
+  - US-15 quedó sin responsable. La página del pedido ya muestra el menú por categoría con nombre, descripción y precio; quien la tome debería extender ese menú en vez de armar otro.
+  - US-23 (Sprint 4): «Tus próximas reservas» del inicio se parece a su «sección de reservas»; quien la tome debería extender esa lista.
+  - El carrito guardado en el servidor (P1) le suma trabajo a US-17 (dos tablas y dos endpoints); el equipo estima que entra en sus 3 SP.
 
   Detalle en `specs/009-pedido-anticipado/research.md`. En la planilla, US-17 figura para el Integrante 4 y US-19 y US-21 para el 5; en la votación las tomó Mateo.
 - Spec 005 (US-13): falta sumar el escenario 6 a la US-13 en la planilla y exportar `backlog.md` (T033a), cargar los datos de demo en producción (T055) y hacer el pase en navegador a 360 px y con teclado (T024/T032). Las decisiones D1–D11 esperan la validación de la PO.
@@ -94,7 +96,7 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 28/10 | 004, 005 | Topes de los datos del restaurante y de la reserva: hasta 100 personas por mesa, 200 mesas por grupo, 50 grupos y 2000 caracteres de descripción; la cantidad de personas de una reserva va de 1 a 100. Son defensas contra abusos, no reglas de producto |
 | 28/10 | 005 | `GET /api/reservations?date=` (las reservas del día del comensal) acepta fechas desde un año atrás hasta 60 días adelante |
 | 28/10 | 004 | En la pantalla de mesas, `free_quantity` cuenta las mesas del grupo que no están ocupadas por una reserva en este momento |
-| 30/10 | 009 | P1: el comensal arma el pedido en la página (sobrevive a recargar) y nada se registra hasta «Confirmar pedido»; mientras tanto la página avisa que el restaurante todavía no lo ve. El restaurante solo ve pedidos confirmados. Un pedido confirmado se puede cambiar y confirmar de nuevo hasta 45 minutos antes de la reserva; si se confirma desde dos lugares, queda el último. Falta que la PO lo valide |
+| 30/10 | 009 | P1: mientras el comensal arma el pedido, cada cambio se guarda en su cuenta como un pedido en armado (carrito), aparte de los pedidos confirmados: sobrevive a recargar, cerrar sesión o cambiar de dispositivo. Solo «Confirmar pedido» lo convierte en el pedido de la reserva; mientras tanto la página avisa que el restaurante todavía no lo ve, y el restaurante solo ve pedidos confirmados. Un pedido confirmado se puede cambiar y confirmar de nuevo hasta 45 minutos antes de la reserva; queda el último cambio y la última confirmación. Primero se eligió un carrito en el navegador; Mateo lo cambió el mismo día por este. Falta que la PO lo valide |
 | 30/10 | 009 | P2: el tiempo estimado del pedido es el del plato más lento, sin importar las cantidades. Los platos sin tiempo no cuentan (con datos parciales, es el más lento de los que tienen); si ninguno tiene, no se muestra ni se avisa. Falta que la PO lo valide |
 | 30/10 | 009 | P3: los precios del menú son finales, con impuestos incluidos. La cuenta lista plato, cantidad, precio unitario y subtotal, y el total aclara «Impuestos incluidos». Falta que la PO lo valide |
 | 30/10 | 009 | P4: el comensal llega al pedido desde la confirmación de la reserva y desde «Tus próximas reservas» en su inicio, una lista mínima que no reemplaza a la US-23. Falta que la PO lo valide |

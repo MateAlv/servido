@@ -18,7 +18,7 @@ Como **Comensal**, quiero agregar platos a mi pedido, para completar lo que dese
 
 **Valor**: Es lo que distingue a Servido! de una plataforma que solo reserva: el comensal deja elegida la comida antes de llegar y el restaurante puede tenerla lista para su llegada.
 
-**Independent Test**: Con una reserva confirmada para dentro de unas horas en un restaurante con menú, abrir el pedido desde la confirmación de la reserva, agregar dos platos, subir y bajar la cantidad de uno, quitar el otro y verificar que el listado y el total acompañan cada cambio. Recargar la página y comprobar que el pedido sigue armado. Confirmarlo, volver a abrirlo desde el inicio, cambiarlo y confirmar de nuevo. Por último, con una reserva que empieza en menos de 45 minutos, comprobar que el pedido no se puede crear ni cambiar.
+**Independent Test**: Con una reserva confirmada para dentro de unas horas en un restaurante con menú, abrir el pedido desde la confirmación de la reserva, agregar dos platos, subir y bajar la cantidad de uno, quitar el otro y verificar que el listado y el total acompañan cada cambio. Sin confirmarlo, cerrar sesión, ingresar desde otro navegador y comprobar que el pedido sigue armado y sin confirmar. Confirmarlo, volver a abrirlo desde el inicio, cambiarlo y confirmar de nuevo. Por último, con una reserva que empieza en menos de 45 minutos, comprobar que el pedido no se puede crear ni cambiar.
 
 **Acceptance Scenarios**:
 
@@ -27,7 +27,7 @@ Como **Comensal**, quiero agregar platos a mi pedido, para completar lo que dese
 3. **Dado** que tengo platos en mi pedido, **Cuando** aumento o disminuyo la cantidad de uno, **Entonces** el listado muestra la nueva cantidad.
 4. **Dado** que tengo platos en mi pedido, **Cuando** quito uno, **Entonces** desaparece del listado.
 5. **Dado** que tengo platos en mi pedido, **Cuando** cambio una cantidad, agrego o quito un plato, **Entonces** el total del pedido se actualiza según el cambio.
-6. **Dado** que armé mi pedido, **Cuando** confirmo explícitamente, **Entonces** el pedido queda confirmado y asociado a mi reserva; hasta ese momento no queda registrado, el restaurante no lo ve y la página me lo indica.
+6. **Dado** que armé mi pedido, **Cuando** confirmo explícitamente, **Entonces** el pedido queda confirmado y asociado a mi reserva; hasta ese momento lo que armé queda guardado solo para mí, no forma parte de la reserva, el restaurante no lo ve y la página me lo indica.
 7. **Dado** que ya confirmé mi pedido y todavía estoy dentro del plazo, **Cuando** lo vuelvo a abrir, cambio platos o cantidades y confirmo, **Entonces** el pedido confirmado pasa a ser el nuevo.
 8. **Dado** que faltan 45 minutos o menos para mi reserva, **Cuando** abro el pedido, **Entonces** no puedo agregar platos ni cambiar o quitar los que tiene; veo el pedido confirmado, si lo hay, sin opciones para modificarlo.
 9. **Dado** que estaba armando o cambiando el pedido y mientras tanto venció el plazo, **Cuando** intento confirmar, **Entonces** el sistema no acepta el cambio, me informa que ya no se puede modificar y me muestra el pedido confirmado que quedó, si lo hay.
@@ -71,7 +71,7 @@ Como **Comensal**, quiero ver el resumen de cuenta y el total a pagar, para sabe
 
 Todas las decisiones de esta sección son del equipo (30/10) y falta que la PO las valide. La justificación de cada una está en `research.md`.
 
-- **Cuándo queda registrado el pedido** *(P1)*: mientras el comensal arma el pedido, los platos quedan guardados en ese navegador y sobreviven a recargar la página. Nada se registra hasta «Confirmar pedido», y mientras haya cambios sin confirmar la página indica que el restaurante todavía no los ve. El restaurante solo ve pedidos confirmados (US-20).
+- **Cuándo queda registrado el pedido** *(P1)*: mientras el comensal arma el pedido, cada cambio queda guardado en su cuenta como un pedido en armado, que sobrevive a recargar la página, cerrar sesión o cambiar de dispositivo. El pedido en armado no forma parte de la reserva: solo «Confirmar pedido» lo convierte en el pedido de la reserva, y mientras haya cambios sin confirmar la página indica que el restaurante todavía no los ve. El restaurante solo ve pedidos confirmados (US-20). «Descartar cambios» borra el pedido en armado y vuelve al confirmado, si lo hay.
 - **Plazo para cambiarlo** *(P1, P6)*: un pedido confirmado se puede volver a abrir, cambiar y confirmar de nuevo mientras falten más de 45 minutos para el horario de inicio de la reserva. La página muestra hasta qué hora se puede cambiar. El plazo vale para crear, cambiar y quitar: una reserva que empieza en 45 minutos o menos no admite pedido nuevo, y la confirmación de la reserva no ofrece armarlo.
 - **Un pedido por reserva** *(P5)*: cada reserva tiene como máximo un pedido, para todo el grupo. Agregar platos a una reserva que ya tiene pedido es cambiar ese pedido.
 - **Hora de llegada** *(P7)*: hasta que exista US-43 (Sprint 5), la hora de llegada es el horario de inicio de la reserva. El plazo de 45 minutos se cuenta siempre desde el inicio de la reserva.
@@ -82,11 +82,12 @@ Todas las decisiones de esta sección son del equipo (30/10) y falta que la PO l
 - **Reserva cancelada o pasada** *(P12)*: no admite pedido nuevo ni cambios. Si una reserva con pedido se cancela, el pedido queda cancelado con ella, sin borrarse (lo informa US-18, escenario 3). La cancelación en sí es de US-25 y US-38.
 - **Comensal sin email verificado** *(P13, lectura de la spec 007, US-51 S5)*: puede armar el pedido, pero no confirmarlo. Al intentarlo se le indica que primero verifique su email, con la opción de reenviar el mail, y sus platos quedan guardados.
 - **Restaurante sin menú** *(P14)*: si el restaurante no tiene platos cargados, la reserva no ofrece armar un pedido, sin avisar que falta el menú.
-- **Dos pestañas o dos dispositivos** *(P1)*: el pedido en armado es de cada navegador. Si el comensal confirma desde dos lugares, queda el último confirmado. Si el pedido confirmado cambió desde otro lugar después de empezar a armar, al volver a abrirlo se muestra el confirmado y se descarta lo que se estaba armando.
+- **Dos pestañas o dos dispositivos** *(P1)*: el pedido en armado es uno por reserva y se ve igual desde cualquier dispositivo con la cuenta del comensal. Si lo cambia desde dos lugares a la vez, queda el último cambio guardado; si confirma desde dos lugares, queda la última confirmación. Una página abierta muestra los cambios hechos en otro lugar al recargarla.
 - **Reserva de otro comensal**: nadie más que el comensal que reservó puede ver o cambiar su pedido desde las pantallas del comensal. Un responsable de restaurante no puede crear ni cambiar pedidos; los ve desde sus propias US (US-20, US-36).
-- **Sesión vencida al confirmar**: se le pide ingresar de nuevo y vuelve al pedido con los platos que había elegido.
+- **Sesión vencida**: se le pide ingresar de nuevo y vuelve al pedido en armado, con los platos que quedaron guardados.
 - **Tiempo estimado con datos parciales** *(P2)*: los platos sin tiempo de preparación no cuentan para el cálculo, así que con datos parciales el estimado es el del plato más lento que sí tiene tiempo. La cantidad de unidades no cambia el tiempo.
 - **Impuestos** *(P3)*: en Argentina el precio al consumidor final ya incluye los impuestos, así que el total es la suma de los subtotales y no se agrega ni se discrimina ningún impuesto.
+- **Pedido en armado de una reserva cerrada**: cuando vence el plazo, o la reserva se cancela o pasa, el pedido en armado que no se confirmó ya no se muestra ni se puede confirmar; el restaurante nunca lo ve.
 - **Pagos**: todavía no existen. Un pedido no tiene medio de pago ni estado de pago hasta US-45, US-56 y US-60; las reglas para cambiar o quitar un pedido ya pagado las definen esas US.
 
 ## Requirements *(mandatory)*
@@ -95,8 +96,8 @@ Todas las decisiones de esta sección son del equipo (30/10) y falta que la PO l
 
 - **FR-001** *(US-17)*: El sistema MUST permitir armar un pedido solo desde una reserva confirmada del propio comensal, con platos del menú del restaurante de esa reserva.
 - **FR-002** *(US-17)*: El sistema MUST permitir agregar platos, aumentar y disminuir su cantidad (de 1 a 20 unidades, hasta 50 platos distintos) y quitarlos, mostrando en todo momento el listado con la cantidad de cada plato.
-- **FR-003** *(US-17)*: El sistema MUST conservar el pedido en armado si el comensal recarga la página en el mismo navegador, y MUST indicar mientras haya cambios sin confirmar que el restaurante todavía no los ve.
-- **FR-004** *(US-17)*: El sistema MUST registrar el pedido solo cuando el comensal lo confirma explícitamente, y MUST NOT mostrarle al restaurante un pedido que no fue confirmado.
+- **FR-003** *(US-17)*: El sistema MUST guardar el pedido en armado en la cuenta del comensal con cada cambio, de modo que lo recupere al recargar, al volver a ingresar o desde otro dispositivo hasta confirmarlo o descartarlo, y MUST indicar mientras haya cambios sin confirmar que el restaurante todavía no los ve.
+- **FR-004** *(US-17)*: El sistema MUST asociar el pedido a la reserva solo cuando el comensal lo confirma explícitamente, y MUST NOT mostrarle al restaurante un pedido en armado ni un pedido que no fue confirmado.
 - **FR-005** *(US-17)*: El sistema MUST permitir cambiar un pedido confirmado y confirmarlo de nuevo, o dejar la reserva sin pedido quitando todos los platos, mientras falten más de 45 minutos para el inicio de la reserva, y MUST mostrar hasta qué hora se puede hacer.
 - **FR-006** *(US-17)*: El sistema MUST NOT aceptar un pedido nuevo ni cambios cuando faltan 45 minutos o menos para el inicio de la reserva, ni cuando la reserva está cancelada o ya pasó, y MUST informarlo al comensal.
 - **FR-007** *(US-17)*: El sistema MUST guardar, con cada plato del pedido confirmado, el nombre, el precio y el tiempo de preparación que tenía en el menú al confirmar.
@@ -113,12 +114,13 @@ Todas las decisiones de esta sección son del equipo (30/10) y falta que la PO l
 
 - **Pedido**: los platos que el comensal pide para una reserva, para todo el grupo. Pertenece a una sola reserva y una reserva tiene como máximo uno. Registra el momento de su última confirmación. Su estado se deriva de la reserva (confirmado mientras la reserva lo está, cancelado si la reserva se cancela), y su total y su tiempo estimado se calculan a partir de sus platos. La hora de llegada es la de la reserva.
 - **Ítem del pedido**: un plato del pedido con su cantidad (1 a 20), y el nombre, el precio unitario y el tiempo de preparación que tenía el plato al confirmar. Su subtotal es cantidad por precio unitario.
+- **Pedido en armado**: los platos que el comensal eligió para una reserva y todavía no confirmó, con la cantidad de cada uno y el nombre, el precio y el tiempo que vio al elegirlos (para poder decirle qué cambió en el menú). Hay como máximo uno por reserva, se guarda en la cuenta del comensal y solo él lo ve; desaparece al confirmar o descartar.
 - **Plato** (specs 006 y 007-agregar-plato): nombre, precio y tiempo de preparación opcional, del menú del restaurante.
 - **Reserva** (spec 005): el pedido toma de ella el restaurante, el comensal, el horario de llegada y si está confirmada.
 
 ## Límites de alcance *(MVP Boundaries)*
 
-- **Dentro**: armar, confirmar y cambiar el pedido de una reserva hasta 45 minutos antes; tiempo estimado de preparación del pedido; cuenta con desglose por ítem y total; el acceso al pedido desde la confirmación de la reserva y desde una lista mínima de próximas reservas en el inicio del comensal, con «Ver pedido» para las que ya tienen uno.
+- **Dentro**: armar, confirmar y cambiar el pedido de una reserva hasta 45 minutos antes, con el pedido en armado guardado en la cuenta del comensal; tiempo estimado de preparación del pedido; cuenta con desglose por ítem y total; el acceso al pedido desde la confirmación de la reserva y desde una lista mínima de próximas reservas en el inicio del comensal, con «Ver pedido» para las que ya tienen uno.
 - **Superposiciones con otras US**:
   - **US-15** (Ver platos y precios, Sprint 3) define cómo ve el comensal el menú. La página del pedido muestra el mismo menú agrupado por categoría. Si US-15 agrega disponibilidad (stock), un plato no disponible no se puede agregar y, al confirmar, cuenta como un plato que ya no está en el menú (P9).
   - **US-47** (Ver pedido asociado, Sprint 5): «Ver pedido» desde la lista del inicio ya cumple ver los platos y cantidades del pedido de una reserva próxima. A US-47 le queda el acceso desde el detalle de la reserva activa (US-23) y el aviso cuando la reserva no tiene pedido.
