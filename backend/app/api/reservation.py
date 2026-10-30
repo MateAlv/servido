@@ -125,6 +125,7 @@ def reservation_response(
 ) -> ReservationResponse:
     starts_at = reservation.starts_at.astimezone(availability.BUENOS_AIRES)
     ends_at = reservation.ends_at.astimezone(availability.BUENOS_AIRES)
+    order_open = orders.order_open(session, reservation, now)
     return ReservationResponse(
         id=reservation.id,
         restaurant=ReservationRestaurant(id=restaurant.id_restaurante, nombre=restaurant.nombre),
@@ -137,8 +138,8 @@ def reservation_response(
         ),
         status=reservation.status,
         has_order=orders.has_order(session, reservation.id),
-        has_cart=orders.open_cart(session, reservation, now) is not None,
-        order_open=orders.order_open(session, reservation, now),
+        has_cart=order_open and orders.cart_of(session, reservation.id) is not None,
+        order_open=order_open,
         order_deadline=orders.order_deadline(reservation),
     )
 

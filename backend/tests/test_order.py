@@ -230,6 +230,7 @@ def test_us17_edge_dish_gone_answers_409(client: TestClient, session: Session) -
     session.commit()
 
     assert confirm(client, s, [shown]).status_code == 409
+    assert stored_order(session, s) is None
 
 
 def test_us17_edge_dish_of_another_restaurant_answers_409(
@@ -362,6 +363,7 @@ def test_us17_edge_rejects_out_of_bounds_items(client: TestClient, session: Sess
         [{**shown, "name": ""}],
         [{**shown, "name": "   "}],
         [{**shown, "name": "x" * 151}],
+        [{**shown, "name": "Provo\u0000leta"}],
         [{**shown, "unit_price": "0"}],
         [{**shown, "unit_price": "12345678901"}],
         [{**shown, "unit_price": "10.001"}],
@@ -374,6 +376,40 @@ def test_us17_edge_rejects_out_of_bounds_items(client: TestClient, session: Sess
         assert confirm(client, s, items).status_code == 400, items
         assert save(client, s, items).status_code == 400, items
     assert stored_order(session, s) is None
+
+
+def test_us17_edge_checks_answer_in_order(client: TestClient, session: Session) -> None:
+    """data-model.md rule 6: the first failing check answers."""
+    s = setup(client, session, verified=False)
+    # Unverified (403) comes before an empty first order (400).
+    assert confirm(client, s, []).status_code == 403
+    verify_diner(session, s.reservation.diner_id)
+    session.commit()
+    # An empty confirmation (400) comes before a changed menu (409).
+    assert confirm(client, s, []).status_code == 400
+    # Another diner's closed reservation is not found (404) before it is closed (409).
+    other = diner_headers(client, "otra@example.com")
+    closed = add_reservation(
+        session, s.restaurant, diner_id(client, other), TODAY, time(9, 30), 2, "indoor"
+    )
+    session.commit()
+    body = {"items": [item_of(s.provoleta)]}
+    assert client.put(order_url(closed.id), json=body, headers=s.headers).status_code == 404
+
+
+def test_us17_edge_menu_changed_keeps_the_order_and_the_cart(
+    client: TestClient, session: Session
+) -> None:
+    s = setup(client, session)
+    assert confirm(client, s, [item_of(s.provoleta)]).status_code == 200
+    assert save(client, s, [item_of(s.provoleta), item_of(s.flan)]).status_code == 200
+
+    changed = {**item_of(s.flan), "unit_price": "1.00"}
+    assert confirm(client, s, [item_of(s.provoleta), changed]).status_code == 409
+
+    body = page(client, s)
+    assert [item["name"] for item in body["order"]["items"]] == ["Provoleta"]
+    assert [item["name"] for item in body["cart"]["items"]] == ["Flan", "Provoleta"]
 
 
 # P1 — the saved cart
@@ -402,6 +438,7 @@ def test_us17_edge_confirming_deletes_the_cart(client: TestClient, session: Sess
 
     response = confirm(client, s, [item_of(s.provoleta)])
 
+    assert response.status_code == 200
     assert response.json()["cart"] is None
     assert response.json()["reservation"]["has_cart"] is False
     session.expire_all()

@@ -26,6 +26,9 @@ class OrderItemRequest(BaseModel):
     def name_not_blank(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("Falta el nombre del plato.")
+        # Postgres text can't hold NUL: the cart would fail with a 500 instead of a 400.
+        if "\x00" in value:
+            raise ValueError("El nombre del plato no es válido.")
         return value
 
     @field_validator("unit_price")
