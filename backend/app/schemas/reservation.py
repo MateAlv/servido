@@ -74,3 +74,18 @@ class ReservationResponse(BaseModel):
 class DayReservationsResponse(BaseModel):
     date: date
     reservations: list[ReservationResponse]
+
+
+class RestaurantReservationResponse(BaseModel):
+    id: UUID
+    start_time: str
+    end_time: str
+    party_size: int
+    table: TableChoice
+    status: str
+
+
+class RestaurantReservationsResponse(BaseModel):
+    restaurant_id: UUID
+    date: date
+    reservations: list[RestaurantReservationResponse]

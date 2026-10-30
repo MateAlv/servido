@@ -8,7 +8,7 @@ import { RestaurantRegisterPage } from './pages/RestaurantRegisterPage'
 import { RestaurantProfilePage } from './pages/RestaurantProfilePage'
 import { OpeningHoursPage } from './pages/OpeningHoursPage'
 import { TableInventoryPage } from './pages/TableInventoryPage'
-import { RestaurantAreaPage } from './pages/RestaurantAreaPage'
+import { RestaurantReservationsPage } from './pages/RestaurantReservationsPage'
 
 export const router = createBrowserRouter([
   {
@@ -23,12 +23,7 @@ export const router = createBrowserRouter([
       { path: '/restaurante/mesas', element: <TableInventoryPage /> },
       {
         path: '/restaurante/reservas',
-        element: (
-          <RestaurantAreaPage
-            title="Reservas"
-            description="La gestión de reservas estará disponible próximamente."
-          />
-        ),
+        element: <RestaurantReservationsPage />,
       },
       {
         path: '/restaurante/menu/nuevo-plato',
