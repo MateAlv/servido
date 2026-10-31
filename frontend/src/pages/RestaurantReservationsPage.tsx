@@ -51,6 +51,9 @@ function reservationCard(reservation: RestaurantReservation) {
           <dd>{reservation.party_size}</dd>
         </div>
       </dl>
+      <Button variant="ghost" size="sm" to={`/restaurante/reservas/${reservation.id}/comensal`}>
+        Ver comensal
+      </Button>
     </Card>
   )
 }

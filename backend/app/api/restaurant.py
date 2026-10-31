@@ -11,12 +11,17 @@ from sqlalchemy.exc import IntegrityError
 from app.api.auth import google_claims, restaurant_session
 from app.api.deps import TokenClaimsDep
 from app.db import SessionDep
+from app.models.diner import Diner
 from app.models.opening_shift import OpeningShift
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
 from app.schemas.opening_hours import OpeningHoursResponse, OpeningShiftPayload
 from app.schemas.reservation import (
+    DinerContact,
+    ReservationDinerResponse,
+    RestaurantCancellationResponse,
+    RestaurantCancellationsResponse,
     RestaurantReservationResponse,
     RestaurantReservationsResponse,
     TableChoice,
@@ -171,6 +176,97 @@ def list_restaurant_reservations(
                     capacity=reservation.table_capacity, seating_area=reservation.seating_area
                 ),
                 status=reservation.status,
+            )
+            for reservation in reservations
+        ],
+    )
+
+
+@router.get(
+    "/restaurante/reservas/{reservation_id}/comensal",
+    response_model=ReservationDinerResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Esta acción es solo para restaurantes."},
+        404: {"description": "La reserva no existe o no pertenece al restaurante."},
+    },
+)
+def get_reservation_diner(
+    reservation_id: UUID, claims: TokenClaimsDep, session: SessionDep
+) -> ReservationDinerResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    reservation = session.scalar(
+        select(Reservation).where(
+            Reservation.id == reservation_id,
+            Reservation.restaurant_id == restaurant.id_restaurante,
+        )
+    )
+    if reservation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La reserva no existe.",
+        )
+    diner = session.get(Diner, reservation.diner_id)
+    if diner is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El comensal no existe.",
+        )
+    return ReservationDinerResponse(
+        reservation_id=reservation.id,
+        diner=DinerContact(id=diner.id_comensal, name=diner.nombre, email=diner.email),
+    )
+
+
+@router.get(
+    "/restaurante/cancelaciones",
+    response_model=RestaurantCancellationsResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Esta acción es solo para restaurantes."},
+    },
+)
+def list_restaurant_cancellations(
+    claims: TokenClaimsDep, session: SessionDep, date: date | None = None
+) -> RestaurantCancellationsResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    query = (
+        select(Reservation)
+        .where(
+            Reservation.restaurant_id == restaurant.id_restaurante,
+            Reservation.status == "cancelled",
+        )
+        .order_by(Reservation.starts_at)
+    )
+    if date is not None:
+        start_local = datetime.combine(date, time.min, tzinfo=availability.BUENOS_AIRES)
+        end_local = start_local + timedelta(days=1)
+        query = query.where(
+            Reservation.starts_at >= start_local,
+            Reservation.starts_at < end_local,
+        )
+    reservations = session.scalars(query).all()
+    return RestaurantCancellationsResponse(
+        restaurant_id=restaurant.id_restaurante,
+        date=date,
+        cancellations=[
+            RestaurantCancellationResponse(
+                reservation_id=reservation.id,
+                reservation_date=reservation.starts_at.astimezone(availability.BUENOS_AIRES).date(),
+                start_time=reservation.starts_at.astimezone(availability.BUENOS_AIRES).strftime(
+                    "%H:%M"
+                ),
+                end_time=reservation.ends_at.astimezone(availability.BUENOS_AIRES).strftime(
+                    "%H:%M"
+                ),
+                party_size=reservation.party_size,
+                table=TableChoice(
+                    capacity=reservation.table_capacity,
+                    seating_area=reservation.seating_area,
+                ),
+                status=reservation.status,
+                cancelled_at=reservation.cancelled_at.astimezone(availability.BUENOS_AIRES),
+                preordered_order=None,
             )
             for reservation in reservations
         ],

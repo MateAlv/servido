@@ -37,7 +37,10 @@ def upgrade() -> None:
         "ALTER TABLE table_inventory ADD CONSTRAINT ck_table_inventory_within_bounds "
         "CHECK (capacity <= 100 AND quantity <= 200) NOT VALID"
     )
-    op.drop_constraint("uq_table_inventory_restaurant_capacity", "table_inventory", type_="unique")
+    op.execute(
+        "ALTER TABLE table_inventory "
+        "DROP CONSTRAINT IF EXISTS uq_table_inventory_restaurant_capacity"
+    )
     op.create_unique_constraint(
         "uq_table_inventory_restaurant_capacity_area",
         "table_inventory",

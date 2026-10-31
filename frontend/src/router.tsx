@@ -9,6 +9,8 @@ import { RestaurantProfilePage } from './pages/RestaurantProfilePage'
 import { OpeningHoursPage } from './pages/OpeningHoursPage'
 import { TableInventoryPage } from './pages/TableInventoryPage'
 import { RestaurantReservationsPage } from './pages/RestaurantReservationsPage'
+import { RestaurantCancellationsPage } from './pages/RestaurantCancellationsPage'
+import { RestaurantReservationDinerPage } from './pages/RestaurantReservationDinerPage'
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +26,14 @@ export const router = createBrowserRouter([
       {
         path: '/restaurante/reservas',
         element: <RestaurantReservationsPage />,
+      },
+      {
+        path: '/restaurante/cancelaciones',
+        element: <RestaurantCancellationsPage />,
+      },
+      {
+        path: '/restaurante/reservas/:reservationId/comensal',
+        element: <RestaurantReservationDinerPage />,
       },
       {
         path: '/restaurante/menu/nuevo-plato',

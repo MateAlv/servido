@@ -73,8 +73,11 @@ Como **Responsable del restaurante**, quiero ver las reservas que fueron cancela
 * **Cancelaciones y Sprint 5:** la US-18 contempla la consulta de reservas canceladas, mientras que la US-38 está prevista para el Sprint 5\. Para validar la consulta durante el Sprint 3, se podrán utilizar reservas de prueba previamente registradas con estado «Cancelado».  
 * **Pedidos asociados:** si una reserva cancelada tenía un pedido anticipado asociado, el sistema debe mostrar que dicho pedido también fue cancelado.  
 * **Notificación por correo:** cuando se produce una cancelación, el sistema debe enviar un correo electrónico al restaurante con el aviso y los detalles correspondientes.  
-* **Disponibilidad liberada:** la cancelación debe liberar la mesa y el horario correspondientes. \[NEEDS CLARIFICATION: confirmar cómo se integrará esta actualización con el mecanismo de disponibilidad implementado para la US-11.\]  
-* **Actualización del calendario:** el backlog exige reflejar nuevas reservas y cancelaciones, pero no establece actualización en tiempo real. \[NEEDS CLARIFICATION: determinar si basta con actualizar la vista al volver a consultarla o si debe actualizarse automáticamente.\]
+
+* **Disponibilidad liberada:** la cancelación debe liberar la mesa y el horario correspondientes reutilizando el mecanismo de disponibilidad de la US-11, que solo cuenta reservas con estado «Confirmado». No se agrega una operación de cancelación en esta iteración.
+* **Actualización del calendario:** alcanza con actualizar la vista al volver a consultarla, cambiar la fecha o ejecutar un refresh manual; no se requiere actualización automática en tiempo real.
+* **Momento de cancelación:** se persistirá en `cancelled_at`, como timestamp nullable en UTC de `Reserva`, y se mostrará convertido a `America/Argentina/Buenos_Aires`.
+* **Pedidos asociados:** US-18 define una proyección opcional para indicar el estado «Cancelado» de un pedido asociado. La persistencia y creación de pedidos quedan para US-17.
 
 ## **Requirements *(mandatory)***
 
@@ -145,5 +148,6 @@ Las entidades representan información necesaria para las historias; no implican
 * Las fechas y horarios se interpretan en la zona horaria `America/Argentina/Buenos_Aires`.  
 * La interfaz utiliza español de Argentina.  
 * Esta spec no incorpora una operación nueva para cancelar reservas.  
-* Las decisiones marcadas como `[NEEDS CLARIFICATION]` deben validarse con la PO antes de considerarlas requisitos de implementación definitivos.
+
+* No quedan decisiones `[NEEDS CLARIFICATION]` abiertas para US-16 y US-18; las decisiones de este incremento fueron confirmadas por la PO y quedan reflejadas en el plan y los contratos.
 

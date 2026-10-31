@@ -1,8 +1,9 @@
-from datetime import time
+from datetime import UTC, datetime, time
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.services import availability
 from tests.reservations import (
     TODAY,
     add_bookable_restaurant,
@@ -33,7 +34,7 @@ def setup_reservations(client: TestClient, session: Session):
 
 
 def test_us14_s1_lists_reservations_for_restaurant_by_date_and_shift(
-    client: TestClient, session: Session
+    client: TestClient, session: Session, mail_outbox
 ) -> None:
     restaurant, first, second, other_day = setup_reservations(client, session)
     headers = restaurant_headers(client, restaurant)
@@ -95,6 +96,7 @@ def test_us14_s6_returns_cancelled_status(client: TestClient, session: Session) 
     diner = diner_id(client, diner_headers(client, "cancelled@example.com"))
     reservation = add_reservation(session, restaurant, diner, TODAY, time(20), 4, "terrace")
     reservation.status = "cancelled"
+    reservation.cancelled_at = datetime(2026, 11, 1, 21, 0, tzinfo=UTC)
     session.flush()
     headers = restaurant_headers(client, restaurant)
     response = client.get(
@@ -124,3 +126,154 @@ def test_us14_edge_empty_date_returns_empty_list(client: TestClient, session: Se
     )
     assert response.status_code == 200
     assert response.json()["reservations"] == []
+
+
+def test_us16_s1_returns_minimal_diner_contact_for_owned_reservation(
+    client: TestClient, session: Session
+) -> None:
+    restaurant, reservation, _, _ = setup_reservations(client, session)
+    headers = restaurant_headers(client, restaurant)
+    response = client.get(f"/api/restaurante/reservas/{reservation.id}/comensal", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["reservation_id"] == str(reservation.id)
+    assert response.json()["diner"]["email"] == "martin@example.com"
+    assert "password_hash" not in response.json()["diner"]
+
+
+def test_us16_s2_denies_foreign_reservation_diner_access(
+    client: TestClient, session: Session
+) -> None:
+    restaurant, reservation, _, _ = setup_reservations(client, session)
+    other = add_bookable_restaurant(session, cuit="30712345678")
+    response = client.get(
+        f"/api/restaurante/reservas/{reservation.id}/comensal",
+        headers=restaurant_headers(client, other),
+    )
+    assert response.status_code == 404
+    assert restaurant.id_restaurante != other.id_restaurante
+
+
+def test_us16_edge_rejects_missing_session_and_unknown_reservation(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, cuit="30712345678")
+    assert (
+        client.get(
+            "/api/restaurante/reservas/00000000-0000-0000-0000-000000000000/comensal",
+        ).status_code
+        == 401
+    )
+    response = client.get(
+        "/api/restaurante/reservas/00000000-0000-0000-0000-000000000000/comensal",
+        headers=restaurant_headers(client, restaurant),
+    )
+    assert response.status_code == 404
+
+
+def test_us18_s1_lists_only_cancelled_reservations(
+    client: TestClient, session: Session, mail_outbox
+) -> None:
+    restaurant, cancelled, confirmed, _ = setup_reservations(client, session)
+    mail_outbox.clear()
+    cancelled.status = "cancelled"
+    cancelled.cancelled_at = datetime(2026, 11, 1, 21, 0, tzinfo=UTC)
+    session.flush()
+    response = client.get(
+        "/api/restaurante/cancelaciones",
+        headers=restaurant_headers(client, restaurant),
+    )
+    assert response.status_code == 200
+    assert [item["reservation_id"] for item in response.json()["cancellations"]] == [
+        str(cancelled.id)
+    ]
+    assert str(confirmed.id) not in response.text
+    assert mail_outbox == []
+
+
+def test_us18_s2_returns_cancellation_details(client: TestClient, session: Session) -> None:
+    restaurant, cancelled, _, _ = setup_reservations(client, session)
+    cancelled.status = "cancelled"
+    cancelled.cancelled_at = datetime(2026, 11, 1, 21, 0, tzinfo=UTC)
+    session.flush()
+    response = client.get(
+        "/api/restaurante/cancelaciones",
+        params={"date": TODAY.isoformat()},
+        headers=restaurant_headers(client, restaurant),
+    )
+    item = response.json()["cancellations"][0]
+    assert item["reservation_date"] == TODAY.isoformat()
+    assert item["start_time"] == "20:00"
+    assert item["table"] == {"capacity": 4, "seating_area": "terrace"}
+    assert item["status"] == "cancelled"
+    assert item["cancelled_at"] == "2026-11-01T18:00:00-03:00"
+
+
+def test_us18_s4_filters_cancellations_by_local_date(client: TestClient, session: Session) -> None:
+    restaurant, cancelled, _, other_day = setup_reservations(client, session)
+    cancelled.status = "cancelled"
+    cancelled.cancelled_at = datetime(2026, 11, 1, 21, 0, tzinfo=UTC)
+    other_day.status = "cancelled"
+    other_day.cancelled_at = datetime(2026, 11, 2, 21, 0, tzinfo=UTC)
+    session.flush()
+    response = client.get(
+        "/api/restaurante/cancelaciones",
+        params={"date": TODAY.isoformat()},
+        headers=restaurant_headers(client, restaurant),
+    )
+    assert [item["reservation_id"] for item in response.json()["cancellations"]] == [
+        str(cancelled.id)
+    ]
+
+
+def test_us18_s6_cancelled_reservation_is_available_again(
+    client: TestClient, session: Session
+) -> None:
+    restaurant, cancelled, _, _ = setup_reservations(client, session)
+    cancelled.status = "cancelled"
+    cancelled.cancelled_at = datetime(2026, 11, 1, 21, 0, tzinfo=UTC)
+    session.flush()
+    _, groups = availability.groups_at(
+        session, restaurant.id_restaurante, TODAY, time(20), 2, availability.current_time()
+    )
+    terrace = next(group for group in groups if group.seating_area == "terrace")
+    assert terrace.free == 1
+
+
+def test_us18_edge_empty_cancellations_returns_empty_list(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, cuit="30712345678")
+    response = client.get(
+        "/api/restaurante/cancelaciones",
+        params={"date": TODAY.isoformat()},
+        headers=restaurant_headers(client, restaurant),
+    )
+    assert response.status_code == 200
+    assert response.json()["cancellations"] == []
+
+
+def test_us18_edge_requires_restaurant_session(client: TestClient, session: Session) -> None:
+    response = client.get("/api/restaurante/cancelaciones", params={"date": TODAY.isoformat()})
+    assert response.status_code == 401
+
+
+def test_us18_edge_rejects_invalid_date_and_diner_session(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session, cuit="30712345678")
+    assert (
+        client.get(
+            "/api/restaurante/cancelaciones",
+            params={"date": "not-a-date"},
+            headers=restaurant_headers(client, restaurant),
+        ).status_code
+        == 400
+    )
+    assert (
+        client.get(
+            "/api/restaurante/cancelaciones",
+            params={"date": TODAY.isoformat()},
+            headers=diner_headers(client, "cancelations-edge@example.com"),
+        ).status_code
+        == 403
+    )
