@@ -22,6 +22,8 @@ export const router = createBrowserRouter([
       { path: '/restaurante/horarios', element: <OpeningHoursPage /> },
       { path: '/restaurante/mesas', element: <TableInventoryPage /> },
       { path: '/restaurante/pedidos', element: <RestaurantOrdersPage /> },
+      { path: '/restaurante/reservas', element: <RestaurantOrdersPage /> },
+      { path: '/reservas', element: <RestaurantOrdersPage /> },
       {
         path: '/restaurante/menu/nuevo-plato',
         lazy: async () => ({ Component: (await import('./pages/AddDishPage')).AddDishPage }),
