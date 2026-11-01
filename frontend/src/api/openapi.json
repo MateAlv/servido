@@ -474,6 +474,74 @@
         }
       }
     },
+    "/api/restaurante/reservas": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "List Restaurant Reservations",
+        "operationId": "list_restaurant_reservations_api_restaurante_reservas_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantReservationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Esta acci\u00f3n es solo para restaurantes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurante/pedidos/turno-actual": {
       "get": {
         "tags": [
@@ -518,6 +586,84 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/restaurante/reservas/{reservation_id}/comensal": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Get Reservation Diner",
+        "operationId": "get_reservation_diner_api_restaurante_reservas__reservation_id__comensal_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationDinerResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Esta acci\u00f3n es solo para restaurantes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o no pertenece al restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/restaurante/pedidos/{order_id}": {
@@ -577,6 +723,81 @@
           },
           "404": {
             "description": "Pedido no encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurante/cancelaciones": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "List Restaurant Cancellations",
+        "operationId": "list_restaurant_cancellations_api_restaurante_cancelaciones_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantCancellationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Esta acci\u00f3n es solo para restaurantes.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1804,6 +2025,37 @@
         ],
         "title": "DayReservationsResponse"
       },
+      "DinerContact": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "title": "DinerContact"
+      },
       "DinerResponse": {
         "properties": {
           "id": {
@@ -2210,6 +2462,19 @@
         ],
         "title": "OrderItemResponse"
       },
+      "PreorderedOrderSummary": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "PreorderedOrderSummary"
+      },
       "PublicDish": {
         "properties": {
           "id": {
@@ -2553,6 +2818,24 @@
         ],
         "title": "RegistrationRequest"
       },
+      "ReservationDinerResponse": {
+        "properties": {
+          "reservation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reservation Id"
+          },
+          "diner": {
+            "$ref": "#/components/schemas/DinerContact"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation_id",
+          "diner"
+        ],
+        "title": "ReservationDinerResponse"
+      },
       "ReservationRequest": {
         "properties": {
           "restaurant_id": {
@@ -2662,6 +2945,101 @@
           "nombre"
         ],
         "title": "ReservationRestaurant"
+      },
+      "RestaurantCancellationResponse": {
+        "properties": {
+          "reservation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reservation Id"
+          },
+          "reservation_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Reservation Date"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time"
+          },
+          "party_size": {
+            "type": "integer",
+            "title": "Party Size"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableChoice"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "cancelled_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Cancelled At"
+          },
+          "preordered_order": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PreorderedOrderSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation_id",
+          "reservation_date",
+          "start_time",
+          "end_time",
+          "party_size",
+          "table",
+          "status",
+          "cancelled_at"
+        ],
+        "title": "RestaurantCancellationResponse"
+      },
+      "RestaurantCancellationsResponse": {
+        "properties": {
+          "restaurant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Restaurant Id"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "cancellations": {
+            "items": {
+              "$ref": "#/components/schemas/RestaurantCancellationResponse"
+            },
+            "type": "array",
+            "title": "Cancellations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "restaurant_id",
+          "date",
+          "cancellations"
+        ],
+        "title": "RestaurantCancellationsResponse"
       },
       "RestaurantGoogleRegistration": {
         "properties": {
@@ -3063,6 +3441,72 @@
           "password"
         ],
         "title": "RestaurantRegistrationRequest"
+      },
+      "RestaurantReservationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time"
+          },
+          "party_size": {
+            "type": "integer",
+            "title": "Party Size"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableChoice"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "start_time",
+          "end_time",
+          "party_size",
+          "table",
+          "status"
+        ],
+        "title": "RestaurantReservationResponse"
+      },
+      "RestaurantReservationsResponse": {
+        "properties": {
+          "restaurant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Restaurant Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "reservations": {
+            "items": {
+              "$ref": "#/components/schemas/RestaurantReservationResponse"
+            },
+            "type": "array",
+            "title": "Reservations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "restaurant_id",
+          "date",
+          "reservations"
+        ],
+        "title": "RestaurantReservationsResponse"
       },
       "RestaurantResponse": {
         "properties": {

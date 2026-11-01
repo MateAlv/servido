@@ -74,3 +74,51 @@ class ReservationResponse(BaseModel):
 class DayReservationsResponse(BaseModel):
     date: date
     reservations: list[ReservationResponse]
+
+
+class RestaurantReservationResponse(BaseModel):
+    id: UUID
+    start_time: str
+    end_time: str
+    party_size: int
+    table: TableChoice
+    status: str
+
+
+class RestaurantReservationsResponse(BaseModel):
+    restaurant_id: UUID
+    date: date
+    reservations: list[RestaurantReservationResponse]
+
+
+class DinerContact(BaseModel):
+    id: UUID
+    name: str | None
+    email: str
+
+
+class ReservationDinerResponse(BaseModel):
+    reservation_id: UUID
+    diner: DinerContact
+
+
+class PreorderedOrderSummary(BaseModel):
+    status: str
+
+
+class RestaurantCancellationResponse(BaseModel):
+    reservation_id: UUID
+    reservation_date: date
+    start_time: str
+    end_time: str
+    party_size: int
+    table: TableChoice
+    status: str
+    cancelled_at: datetime
+    preordered_order: PreorderedOrderSummary | None = None
+
+
+class RestaurantCancellationsResponse(BaseModel):
+    restaurant_id: UUID
+    date: date | None
+    cancellations: list[RestaurantCancellationResponse]
