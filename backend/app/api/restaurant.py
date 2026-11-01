@@ -165,6 +165,8 @@ def restaurant_order_response(order) -> RestaurantOrderResponse:
             for item in order.items
         ],
     )
+
+
 @router.get(
     "/restaurante/reservas",
     response_model=RestaurantReservationsResponse,
@@ -236,6 +238,7 @@ def list_current_shift_orders(
         orders=[restaurant_order_response(order) for order in orders],
     )
 
+
 @router.get(
     "/restaurante/reservas/{reservation_id}/comensal",
     response_model=ReservationDinerResponse,
@@ -289,6 +292,7 @@ def get_restaurant_order(
     if order is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido no encontrado.")
     return restaurant_order_response(order)
+
 
 @router.get(
     "/restaurante/cancelaciones",
