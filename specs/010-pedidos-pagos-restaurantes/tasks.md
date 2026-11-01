@@ -46,9 +46,9 @@ quantities, detail view, empty state and required ordering.
 ### Tests for US-20
 
 - [X] T010 [P] [US20] Add `test_us20_s1_lists_confirmed_orders` in `backend/tests/test_restaurant_orders.py` for confirmed orders in the active Buenos Aires shift
-- [ ] T011 [P] [US20] Add `US-20 S2 shows order summary` in `frontend/src/pages/RestaurantOrdersPage.test.tsx` for reservation, arrival, dishes and quantities
+- [X] T011 [P] [US20] Add `US-20 S2 shows order summary` in `frontend/src/pages/RestaurantOrdersPage.test.tsx` for reservation, arrival, dishes and quantities
 - [X] T012 [P] [US20] Add `test_us20_s3_excludes_unconfirmed_and_cancelled` in `backend/tests/test_restaurant_orders.py`
-- [ ] T013 [P] [US20] Add `US-20 S4 opens order detail` in `frontend/src/pages/RestaurantOrdersPage.test.tsx`
+- [X] T013 [P] [US20] Add `US-20 S4 opens order detail` in `frontend/src/pages/RestaurantOrdersPage.test.tsx`
 - [X] T014 [P] [US20] Add `test_us20_s5_orders_by_arrival` in `backend/tests/test_restaurant_orders.py`
 - [X] T015 [P] [US20] Add `test_us20_s6_orders_ties_by_prep_start` in `backend/tests/test_restaurant_orders.py`, including a stable order-ID tie-break
 - [X] T016 [P] [US20] Add edge-case tests for no active shift, no orders, diner access, expired session and foreign restaurant ownership in `backend/tests/test_restaurant_orders.py`
@@ -58,9 +58,9 @@ quantities, detail view, empty state and required ordering.
 - [X] T017 [US20] Implement active Buenos Aires shift lookup and order filtering/ordering in `backend/app/services/restaurant_orders.py`; use arrival time, `prep_start_time`, then order ID, calculate preparation start as arrival minus the maximum item preparation time, treat missing preparation times as 0, and expose `prep_time_warning`
 - [X] T018 [US20] Add restaurant order list and detail response schemas in `backend/app/schemas/order.py`, including reservation arrival, item names, quantities and preparation start
 - [X] T019 [US20] Implement `GET /api/restaurante/pedidos/turno-actual` and `GET /api/restaurante/pedidos/{order_id}` in `backend/app/api/restaurant.py` with restaurant ownership, confirmed-order and confirmed-reservation filters
-- [ ] T020 [US20] Add the typed client in `frontend/src/api/restaurantOrders.ts` and regenerate `frontend/src/api/openapi.json` and `frontend/src/api/schema.d.ts` with `make api-types`
-- [ ] T021 [US20] Build `RestaurantOrdersPage` in `frontend/src/pages/RestaurantOrdersPage.tsx` and `RestaurantOrdersPage.module.css` with Spanish loading, empty, error, list and detail states, plus a warning when preparation time is 0, using existing design components
-- [ ] T022 [US20] Add the restaurant orders route in `frontend/src/router.tsx` and ensure it is reachable only through the existing restaurant shell/auth behavior
+- [X] T020 [US20] Add the typed client in `frontend/src/api/restaurantOrders.ts` and regenerate `frontend/src/api/openapi.json` and `frontend/src/api/schema.d.ts` with `make api-types`
+- [X] T021 [US20] Build `RestaurantOrdersPage` in `frontend/src/pages/RestaurantOrdersPage.tsx` and `RestaurantOrdersPage.module.css` with Spanish loading, empty, error, list and detail states, plus a warning when preparation time is 0, using existing design components
+- [X] T022 [US20] Add the restaurant orders route in `frontend/src/router.tsx` and ensure it is reachable only through the existing restaurant shell/auth behavior
 
 **Checkpoint**: US-20 works end to end and T010–T016 pass.
 
@@ -104,11 +104,11 @@ tests pass; deferred transitions remain explicitly documented if not approved.
 
 ## Phase 5: Polish and Cross-Cutting Validation
 
-- [ ] T038 Run `make format` and review only files changed for spec 010
-- [ ] T039 Run `make lint` and fix backend/frontend formatting, lint and type errors
+- [X] T038 Run `make format` and review only files changed for spec 010
+- [X] T039 Run `make lint` and fix backend/frontend formatting, lint and type errors
 - [ ] T040 Run `make test` and verify every US-20 and US-22 acceptance scenario
 - [ ] T041 Follow `specs/010-pedidos-pagos-restaurantes/quickstart.md` through the restaurant UI at 360px width and with keyboard navigation
-- [ ] T042 Verify `make api-types` leaves `frontend/src/api/openapi.json` and `frontend/src/api/schema.d.ts` synchronized with the backend
+- [X] T042 Verify `make api-types` leaves `frontend/src/api/openapi.json` and `frontend/src/api/schema.d.ts` synchronized with the backend
 - [ ] T043 Update `specs/010-pedidos-pagos-restaurantes/plan.md`, `research.md`, `data-model.md`, `contracts/`, and `quickstart.md` if implementation decisions diverge
 
 ## Dependencies & Execution Order

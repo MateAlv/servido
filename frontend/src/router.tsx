@@ -8,7 +8,7 @@ import { RestaurantRegisterPage } from './pages/RestaurantRegisterPage'
 import { RestaurantProfilePage } from './pages/RestaurantProfilePage'
 import { OpeningHoursPage } from './pages/OpeningHoursPage'
 import { TableInventoryPage } from './pages/TableInventoryPage'
-import { RestaurantAreaPage } from './pages/RestaurantAreaPage'
+import { RestaurantOrdersPage } from './pages/RestaurantOrdersPage'
 
 export const router = createBrowserRouter([
   {
@@ -21,15 +21,7 @@ export const router = createBrowserRouter([
       { path: '/restaurante/perfil', element: <RestaurantProfilePage /> },
       { path: '/restaurante/horarios', element: <OpeningHoursPage /> },
       { path: '/restaurante/mesas', element: <TableInventoryPage /> },
-      {
-        path: '/restaurante/reservas',
-        element: (
-          <RestaurantAreaPage
-            title="Reservas"
-            description="La gestión de reservas estará disponible próximamente."
-          />
-        ),
-      },
+      { path: '/restaurante/pedidos', element: <RestaurantOrdersPage /> },
       {
         path: '/restaurante/menu/nuevo-plato',
         lazy: async () => ({ Component: (await import('./pages/AddDishPage')).AddDishPage }),
