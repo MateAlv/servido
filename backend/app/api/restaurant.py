@@ -14,6 +14,12 @@ from app.models.opening_shift import OpeningShift
 from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
 from app.schemas.opening_hours import OpeningHoursResponse, OpeningShiftPayload
+from app.schemas.order import (
+    OpeningShiftResponse,
+    OrderItemResponse,
+    RestaurantOrderResponse,
+    RestaurantOrdersResponse,
+)
 from app.schemas.restaurant import (
     GeocodingPreview,
     GeocodingRequest,
@@ -33,6 +39,11 @@ from app.services import availability
 from app.services.auth import hash_password, normalize_email
 from app.services.geocoding import GeocodingError, geocode_address
 from app.services.opening_hours import validate_shifts
+from app.services.restaurant_orders import (
+    format_local_time,
+    restaurant_order,
+    restaurant_orders,
+)
 from app.services.roles import RESTAURANT
 from app.services.table_inventory import ReservationConflictError, replace_inventory
 
@@ -124,6 +135,71 @@ def restaurant_from_claims(claims: dict[str, object], session: SessionDep) -> Re
             status_code=status.HTTP_404_NOT_FOUND, detail="Restaurante no encontrado."
         )
     return restaurant
+
+
+def restaurant_order_response(order) -> RestaurantOrderResponse:
+    return RestaurantOrderResponse(
+        id=order.id,
+        reservation_id=order.reservation_id,
+        arrival_time=format_local_time(order.arrival_at),
+        prep_start_time=format_local_time(order.prep_start_at),
+        prep_time_warning=order.prep_time_warning,
+        items=[
+            OrderItemResponse(
+                dish_name=item.dish_name,
+                quantity=item.quantity,
+                prep_time_minutes=item.prep_time_minutes,
+            )
+            for item in order.items
+        ],
+    )
+
+
+@router.get(
+    "/restaurante/pedidos/turno-actual",
+    response_model=RestaurantOrdersResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "No tenés permiso."},
+    },
+)
+def list_current_shift_orders(
+    claims: TokenClaimsDep, session: SessionDep
+) -> RestaurantOrdersResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    shift, orders = restaurant_orders(
+        session, restaurant.id_restaurante, availability.current_time()
+    )
+    return RestaurantOrdersResponse(
+        shift=(
+            OpeningShiftResponse(
+                start_time=shift.start_time.strftime("%H:%M"),
+                end_time=shift.end_time.strftime("%H:%M"),
+            )
+            if shift
+            else None
+        ),
+        orders=[restaurant_order_response(order) for order in orders],
+    )
+
+
+@router.get(
+    "/restaurante/pedidos/{order_id}",
+    response_model=RestaurantOrderResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "No tenés permiso."},
+        404: {"description": "Pedido no encontrado."},
+    },
+)
+def get_restaurant_order(
+    order_id: UUID, claims: TokenClaimsDep, session: SessionDep
+) -> RestaurantOrderResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    order = restaurant_order(session, restaurant.id_restaurante, order_id)
+    if order is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido no encontrado.")
+    return restaurant_order_response(order)
 
 
 @router.get("/restaurante/perfil", response_model=RestaurantProfileResponse)
