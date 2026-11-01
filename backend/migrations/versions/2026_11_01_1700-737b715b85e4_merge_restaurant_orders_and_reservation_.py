@@ -5,17 +5,13 @@ Revises: 007_reservation_cancellation, d43ba10815e7
 Create Date: 2026-11-01 17:00:06.644317
 
 """
-from typing import Sequence, Union
-
-from alembic import op
-import sqlalchemy as sa
-
+from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
 revision: str = '737b715b85e4'
-down_revision: Union[str, Sequence[str], None] = ('007_reservation_cancellation', 'd43ba10815e7')
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = ('007_reservation_cancellation', 'd43ba10815e7')
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
