@@ -174,6 +174,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurante/pedidos/turno-actual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Current Shift Orders */
+        get: operations["list_current_shift_orders_api_restaurante_pedidos_turno_actual_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurante/reservas/{reservation_id}/comensal": {
         parameters: {
             query?: never;
@@ -183,6 +200,23 @@ export interface paths {
         };
         /** Get Reservation Diner */
         get: operations["get_reservation_diner_api_restaurante_reservas__reservation_id__comensal_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurante/pedidos/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Restaurant Order */
+        get: operations["get_restaurant_order_api_restaurante_pedidos__order_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -721,6 +755,41 @@ export interface components {
              */
             active: boolean;
         };
+        /** OpeningShiftResponse */
+        OpeningShiftResponse: {
+            /** Start Time */
+            start_time: string;
+            /** End Time */
+            end_time: string;
+        };
+        /** OrderItemResponse */
+        OrderItemResponse: {
+            /** Dish Name */
+            dish_name: string;
+            /** Quantity */
+            quantity: number;
+            /** Prep Time Minutes */
+            prep_time_minutes: number;
+            /** Unit Price */
+            unit_price: string;
+            /** Subtotal */
+            subtotal: string;
+        };
+        /** OrderPaymentResponse */
+        OrderPaymentResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "paid";
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "online" | "No seleccionado";
+            /** Total */
+            total: string;
+        };
         /** PreorderedOrderSummary */
         PreorderedOrderSummary: {
             /** Status */
@@ -957,6 +1026,34 @@ export interface components {
              * @default bearer
              */
             token_type: string;
+        };
+        /** RestaurantOrderResponse */
+        RestaurantOrderResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Reservation Id
+             * Format: uuid
+             */
+            reservation_id: string;
+            /** Arrival Time */
+            arrival_time: string;
+            /** Prep Start Time */
+            prep_start_time: string;
+            /** Prep Time Warning */
+            prep_time_warning: boolean;
+            /** Items */
+            items: components["schemas"]["OrderItemResponse"][];
+            payment: components["schemas"]["OrderPaymentResponse"];
+        };
+        /** RestaurantOrdersResponse */
+        RestaurantOrdersResponse: {
+            shift: components["schemas"]["OpeningShiftResponse"] | null;
+            /** Orders */
+            orders: components["schemas"]["RestaurantOrderResponse"][];
         };
         /** RestaurantProfileResponse */
         RestaurantProfileResponse: {
@@ -1620,6 +1717,44 @@ export interface operations {
             };
         };
     };
+    list_current_shift_orders_api_restaurante_pedidos_turno_actual_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantOrdersResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tenés permiso. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_reservation_diner_api_restaurante_reservas__reservation_id__comensal_get: {
         parameters: {
             query?: never;
@@ -1668,6 +1803,64 @@ export interface operations {
                 };
             };
             /** @description La reserva no existe o no pertenece al restaurante. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_restaurant_order_api_restaurante_pedidos__order_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantOrderResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tenés permiso. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Pedido no encontrado. */
             404: {
                 headers: {
                     [name: string]: unknown;

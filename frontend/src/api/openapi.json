@@ -542,6 +542,52 @@
         }
       }
     },
+    "/api/restaurante/pedidos/turno-actual": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "List Current Shift Orders",
+        "operationId": "list_current_shift_orders_api_restaurante_pedidos_turno_actual_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantOrdersResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/restaurante/reservas/{reservation_id}/comensal": {
       "get": {
         "tags": [
@@ -599,6 +645,84 @@
           },
           "404": {
             "description": "La reserva no existe o no pertenece al restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurante/pedidos/{order_id}": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Get Restaurant Order",
+        "operationId": "get_restaurant_order_api_restaurante_pedidos__order_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Pedido no encontrado.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2297,6 +2421,89 @@
         ],
         "title": "OpeningShiftPayload"
       },
+      "OpeningShiftResponse": {
+        "properties": {
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_time",
+          "end_time"
+        ],
+        "title": "OpeningShiftResponse"
+      },
+      "OrderItemResponse": {
+        "properties": {
+          "dish_name": {
+            "type": "string",
+            "title": "Dish Name"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "prep_time_minutes": {
+            "type": "integer",
+            "title": "Prep Time Minutes"
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price"
+          },
+          "subtotal": {
+            "type": "string",
+            "title": "Subtotal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dish_name",
+          "quantity",
+          "prep_time_minutes",
+          "unit_price",
+          "subtotal"
+        ],
+        "title": "OrderItemResponse"
+      },
+      "OrderPaymentResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "paid"
+            ],
+            "title": "Status"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "online",
+              "No seleccionado"
+            ],
+            "title": "Method"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "method",
+          "total"
+        ],
+        "title": "OrderPaymentResponse"
+      },
       "PreorderedOrderSummary": {
         "properties": {
           "status": {
@@ -2933,6 +3140,80 @@
           "access_token"
         ],
         "title": "RestaurantLoginResponse"
+      },
+      "RestaurantOrderResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "reservation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reservation Id"
+          },
+          "arrival_time": {
+            "type": "string",
+            "title": "Arrival Time"
+          },
+          "prep_start_time": {
+            "type": "string",
+            "title": "Prep Start Time"
+          },
+          "prep_time_warning": {
+            "type": "boolean",
+            "title": "Prep Time Warning"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/OrderPaymentResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "reservation_id",
+          "arrival_time",
+          "prep_start_time",
+          "prep_time_warning",
+          "items",
+          "payment"
+        ],
+        "title": "RestaurantOrderResponse"
+      },
+      "RestaurantOrdersResponse": {
+        "properties": {
+          "shift": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OpeningShiftResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "orders": {
+            "items": {
+              "$ref": "#/components/schemas/RestaurantOrderResponse"
+            },
+            "type": "array",
+            "title": "Orders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shift",
+          "orders"
+        ],
+        "title": "RestaurantOrdersResponse"
       },
       "RestaurantProfileResponse": {
         "properties": {
