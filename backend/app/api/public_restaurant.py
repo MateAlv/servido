@@ -1,10 +1,9 @@
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import exists, select
+from sqlalchemy import select
 
 from app.db import SessionDep
-from app.models.dish import Dish
 from app.models.restaurant import Restaurant
 from app.schemas.public_restaurant import (
     PublicDish,
@@ -13,6 +12,7 @@ from app.schemas.public_restaurant import (
     PublicRestaurantList,
 )
 from app.services.availability import bookable_condition
+from app.services.menu import menu_dishes
 
 router = APIRouter(tags=["restaurant"])
 
@@ -34,9 +34,7 @@ def public_fields(restaurant: Restaurant, session: SessionDep) -> dict:
         "lat": float(restaurant.latitud),
         "lng": float(restaurant.longitud),
         "photo_url": restaurant.foto_url,
-        "has_menu": session.scalar(
-            select(exists().where(Dish.id_restaurante == restaurant.id_restaurante))
-        ),
+        "has_menu": bool(menu_dishes(session, restaurant.id_restaurante)),
     }
 
 
@@ -63,9 +61,7 @@ def get_bookable_restaurant(restaurant_id: UUID, session: SessionDep) -> PublicR
     )
     if restaurant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=RESTAURANT_NOT_FOUND)
-    dishes = session.scalars(
-        select(Dish).where(Dish.id_restaurante == restaurant_id).order_by(Dish.nombre)
-    )
+    dishes = menu_dishes(session, restaurant_id)
     return PublicRestaurantDetail(
         **public_fields(restaurant, session),
         menu=[

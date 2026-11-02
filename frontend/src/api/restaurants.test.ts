@@ -72,8 +72,8 @@ describe('restaurants (decision D4 of spec 005)', () => {
             description: null,
             category: 'plato_principal',
             price: '18500.00',
-            photo_url: null,
-            dietary_restrictions: [],
+            photo_url: '/media/bife.jpg',
+            dietary_restrictions: ['sin_tacc'],
           },
           {
             id: 'd-2',
@@ -92,12 +92,97 @@ describe('restaurants (decision D4 of spec 005)', () => {
     const restaurant = await fetchRestaurant(REAL.id)
 
     expect(restaurant?.menu).toEqual([
-      { category: 'Principales', dishes: [{ name: 'Bife de chorizo', price: 18500 }] },
+      {
+        category: 'Principales',
+        dishes: [
+          {
+            id: 'd-1',
+            name: 'Bife de chorizo',
+            price: 18500,
+            photo: '/media/bife.jpg',
+            dietaryRestrictions: ['Sin TACC'],
+          },
+        ],
+      },
       {
         category: 'Postres',
-        dishes: [{ name: 'Flan', price: 6000, description: 'Con dulce de leche.' }],
+        dishes: [
+          {
+            id: 'd-2',
+            name: 'Flan',
+            price: 6000,
+            description: 'Con dulce de leche.',
+            dietaryRestrictions: [],
+          },
+        ],
       },
     ])
+  })
+
+  it('orders all menu categories and dishes while preserving photos', async () => {
+    get.mockResolvedValue({
+      data: {
+        ...REAL,
+        menu: [
+          {
+            id: 'b',
+            name: 'Agua',
+            description: null,
+            category: 'bebida',
+            price: '100',
+            photo_url: null,
+            dietary_restrictions: [],
+          },
+          {
+            id: 'p2',
+            name: 'Zabaglione',
+            description: null,
+            category: 'postre',
+            price: '200',
+            photo_url: null,
+            dietary_restrictions: [],
+          },
+          {
+            id: 'p1',
+            name: 'Flan',
+            description: null,
+            category: 'postre',
+            price: '150',
+            photo_url: '/flan.jpg',
+            dietary_restrictions: ['vegano'],
+          },
+          {
+            id: 'e',
+            name: 'Empanada',
+            description: null,
+            category: 'entrada',
+            price: '50',
+            photo_url: null,
+            dietary_restrictions: [],
+          },
+          {
+            id: 'm',
+            name: 'Milanesa',
+            description: null,
+            category: 'plato_principal',
+            price: '300',
+            photo_url: null,
+            dietary_restrictions: [],
+          },
+        ],
+      },
+      error: undefined,
+    } as never)
+
+    const restaurant = await fetchRestaurant(REAL.id)
+    expect(restaurant?.menu.map((section) => section.category)).toEqual([
+      'Entradas',
+      'Principales',
+      'Postres',
+      'Bebidas',
+    ])
+    expect(restaurant?.menu[2].dishes.map((dish) => dish.name)).toEqual(['Flan', 'Zabaglione'])
+    expect(restaurant?.menu[2].dishes[0].photo).toBe('/flan.jpg')
   })
 
   it('answers a test restaurant without calling the API', async () => {

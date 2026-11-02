@@ -97,10 +97,13 @@ def seed() -> None:
                 )
 
         dishes = (
-            ("Ravioles de ricota", "Principal", Decimal("12500.00"), 20),
-            ("Tiramisú", "Postre", Decimal("6500.00"), 10),
+            ("Empanada de carne", "entrada", Decimal("3200.00"), 15, True, None),
+            ("Ravioles de ricota", "plato_principal", Decimal("12500.00"), 20, True, None),
+            ("Tiramisú", "postre", Decimal("6500.00"), 10, True, "/servido-logo.png"),
+            ("Limonada", "bebida", Decimal("2800.00"), 5, True, None),
+            ("Plato agotado", "entrada", Decimal("4000.00"), 15, False, None),
         )
-        for name, category, price, prep_time in dishes:
+        for name, category, price, prep_time, available, photo_url in dishes:
             dish = session.scalar(
                 select(Dish).where(
                     Dish.id_restaurante == restaurant.id_restaurante,
@@ -114,11 +117,18 @@ def seed() -> None:
                         nombre=name,
                         categoria=category,
                         precio=price,
+                        foto_url=photo_url,
+                        disponible=available,
                         restricciones_alimenticias=[],
                         tiempo_preparacion_minutos=prep_time,
                         creado_en=datetime.now(UTC),
                     )
                 )
+            else:
+                dish.categoria = category
+                dish.precio = price
+                dish.foto_url = photo_url
+                dish.disponible = available
 
     print("Seed listo.")
     print(f"Restaurante: {RESTAURANT_EMAIL} / {RESTAURANT_PASSWORD}")

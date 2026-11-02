@@ -69,5 +69,6 @@ class DishResponse(BaseModel):
     restricciones_alimenticias: list[str]
     tiempo_preparacion_minutos: int | None
     foto_url: str | None
+    disponible: bool
 
     model_config = {"from_attributes": True}

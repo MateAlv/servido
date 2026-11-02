@@ -4,6 +4,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -11,6 +12,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    true,
 )
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -43,6 +45,9 @@ class Dish(Base):
     foto_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     restricciones_alimenticias: Mapped[list[str]] = mapped_column(
         JSON, nullable=False, default=list
+    )
+    disponible: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=true()
     )
     tiempo_preparacion_minutos: Mapped[int | None] = mapped_column(nullable=True)
     creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
