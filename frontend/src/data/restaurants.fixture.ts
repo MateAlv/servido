@@ -5,10 +5,13 @@ import type { GeoPoint } from '../lib/geo'
 export type RestaurantPriceTier = '$' | '$$' | '$$$' | '$$$$'
 
 export type MenuDish = {
+  id?: string
   name: string
   /** Price in Argentine pesos. */
   price: number
   description?: string
+  photo?: string
+  dietaryRestrictions?: string[]
 }
 
 export type MenuSection = {

@@ -167,16 +167,31 @@
 }
 
 .dish {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 0;
+  padding: 0;
   border-bottom: 1px dashed var(--color-line);
 }
 
 .dish:last-child {
   border-bottom: 0;
+}
+
+.dishButton {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dishButton:hover,
+.dishButton:focus-visible {
+  color: var(--color-primary-text);
 }
 
 .dishName {
@@ -194,6 +209,48 @@
   flex: none;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
+}
+
+.dishModal {
+  display: grid;
+  gap: 14px;
+}
+
+.dishPhoto,
+.noDishPhoto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 8 / 5;
+  border-radius: var(--radius-field);
+  object-fit: cover;
+  background: var(--color-surface-sunken);
+}
+
+.noDishPhoto {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-muted);
+  font-weight: 800;
+}
+
+.modalDescription,
+.modalPrice {
+  margin: 0;
+}
+
+.modalDescription {
+  color: var(--color-text-muted);
+}
+
+.modalPrice {
+  font-size: var(--text-lg);
+  font-weight: 800;
+}
+
+.modalRestrictions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .rating {

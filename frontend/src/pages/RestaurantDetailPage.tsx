@@ -1,14 +1,17 @@
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 
 import { useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
 import { OccupancyMeter } from '../components/restaurant'
+import type { RestaurantPublic } from '../data/restaurants.fixture'
 import {
   Button,
   Card,
   IconArrowRight,
   IconPin,
+  Modal,
   Reveal,
   StarRating,
   StatusPill,
@@ -41,6 +44,10 @@ export function RestaurantDetailPage() {
   })
   // Only a signed-in diner can start a reservation (US-11); the API would answer 403 to a restaurant.
   const { data: account } = useAccount()
+  const [selectedDish, setSelectedDish] = useState<
+    RestaurantPublic['menu'][number]['dishes'][number] | null
+  >(null)
+  const [dishPhotoFailed, setDishPhotoFailed] = useState(false)
 
   const back = (
     <Link to={backTo} className={styles.back}>
@@ -154,14 +161,23 @@ export function RestaurantDetailPage() {
                     <h3 className={styles.category}>{section.category}</h3>
                     <ul className={styles.dishes}>
                       {section.dishes.map((dish) => (
-                        <li key={dish.name} className={styles.dish}>
-                          <span>
-                            <span className={styles.dishName}>{dish.name}</span>
-                            {dish.description && (
-                              <span className={styles.dishDescription}>{dish.description}</span>
-                            )}
-                          </span>
-                          <span className={styles.price}>{PRICE_FORMAT.format(dish.price)}</span>
+                        <li key={dish.id ?? dish.name} className={styles.dish}>
+                          <button
+                            type="button"
+                            className={styles.dishButton}
+                            onClick={() => {
+                              setSelectedDish(dish)
+                              setDishPhotoFailed(false)
+                            }}
+                          >
+                            <span>
+                              <span className={styles.dishName}>{dish.name}</span>
+                              {dish.description && (
+                                <span className={styles.dishDescription}>{dish.description}</span>
+                              )}
+                            </span>
+                            <span className={styles.price}>{PRICE_FORMAT.format(dish.price)}</span>
+                          </button>
                         </li>
                       ))}
                     </ul>
@@ -244,6 +260,37 @@ export function RestaurantDetailPage() {
           </Card>
         </aside>
       </div>
+      {selectedDish && (
+        <Modal open title={selectedDish.name} onClose={() => setSelectedDish(null)}>
+          <div className={styles.dishModal}>
+            {selectedDish.photo && !dishPhotoFailed ? (
+              <img
+                className={styles.dishPhoto}
+                src={selectedDish.photo}
+                alt={`Foto de ${selectedDish.name}`}
+                width={640}
+                height={400}
+                onError={() => setDishPhotoFailed(true)}
+              />
+            ) : (
+              <div className={styles.noDishPhoto}>Sin foto</div>
+            )}
+            {selectedDish.description && (
+              <p className={styles.modalDescription}>{selectedDish.description}</p>
+            )}
+            <p className={styles.modalPrice}>{PRICE_FORMAT.format(selectedDish.price)}</p>
+            {selectedDish.dietaryRestrictions && selectedDish.dietaryRestrictions.length > 0 && (
+              <div className={styles.modalRestrictions}>
+                {selectedDish.dietaryRestrictions.map((restriction) => (
+                  <span key={restriction} className={styles.tag}>
+                    {restriction}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </main>
   )
 }

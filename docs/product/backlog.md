@@ -22,7 +22,7 @@
 | 12 | Agregar plato | Restaurante | 3 SP | 2 | [006-menu-platos](../../specs/006-menu-platos/spec.md) |
 | 13 | Confirmar datos | Comensal | 2 SP | 3 | [005-reservar-mesa](../../specs/005-reservar-mesa/spec.md) |
 | 14 | Ver calendario de reservas | Restaurante | 3 SP | 3 | — |
-| 15 | Ver platos y precios | Comensal | 2 SP | 3 | — |
+| 15 | Ver platos y precios | Comensal | 2 SP | 3 | [011-ver-platos-precios](../../specs/011-ver-platos-precios/spec.md) |
 | 16 | Ver cliente | Restaurante | 1 SP | 3 | — |
 | 17 | Crear pedido | Comensal | 3 SP | 3 | [009-pedido-anticipado](../../specs/009-pedido-anticipado/spec.md) |
 | 18 | Ver cancelaciones | Restaurante | 1 SP | 3 | — |

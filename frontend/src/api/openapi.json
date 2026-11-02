@@ -2162,6 +2162,10 @@
               }
             ],
             "title": "Foto Url"
+          },
+          "disponible": {
+            "type": "boolean",
+            "title": "Disponible"
           }
         },
         "type": "object",
@@ -2173,7 +2177,8 @@
           "precio",
           "restricciones_alimenticias",
           "tiempo_preparacion_minutos",
-          "foto_url"
+          "foto_url",
+          "disponible"
         ],
         "title": "DishResponse"
       },

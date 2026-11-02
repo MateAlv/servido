@@ -637,6 +637,8 @@ export interface components {
             tiempo_preparacion_minutos: number | null;
             /** Foto Url */
             foto_url: string | null;
+            /** Disponible */
+            disponible: boolean;
         };
         /** FreeGroupResponse */
         FreeGroupResponse: {
