@@ -89,7 +89,9 @@ def test_us15_s3_menu_is_ordered_by_category_then_name(
     ):
         add_dish(session, restaurant.id_restaurante, name, category)
 
-    categories = [dish["category"] for dish in public_menu(client, restaurant.id_restaurante)["menu"]]
+    categories = [
+        dish["category"] for dish in public_menu(client, restaurant.id_restaurante)["menu"]
+    ]
     assert categories == [
         "entrada",
         "plato_principal",
