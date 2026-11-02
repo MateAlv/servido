@@ -2452,15 +2452,57 @@
           "prep_time_minutes": {
             "type": "integer",
             "title": "Prep Time Minutes"
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price"
+          },
+          "subtotal": {
+            "type": "string",
+            "title": "Subtotal"
           }
         },
         "type": "object",
         "required": [
           "dish_name",
           "quantity",
-          "prep_time_minutes"
+          "prep_time_minutes",
+          "unit_price",
+          "subtotal"
         ],
         "title": "OrderItemResponse"
+      },
+      "OrderPaymentResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "paid"
+            ],
+            "title": "Status"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "online",
+              "No seleccionado"
+            ],
+            "title": "Method"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "method",
+          "total"
+        ],
+        "title": "OrderPaymentResponse"
       },
       "PreorderedOrderSummary": {
         "properties": {
@@ -3129,6 +3171,9 @@
             },
             "type": "array",
             "title": "Items"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/OrderPaymentResponse"
           }
         },
         "type": "object",
@@ -3138,7 +3183,8 @@
           "arrival_time",
           "prep_start_time",
           "prep_time_warning",
-          "items"
+          "items",
+          "payment"
         ],
         "title": "RestaurantOrderResponse"
       },

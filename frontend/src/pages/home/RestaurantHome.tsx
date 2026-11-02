@@ -234,7 +234,7 @@ export function RestaurantHome({ account }: { account: Account }) {
               description="Las próximas visitas a tu local."
               icon={<IconUsers />}
               action={
-                <Button size="sm" to="/restaurante/pedidos">
+                <Button size="sm" to="/restaurante/reservas">
                   Ver reservas
                 </Button>
               }
@@ -244,6 +244,21 @@ export function RestaurantHome({ account }: { account: Account }) {
                   ? 'Los comensales ya pueden reservar en tu local.'
                   : 'Completá tus datos con la dirección, tus horarios y tus mesas para recibir reservas.'}
               </p>
+            </DashboardCard>
+          </Reveal>
+          <Reveal delay={300}>
+            <DashboardCard
+              title="Pedidos del turno"
+              description="Los pedidos anticipados de las reservas del turno actual."
+              icon={<IconCloche />}
+              action={
+                <Button size="sm" to="/restaurante/pedidos">
+                  Ver pedidos del turno
+                </Button>
+              }
+            >
+              <p>Consultá los pedidos confirmados y sus detalles.</p>
+              <p className={styles.muted}>Revisá los platos, las cantidades y el estado de pago.</p>
             </DashboardCard>
           </Reveal>
         </div>

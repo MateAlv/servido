@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import select
@@ -18,6 +19,8 @@ class OrderItemData:
     dish_name: str
     quantity: int
     prep_time_minutes: int
+    unit_price: Decimal
+    subtotal: Decimal
 
 
 @dataclass(frozen=True)
@@ -28,6 +31,7 @@ class RestaurantOrderData:
     prep_start_at: datetime
     prep_time_warning: bool
     items: list[OrderItemData]
+    total: Decimal
 
 
 def current_shift(session: Session, restaurant_id: UUID, now: datetime) -> OpeningShift | None:
@@ -59,6 +63,8 @@ def order_items(session: Session, order_id: UUID) -> list[OrderItemData]:
             dish_name=dish.nombre,
             quantity=item.quantity,
             prep_time_minutes=item.prep_time_minutes or 0,
+            unit_price=item.unit_price,
+            subtotal=item.unit_price * item.quantity,
         )
         for item, dish in rows
     ]
@@ -77,6 +83,7 @@ def order_data(session: Session, order: Order, reservation: Reservation) -> Rest
         prep_start_at=prep_start_at,
         prep_time_warning=warning,
         items=items,
+        total=sum((item.subtotal for item in items), Decimal("0.00")),
     )
 
 

@@ -6,10 +6,32 @@ import {
   type RestaurantOrder,
   type RestaurantOrders,
 } from '../api/restaurantOrders'
-import { Button, Card, IconArrowLeft } from '../components/ui'
+import { Button, Card, IconArrowLeft, StatusPill } from '../components/ui'
 import styles from './RestaurantOrdersPage.module.css'
 
-function OrderCard({ order, onSelect }: { order: RestaurantOrder; onSelect: () => void }) {
+const money = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  minimumFractionDigits: 2,
+})
+
+function paymentState(order: RestaurantOrder) {
+  return (
+    <StatusPill tone={order.payment.status === 'paid' ? 'ok' : 'warn'}>
+      {order.payment.status === 'paid' ? 'Pagado' : 'Pendiente de pago'}
+    </StatusPill>
+  )
+}
+
+function OrderCard({
+  order,
+  onSelect,
+  isSelected,
+}: {
+  order: RestaurantOrder
+  onSelect: () => void
+  isSelected: boolean
+}) {
   return (
     <Card className={styles.order}>
       <div className={styles.orderHeader}>
@@ -18,9 +40,10 @@ function OrderCard({ order, onSelect }: { order: RestaurantOrder; onSelect: () =
           <h3>{order.arrival_time}</h3>
         </div>
         <Button variant="secondary" size="sm" onClick={onSelect}>
-          Ver detalle
+          {isSelected ? 'Ocultar detalle' : 'Ver detalle'}
         </Button>
       </div>
+      {paymentState(order)}
       <ul className={styles.items}>
         {order.items.map((item) => (
           <li key={`${item.dish_name}-${item.quantity}`}>
@@ -64,6 +87,11 @@ export function RestaurantOrdersPage() {
   }, [])
 
   async function showDetail(order: RestaurantOrder) {
+    if (selected?.id === order.id) {
+      setSelected(null)
+      return
+    }
+
     try {
       setSelected(await fetchRestaurantOrder(order.id))
     } catch (requestError) {
@@ -97,7 +125,12 @@ export function RestaurantOrdersPage() {
             ) : (
               <div className={styles.orders}>
                 {calendar.orders.map((order) => (
-                  <OrderCard key={order.id} order={order} onSelect={() => showDetail(order)} />
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    onSelect={() => showDetail(order)}
+                    isSelected={selected?.id === order.id}
+                  />
                 ))}
               </div>
             )}
@@ -109,14 +142,29 @@ export function RestaurantOrdersPage() {
             <p>
               Reserva {selected.reservation_id} para las {selected.arrival_time}
             </p>
-            <ul className={styles.items}>
+            {paymentState(selected)}
+            <p>
+              Medio de pago:{' '}
+              {selected.payment.method === 'cash'
+                ? 'Efectivo'
+                : selected.payment.method === 'online'
+                  ? 'Electrónico'
+                  : 'No seleccionado'}
+            </p>
+            <ul className={`${styles.items} ${styles.breakdown}`} aria-label="Desglose del pedido">
               {selected.items.map((item) => (
                 <li key={`${item.dish_name}-${item.quantity}`}>
                   <span>{item.dish_name}</span>
-                  <strong>×{item.quantity}</strong>
+                  <span>Cantidad: {item.quantity}</span>
+                  <span>Precio unitario: {money.format(Number(item.unit_price))}</span>
+                  <strong>Subtotal: {money.format(Number(item.subtotal))}</strong>
                 </li>
               ))}
             </ul>
+            <p>
+              <strong>Total: {money.format(Number(selected.payment.total))}</strong>
+            </p>
+            <p>Impuestos incluidos</p>
             {selected.prep_time_warning && (
               <p className={styles.warning} role="note">
                 Revisá los platos con tiempo de preparación 0 minutos.

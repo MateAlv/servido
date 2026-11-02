@@ -770,6 +770,25 @@ export interface components {
             quantity: number;
             /** Prep Time Minutes */
             prep_time_minutes: number;
+            /** Unit Price */
+            unit_price: string;
+            /** Subtotal */
+            subtotal: string;
+        };
+        /** OrderPaymentResponse */
+        OrderPaymentResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "paid";
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "cash" | "online" | "No seleccionado";
+            /** Total */
+            total: string;
         };
         /** PreorderedOrderSummary */
         PreorderedOrderSummary: {
@@ -1028,6 +1047,7 @@ export interface components {
             prep_time_warning: boolean;
             /** Items */
             items: components["schemas"]["OrderItemResponse"][];
+            payment: components["schemas"]["OrderPaymentResponse"];
         };
         /** RestaurantOrdersResponse */
         RestaurantOrdersResponse: {

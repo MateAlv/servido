@@ -20,6 +20,7 @@ from app.schemas.opening_hours import OpeningHoursResponse, OpeningShiftPayload
 from app.schemas.order import (
     OpeningShiftResponse,
     OrderItemResponse,
+    OrderPaymentResponse,
     RestaurantOrderResponse,
     RestaurantOrdersResponse,
 )
@@ -156,11 +157,15 @@ def restaurant_order_response(order) -> RestaurantOrderResponse:
         arrival_time=format_local_time(order.arrival_at),
         prep_start_time=format_local_time(order.prep_start_at),
         prep_time_warning=order.prep_time_warning,
+        # No payment records exist yet (US-45/56/60); confirmation is not payment.
+        payment=OrderPaymentResponse(status="pending", method="No seleccionado", total=order.total),
         items=[
             OrderItemResponse(
                 dish_name=item.dish_name,
                 quantity=item.quantity,
                 prep_time_minutes=item.prep_time_minutes,
+                unit_price=item.unit_price,
+                subtotal=item.subtotal,
             )
             for item in order.items
         ],

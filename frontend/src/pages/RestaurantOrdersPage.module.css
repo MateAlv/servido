@@ -82,3 +82,19 @@
     padding: var(--space-7) var(--space-5);
   }
 }
+
+.breakdown li {
+  display: grid;
+  gap: var(--space-1);
+  overflow-wrap: anywhere;
+}
+
+.orderHeader {
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
+.detail {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
