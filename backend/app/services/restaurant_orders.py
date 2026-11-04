@@ -6,7 +6,6 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.dish import Dish
 from app.models.opening_shift import OpeningShift
 from app.models.order import Order
 from app.models.order_item import OrderItem
@@ -52,21 +51,19 @@ def current_shift(session: Session, restaurant_id: UUID, now: datetime) -> Openi
 
 
 def order_items(session: Session, order_id: UUID) -> list[OrderItemData]:
-    rows = session.execute(
-        select(OrderItem, Dish)
-        .join(Dish, Dish.id_plato == OrderItem.dish_id)
-        .where(OrderItem.order_id == order_id)
-        .order_by(OrderItem.id)
+    items = session.scalars(
+        select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.id)
     ).all()
+    # The name the dish had when the diner confirmed (spec 009, P8), like the price.
     return [
         OrderItemData(
-            dish_name=dish.nombre,
+            dish_name=item.dish_name,
             quantity=item.quantity,
             prep_time_minutes=item.prep_time_minutes or 0,
             unit_price=item.unit_price,
             subtotal=item.unit_price * item.quantity,
         )
-        for item, dish in rows
+        for item in items
     ]
 
 

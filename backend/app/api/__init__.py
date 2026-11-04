@@ -6,6 +6,7 @@ from app.api import (
     dish,
     email_verification,
     health,
+    order,
     public_restaurant,
     reservation,
     restaurant,
@@ -19,4 +20,5 @@ api_router.include_router(dish.router)
 api_router.include_router(account.router)
 api_router.include_router(email_verification.router)
 api_router.include_router(reservation.router)
+api_router.include_router(order.router)
 api_router.include_router(public_restaurant.router)

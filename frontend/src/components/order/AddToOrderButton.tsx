@@ -13,6 +13,8 @@ type AddToOrderButtonProps = {
   addedLabel?: string
   disabled?: boolean
   size?: 'sm' | 'md' | 'lg'
+  /** The dish, read after the visible label so each button has its own name. */
+  itemName?: string
 }
 
 /** Adds a dish to the order: the cutlery clinks, a check pops in and "+1" floats up. */
@@ -22,6 +24,7 @@ export function AddToOrderButton({
   addedLabel = '¡Agregado!',
   disabled = false,
   size = 'md',
+  itemName,
 }: AddToOrderButtonProps) {
   const [adds, setAdds] = useState(0)
   const [added, setAdded] = useState(false)
@@ -61,6 +64,7 @@ export function AddToOrderButton({
           <IconCheck className={styles.check} />
         </span>
         {added ? addedLabel : label}
+        {itemName && <span className="visually-hidden">: {itemName}</span>}
       </Button>
       {adds > 0 && (
         <span key={adds} className={styles.plusOne} aria-hidden="true">

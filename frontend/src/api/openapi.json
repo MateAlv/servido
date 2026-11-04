@@ -1723,6 +1723,396 @@
         }
       }
     },
+    "/api/reservations/upcoming": {
+      "get": {
+        "tags": [
+          "reservation"
+        ],
+        "summary": "List Upcoming Reservations",
+        "operationId": "list_upcoming_reservations_api_reservations_upcoming_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpcomingReservationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/reservations/{reservation_id}/order": {
+      "get": {
+        "tags": [
+          "order"
+        ],
+        "summary": "Get Order",
+        "operationId": "get_order_api_reservations__reservation_id__order_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderPageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o es de otro comensal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "order"
+        ],
+        "summary": "Put Order",
+        "description": "Confirms the order: it replaces the previous one and the cart (P1, P11).",
+        "operationId": "put_order_api_reservations__reservation_id__order_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderPageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inv\u00e1lidos, o no hay platos ni pedido que quitar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o es de otro comensal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El pedido ya no se puede cambiar, o el men\u00fa cambi\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations/{reservation_id}/cart": {
+      "put": {
+        "tags": [
+          "order"
+        ],
+        "summary": "Put Cart",
+        "description": "Saves the order being built; the restaurant never sees it (P1).",
+        "operationId": "put_cart_api_reservations__reservation_id__cart_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartSaveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inv\u00e1lidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o es de otro comensal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El pedido ya no se puede cambiar, o un plato ya no est\u00e1.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "order"
+        ],
+        "summary": "Delete Cart",
+        "description": "\u00abDescartar cambios\u00bb: back to the confirmed order, if any.",
+        "operationId": "delete_cart_api_reservations__reservation_id__cart_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o es de otro comensal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurants": {
       "get": {
         "tags": [
@@ -1980,6 +2370,148 @@
           "foto"
         ],
         "title": "Body_upload_restaurant_photo_api_restaurante_perfil_foto_post"
+      },
+      "CartItemResponse": {
+        "properties": {
+          "dish_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dish Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price"
+          },
+          "prep_time_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prep Time Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dish_id",
+          "quantity",
+          "name",
+          "unit_price",
+          "prep_time_minutes"
+        ],
+        "title": "CartItemResponse"
+      },
+      "CartResponse": {
+        "properties": {
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CartItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "updated_at",
+          "items"
+        ],
+        "title": "CartResponse"
+      },
+      "CartSaveResponse": {
+        "properties": {
+          "cart": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CartResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "cart"
+        ],
+        "title": "CartSaveResponse"
+      },
+      "ConfirmedOrderItemResponse": {
+        "properties": {
+          "dish_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dish Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "unit_price": {
+            "type": "string",
+            "title": "Unit Price"
+          },
+          "prep_time_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prep Time Minutes"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "subtotal": {
+            "type": "string",
+            "title": "Subtotal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dish_id",
+          "name",
+          "unit_price",
+          "prep_time_minutes",
+          "quantity",
+          "subtotal"
+        ],
+        "title": "ConfirmedOrderItemResponse"
       },
       "Credentials": {
         "properties": {
@@ -2444,6 +2976,61 @@
         ],
         "title": "OpeningShiftResponse"
       },
+      "OrderItemRequest": {
+        "properties": {
+          "dish_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dish Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "maximum": 20.0,
+            "minimum": 1.0,
+            "title": "Quantity"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "unit_price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Unit Price"
+          },
+          "prep_time_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2147483647.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prep Time Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dish_id",
+          "quantity",
+          "name",
+          "unit_price"
+        ],
+        "title": "OrderItemRequest",
+        "description": "A dish of the order with the name, price and time the page showed (P9)."
+      },
       "OrderItemResponse": {
         "properties": {
           "dish_name": {
@@ -2477,6 +3064,121 @@
         ],
         "title": "OrderItemResponse"
       },
+      "OrderMenuDish": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "price": {
+            "type": "string",
+            "title": "Price"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "dietary_restrictions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Dietary Restrictions"
+          },
+          "prep_time_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prep Time Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "category",
+          "price",
+          "photo_url",
+          "dietary_restrictions",
+          "prep_time_minutes"
+        ],
+        "title": "OrderMenuDish"
+      },
+      "OrderPageResponse": {
+        "properties": {
+          "reservation": {
+            "$ref": "#/components/schemas/ReservationResponse"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cart": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CartResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "menu": {
+            "items": {
+              "$ref": "#/components/schemas/OrderMenuDish"
+            },
+            "type": "array",
+            "title": "Menu"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation",
+          "order",
+          "cart",
+          "menu"
+        ],
+        "title": "OrderPageResponse"
+      },
       "OrderPaymentResponse": {
         "properties": {
           "status": {
@@ -2508,6 +3210,63 @@
           "total"
         ],
         "title": "OrderPaymentResponse"
+      },
+      "OrderRequest": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemRequest"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "OrderRequest",
+        "description": "The whole order (or cart): it replaces the previous one."
+      },
+      "OrderResponse": {
+        "properties": {
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Confirmed At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConfirmedOrderItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
+          },
+          "prep_time_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prep Time Minutes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "confirmed_at",
+          "items",
+          "total",
+          "prep_time_minutes"
+        ],
+        "title": "OrderResponse"
       },
       "PreorderedOrderSummary": {
         "properties": {
@@ -2959,6 +3718,23 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "has_order": {
+            "type": "boolean",
+            "title": "Has Order"
+          },
+          "has_cart": {
+            "type": "boolean",
+            "title": "Has Cart"
+          },
+          "order_open": {
+            "type": "boolean",
+            "title": "Order Open"
+          },
+          "order_deadline": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Order Deadline"
           }
         },
         "type": "object",
@@ -2970,7 +3746,11 @@
           "end_time",
           "party_size",
           "table",
-          "status"
+          "status",
+          "has_order",
+          "has_cart",
+          "order_open",
+          "order_deadline"
         ],
         "title": "ReservationResponse"
       },
@@ -3771,6 +4551,22 @@
           "tables"
         ],
         "title": "TablesAvailabilityResponse"
+      },
+      "UpcomingReservationsResponse": {
+        "properties": {
+          "reservations": {
+            "items": {
+              "$ref": "#/components/schemas/ReservationResponse"
+            },
+            "type": "array",
+            "title": "Reservations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservations"
+        ],
+        "title": "UpcomingReservationsResponse"
       },
       "ValidationError": {
         "properties": {

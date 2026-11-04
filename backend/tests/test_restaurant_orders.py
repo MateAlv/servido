@@ -87,6 +87,7 @@ def restaurant_with_orders(session: Session) -> tuple[Restaurant, list[Order]]:
             OrderItem(
                 order_id=order.id,
                 dish_id=dish.id_plato,
+                dish_name=dish.nombre,
                 quantity=2,
                 unit_price=Decimal("12000.00"),
                 prep_time_minutes=10,
@@ -214,6 +215,7 @@ def test_us22_s2_historical_prices_and_exact_totals(client: TestClient, session:
         OrderItem(
             order_id=orders[0].id,
             dish_id=item.dish_id,
+            dish_name=item.dish_name,
             quantity=2,
             unit_price=Decimal("10.05"),
             prep_time_minutes=10,

@@ -18,8 +18,8 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | ✅ | ✅ | ✅ US-6, US-8, US-10 (el tipo de mesa de los grupos, decidido el 28/10, entra con la US-13) |
 | [005-reservar-mesa](005-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | ✅ | ✅ | ✅ US-11 y US-13, con backend real (decisiones D1–D11 del 28/10, falta que la PO las valide) |
 | [006-menu-platos](006-menu-platos/spec.md) | Restaurante | 12 | 3 | 2 | ✅ | — | — | — |
-| [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17) |
-| [009-pedido-anticipado](009-pedido-anticipado/spec.md) | Comensal | 17, 19, 21 | 5 | 3 | ✅ | ✅ | ✅ | — (decisiones P1–P14 del 30/10, falta que la PO las valide) |
+| [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17 en la spec 009) |
+| [009-pedido-anticipado](009-pedido-anticipado/spec.md) | Comensal | 17, 19, 21 | 5 | 3 | ✅ | ✅ | ✅ | ✅ US-17, US-19, US-21 (decisiones P1–P14 del 30/10, falta que la PO las valide) |
 | [011-ver-platos-precios](011-ver-platos-precios/spec.md) | Comensal | 15 | 2 | 3 | ✅ | ✅ | ✅ | ✅ US-15 (D1–D4, falta que la PO las valide) |
 
 Arrastre de la spec 003: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002 muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
@@ -102,6 +102,7 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 30/10 | 009 | P3: los precios del menú son finales, con impuestos incluidos. La cuenta lista plato, cantidad, precio unitario y subtotal, y el total aclara «Impuestos incluidos». Falta que la PO lo valide |
 | 30/10 | 009 | P4: el comensal llega al pedido desde la confirmación de la reserva y desde «Tus próximas reservas» en su inicio, una lista mínima que no reemplaza a la US-23. Falta que la PO lo valide |
 | 30/10 | 009 | P5–P14: un pedido por reserva; el plazo de 45 minutos vale para crear, cambiar y quitar, y se muestra como hora («Podés cambiarlo hasta las 20:15»); la hora de llegada es la de la reserva hasta la US-43; nombre, precio y tiempo de cada plato quedan fijos al confirmar; si el menú cambió mientras se armaba (plato quitado o con otro nombre, precio o tiempo), la confirmación se frena y se muestra qué cambió; de 1 a 20 unidades por plato y hasta 50 platos distintos; confirmar sin platos deja la reserva sin pedido, previa confirmación; el pedido de una reserva cancelada queda cancelado, sin borrarse; un comensal sin email verificado puede armar el pedido pero no confirmarlo (lectura de US-51 S5); sin menú no se ofrece pedido. Falta que la PO lo valide |
+| 04/11 | 009 | El pedido confirmado se guarda en las tablas `pedidos` y `pedido_items` que trajo el PR #32 (US-20, US-22), en vez de las `orders` y `order_items` del primer diseño. Se les suma la hora de confirmación y el nombre del plato al confirmar (P8); US-17 siempre escribe el estado `confirmed`, y lo que no se confirmó queda en el carrito. Un plato no disponible (US-15) cuenta como fuera del menú. Decisión de Mateo para cerrar el Sprint 3 |
 
 ## Notas de formato
 

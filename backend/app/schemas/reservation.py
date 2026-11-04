@@ -69,10 +69,20 @@ class ReservationResponse(BaseModel):
     party_size: int
     table: TableChoice
     status: str
+    has_order: bool
+    # An unconfirmed cart the diner can keep building (spec 009, P1).
+    has_cart: bool
+    # Whether the order can still be created or changed, and until when (spec 009, P6).
+    order_open: bool
+    order_deadline: datetime
 
 
 class DayReservationsResponse(BaseModel):
     date: date
+    reservations: list[ReservationResponse]
+
+
+class UpcomingReservationsResponse(BaseModel):
     reservations: list[ReservationResponse]
 
 

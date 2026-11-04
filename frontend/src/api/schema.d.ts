@@ -460,6 +460,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reservations/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Upcoming Reservations */
+        get: operations["list_upcoming_reservations_api_reservations_upcoming_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/{reservation_id}/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Order */
+        get: operations["get_order_api_reservations__reservation_id__order_get"];
+        /**
+         * Put Order
+         * @description Confirms the order: it replaces the previous one and the cart (P1, P11).
+         */
+        put: operations["put_order_api_reservations__reservation_id__order_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/{reservation_id}/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Put Cart
+         * @description Saves the order being built; the restaurant never sees it (P1).
+         */
+        put: operations["put_cart_api_reservations__reservation_id__cart_put"];
+        post?: never;
+        /**
+         * Delete Cart
+         * @description «Descartar cambios»: back to the confirmed order, if any.
+         */
+        delete: operations["delete_cart_api_reservations__reservation_id__cart_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurants": {
         parameters: {
             query?: never;
@@ -570,6 +632,48 @@ export interface components {
         Body_upload_restaurant_photo_api_restaurante_perfil_foto_post: {
             /** Foto */
             foto: string;
+        };
+        /** CartItemResponse */
+        CartItemResponse: {
+            /** Dish Id */
+            dish_id: string | null;
+            /** Quantity */
+            quantity: number;
+            /** Name */
+            name: string;
+            /** Unit Price */
+            unit_price: string;
+            /** Prep Time Minutes */
+            prep_time_minutes: number | null;
+        };
+        /** CartResponse */
+        CartResponse: {
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Items */
+            items: components["schemas"]["CartItemResponse"][];
+        };
+        /** CartSaveResponse */
+        CartSaveResponse: {
+            cart: components["schemas"]["CartResponse"] | null;
+        };
+        /** ConfirmedOrderItemResponse */
+        ConfirmedOrderItemResponse: {
+            /** Dish Id */
+            dish_id: string | null;
+            /** Name */
+            name: string;
+            /** Unit Price */
+            unit_price: string;
+            /** Prep Time Minutes */
+            prep_time_minutes: number | null;
+            /** Quantity */
+            quantity: number;
+            /** Subtotal */
+            subtotal: string;
         };
         /** Credentials */
         Credentials: {
@@ -764,6 +868,25 @@ export interface components {
             /** End Time */
             end_time: string;
         };
+        /**
+         * OrderItemRequest
+         * @description A dish of the order with the name, price and time the page showed (P9).
+         */
+        OrderItemRequest: {
+            /**
+             * Dish Id
+             * Format: uuid
+             */
+            dish_id: string;
+            /** Quantity */
+            quantity: number;
+            /** Name */
+            name: string;
+            /** Unit Price */
+            unit_price: number | string;
+            /** Prep Time Minutes */
+            prep_time_minutes?: number | null;
+        };
         /** OrderItemResponse */
         OrderItemResponse: {
             /** Dish Name */
@@ -776,6 +899,36 @@ export interface components {
             unit_price: string;
             /** Subtotal */
             subtotal: string;
+        };
+        /** OrderMenuDish */
+        OrderMenuDish: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string | null;
+            /** Category */
+            category: string;
+            /** Price */
+            price: string;
+            /** Photo Url */
+            photo_url: string | null;
+            /** Dietary Restrictions */
+            dietary_restrictions: string[];
+            /** Prep Time Minutes */
+            prep_time_minutes: number | null;
+        };
+        /** OrderPageResponse */
+        OrderPageResponse: {
+            reservation: components["schemas"]["ReservationResponse"];
+            order: components["schemas"]["OrderResponse"] | null;
+            cart: components["schemas"]["CartResponse"] | null;
+            /** Menu */
+            menu: components["schemas"]["OrderMenuDish"][];
         };
         /** OrderPaymentResponse */
         OrderPaymentResponse: {
@@ -791,6 +944,28 @@ export interface components {
             method: "cash" | "online" | "No seleccionado";
             /** Total */
             total: string;
+        };
+        /**
+         * OrderRequest
+         * @description The whole order (or cart): it replaces the previous one.
+         */
+        OrderRequest: {
+            /** Items */
+            items: components["schemas"]["OrderItemRequest"][];
+        };
+        /** OrderResponse */
+        OrderResponse: {
+            /**
+             * Confirmed At
+             * Format: date-time
+             */
+            confirmed_at: string;
+            /** Items */
+            items: components["schemas"]["ConfirmedOrderItemResponse"][];
+            /** Total */
+            total: string;
+            /** Prep Time Minutes */
+            prep_time_minutes: number | null;
         };
         /** PreorderedOrderSummary */
         PreorderedOrderSummary: {
@@ -953,6 +1128,17 @@ export interface components {
             table: components["schemas"]["TableChoice"];
             /** Status */
             status: string;
+            /** Has Order */
+            has_order: boolean;
+            /** Has Cart */
+            has_cart: boolean;
+            /** Order Open */
+            order_open: boolean;
+            /**
+             * Order Deadline
+             * Format: date-time
+             */
+            order_deadline: string;
         };
         /** ReservationRestaurant */
         ReservationRestaurant: {
@@ -1246,6 +1432,11 @@ export interface components {
             ends_at: string;
             /** Tables */
             tables: components["schemas"]["FreeGroupResponse"][];
+        };
+        /** UpcomingReservationsResponse */
+        UpcomingReservationsResponse: {
+            /** Reservations */
+            reservations: components["schemas"]["ReservationResponse"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -2550,6 +2741,300 @@ export interface operations {
             };
             /** @description Algo cambió durante la revisión: la reserva no se creó. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_upcoming_reservations_api_reservations_upcoming_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpcomingReservationsResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_order_api_reservations__reservation_id__order_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o es de otro comensal. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_order_api_reservations__reservation_id__order_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPageResponse"];
+                };
+            };
+            /** @description Datos inválidos, o no hay platos ni pedido que quitar. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o es de otro comensal. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description El pedido ya no se puede cambiar, o el menú cambió. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_cart_api_reservations__reservation_id__cart_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartSaveResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o es de otro comensal. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description El pedido ya no se puede cambiar, o un plato ya no está. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_cart_api_reservations__reservation_id__cart_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o es de otro comensal. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -1,3 +1,4 @@
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +22,16 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_username: str = "servido.gdsi@gmail.com"
     smtp_password: str = ""
+    # Local mode (`make up-local`): diners who sign up with a password start verified, so the
+    # team can try the app on localhost without opening a mail.
+    auto_verify_emails: bool = False
+
+    @model_validator(mode="after")
+    def local_mode_never_sends_mail(self) -> "Settings":
+        # A deploy that sends real mail must never skip the verification (US-51).
+        if self.auto_verify_emails and self.mail_backend not in ("console", "memory"):
+            raise ValueError("AUTO_VERIFY_EMAILS only works with MAIL_BACKEND=console.")
+        return self
 
 
 settings = Settings()

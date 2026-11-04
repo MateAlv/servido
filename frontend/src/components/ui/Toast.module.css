@@ -1,7 +1,8 @@
 .region {
   position: fixed;
   left: 50%;
-  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  /* A page with a bottom bar (the order page) raises its toasts above it. */
+  bottom: calc(var(--toast-bottom, 24px) + env(safe-area-inset-bottom, 0px));
   z-index: var(--z-toast);
   display: grid;
   justify-items: center;

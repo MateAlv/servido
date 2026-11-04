@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 
 import type { Reservation } from '../../api/reservations'
 import { Button, Card, StatusPill } from '../../components/ui'
-import { longDate } from '../../lib/date'
+import { longDate, timeInBuenosAires } from '../../lib/date'
 import { tableLabel } from '../../lib/seating'
 import styles from '../ReservationPage.module.css'
 
@@ -45,9 +45,24 @@ export function ConfirmedStep({ reservation }: { reservation: Reservation }) {
           <dd>{tableLabel(reservation.table)}</dd>
         </div>
       </dl>
-      <div className={styles.actions}>
-        <Button to="/">Ir al inicio</Button>
-      </div>
+      {reservation.order_open ? (
+        <>
+          <p className={styles.hint}>
+            Elegí tus platos ahora y los tenemos en cuenta para tu llegada. Podés cambiarlo hasta
+            las {timeInBuenosAires(reservation.order_deadline)}.
+          </p>
+          <div className={styles.actions}>
+            <Button to={`/reservas/${reservation.id}/pedido`}>Armar pedido</Button>
+            <Button to="/" variant="secondary">
+              Ir al inicio
+            </Button>
+          </div>
+        </>
+      ) : (
+        <div className={styles.actions}>
+          <Button to="/">Ir al inicio</Button>
+        </div>
+      )}
     </Card>
   )
 }

@@ -62,6 +62,10 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: '/reservas/:reservaId/pedido',
+        lazy: async () => ({ Component: (await import('./pages/OrderPage')).OrderPage }),
+      },
+      {
         path: '/verificar-email',
         lazy: async () => ({
           Component: (await import('./pages/VerifyEmailPage')).VerifyEmailPage,

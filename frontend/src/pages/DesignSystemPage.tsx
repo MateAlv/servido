@@ -12,9 +12,12 @@ import {
 } from '../components/brand'
 import {
   AddToOrderButton,
+  DietaryBadges,
+  DishDetails,
   LiveIndicator,
   OrderIndicator,
   PrepTimer,
+  Receipt,
   Steam,
 } from '../components/order'
 import { ConfirmationStamp, Ticket, TicketDivider, Timeline } from '../components/reservation'
@@ -445,6 +448,50 @@ function OrderDemo() {
         <span className={styles.total}>
           Total: <RollingNumber value={quantity * DISH_PRICE} format={(n) => PRICE.format(n)} />
         </span>
+      </Demo>
+      <Demo
+        title="Restricciones alimenticias"
+        note="Lo que declara el restaurante, cada una con su ícono para no depender del color."
+      >
+        <DietaryBadges restrictions={['vegano', 'vegetariano', 'sin_tacc']} size="md" />
+      </Demo>
+      <Demo
+        title="Plato de cerca"
+        note="El detalle de un plato en el pedido (US-17): foto, precio, tiempo (US-19), restricciones y descripción. Va en un Modal; sin foto muestra la campana."
+      >
+        <DishDetails
+          dish={{
+            name: 'Ravioles de ricota',
+            description: 'Pasta casera rellena de ricota y nuez, con tuco de la casa.',
+            category: 'plato_principal',
+            price: '12500.00',
+            photo_url: null,
+            dietary_restrictions: ['vegetariano'],
+            prep_time_minutes: 20,
+          }}
+        />
+      </Demo>
+      <Demo
+        title="Cuenta"
+        note="El detalle de la cuenta del pedido, impreso como un ticket de papel (US-21). Se abre en un Modal desde «Ver detalle de la cuenta»."
+      >
+        <Receipt
+          restaurant="La Esquina de Palermo"
+          reservation="martes, 3 de noviembre · 21:00 · 4 personas"
+          lines={[
+            { name: 'Provoleta', quantity: 2, unitPriceCents: 750000, subtotalCents: 1500000 },
+            {
+              name: 'Bife de chorizo',
+              quantity: 1,
+              unitPriceCents: 1850000,
+              subtotalCents: 1850000,
+            },
+          ]}
+          totalCents={3350000}
+          prepTimeMinutes={25}
+          arrival="21:00"
+          confirmed
+        />
       </Demo>
       <Demo
         title="Tiempo de preparación"

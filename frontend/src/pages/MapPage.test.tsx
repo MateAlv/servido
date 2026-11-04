@@ -323,6 +323,15 @@ describe('RestaurantDetailPage (US-9)', () => {
     expect(screen.getByText(/el bife llegó justo cuando nos sentamos/i)).toBeInTheDocument()
   })
 
+  it('US-17 S2 the restaurant detail offers no way to order', async () => {
+    renderMapWithDetail('/restaurantes/r-la-esquina')
+
+    await screen.findByText('Bife de chorizo con papas')
+    // An order is built only from a confirmed reservation of the diner.
+    expect(screen.queryByRole('button', { name: /Agregar al pedido|Armar pedido/ })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Armar pedido|Ver pedido/ })).toBeNull()
+  })
+
   it('US-9 edge goes back to the map with the same price filter', async () => {
     const user = userEvent.setup()
     renderMapWithDetail('/mapa?precio=%24%24')

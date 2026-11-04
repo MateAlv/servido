@@ -7,6 +7,8 @@ from app.services import availability
 from tests.reservations import (
     TODAY,
     add_bookable_restaurant,
+    add_dish,
+    add_order,
     add_reservation,
     diner_headers,
     diner_id,
@@ -206,6 +208,27 @@ def test_us18_s2_returns_cancellation_details(client: TestClient, session: Sessi
     assert item["table"] == {"capacity": 4, "seating_area": "terrace"}
     assert item["status"] == "cancelled"
     assert item["cancelled_at"] == "2026-11-01T18:00:00-03:00"
+
+
+def test_us18_s3_returns_cancelled_order_summary_when_present(
+    client: TestClient, session: Session
+) -> None:
+    restaurant, with_order, without_order, _ = setup_reservations(client, session)
+    add_order(session, with_order, [(add_dish(session, restaurant, "Provoleta", "7500.00", 10), 2)])
+    for reservation in (with_order, without_order):
+        reservation.status = "cancelled"
+        reservation.cancelled_at = datetime(2026, 11, 1, 21, 0, tzinfo=UTC)
+    session.flush()
+
+    response = client.get(
+        "/api/restaurante/cancelaciones",
+        params={"date": TODAY.isoformat()},
+        headers=restaurant_headers(client, restaurant),
+    )
+
+    by_start = {item["start_time"]: item for item in response.json()["cancellations"]}
+    assert by_start["20:00"]["preordered_order"] == {"status": "cancelled"}
+    assert by_start["12:00"]["preordered_order"] is None
 
 
 def test_us18_s4_filters_cancellations_by_local_date(client: TestClient, session: Session) -> None:

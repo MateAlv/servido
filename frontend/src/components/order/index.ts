@@ -1,5 +1,8 @@
 export { AddToOrderButton } from './AddToOrderButton'
+export { DietaryBadges } from './DietaryBadges'
+export { DishDetails, type DishDetailsDish } from './DishDetails'
 export { LiveIndicator } from './LiveIndicator'
 export { OrderIndicator } from './OrderIndicator'
 export { PrepTimer } from './PrepTimer'
+export { Receipt, type ReceiptLine } from './Receipt'
 export { Steam } from './Steam'

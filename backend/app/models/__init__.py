@@ -1,4 +1,5 @@
 from app.models.base import Base
+from app.models.cart import Cart, CartItem
 from app.models.diner import Diner
 from app.models.dish import Dish
 from app.models.email_verification import EmailVerification
@@ -11,6 +12,8 @@ from app.models.table_inventory import TableInventoryGroup
 
 __all__ = [
     "Base",
+    "Cart",
+    "CartItem",
     "Diner",
     "Dish",
     "EmailVerification",

@@ -26,6 +26,7 @@ from app.schemas.order import (
 )
 from app.schemas.reservation import (
     DinerContact,
+    PreorderedOrderSummary,
     ReservationDinerResponse,
     RestaurantCancellationResponse,
     RestaurantCancellationsResponse,
@@ -48,7 +49,7 @@ from app.schemas.table_inventory import (
     TableInventoryGroupPayload,
     TableInventoryGroupResponse,
 )
-from app.services import availability
+from app.services import availability, orders
 from app.services.auth import hash_password, normalize_email
 from app.services.geocoding import GeocodingError, geocode_address
 from app.services.opening_hours import validate_shifts
@@ -347,7 +348,10 @@ def list_restaurant_cancellations(
                 ),
                 status=reservation.status,
                 cancelled_at=reservation.cancelled_at.astimezone(availability.BUENOS_AIRES),
-                preordered_order=None,
+                # The order of a cancelled reservation counts as cancelled (spec 009, P12).
+                preordered_order=PreorderedOrderSummary(status="cancelled")
+                if orders.has_order(session, reservation.id)
+                else None,
             )
             for reservation in reservations
         ],

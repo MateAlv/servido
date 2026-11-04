@@ -1,12 +1,11 @@
-from datetime import date, time, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 
-from app.api.deps import SESSION_EXPIRED_DETAIL, TokenClaimsDep
+from app.api.deps import TokenClaimsDep, require_diner
 from app.db import SessionDep
-from app.models.diner import Diner
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.reservation import (
@@ -19,27 +18,16 @@ from app.schemas.reservation import (
     SlotResponse,
     TableChoice,
     TablesAvailabilityResponse,
+    UpcomingReservationsResponse,
 )
 from app.schemas.table_inventory import MAX_TABLE_CAPACITY
-from app.services import availability
-from app.services.roles import DINER
+from app.services import availability, orders
 
 router = APIRouter(tags=["reservation"])
 
-DINERS_ONLY = "Esta acción es solo para comensales."
 RESTAURANT_NOT_FOUND = "No encontramos ese restaurante."
 
 PartySize = Annotated[int, Query(ge=1, le=MAX_TABLE_CAPACITY)]
-
-
-def require_diner(claims: TokenClaimsDep, session: SessionDep) -> UUID:
-    if claims.get("rol") != DINER:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=DINERS_ONLY)
-    diner_id = UUID(str(claims["sub"]))
-    # A token can outlive its account: treat it as an expired session.
-    if session.get(Diner, diner_id) is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=SESSION_EXPIRED_DETAIL)
-    return diner_id
 
 
 def existing_restaurant(session: SessionDep, restaurant_id: UUID) -> Restaurant:
@@ -132,9 +120,12 @@ def get_available_tables(
     )
 
 
-def reservation_response(reservation: Reservation, restaurant: Restaurant) -> ReservationResponse:
+def reservation_response(
+    session: SessionDep, reservation: Reservation, restaurant: Restaurant, now: datetime
+) -> ReservationResponse:
     starts_at = reservation.starts_at.astimezone(availability.BUENOS_AIRES)
     ends_at = reservation.ends_at.astimezone(availability.BUENOS_AIRES)
+    order_open = orders.order_open(session, reservation, now)
     return ReservationResponse(
         id=reservation.id,
         restaurant=ReservationRestaurant(id=restaurant.id_restaurante, nombre=restaurant.nombre),
@@ -146,6 +137,10 @@ def reservation_response(reservation: Reservation, restaurant: Restaurant) -> Re
             capacity=reservation.table_capacity, seating_area=reservation.seating_area
         ),
         status=reservation.status,
+        has_order=orders.has_order(session, reservation.id),
+        has_cart=order_open and orders.cart_of(session, reservation.id) is not None,
+        order_open=order_open,
+        order_deadline=orders.order_deadline(reservation),
     )
 
 
@@ -190,7 +185,12 @@ def confirm_reservation(
     if not created:
         response.status_code = status.HTTP_200_OK
     # A repeated request answers with its own reservation, whatever this payload says.
-    return reservation_response(reservation, session.get(Restaurant, reservation.restaurant_id))
+    return reservation_response(
+        session,
+        reservation,
+        session.get(Restaurant, reservation.restaurant_id),
+        availability.current_time(),
+    )
 
 
 @router.get(
@@ -215,10 +215,36 @@ def list_day_reservations(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Esa fecha no es válida."
         )
     reservations = availability.diner_reservations_of_day(session, diner_id, date)
+    now = availability.current_time()
     return DayReservationsResponse(
         date=date,
         reservations=[
-            reservation_response(reservation, session.get(Restaurant, reservation.restaurant_id))
+            reservation_response(
+                session, reservation, session.get(Restaurant, reservation.restaurant_id), now
+            )
             for reservation in reservations
         ],
+    )
+
+
+@router.get(
+    "/reservations/upcoming",
+    response_model=UpcomingReservationsResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Solo para comensales."},
+    },
+)
+def list_upcoming_reservations(
+    claims: TokenClaimsDep, session: SessionDep
+) -> UpcomingReservationsResponse:
+    diner_id = require_diner(claims, session)
+    now = availability.current_time()
+    return UpcomingReservationsResponse(
+        reservations=[
+            reservation_response(
+                session, reservation, session.get(Restaurant, reservation.restaurant_id), now
+            )
+            for reservation in orders.upcoming_reservations(session, diner_id, now)
+        ]
     )
