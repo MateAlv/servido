@@ -1,4 +1,4 @@
-.PHONY: up up-local down db logs test test-backend test-frontend lint format migrate migration api-types
+.PHONY: up up-local down db logs test test-backend test-frontend lint format migrate migration seed api-types
 
 up: ## Run db, backend and frontend in Docker (http://localhost:5173)
 	docker compose up --build
@@ -33,6 +33,9 @@ format:
 
 migrate: db
 	cd backend && uv run alembic upgrade head
+
+seed: migrate
+	cd backend && uv run python -m scripts.seed
 
 migration: db ## Usage: make migration m="add restaurants table"
 	cd backend && uv run alembic revision --autogenerate -m "$(m)"

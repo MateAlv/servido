@@ -1,4 +1,5 @@
 import secrets
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from typing import Annotated
 from uuid import UUID, uuid4
@@ -10,10 +11,28 @@ from sqlalchemy.exc import IntegrityError
 from app.api.auth import google_claims, restaurant_session
 from app.api.deps import TokenClaimsDep
 from app.db import SessionDep
+from app.models.diner import Diner
 from app.models.opening_shift import OpeningShift
+from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
 from app.schemas.opening_hours import OpeningHoursResponse, OpeningShiftPayload
+from app.schemas.order import (
+    OpeningShiftResponse,
+    OrderItemResponse,
+    OrderPaymentResponse,
+    RestaurantOrderResponse,
+    RestaurantOrdersResponse,
+)
+from app.schemas.reservation import (
+    DinerContact,
+    ReservationDinerResponse,
+    RestaurantCancellationResponse,
+    RestaurantCancellationsResponse,
+    RestaurantReservationResponse,
+    RestaurantReservationsResponse,
+    TableChoice,
+)
 from app.schemas.restaurant import (
     GeocodingPreview,
     GeocodingRequest,
@@ -33,6 +52,11 @@ from app.services import availability
 from app.services.auth import hash_password, normalize_email
 from app.services.geocoding import GeocodingError, geocode_address
 from app.services.opening_hours import validate_shifts
+from app.services.restaurant_orders import (
+    format_local_time,
+    restaurant_order,
+    restaurant_orders,
+)
 from app.services.roles import RESTAURANT
 from app.services.table_inventory import ReservationConflictError, replace_inventory
 
@@ -124,6 +148,210 @@ def restaurant_from_claims(claims: dict[str, object], session: SessionDep) -> Re
             status_code=status.HTTP_404_NOT_FOUND, detail="Restaurante no encontrado."
         )
     return restaurant
+
+
+def restaurant_order_response(order) -> RestaurantOrderResponse:
+    return RestaurantOrderResponse(
+        id=order.id,
+        reservation_id=order.reservation_id,
+        arrival_time=format_local_time(order.arrival_at),
+        prep_start_time=format_local_time(order.prep_start_at),
+        prep_time_warning=order.prep_time_warning,
+        # No payment records exist yet (US-45/56/60); confirmation is not payment.
+        payment=OrderPaymentResponse(status="pending", method="No seleccionado", total=order.total),
+        items=[
+            OrderItemResponse(
+                dish_name=item.dish_name,
+                quantity=item.quantity,
+                prep_time_minutes=item.prep_time_minutes,
+                unit_price=item.unit_price,
+                subtotal=item.subtotal,
+            )
+            for item in order.items
+        ],
+    )
+
+
+@router.get(
+    "/restaurante/reservas",
+    response_model=RestaurantReservationsResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Esta acción es solo para restaurantes."},
+    },
+)
+def list_restaurant_reservations(
+    date: date, claims: TokenClaimsDep, session: SessionDep
+) -> RestaurantReservationsResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    start_local = datetime.combine(date, time.min, tzinfo=availability.BUENOS_AIRES)
+    end_local = start_local + timedelta(days=1)
+    reservations = session.scalars(
+        select(Reservation)
+        .where(Reservation.restaurant_id == restaurant.id_restaurante)
+        .where(Reservation.starts_at >= start_local)
+        .where(Reservation.starts_at < end_local)
+        .order_by(Reservation.starts_at)
+    ).all()
+    return RestaurantReservationsResponse(
+        restaurant_id=restaurant.id_restaurante,
+        date=date,
+        reservations=[
+            RestaurantReservationResponse(
+                id=reservation.id,
+                start_time=reservation.starts_at.astimezone(availability.BUENOS_AIRES).strftime(
+                    "%H:%M"
+                ),
+                end_time=reservation.ends_at.astimezone(availability.BUENOS_AIRES).strftime(
+                    "%H:%M"
+                ),
+                party_size=reservation.party_size,
+                table=TableChoice(
+                    capacity=reservation.table_capacity, seating_area=reservation.seating_area
+                ),
+                status=reservation.status,
+            )
+            for reservation in reservations
+        ],
+    )
+
+
+@router.get(
+    "/restaurante/pedidos/turno-actual",
+    response_model=RestaurantOrdersResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "No tenés permiso."},
+    },
+)
+def list_current_shift_orders(
+    claims: TokenClaimsDep, session: SessionDep
+) -> RestaurantOrdersResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    shift, orders = restaurant_orders(
+        session, restaurant.id_restaurante, availability.current_time()
+    )
+    return RestaurantOrdersResponse(
+        shift=(
+            OpeningShiftResponse(
+                start_time=shift.start_time.strftime("%H:%M"),
+                end_time=shift.end_time.strftime("%H:%M"),
+            )
+            if shift
+            else None
+        ),
+        orders=[restaurant_order_response(order) for order in orders],
+    )
+
+
+@router.get(
+    "/restaurante/reservas/{reservation_id}/comensal",
+    response_model=ReservationDinerResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Esta acción es solo para restaurantes."},
+        404: {"description": "La reserva no existe o no pertenece al restaurante."},
+    },
+)
+def get_reservation_diner(
+    reservation_id: UUID, claims: TokenClaimsDep, session: SessionDep
+) -> ReservationDinerResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    reservation = session.scalar(
+        select(Reservation).where(
+            Reservation.id == reservation_id,
+            Reservation.restaurant_id == restaurant.id_restaurante,
+        )
+    )
+    if reservation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La reserva no existe.",
+        )
+    diner = session.get(Diner, reservation.diner_id)
+    if diner is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El comensal no existe.",
+        )
+    return ReservationDinerResponse(
+        reservation_id=reservation.id,
+        diner=DinerContact(id=diner.id_comensal, name=diner.nombre, email=diner.email),
+    )
+
+
+@router.get(
+    "/restaurante/pedidos/{order_id}",
+    response_model=RestaurantOrderResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "No tenés permiso."},
+        404: {"description": "Pedido no encontrado."},
+    },
+)
+def get_restaurant_order(
+    order_id: UUID, claims: TokenClaimsDep, session: SessionDep
+) -> RestaurantOrderResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    order = restaurant_order(session, restaurant.id_restaurante, order_id)
+    if order is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pedido no encontrado.")
+    return restaurant_order_response(order)
+
+
+@router.get(
+    "/restaurante/cancelaciones",
+    response_model=RestaurantCancellationsResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Esta acción es solo para restaurantes."},
+    },
+)
+def list_restaurant_cancellations(
+    claims: TokenClaimsDep, session: SessionDep, date: date | None = None
+) -> RestaurantCancellationsResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    query = (
+        select(Reservation)
+        .where(
+            Reservation.restaurant_id == restaurant.id_restaurante,
+            Reservation.status == "cancelled",
+        )
+        .order_by(Reservation.starts_at)
+    )
+    if date is not None:
+        start_local = datetime.combine(date, time.min, tzinfo=availability.BUENOS_AIRES)
+        end_local = start_local + timedelta(days=1)
+        query = query.where(
+            Reservation.starts_at >= start_local,
+            Reservation.starts_at < end_local,
+        )
+    reservations = session.scalars(query).all()
+    return RestaurantCancellationsResponse(
+        restaurant_id=restaurant.id_restaurante,
+        date=date,
+        cancellations=[
+            RestaurantCancellationResponse(
+                reservation_id=reservation.id,
+                reservation_date=reservation.starts_at.astimezone(availability.BUENOS_AIRES).date(),
+                start_time=reservation.starts_at.astimezone(availability.BUENOS_AIRES).strftime(
+                    "%H:%M"
+                ),
+                end_time=reservation.ends_at.astimezone(availability.BUENOS_AIRES).strftime(
+                    "%H:%M"
+                ),
+                party_size=reservation.party_size,
+                table=TableChoice(
+                    capacity=reservation.table_capacity,
+                    seating_area=reservation.seating_area,
+                ),
+                status=reservation.status,
+                cancelled_at=reservation.cancelled_at.astimezone(availability.BUENOS_AIRES),
+                preordered_order=None,
+            )
+            for reservation in reservations
+        ],
+    )
 
 
 @router.get("/restaurante/perfil", response_model=RestaurantProfileResponse)

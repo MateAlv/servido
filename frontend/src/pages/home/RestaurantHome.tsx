@@ -246,6 +246,21 @@ export function RestaurantHome({ account }: { account: Account }) {
               </p>
             </DashboardCard>
           </Reveal>
+          <Reveal delay={300}>
+            <DashboardCard
+              title="Pedidos del turno"
+              description="Los pedidos anticipados de las reservas del turno actual."
+              icon={<IconCloche />}
+              action={
+                <Button size="sm" to="/restaurante/pedidos">
+                  Ver pedidos del turno
+                </Button>
+              }
+            >
+              <p>Consultá los pedidos confirmados y sus detalles.</p>
+              <p className={styles.muted}>Revisá los platos, las cantidades y el estado de pago.</p>
+            </DashboardCard>
+          </Reveal>
         </div>
       </section>
     </main>

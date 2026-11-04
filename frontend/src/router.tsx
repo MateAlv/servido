@@ -8,7 +8,10 @@ import { RestaurantRegisterPage } from './pages/RestaurantRegisterPage'
 import { RestaurantProfilePage } from './pages/RestaurantProfilePage'
 import { OpeningHoursPage } from './pages/OpeningHoursPage'
 import { TableInventoryPage } from './pages/TableInventoryPage'
-import { RestaurantAreaPage } from './pages/RestaurantAreaPage'
+import { RestaurantOrdersPage } from './pages/RestaurantOrdersPage'
+import { RestaurantReservationsPage } from './pages/RestaurantReservationsPage'
+import { RestaurantCancellationsPage } from './pages/RestaurantCancellationsPage'
+import { RestaurantReservationDinerPage } from './pages/RestaurantReservationDinerPage'
 
 export const router = createBrowserRouter([
   {
@@ -21,14 +24,18 @@ export const router = createBrowserRouter([
       { path: '/restaurante/perfil', element: <RestaurantProfilePage /> },
       { path: '/restaurante/horarios', element: <OpeningHoursPage /> },
       { path: '/restaurante/mesas', element: <TableInventoryPage /> },
+      { path: '/restaurante/pedidos', element: <RestaurantOrdersPage /> },
       {
         path: '/restaurante/reservas',
-        element: (
-          <RestaurantAreaPage
-            title="Reservas"
-            description="La gestión de reservas estará disponible próximamente."
-          />
-        ),
+        element: <RestaurantReservationsPage />,
+      },
+      {
+        path: '/restaurante/cancelaciones',
+        element: <RestaurantCancellationsPage />,
+      },
+      {
+        path: '/restaurante/reservas/:reservationId/comensal',
+        element: <RestaurantReservationDinerPage />,
       },
       {
         path: '/restaurante/menu/nuevo-plato',

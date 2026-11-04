@@ -22,20 +22,43 @@ const CATEGORY_LABELS: Record<string, string> = {
   postre: 'Postres',
   bebida: 'Bebidas',
 }
+const CATEGORY_ORDER = ['entrada', 'plato_principal', 'postre', 'bebida']
+const RESTRICTION_LABELS: Record<string, string> = {
+  sin_tacc: 'Sin TACC',
+  vegetariano: 'Vegetariano',
+  vegano: 'Vegano',
+}
 
 function menuSections(dishes: BookableRestaurantDetail['menu']): MenuSection[] {
   const sections = new Map<string, MenuSection>()
   for (const dish of dishes) {
     const category = CATEGORY_LABELS[dish.category] ?? dish.category
-    const section = sections.get(category) ?? { category, dishes: [] }
+    const section = sections.get(dish.category) ?? { category, dishes: [] }
     section.dishes.push({
+      id: dish.id,
       name: dish.name,
       price: Number(dish.price),
       description: dish.description ?? undefined,
+      photo: dish.photo_url ?? undefined,
+      dietaryRestrictions: dish.dietary_restrictions.map(
+        (restriction) => RESTRICTION_LABELS[restriction] ?? restriction,
+      ),
     })
-    sections.set(category, section)
+    sections.set(dish.category, section)
   }
-  return [...sections.values()]
+  return [...sections.entries()]
+    .sort(([first], [second]) => {
+      const firstIndex = CATEGORY_ORDER.indexOf(first)
+      const secondIndex = CATEGORY_ORDER.indexOf(second)
+      return (
+        (firstIndex < 0 ? CATEGORY_ORDER.length : firstIndex) -
+        (secondIndex < 0 ? CATEGORY_ORDER.length : secondIndex)
+      )
+    })
+    .map(([, section]) => ({
+      ...section,
+      dishes: section.dishes.sort((first, second) => first.name.localeCompare(second.name, 'es')),
+    }))
 }
 
 /** What the database doesn't know yet stays empty, and the UI leaves it out. */

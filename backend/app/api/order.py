@@ -6,14 +6,15 @@ from fastapi import APIRouter, HTTPException, Response, status
 from app.api.deps import TokenClaimsDep, require_diner
 from app.api.reservation import reservation_response
 from app.db import SessionDep
-from app.models.order import Cart, Order
+from app.models.cart import Cart
+from app.models.order import Order
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
-from app.schemas.order import (
+from app.schemas.diner_order import (
     CartItemResponse,
     CartResponse,
     CartSaveResponse,
-    OrderItemResponse,
+    ConfirmedOrderItemResponse,
     OrderMenuDish,
     OrderPageResponse,
     OrderRequest,
@@ -38,7 +39,7 @@ def order_response(order: Order) -> OrderResponse:
     return OrderResponse(
         confirmed_at=order.confirmed_at.astimezone(BUENOS_AIRES),
         items=[
-            OrderItemResponse(
+            ConfirmedOrderItemResponse(
                 dish_id=item.dish_id,
                 name=item.dish_name,
                 unit_price=item.unit_price,

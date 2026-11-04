@@ -6,7 +6,9 @@ Decisions P1–P14 are in [research.md](research.md). New tables use English nam
 
 ## Entities
 
-### `orders` (new) — `Order`
+> **Reconciled with main on 04/11.** PR #32 (US-20, US-22) merged its own order tables, `pedidos` and `pedido_items`, before this code. The team chose to keep them (decision of 04/11) and add what US-17 needs, instead of the `orders` and `order_items` first designed here. The differences are marked below.
+
+### `pedidos` (PR #32, extended) — `Order`
 
 The confirmed pre-order of one reservation (P1, P5). A row exists only while the reservation has an order: confirming an empty order deletes it (P11).
 
@@ -14,26 +16,29 @@ The confirmed pre-order of one reservation (P1, P5). A row exists only while the
 | --- | --- | --- |
 | `id` | UUID | Primary key |
 | `reservation_id` | UUID, not null | FK `reservations.id` `ON DELETE RESTRICT`; **unique** (one order per reservation, P5) |
-| `confirmed_at` | timestamptz, not null | Last time the diner confirmed it (UTC) |
-| `created_at` | timestamptz, not null | First confirmation; server default `CURRENT_TIMESTAMP` |
+| `restaurant_id` | UUID, not null | FK `restaurantes.id_restaurante`; the reservation's restaurant (from PR #32) |
+| `status` | varchar(20), not null | `confirmed` or `pending` (from PR #32). US-17 always writes `confirmed`: what the diner hasn't confirmed lives in `carts`, never here |
+| `prep_start_time` | timestamptz, not null | Suggested preparation start (from PR #32), written at each confirmation as arrival minus the slowest dish's time (`suggested_start`). US-20 recomputes it from the items |
+| `created_at` | timestamptz, not null | First confirmation |
+| `confirmed_at` | timestamptz, not null | **Added**: last time the diner confirmed it (UTC); existing rows take `CURRENT_TIMESTAMP` |
 
-No status column (research, technical choices): the order is confirmed while it exists and its reservation is confirmed, and cancelled when its reservation is (P12). Restaurant, diner and arrival time come from the reservation.
+The order's state still comes from the reservation: it counts as cancelled when its reservation is (P12).
 
-### `order_items` (new) — `OrderItem`
+### `pedido_items` (PR #32, extended) — `OrderItem`
 
 One dish of an order, with what the menu said when the diner confirmed (P8).
 
 | Column | Type | Rules |
 | --- | --- | --- |
 | `id` | UUID | Primary key |
-| `order_id` | UUID, not null | FK `orders.id` `ON DELETE CASCADE` (the relationship uses `passive_deletes=True`) |
-| `dish_id` | UUID, nullable | FK `platos.id_plato` `ON DELETE SET NULL`; unique per order (`order_id`, `dish_id`); NULLs are distinct, so a deleted dish doesn't clash |
-| `dish_name` | varchar(150), not null | Copied from `platos.nombre`; `CHECK (length(trim(dish_name)) > 0)` |
+| `order_id` | UUID, not null | FK `pedidos.id` `ON DELETE CASCADE` (the relationship uses `passive_deletes=True`) |
+| `dish_id` | UUID, not null | FK `platos.id_plato` `ON DELETE RESTRICT` (from PR #32): a dish in an order can't be deleted, so the first design's `SET NULL` isn't needed |
+| `dish_name` | varchar(150), not null | **Added**: copied from `platos.nombre`; existing items take the dish's current name. `CHECK (length(trim(dish_name)) > 0)`. US-20 now shows this name |
 | `unit_price` | numeric(10, 2), not null | Copied from `platos.precio`; `CHECK (unit_price > 0)` |
-| `prep_time_minutes` | integer, nullable | Copied from `platos.tiempo_preparacion_minutos`; `CHECK (prep_time_minutes IS NULL OR prep_time_minutes > 0)` |
-| `quantity` | integer, not null | `CHECK (quantity BETWEEN 1 AND 20)` (P10) |
+| `prep_time_minutes` | integer, nullable | Copied from `platos.tiempo_preparacion_minutos`; `CHECK (... >= 0)` (from PR #32) |
+| `quantity` | integer, not null | `CHECK (quantity > 0)`, and **added** `CHECK (quantity <= 20)` as `NOT VALID`, so an older item can't fail the deploy (P10) |
 
-The unique keys cover the lookups; no other index is needed. Every confirmation replaces the items, so nothing may reference `order_items.id`.
+There is no unique (`order_id`, `dish_id`): the request validation rejects a repeated dish, and a confirmation deletes the old items before inserting the new ones.
 
 ### `carts` (new) — `Cart`
 
@@ -47,7 +52,7 @@ The order a diner is building for one reservation and hasn't confirmed (P1). Nev
 
 ### `cart_items` (new) — `CartItem`
 
-One dish of a cart, with the values the page showed when the diner added it. Same columns and constraints as `order_items`, with `cart_id` in place of `order_id`:
+One dish of a cart, with the values the page showed when the diner added it. Same columns as `pedido_items`, with `cart_id` in place of `order_id`, a nullable `dish_id` (`ON DELETE SET NULL`) and a unique (`cart_id`, `dish_id`):
 
 | Column | Type | Rules |
 | --- | --- | --- |
@@ -63,7 +68,7 @@ A cart may have no items only while the reservation has an order: that is a conf
 
 ### `platos` (specs 006 and 007-agregar-plato, unchanged)
 
-Read for the menu: `id_plato`, `id_restaurante`, `nombre`, `descripcion`, `categoria`, `precio`, `foto_url`, `restricciones_alimenticias`, `tiempo_preparacion_minutos`. "A dish on the menu" is decided by one helper (`menu_dishes(session, restaurant_id)`), so that availability (US-15, US-34) changes one place.
+Read for the menu: `id_plato`, `id_restaurante`, `nombre`, `descripcion`, `categoria`, `precio`, `foto_url`, `restricciones_alimenticias`, `tiempo_preparacion_minutos`, `disponible`. "A dish on the menu" is decided by one helper (`menu_dishes(session, restaurant_id)`): since US-15 (spec 011) it is a dish with `disponible = true`, and a dish that stops being available counts as off the menu at confirmation (P9).
 
 ### `reservations` (spec 005, unchanged)
 
@@ -71,7 +76,7 @@ Gives the order its restaurant (`restaurant_id`), its diner (`diner_id`), its ar
 
 ## Derived values
 
-Each is one function in `app/services/orders.py`; every reader calls it instead of recomputing. Never stored.
+Each is one function in `app/services/orders.py`; every reader calls it instead of recomputing. Never stored, except the preparation start that PR #32 keeps in `pedidos.prep_start_time`.
 
 | Value | Function | Rule |
 | --- | --- | --- |
@@ -102,10 +107,10 @@ For US-20, ordering the orders of a shift by arrival time, then by suggested pre
 
 ## Not in this model (on purpose)
 
-- **Payments**: US-45 adds the payment method to the order; US-56 and US-60 add payment records that point at `orders`. The deposit (*seña*) belongs to the reservation or the restaurant (risk 1), not to the order. Until then, every order is unpaid with no method. Once payments exist, those stories decide what happens when a paid order is changed or emptied.
+- **Payments**: US-45 adds the payment method to the order; US-56 and US-60 add payment records that point at `pedidos`. The deposit (*seña*) belongs to the reservation or the restaurant (risk 1), not to the order. Until then, every order is unpaid with no method. Once payments exist, those stories decide what happens when a paid order is changed or emptied.
 - **A different arrival time** (US-43) and **a restaurant-set preparation time per order** (US-40): both change `arrival_time` and the estimate in one function each. If US-40 adds an order-level time, the diner's re-confirmation (rule 4) must keep it.
 - **Notes per dish** (`aclaraciones` in `scripts/sql/servido.sql`): no story asks for them.
 
 ## Migration
 
-One Alembic migration after `006_reservations` creates the four tables with their named constraints. No data changes: no order exists yet. If another branch adds a migration after `006_reservations` first, the second to merge rebases its `down_revision` instead of adding a merge migration.
+`2026_11_04_1116-e0e674653e2f_pre_order_and_cart.py`, after `8f3c1a2b4d5e` (dish availability, US-15): creates `carts` and `cart_items`, adds `pedidos.confirmed_at` and `pedido_items.dish_name` (filled from `platos`), and the two new checks. It downgrades cleanly.

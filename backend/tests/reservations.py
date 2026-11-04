@@ -9,10 +9,12 @@ from zoneinfo import ZoneInfo
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.models.cart import Cart, CartItem
 from app.models.diner import Diner
 from app.models.dish import Dish
 from app.models.opening_shift import OpeningShift
-from app.models.order import Cart, CartItem, Order, OrderItem
+from app.models.order import Order
+from app.models.order_item import OrderItem
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
@@ -155,7 +157,13 @@ def item_of(dish: Dish, quantity: int = 1) -> dict:
 
 
 def add_order(session: Session, reservation: Reservation, dishes: list[tuple[Dish, int]]) -> Order:
-    order = Order(reservation_id=reservation.id, confirmed_at=NOW)
+    order = Order(
+        reservation_id=reservation.id,
+        restaurant_id=reservation.restaurant_id,
+        status="confirmed",
+        prep_start_time=reservation.starts_at,
+        confirmed_at=NOW,
+    )
     session.add(order)
     session.flush()
     for dish, quantity in dishes:

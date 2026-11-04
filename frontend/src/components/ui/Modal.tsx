@@ -64,6 +64,9 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
         event.preventDefault()
         onClose()
       }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') onClose()
+      }}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}

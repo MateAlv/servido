@@ -1,8 +1,8 @@
 # Local mode: `make up-local`. Diners who sign up start verified (no mail to open) and the
-# database gets a bookable restaurant with a menu and a diner (backend/app/dev_seed.py).
+# database gets the demo restaurant and diner of `make seed` (backend/scripts/seed.py).
 services:
   backend:
-    command: sh -c "alembic upgrade head && python -m app.dev_seed && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "alembic upgrade head && python -m scripts.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     environment:
       AUTO_VERIFY_EMAILS: "true"
       MAIL_BACKEND: console

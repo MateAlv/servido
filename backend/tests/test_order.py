@@ -311,6 +311,7 @@ def test_us17_edge_cancelled_reservation_takes_no_order(
 ) -> None:
     s = setup(client, session)
     s.reservation.status = "cancelled"
+    s.reservation.cancelled_at = NOW
     session.commit()
 
     assert confirm(client, s, [item_of(s.provoleta)]).status_code == 409
@@ -323,6 +324,7 @@ def test_us17_edge_cancelling_keeps_the_order(client: TestClient, session: Sessi
     assert confirm(client, s, [item_of(s.provoleta)]).status_code == 200
 
     s.reservation.status = "cancelled"
+    s.reservation.cancelled_at = NOW
     session.commit()
 
     body = page(client, s)
@@ -458,6 +460,7 @@ def test_us17_edge_discarding_the_cart(client: TestClient, session: Session) -> 
     # Discarding again, or once the order is closed, is harmless.
     assert client.delete(cart_url(s.reservation.id), headers=s.headers).status_code == 204
     s.reservation.status = "cancelled"
+    s.reservation.cancelled_at = NOW
     session.commit()
     assert client.delete(cart_url(s.reservation.id), headers=s.headers).status_code == 204
 
@@ -582,6 +585,7 @@ def test_us17_edge_upcoming_lists_only_future_confirmed_reservations_of_the_dine
     add_reservation(session, s.restaurant, diner, TODAY, time(8), 2, "indoor")
     cancelled = add_reservation(session, s.restaurant, diner, TOMORROW, time(13), 2, "indoor")
     cancelled.status = "cancelled"
+    cancelled.cancelled_at = NOW
     other = diner_id(client, diner_headers(client, "otra@example.com"))
     add_reservation(session, s.restaurant, other, TOMORROW, time(20), 2, "indoor")
     add_order(session, s.reservation, [(s.provoleta, 1)])
@@ -695,14 +699,33 @@ def test_us17_edge_menu_follows_the_category_order(client: TestClient, session: 
     ]
 
 
-def test_us17_edge_deleted_dish_keeps_the_confirmed_item(
+def test_us17_edge_unavailable_dish_is_off_the_menu(client: TestClient, session: Session) -> None:
+    s = setup(client, session)
+    shown = item_of(s.flan)
+    s.flan.disponible = False
+    session.commit()
+
+    assert "Flan" not in [dish["name"] for dish in page(client, s)["menu"]]
+    assert confirm(client, s, [shown]).status_code == 409
+    assert save(client, s, [shown]).status_code == 409
+
+
+def test_us17_edge_restaurant_sees_the_confirmed_order(
     client: TestClient, session: Session
 ) -> None:
     s = setup(client, session)
-    assert confirm(client, s, [item_of(s.flan)]).status_code == 200
-    session.delete(s.flan)
-    session.commit()
+    body = confirm(client, s, [item_of(s.provoleta, 2), item_of(s.bife)]).json()
+    order = stored_order(session, s)
 
-    item = page(client, s)["order"]["items"][0]
+    detail = client.get(
+        f"/api/restaurante/pedidos/{order.id}", headers=restaurant_headers(client, s.restaurant)
+    )
 
-    assert (item["dish_id"], item["name"]) == (None, "Flan")
+    assert body["order"]["total"] == "33500.00"
+    assert detail.status_code == 200
+    assert {(item["dish_name"], item["quantity"]) for item in detail.json()["items"]} == {
+        ("Provoleta", 2),
+        ("Bife de chorizo", 1),
+    }
+    # The kitchen starts with the slowest dish: 25 minutes before the 21:00 arrival.
+    assert detail.json()["prep_start_time"] == "20:35"

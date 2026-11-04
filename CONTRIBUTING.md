@@ -5,7 +5,7 @@ How the team works on Servido!. The rules agents follow are in [AGENTS.md](AGENT
 ## Setup
 
 1. Install Docker, [uv](https://docs.astral.sh/uv/), Node.js 22 and `make`. On Windows, work inside WSL.
-2. Clone the repo and run `make up`. The first run builds the images and installs dependencies. To try the app without opening mails, run `make up-local`: it loads a restaurant and a diner (`restaurante@servido.local` and `comensal@servido.local`, password `Servido2026`) and new diners start verified. It never runs with a real mail backend.
+2. Clone the repo and run `make up`. The first run builds the images and installs dependencies. To try the app without opening mails, run `make up-local`: it runs the seed of `make seed` (`demo@servido.local` / `DemoRestaurante123` and `cliente@servido.local` / `ClienteDemo123`) and new diners start verified. It never runs with a real mail backend.
 3. To run things natively instead:
 
    ```bash

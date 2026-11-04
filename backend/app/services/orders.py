@@ -12,9 +12,11 @@ from uuid import UUID
 from sqlalchemy import case, delete, exists, select
 from sqlalchemy.orm import Session
 
+from app.models.cart import Cart, CartItem
 from app.models.diner import Diner
 from app.models.dish import Dish
-from app.models.order import Cart, CartItem, Order, OrderItem
+from app.models.order import Order
+from app.models.order_item import OrderItem
 from app.models.reservation import Reservation
 from app.services.availability import BUENOS_AIRES
 
@@ -66,7 +68,8 @@ class OrderSummary:
 
 
 def menu_dishes(session: Session, restaurant_id: UUID) -> list[Dish]:
-    """The dishes a diner can order, by category (entradas first) and then by name."""
+    """The dishes a diner can order: the available ones (US-15), by category (entradas first)
+    and then by name. A dish that stops being available counts as off the menu (P9)."""
     category_rank = case(
         {category: rank for rank, category in enumerate(CATEGORY_ORDER)},
         value=Dish.categoria,
@@ -75,14 +78,18 @@ def menu_dishes(session: Session, restaurant_id: UUID) -> list[Dish]:
     return list(
         session.scalars(
             select(Dish)
-            .where(Dish.id_restaurante == restaurant_id)
+            .where(Dish.id_restaurante == restaurant_id, Dish.disponible.is_(True))
             .order_by(category_rank, Dish.nombre)
         )
     )
 
 
 def has_menu(session: Session, restaurant_id: UUID) -> bool:
-    return bool(session.scalar(select(exists().where(Dish.id_restaurante == restaurant_id))))
+    return bool(
+        session.scalar(
+            select(exists().where(Dish.id_restaurante == restaurant_id, Dish.disponible.is_(True)))
+        )
+    )
 
 
 def order_deadline(reservation: Reservation) -> datetime:
@@ -121,9 +128,14 @@ def arrival_time(reservation: Reservation) -> datetime:
 
 def prep_start_time(reservation: Reservation, order: Order) -> datetime:
     """When the kitchen should start so the order is ready on arrival (for US-20)."""
-    estimate = order_summary(order.items).prep_time_minutes
+    return suggested_start(reservation, order.items)
+
+
+def suggested_start(reservation: Reservation, items: list[OrderItem] | list[ItemInput]) -> datetime:
+    """Arrival minus the slowest dish's time (P2); the arrival when no dish has a time."""
+    times = [item.prep_time_minutes for item in items if item.prep_time_minutes is not None]
     arrival = arrival_time(reservation)
-    return arrival if estimate is None else arrival - timedelta(minutes=estimate)
+    return arrival - timedelta(minutes=max(times)) if times else arrival
 
 
 def order_of(session: Session, reservation_id: UUID) -> Order | None:
@@ -212,7 +224,14 @@ def confirm_order(
         session.flush()
         return reservation, None
     if order is None:
-        order = Order(reservation_id=reservation.id, confirmed_at=now)
+        # Every order US-17 writes is confirmed: the cart is what is still pending (P1).
+        order = Order(
+            reservation_id=reservation.id,
+            restaurant_id=reservation.restaurant_id,
+            status="confirmed",
+            prep_start_time=suggested_start(reservation, items),
+            confirmed_at=now,
+        )
         session.add(order)
         session.flush()
     else:
@@ -220,6 +239,8 @@ def confirm_order(
         # (order_id, dish_id) whenever a dish stays in the order.
         session.execute(delete(OrderItem).where(OrderItem.order_id == order.id))
         session.expire(order, ["items"])
+        order.status = "confirmed"
+        order.prep_start_time = suggested_start(reservation, items)
         order.confirmed_at = now
     session.add_all(OrderItem(order_id=order.id, **item_values(item)) for item in items)
     session.flush()
