@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Link, Route, Routes, useLocation } from 'react-router'
@@ -323,7 +323,7 @@ describe('OrderPage', () => {
     expect(
       screen.getByText('Tu pedido ya está cerrado. Se podía cambiar hasta las 20:15.'),
     ).toBeVisible()
-    expect(screen.getByText('Provoleta')).toBeVisible()
+    expect(screen.getAllByText('Provoleta')[0]).toBeVisible()
     expect(
       screen.queryByRole('button', { name: /Agregar|Quitar|Sacar|Confirmar/ }),
     ).not.toBeInTheDocument()
@@ -760,18 +760,30 @@ describe('OrderPage', () => {
   it('US-21 S1 opens the bill detail with the value of each item', async () => {
     const user = await openPage()
     await add(user, 'Provoleta')
-    const toggle = screen.getByRole('button', { name: 'Ver detalle de la cuenta' })
-    expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByRole('table', { name: 'Detalle de la cuenta' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Detalle de la cuenta' })).not.toBeInTheDocument()
 
-    await user.click(toggle)
+    await user.click(screen.getByRole('button', { name: 'Ver detalle de la cuenta' }))
 
-    expect(screen.getByRole('button', { name: 'Ocultar detalle' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
-    const bill = screen.getByRole('table', { name: 'Detalle de la cuenta' })
+    const dialog = screen.getByRole('dialog', { name: 'Detalle de la cuenta' })
+    const bill = within(dialog).getByRole('table', { name: 'Detalle de la cuenta' })
     expect(within(bill).getByRole('row', { name: /Provoleta/ })).toHaveTextContent(money(7500))
+    expect(dialog).toHaveTextContent('Impuestos incluidos')
+    expect(dialog).toHaveTextContent('Preparación: unos 10 min, para tu llegada a las 21:00')
+    expect(dialog).toHaveTextContent('Sin confirmar: el restaurante todavía no lo ve')
+
+    // Clicking outside the bill (on the backdrop) closes it.
+    fireEvent.click(dialog)
+    await waitFor(() => expect(dialog).not.toHaveAttribute('open'))
+  })
+
+  it('US-21 edge shows the bill of a closed order too', async () => {
+    const user = await openPage(pageData({ order: orderOf([[PROVOLETA, 2]]) }, false))
+
+    await user.click(screen.getByRole('button', { name: 'Ver detalle de la cuenta' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Detalle de la cuenta' })
+    expect(within(dialog).getByRole('row', { name: /Total/ })).toHaveTextContent(money(15000))
+    expect(dialog).toHaveTextContent('Pedido confirmado')
   })
 
   it('US-21 S2 shows the total with taxes included', async () => {
@@ -791,7 +803,10 @@ describe('OrderPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Ver detalle de la cuenta' }))
 
-    const bill = screen.getByRole('table', { name: 'Detalle de la cuenta' })
+    const bill = within(screen.getByRole('dialog', { name: 'Detalle de la cuenta' })).getByRole(
+      'table',
+      { name: 'Detalle de la cuenta' },
+    )
     const cells = (name: RegExp) =>
       within(within(bill).getByRole('row', { name }))
         .getAllByRole('cell')

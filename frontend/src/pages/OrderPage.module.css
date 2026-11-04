@@ -232,12 +232,30 @@
 }
 
 .estimate {
-  margin: 0;
-  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-sunken);
 }
 
 .estimate p {
   margin: 0;
+}
+
+.estimateIcon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  color: var(--color-primary-text);
+}
+
+.estimateValue {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3em;
+  font: 800 var(--text-lg) / 1.2 var(--font-display);
 }
 
 .total {
@@ -254,73 +272,8 @@
   font-weight: 700;
 }
 
-.disclosure {
+.billButton {
   justify-self: start;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color-primary-text);
-  font: inherit;
-  font-weight: 800;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.bill {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-sm);
-}
-
-.bill caption {
-  margin-bottom: 6px;
-  font-weight: 800;
-  text-align: left;
-}
-
-.bill th,
-.bill td {
-  padding: 6px 4px;
-  border-bottom: 1px solid var(--color-line);
-  text-align: left;
-}
-
-.bill td:last-child {
-  text-align: right;
-}
-
-/* On a phone each row reads «Provoleta», then «2 × $ 7.500» and the subtotal. */
-@media (max-width: 480px) {
-  .bill thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .bill tbody tr {
-    display: grid;
-    grid-template-columns: auto auto 1fr;
-    gap: 4px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--color-line);
-  }
-
-  .bill tbody td {
-    padding: 0;
-    border: 0;
-  }
-
-  .bill tbody td:first-child {
-    grid-column: 1 / -1;
-    font-weight: 800;
-  }
-
-  .bill tbody td:nth-child(2)::after {
-    content: ' ×';
-  }
 }
 
 .bar {

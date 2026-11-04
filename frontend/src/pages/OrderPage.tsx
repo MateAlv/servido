@@ -15,11 +15,12 @@ import {
 import { signOut, useAccount, type Account } from '../api/session'
 import { UnverifiedNotice } from '../components/access'
 import { LogoSpinner } from '../components/brand'
-import { AddToOrderButton } from '../components/order'
+import { AddToOrderButton, Receipt, type ReceiptLine } from '../components/order'
 import { Button, Card, Modal, QuantityStepper, RollingNumber, StatusPill } from '../components/ui'
+import { IconClock } from '../components/ui/icons'
 import { cx } from '../lib/cx'
 import { longDate, timeInBuenosAires } from '../lib/date'
-import { formatCents, formatPrice, orderSummary, subtotalCents } from '../lib/orderSummary'
+import { formatCents, formatPrice, orderSummary, subtotalCents, toCents } from '../lib/orderSummary'
 import {
   lineOf,
   linesOfCart,
@@ -144,6 +145,7 @@ function OrderEditor({
   const [confirming, setConfirming] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [billOpen, setBillOpen] = useState(false)
+  const [billPrints, setBillPrints] = useState(0)
   const changesRef = useRef<HTMLDivElement>(null)
   const bannerRef = useRef<HTMLHeadingElement>(null)
   const closedRef = useRef<HTMLParagraphElement>(null)
@@ -342,6 +344,71 @@ function OrderEditor({
     )
   }
 
+  const reservationLine = `${longDate(reservation.date)} · ${reservation.start_time} · ${
+    reservation.party_size === 1 ? '1 persona' : `${reservation.party_size} personas`
+  }`
+  // The bill of what the page shows: the order being built, or the closed order.
+  const receipt: {
+    lines: ReceiptLine[]
+    total: number
+    estimate: number | null
+    confirmed: boolean
+  } | null = reservation.order_open
+    ? {
+        lines: lines.map((line) => ({
+          name: line.name,
+          quantity: line.quantity,
+          unitPriceCents: toCents(line.unitPrice),
+          subtotalCents: subtotalCents(line),
+        })),
+        total: totalCents,
+        estimate: prepTimeMinutes,
+        confirmed: !unconfirmed,
+      }
+    : page.order
+      ? {
+          lines: page.order.items.map((item) => ({
+            name: item.name,
+            quantity: item.quantity,
+            unitPriceCents: toCents(item.unit_price),
+            subtotalCents: toCents(item.subtotal),
+          })),
+          total: toCents(page.order.total),
+          estimate: page.order.prep_time_minutes,
+          confirmed: true,
+        }
+      : null
+  const billButton = (
+    <Button
+      variant="secondary"
+      size="sm"
+      aria-haspopup="dialog"
+      className={styles.billButton}
+      onClick={() => {
+        setBillPrints((count) => count + 1)
+        setBillOpen(true)
+      }}
+    >
+      Ver detalle de la cuenta
+    </Button>
+  )
+  // Outside «Tu pedido», so the closed dialog doesn't repeat its text there. The key prints the
+  // receipt again every time it opens.
+  const billModal = receipt && (
+    <Modal open={billOpen} onClose={() => setBillOpen(false)} title="Detalle de la cuenta">
+      <Receipt
+        key={billPrints}
+        restaurant={reservation.restaurant.nombre}
+        reservation={reservationLine}
+        lines={receipt.lines}
+        totalCents={receipt.total}
+        prepTimeMinutes={receipt.estimate}
+        arrival={reservation.start_time}
+        confirmed={receipt.confirmed}
+      />
+    </Modal>
+  )
+
   const summary = (
     <p className={styles.muted}>
       {longDate(reservation.date)} · {reservation.start_time} ·{' '}
@@ -393,6 +460,7 @@ function OrderEditor({
                 <strong>{formatPrice(page.order.total)}</strong>
               </p>
               <p className={styles.hint}>Impuestos incluidos</p>
+              {billButton}
             </Card>
           </>
         ) : (
@@ -404,6 +472,7 @@ function OrderEditor({
         <div className={styles.actions}>
           <Button to="/">Ir al inicio</Button>
         </div>
+        {billModal}
       </main>
     )
   }
@@ -559,10 +628,13 @@ function OrderEditor({
 
             {prepTimeMinutes !== null && (
               <div className={styles.estimate}>
-                <p>Preparación: unos {prepTimeMinutes} min</p>
-                <p className={styles.hint}>
-                  La cocina lo prepara para tu llegada a las {reservation.start_time}
-                </p>
+                <IconClock className={styles.estimateIcon} aria-hidden="true" />
+                <div>
+                  <p className={styles.estimateValue}>Preparación: unos {prepTimeMinutes} min</p>
+                  <p className={styles.hint}>
+                    La cocina lo prepara para tu llegada a las {reservation.start_time}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -575,44 +647,7 @@ function OrderEditor({
                   </strong>
                 </p>
                 <p className={styles.hint}>Impuestos incluidos</p>
-                <button
-                  type="button"
-                  className={styles.disclosure}
-                  aria-expanded={billOpen}
-                  aria-controls="bill-detail"
-                  onClick={() => setBillOpen((open) => !open)}
-                >
-                  {billOpen ? 'Ocultar detalle' : 'Ver detalle de la cuenta'}
-                </button>
-                <table id="bill-detail" hidden={!billOpen} className={styles.bill}>
-                  <caption>Detalle de la cuenta</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Plato</th>
-                      <th scope="col">Cantidad</th>
-                      <th scope="col">Precio unitario</th>
-                      <th scope="col">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lines.map((line) => (
-                      <tr key={line.dishId}>
-                        <td>{line.name}</td>
-                        <td>{line.quantity}</td>
-                        <td>{formatPrice(line.unitPrice)}</td>
-                        <td>{formatCents(subtotalCents(line))}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <th scope="row" colSpan={3}>
-                        Total (impuestos incluidos)
-                      </th>
-                      <td>{formatCents(totalCents)}</td>
-                    </tr>
-                  </tfoot>
-                </table>
+                {billButton}
               </>
             )}
           </Card>
@@ -633,7 +668,10 @@ function OrderEditor({
             >
               {dishCount(lines)} · {formatCents(totalCents)}
             </button>
-            <span className={styles.hint}>Impuestos incluidos</span>
+            <span className={styles.hint}>
+              Impuestos incluidos
+              {prepTimeMinutes !== null && ` · Preparación: unos ${prepTimeMinutes} min`}
+            </span>
             {unconfirmed && (
               <span className={styles.unconfirmed}>
                 Sin confirmar: el restaurante todavía no lo ve
@@ -663,6 +701,8 @@ function OrderEditor({
           </div>
         </div>
       )}
+
+      {billModal}
 
       <Modal
         open={removing}

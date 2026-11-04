@@ -15,6 +15,7 @@ import {
   LiveIndicator,
   OrderIndicator,
   PrepTimer,
+  Receipt,
   Steam,
 } from '../components/order'
 import { ConfirmationStamp, Ticket, TicketDivider, Timeline } from '../components/reservation'
@@ -445,6 +446,28 @@ function OrderDemo() {
         <span className={styles.total}>
           Total: <RollingNumber value={quantity * DISH_PRICE} format={(n) => PRICE.format(n)} />
         </span>
+      </Demo>
+      <Demo
+        title="Cuenta"
+        note="El detalle de la cuenta del pedido, impreso como un ticket de papel (US-21). Se abre en un Modal desde «Ver detalle de la cuenta»."
+      >
+        <Receipt
+          restaurant="La Esquina de Palermo"
+          reservation="martes, 3 de noviembre · 21:00 · 4 personas"
+          lines={[
+            { name: 'Provoleta', quantity: 2, unitPriceCents: 750000, subtotalCents: 1500000 },
+            {
+              name: 'Bife de chorizo',
+              quantity: 1,
+              unitPriceCents: 1850000,
+              subtotalCents: 1850000,
+            },
+          ]}
+          totalCents={3350000}
+          prepTimeMinutes={25}
+          arrival="21:00"
+          confirmed
+        />
       </Demo>
       <Demo
         title="Tiempo de preparación"
