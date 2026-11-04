@@ -15,9 +15,15 @@ import {
 import { signOut, useAccount, type Account } from '../api/session'
 import { UnverifiedNotice } from '../components/access'
 import { LogoSpinner } from '../components/brand'
-import { AddToOrderButton, Receipt, type ReceiptLine } from '../components/order'
+import {
+  AddToOrderButton,
+  DietaryBadges,
+  DishDetails,
+  Receipt,
+  type ReceiptLine,
+} from '../components/order'
 import { Button, Card, Modal, QuantityStepper, RollingNumber, StatusPill } from '../components/ui'
-import { IconClock } from '../components/ui/icons'
+import { IconCloche, IconClock, IconEye } from '../components/ui/icons'
 import { cx } from '../lib/cx'
 import { longDate, timeInBuenosAires } from '../lib/date'
 import { formatCents, formatPrice, orderSummary, subtotalCents, toCents } from '../lib/orderSummary'
@@ -40,12 +46,6 @@ const CATEGORIES: [string, string][] = [
   ['postre', 'Postres'],
   ['bebida', 'Bebidas'],
 ]
-
-const RESTRICTIONS: Record<string, string> = {
-  sin_tacc: 'Sin TACC',
-  vegetariano: 'Vegetariano',
-  vegano: 'Vegano',
-}
 
 function dishCount(lines: CartLine[]): string {
   const count = lines.reduce((total, line) => total + line.quantity, 0)
@@ -146,6 +146,8 @@ function OrderEditor({
   const [removing, setRemoving] = useState(false)
   const [billOpen, setBillOpen] = useState(false)
   const [billPrints, setBillPrints] = useState(0)
+  // The dish shown up close, by id.
+  const [viewing, setViewing] = useState<string | null>(null)
   const changesRef = useRef<HTMLDivElement>(null)
   const bannerRef = useRef<HTMLHeadingElement>(null)
   const closedRef = useRef<HTMLParagraphElement>(null)
@@ -296,7 +298,7 @@ function OrderEditor({
       afterRender.current = () =>
         (next
           ? orderListRef.current?.querySelector<HTMLElement>(`[data-dish="${next.dishId}"] button`)
-          : menuRef.current?.querySelector<HTMLElement>(`[data-dish="${dishId}"] button`)
+          : menuRef.current?.querySelector<HTMLElement>(`[data-dish="${dishId}"] [data-add] button`)
         )?.focus()
     } else if (quantity >= MAX_UNITS) {
       // The "+" just pressed is disabled at the maximum: focus stays on this dish's "−".
@@ -477,6 +479,9 @@ function OrderEditor({
     )
   }
 
+  const viewedDish = page.menu.find((dish) => dish.id === viewing)
+  const viewedLine = viewedDish && lines.find((line) => line.dishId === viewedDish.id)
+
   const primaryLabel =
     lines.length === 0 ? 'Quitar pedido' : confirmedLines ? 'Confirmar cambios' : 'Confirmar pedido'
   const showPrimary = unconfirmed
@@ -545,32 +550,44 @@ function OrderEditor({
                     const inOrder = lines.find((line) => line.dishId === dish.id)
                     return (
                       <li key={dish.id} data-dish={dish.id} className={styles.dish}>
-                        {dish.photo_url && (
-                          <img src={dish.photo_url} alt="" className={styles.photo} />
-                        )}
-                        <div className={styles.dishInfo}>
-                          <span className={styles.dishName}>{dish.name}</span>
-                          {dish.description && (
-                            <span className={styles.muted}>{dish.description}</span>
-                          )}
-                          <span className={styles.dishMeta}>
-                            <span className={styles.price}>{formatPrice(dish.price)}</span>
-                            {dish.prep_time_minutes !== null && (
-                              <span>
-                                <span aria-hidden="true">{dish.prep_time_minutes} min</span>
-                                <span className="visually-hidden">
-                                  Se prepara en {dish.prep_time_minutes} min
-                                </span>
-                              </span>
+                        <button
+                          type="button"
+                          className={styles.dishOpen}
+                          aria-haspopup="dialog"
+                          onClick={() => setViewing(dish.id)}
+                        >
+                          <span className={styles.thumb}>
+                            {dish.photo_url ? (
+                              <img src={dish.photo_url} alt="" className={styles.photo} />
+                            ) : (
+                              <IconCloche className={styles.thumbIcon} />
                             )}
-                            {dish.dietary_restrictions.map((restriction) => (
-                              <span key={restriction} className={styles.tag}>
-                                {RESTRICTIONS[restriction] ?? restriction}
-                              </span>
-                            ))}
+                            <span className={styles.peek} aria-hidden="true">
+                              <IconEye />
+                              Ver
+                            </span>
                           </span>
-                        </div>
-                        <div className={styles.dishAction}>
+                          <span className={styles.dishInfo}>
+                            <span className={styles.dishName}>{dish.name}</span>
+                            {dish.description && (
+                              <span className={styles.dishDescription}>{dish.description}</span>
+                            )}
+                            <span className={styles.dishMeta}>
+                              <span className={styles.price}>{formatPrice(dish.price)}</span>
+                              {dish.prep_time_minutes !== null && (
+                                <span className={styles.dishTime}>
+                                  <IconClock aria-hidden="true" />
+                                  <span aria-hidden="true">{dish.prep_time_minutes} min</span>
+                                  <span className="visually-hidden">
+                                    Se prepara en {dish.prep_time_minutes} min
+                                  </span>
+                                </span>
+                              )}
+                            </span>
+                            <DietaryBadges restrictions={dish.dietary_restrictions} inline />
+                          </span>
+                        </button>
+                        <div className={styles.dishAction} data-add="">
                           <AddToOrderButton
                             size="sm"
                             label={inOrder ? 'Agregar otro' : 'Agregar al pedido'}
@@ -703,6 +720,41 @@ function OrderEditor({
       )}
 
       {billModal}
+
+      <Modal
+        open={viewedDish !== undefined}
+        onClose={() => setViewing(null)}
+        title={viewedDish?.name ?? ''}
+        footer={
+          viewedDish && (
+            <div className={styles.dishModalActions}>
+              {viewedLine && (
+                <QuantityStepper
+                  label={`Cantidad de ${viewedDish.name}`}
+                  value={viewedLine.quantity}
+                  min={0}
+                  max={MAX_UNITS}
+                  decreaseLabel={
+                    viewedLine.quantity === 1 ? `Sacar ${viewedDish.name} del pedido` : 'Quitar uno'
+                  }
+                  maxHint={`Máximo ${MAX_UNITS} por plato`}
+                  announce={false}
+                  disabled={confirming}
+                  onChange={(quantity) => setQuantity(viewedLine, quantity)}
+                />
+              )}
+              <AddToOrderButton
+                label={viewedLine ? 'Agregar otro' : 'Agregar al pedido'}
+                itemName={viewedDish.name}
+                disabled={confirming || (viewedLine?.quantity ?? 0) >= MAX_UNITS}
+                onAdd={() => setQuantity(viewedDish, (viewedLine?.quantity ?? 0) + 1)}
+              />
+            </div>
+          )
+        }
+      >
+        {viewedDish && <DishDetails dish={viewedDish} />}
+      </Modal>
 
       <Modal
         open={removing}

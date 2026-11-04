@@ -171,3 +171,33 @@ export function IconEyeOff(props: IconProps) {
     </Icon>
   )
 }
+
+export function IconLeaf(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15" />
+      <path d="M5 19 13 11" />
+    </Icon>
+  )
+}
+
+export function IconSprout(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 21v-9" />
+      <path d="M12 12C12 8 9.5 6 5 6c0 4 2.5 6 7 6Z" />
+      <path d="M12 14c0-4 2.5-6.5 7-6.5 0 4-2.5 6.5-7 6.5Z" />
+    </Icon>
+  )
+}
+
+export function IconWheatOff(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 21V8" />
+      <path d="M12 8c-2-1-3-2.8-3-5 2 .8 3 2.5 3 5Zm0 0c2-1 3-2.8 3-5-2 .8-3 2.5-3 5Z" />
+      <path d="M12 14c-2.2 0-4-1.4-4.5-3.5 2.2 0 4 1.4 4.5 3.5Zm0 0c2.2 0 4-1.4 4.5-3.5-2.2 0-4 1.4-4.5 3.5Z" />
+      <path d="M3 3l18 18" />
+    </Icon>
+  )
+}

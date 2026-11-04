@@ -12,6 +12,8 @@ import {
 } from '../components/brand'
 import {
   AddToOrderButton,
+  DietaryBadges,
+  DishDetails,
   LiveIndicator,
   OrderIndicator,
   PrepTimer,
@@ -446,6 +448,28 @@ function OrderDemo() {
         <span className={styles.total}>
           Total: <RollingNumber value={quantity * DISH_PRICE} format={(n) => PRICE.format(n)} />
         </span>
+      </Demo>
+      <Demo
+        title="Restricciones alimenticias"
+        note="Lo que declara el restaurante, cada una con su ícono para no depender del color."
+      >
+        <DietaryBadges restrictions={['vegano', 'vegetariano', 'sin_tacc']} size="md" />
+      </Demo>
+      <Demo
+        title="Plato de cerca"
+        note="El detalle de un plato en el pedido (US-17): foto, precio, tiempo (US-19), restricciones y descripción. Va en un Modal; sin foto muestra la campana."
+      >
+        <DishDetails
+          dish={{
+            name: 'Ravioles de ricota',
+            description: 'Pasta casera rellena de ricota y nuez, con tuco de la casa.',
+            category: 'plato_principal',
+            price: '12500.00',
+            photo_url: null,
+            dietary_restrictions: ['vegetariano'],
+            prep_time_minutes: 20,
+          }}
+        />
       </Demo>
       <Demo
         title="Cuenta"

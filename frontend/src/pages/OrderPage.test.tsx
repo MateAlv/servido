@@ -715,6 +715,52 @@ describe('OrderPage', () => {
     expect(screen.getByRole('button', { name: 'Agregar al pedido: Flan' })).toBeVisible()
   })
 
+  it('US-17 edge shows a dish up close and adds it from there', async () => {
+    const user = await openPage(
+      pageData({ menu: [PROVOLETA, { ...BIFE, photo_url: '/media/dishes/bife.jpg' }, FLAN] }),
+    )
+
+    await user.click(
+      within(menuDish('Bife de chorizo')).getByRole('button', { name: /^Bife de chorizo/ }),
+    )
+
+    const dialog = screen.getByRole('dialog', { name: 'Bife de chorizo' })
+    expect(within(dialog).getByRole('img', { name: 'Foto de Bife de chorizo' })).toHaveAttribute(
+      'src',
+      '/media/dishes/bife.jpg',
+    )
+    expect(dialog).toHaveTextContent('Plato principal')
+    expect(dialog).toHaveTextContent('Se prepara en 25 min')
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Agregar al pedido: Bife de chorizo' }),
+    )
+    expect(orderRow('Bife de chorizo')).toBeInTheDocument()
+    expect(within(dialog).getByRole('group', { name: 'Cantidad de Bife de chorizo' })).toBeVisible()
+
+    // Clicking outside the dish closes it.
+    fireEvent.click(dialog)
+    await waitFor(() => expect(dialog).not.toHaveAttribute('open'))
+  })
+
+  it('US-17 edge shows the dietary restrictions the restaurant declared', async () => {
+    await openPage()
+
+    expect(within(menuDish('Provoleta')).getByText('Sin TACC')).toBeInTheDocument()
+    expect(
+      within(menuDish('Flan')).queryByText(/Vegano|Vegetariano|Sin TACC/),
+    ).not.toBeInTheDocument()
+  })
+
+  it('US-17 edge says when a dish has no photo yet', async () => {
+    const user = await openPage()
+
+    await user.click(within(menuDish('Flan')).getByRole('button', { name: /^Flan/ }))
+
+    expect(screen.getByRole('dialog', { name: 'Flan' })).toHaveTextContent(
+      'El restaurante todavía no cargó una foto',
+    )
+  })
+
   it('US-19 S1 shows the estimated time while building and once confirmed', async () => {
     confirmMock.mockResolvedValue({ ok: true, page: pageData({ order: orderOf([[BIFE, 1]]) }) })
     const user = await openPage()

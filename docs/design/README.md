@@ -98,6 +98,8 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 | `AddToOrderButton` | Agregar un plato: los cubiertos chocan, aparece un check y sube un "+1". `itemName` suma el plato al nombre accesible («Agregar al pedido: Provoleta») | 17 |
 | `OrderIndicator` | Botón del pedido en el encabezado: la tapa salta y el contador rebota al agregar | 17, 47 |
 | `PrepTimer` | Anillo de tiempo de preparación que se completa y termina en "¡Listo!" | 19, 20, 40 |
+| `DietaryBadges` | Restricciones que declara el restaurante (vegano, vegetariano, sin TACC), cada una con ícono y color propios. `inline` la arma con `span` para usarla dentro de un botón | 15, 17 |
+| `DishDetails` | Un plato de cerca para un Modal: foto que se asienta al abrirse (o la campana si no hay), categoría, precio, tiempo de preparación, descripción y restricciones | 17, 19 |
 | `Receipt` | La cuenta de un pedido como un ticket de papel crema con borde dentado, en los dos temas: platos, cantidades, precios, total con impuestos incluidos, tiempo estimado y estado. Sale «impresa» al abrirse; con movimiento reducido aparece directo | 21 |
 | `Steam` | Vapor que sube: algo se está cocinando | 19, 20 |
 | `LiveIndicator` | Píldora "En vivo" que late | 5, 20 |
