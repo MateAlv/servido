@@ -234,9 +234,14 @@ export function RestaurantHome({ account }: { account: Account }) {
               description="Las próximas visitas a tu local."
               icon={<IconUsers />}
               action={
-                <Button size="sm" to="/restaurante/reservas">
-                  Ver reservas
-                </Button>
+                <>
+                  <Button size="sm" to="/restaurante/reservas">
+                    Ver reservas
+                  </Button>
+                  <Button size="sm" variant="secondary" to="/restaurante/cancelaciones">
+                    Ver cancelaciones
+                  </Button>
+                </>
               }
             >
               <p>

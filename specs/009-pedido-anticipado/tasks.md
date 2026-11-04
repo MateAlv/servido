@@ -141,7 +141,7 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
 ## Phase 5: Wrap-up
 
 - [X] T033 Run `make format lint test`, and check that every scenario of the plan's test map has its test
-- [X] T038 Merge main into the branch and reconcile with PR #32 (04/11): write `pedidos`/`pedido_items` (status `confirmed`, `prep_start_time`), add `confirmed_at` and `dish_name` in migration `e0e674653e2f`, treat unavailable dishes (US-15) as off the menu, US-20 shows the frozen name, and local mode reuses `scripts/seed.py`
+- [X] T038 Merge main into the branch and reconcile with PR #32 (04/11): write `pedidos`/`pedido_items` (status `confirmed`, `prep_start_time`), add `confirmed_at` and `dish_name` in migration `e0e674653e2f`, treat unavailable dishes (US-15) as off the menu, US-20 shows the frozen name, and local mode reuses `scripts/seed.py`. Also wires US-18 S3 (spec 008), which waited for orders: a cancelled reservation with an order says so in `/restaurante/cancelaciones`, and the restaurant panel links to that page
 - [ ] T034 Walk through [quickstart.md](quickstart.md) locally, at 360 px and with the keyboard
 - [X] T035 Update the docs:
   - `AGENTS.md`: "Where things stand", routes and endpoints, glossary rows `OrderItem` and `Cart` / `CartItem` (Pedido en armado);

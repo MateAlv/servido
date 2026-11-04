@@ -159,6 +159,16 @@ describe('HomePage', () => {
     expect(screen.queryByRole('region', { name: 'Soy restaurante' })).not.toBeInTheDocument()
   })
 
+  it('US-18 edge the restaurant panel links to its cancellations', async () => {
+    signedInAs('restaurant', 'La Esquina')
+    renderWithProviders(<HomePage />)
+
+    expect(await screen.findByRole('link', { name: 'Ver cancelaciones' })).toHaveAttribute(
+      'href',
+      '/restaurante/cancelaciones',
+    )
+  })
+
   it('US-3 S4 an expired session falls back to the public home', async () => {
     sessionStorage.setItem('servido-access-token', 'token-vencido')
     answerMe({ error: { detail: 'Tu sesión no es válida o venció. Volvé a ingresar.' } })
