@@ -150,6 +150,7 @@ def test_us4_s3_restaurant_gets_403_on_diner_endpoints(client: TestClient) -> No
             "cuit": "30711111111",
             "telefono": "1155554444",
             "password": "Segura123",
+            "terms_accepted": True,
         },
     )
     token = client.post(
