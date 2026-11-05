@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import { api } from '../api/client'
 import { getApiErrorMessage, getRequestErrorMessage } from '../api/errors'
 import { restaurantAccount, signIn } from '../api/session'
-import { Button, Card, PasswordField, TextField, useToast } from '../components/ui'
+import { Button, Card, Checkbox, PasswordField, TextField, useToast } from '../components/ui'
 import { GoogleButton, RedirectIfSignedIn } from '../components/access'
 import { googleEmail } from '../lib/google'
 import styles from './AuthPage.module.css'
@@ -42,6 +42,7 @@ export function RestaurantRegisterPage() {
   const [fields, setFields] = useState(EMPTY_FIELDS)
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [confirmationError, setConfirmationError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -55,7 +56,7 @@ export function RestaurantRegisterPage() {
     try {
       const { nombre, cuit, telefono } = fields
       const { data, error, response } = await api.POST('/api/restaurantes/google', {
-        body: { credential: googleCredential, nombre, cuit, telefono },
+        body: { credential: googleCredential, nombre, cuit, telefono, terms_accepted: true },
       })
       if (error || !data) {
         // An expired or rejected Google sign-in has to be done again.
@@ -75,6 +76,10 @@ export function RestaurantRegisterPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+    if (!termsAccepted) {
+      setError('Primero aceptá los términos y condiciones.')
+      return
+    }
     if (googleCredential) {
       await submitWithGoogle()
       return
@@ -85,7 +90,9 @@ export function RestaurantRegisterPage() {
     }
     setLoading(true)
     try {
-      const { error } = await api.POST('/api/restaurantes', { body: fields })
+      const { error } = await api.POST('/api/restaurantes', {
+        body: { ...fields, terms_accepted: true },
+      })
       if (error) throw new Error(getApiErrorMessage(error, FALLBACK_ERROR))
       toast('¡Listo! La cuenta del restaurante está creada. Ingresá para seguir.', { tone: 'ok' })
       navigate('/ingresar?rol=restaurante', { state: { email: fields.email } })
@@ -125,7 +132,17 @@ export function RestaurantRegisterPage() {
             </div>
           ) : (
             <>
-              <GoogleButton text="signup_with" onCredential={setGoogleCredential} />
+              <GoogleButton
+                text="signup_with"
+                onCredential={(credential) => {
+                  if (!termsAccepted) {
+                    setError('Primero aceptá los términos')
+                    return
+                  }
+                  setGoogleCredential(credential)
+                  setError('')
+                }}
+              />
               <p className={styles.divider}>o</p>
             </>
           )}
@@ -186,6 +203,21 @@ export function RestaurantRegisterPage() {
                 />
               </>
             )}
+            <Checkbox
+              checked={termsAccepted}
+              onChange={(event) => {
+                setTermsAccepted(event.target.checked)
+                if (event.target.checked) setError('')
+              }}
+              label={
+                <>
+                  He leído y acepto los{' '}
+                  <a href="/terminos/restaurantes" target="_blank" rel="noopener">
+                    Términos y condiciones
+                  </a>
+                </>
+              }
+            />
             {error && (
               <p className={styles.error} role="alert">
                 {error}

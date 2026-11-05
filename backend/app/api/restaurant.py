@@ -60,6 +60,7 @@ from app.services.restaurant_orders import (
 )
 from app.services.roles import RESTAURANT
 from app.services.table_inventory import ReservationConflictError, replace_inventory
+from app.services.terms import acceptance_for
 
 router = APIRouter(tags=["restaurant"])
 RESTAURANT_UPLOADS_DIR = Path("uploads/restaurants")
@@ -107,6 +108,7 @@ def register_restaurant(payload: RestaurantRegistrationRequest, session: Session
         telefono=payload.telefono,
         password_hash=hash_password(payload.password),
     )
+    restaurant.terms_version, restaurant.terms_accepted_at = acceptance_for("restaurant")
     return save_restaurant(session, restaurant)
 
 
@@ -131,6 +133,7 @@ def register_restaurant_with_google(
         telefono=payload.telefono,
         password_hash=hash_password(secrets.token_urlsafe(32)),
     )
+    restaurant.terms_version, restaurant.terms_accepted_at = acceptance_for("restaurant")
     return restaurant_session(save_restaurant(session, restaurant))
 
 

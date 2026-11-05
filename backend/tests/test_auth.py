@@ -11,7 +11,7 @@ def registration_payload(
     password: str = "Segura123",
     nombre: str = "Comensal",
 ) -> dict[str, str]:
-    return {"email": email, "password": password, "nombre": nombre}
+    return {"email": email, "password": password, "nombre": nombre, "terms_accepted": True}
 
 
 def test_us1_s1_registration_form_accepts_required_fields(client: TestClient) -> None:
@@ -21,7 +21,9 @@ def test_us1_s1_registration_form_accepts_required_fields(client: TestClient) ->
 
 
 def test_us1_s2_empty_registration_fields_are_rejected(client: TestClient) -> None:
-    response = client.post("/api/comensales", json={"email": "", "password": ""})
+    response = client.post(
+        "/api/comensales", json={"email": "", "password": "", "terms_accepted": True}
+    )
     assert response.status_code == 400
     assert response.json()["detail"]
 
