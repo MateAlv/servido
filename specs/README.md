@@ -21,6 +21,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17 en la spec 009) |
 | [009-pedido-anticipado](009-pedido-anticipado/spec.md) | Comensal | 17, 19, 21 | 5 | 3 | ✅ | ✅ | ✅ | ✅ US-17, US-19, US-21 (decisiones P1–P14 del 30/10, falta que la PO las valide) |
 | [011-ver-platos-precios](011-ver-platos-precios/spec.md) | Comensal | 15 | 2 | 3 | ✅ | ✅ | ✅ | ✅ US-15 (D1–D4, falta que la PO las valide) |
+| [012-resenas](012-resenas/spec.md) | Comensal y Restaurante | 24, 27, 50 (y criterio pendiente de 7) | 5 | 4 (US-50 adelantada del 6) | ✅ | — | — | — (decisiones R1–R19 del 05/11, falta que la PO las valide) |
 
 Arrastre de la spec 003: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002 muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
 
@@ -41,6 +42,7 @@ Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 están U
 
   Detalle en `specs/009-pedido-anticipado/research.md`. En la planilla, US-17 figura para el Integrante 4 y US-19 y US-21 para el 5; en la votación las tomó Mateo.
 - Spec 005 (US-13): falta sumar el escenario 6 a la US-13 en la planilla y exportar `backlog.md` (T033a), cargar los datos de demo en producción (T055) y hacer el pase en navegador a 360 px y con teclado (T024/T032). Las decisiones D1–D11 esperan la validación de la PO.
+- Spec 012 (US-24, US-27, US-50): antes de implementarla, falta que la PO la valide. US-50 pasa del Sprint 6 (Integrante 3) al Sprint 4 (Integrante 1): hay que actualizar la planilla y avisarle a Integrante 3. US-25 y US-38 deben impedir cancelar una reserva que ya terminó, y US-35 debe usar el promedio de esta spec.
 
 ### Numeración
 
@@ -103,6 +105,10 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 30/10 | 009 | P4: el comensal llega al pedido desde la confirmación de la reserva y desde «Tus próximas reservas» en su inicio, una lista mínima que no reemplaza a la US-23. Falta que la PO lo valide |
 | 30/10 | 009 | P5–P14: un pedido por reserva; el plazo de 45 minutos vale para crear, cambiar y quitar, y se muestra como hora («Podés cambiarlo hasta las 20:15»); la hora de llegada es la de la reserva hasta la US-43; nombre, precio y tiempo de cada plato quedan fijos al confirmar; si el menú cambió mientras se armaba (plato quitado o con otro nombre, precio o tiempo), la confirmación se frena y se muestra qué cambió; de 1 a 20 unidades por plato y hasta 50 platos distintos; confirmar sin platos deja la reserva sin pedido, previa confirmación; el pedido de una reserva cancelada queda cancelado, sin borrarse; un comensal sin email verificado puede armar el pedido pero no confirmarlo (lectura de US-51 S5); sin menú no se ofrece pedido. Falta que la PO lo valide |
 | 04/11 | 009 | El pedido confirmado se guarda en las tablas `pedidos` y `pedido_items` que trajo el PR #32 (US-20, US-22), en vez de las `orders` y `order_items` del primer diseño. Se les suma la hora de confirmación y el nombre del plato al confirmar (P8); US-17 siempre escribe el estado `confirmed`, y lo que no se confirmó queda en el carrito. Un plato no disponible (US-15) cuenta como fuera del menú. Decisión de Mateo para cerrar el Sprint 3 |
+| 05/11 | 012 | R1: US-50 se adelanta entera del Sprint 6 al 4, y el Sprint 4 queda en 15 SP y el Sprint 6 en 15. R2: una reserva está realizada si sigue confirmada y su horario de fin ya pasó; quien no se presentó también puede calificar. R3: los comensales ven el promedio, la cantidad y las opiniones reales. R4: una reseña por reserva, definitiva. Falta que la PO lo valide |
+| 05/11 | 012 | R5: el gasto por persona se pide y es opcional. R6: desde 5 personas con un gasto informado, la media reemplaza la categoría declarada (US-7). R7: se califica desde el bloque «¿Cómo estuvo?» del inicio. R8: hay que tener el email verificado. R9: hasta 30 días después de la reserva. Falta que la PO lo valide |
+| 05/11 | 012 | R10: en público, el autor se ve como nombre e inicial, con la fecha de la visita. R11: el gasto por persona es público. R12: el promedio se muestra desde la primera reseña, con la cantidad. R13: solo cuenta la última reseña de cada persona, según la visita más reciente. R14: en público solo se ve esa reseña, si tiene comentario; el restaurante ve todas. R15: para US-7 se usa el último gasto informado de cada persona. Falta que la PO lo valide |
+| 05/11 | 012 | R16: siempre se revisa «Así se va a ver» antes de publicar. R17: el restaurante ve nombre e inicial, fecha y horario de la visita, estrellas, comentario y gasto, sin contacto ni enlace a la reserva. R18: un script carga datos de demo en producción, solo en el restaurante de demo y de forma reversible. R19: sin moderación ni denuncia en el MVP. Falta que la PO lo valide |
 
 ## Notas de formato
 
