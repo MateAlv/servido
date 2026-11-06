@@ -14,6 +14,12 @@ function answerMe(me: { data?: unknown; error?: unknown }, upcoming: unknown[] =
     if (path === '/api/me') {
       return { ...me, response: new Response(null, { status: me.error ? 401 : 200 }) }
     }
+    if (path === '/api/reviews/pending') {
+      return {
+        data: { author: 'Mateo', reservations: [] },
+        response: new Response(null, { status: 200 }),
+      }
+    }
     if (path === '/api/reservations/upcoming') {
       return { data: { reservations: upcoming }, response: new Response(null, { status: 200 }) }
     }

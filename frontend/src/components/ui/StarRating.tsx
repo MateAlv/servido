@@ -13,6 +13,9 @@ type StarRatingProps = {
   onChange?: (value: number) => void
   label?: string
   size?: number
+  invalid?: boolean
+  /** The id of what explains the error. */
+  describedBy?: string
 }
 
 function starsLabel(value: number) {
@@ -25,6 +28,8 @@ export function StarRating({
   onChange,
   label = 'Calificación',
   size = 28,
+  invalid = false,
+  describedBy,
 }: StarRatingProps) {
   const [hovered, setHovered] = useState<number | null>(null)
   const sizeStyle = cssVars({ '--star-size': `${size}px` })
@@ -46,13 +51,18 @@ export function StarRating({
     const step = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[event.key]
     if (!step) return
     event.preventDefault()
-    select(Math.min(5, Math.max(1, value + step)))
+    const next = Math.min(5, Math.max(1, value + step))
+    select(next)
+    event.currentTarget.querySelectorAll('button')[next - 1].focus()
   }
 
   return (
     <div
       role="radiogroup"
       aria-label={label}
+      aria-required="true"
+      aria-invalid={invalid || undefined}
+      aria-describedby={describedBy}
       className={styles.rating}
       style={sizeStyle}
       onKeyDown={handleKeyDown}

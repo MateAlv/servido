@@ -1,0 +1,51 @@
+.opinion {
+  display: grid;
+  gap: 4px;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.author {
+  font-weight: 800;
+}
+
+.comment {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.note::first-letter {
+  text-transform: uppercase;
+}
+
+.readMore {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.remark {
+  justify-self: start;
+  margin: 4px 0 0;
+  padding: 4px 10px;
+  border-radius: var(--radius-small);
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}

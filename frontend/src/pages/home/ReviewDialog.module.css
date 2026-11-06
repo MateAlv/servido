@@ -1,0 +1,76 @@
+.step {
+  display: grid;
+  gap: 16px;
+}
+
+.when {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.when::first-letter {
+  text-transform: uppercase;
+}
+
+.ratingLabel {
+  margin: 0 0 6px;
+  font-weight: 800;
+}
+
+.ratingRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.ratingValue {
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.previewTitle {
+  margin: 0;
+  font: 800 var(--text-lg) var(--font-display);
+}
+
+.preview {
+  padding: 14px;
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-small);
+  background: var(--color-surface-sunken);
+}
+
+.notice {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-small);
+  background: var(--color-warn-bg);
+  color: var(--color-text);
+}
+
+.notice p {
+  margin: 0;
+}
+
+.error {
+  margin: 6px 0 0;
+  color: var(--color-error);
+  font-weight: 700;
+}
+
+/* Stays in view while the content scrolls; the margins cancel the padding of the modal. */
+.actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin: 0 -26px -26px;
+  padding: 12px 26px 26px;
+  background: var(--color-surface);
+}

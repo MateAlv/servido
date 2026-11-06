@@ -13,8 +13,13 @@ import {
   useMap,
 } from 'react-leaflet'
 
-import { averageRating, type RestaurantPublic } from '../../data/restaurants.fixture'
+import {
+  averageRating,
+  reviewCountLabel,
+  type RestaurantPublic,
+} from '../../data/restaurants.fixture'
 import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../lib/geo'
+import { formatRating } from '../../lib/rating'
 import { Button, IconStar } from '../ui'
 import { MapPin } from './MapPin'
 import { OccupancyMeter } from './OccupancyMeter'
@@ -145,7 +150,9 @@ export function RestaurantMap({
                     {rating !== null && (
                       <span className={styles.stars}>
                         <IconStar className={styles.star} />
-                        {rating.toLocaleString('es-AR', { maximumFractionDigits: 1 })}
+                        {formatRating(rating)}
+                        <span className="visually-hidden"> de 5 estrellas</span> ·{' '}
+                        {reviewCountLabel(restaurant)}
                       </span>
                     )}
                     {restaurant.cuisine && <span>{restaurant.cuisine}</span>}

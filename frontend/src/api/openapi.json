@@ -2113,6 +2113,219 @@
         }
       }
     },
+    "/api/reviews/pending": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "List Pending Reviews",
+        "operationId": "list_pending_reviews_api_reviews_pending_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingReviewsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/reservations/{reservation_id}/review": {
+      "post": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Publish Review",
+        "operationId": "publish_review_api_reservations__reservation_id__review_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedReviewResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o es de otro comensal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La reserva ya tiene rese\u00f1a o no se puede calificar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurant/reviews": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "List Restaurant Reviews",
+        "operationId": "list_restaurant_reviews_api_restaurant_reviews_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantReviewsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurants": {
       "get": {
         "tags": [
@@ -3268,6 +3481,78 @@
         ],
         "title": "OrderResponse"
       },
+      "PendingReview": {
+        "properties": {
+          "reservation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reservation Id"
+          },
+          "restaurant_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Restaurant Id"
+          },
+          "restaurant_name": {
+            "type": "string",
+            "title": "Restaurant Name"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "party_size": {
+            "type": "integer",
+            "title": "Party Size"
+          },
+          "hidden_by_later_visit": {
+            "type": "boolean",
+            "title": "Hidden By Later Visit"
+          },
+          "replaces_earlier_review": {
+            "type": "boolean",
+            "title": "Replaces Earlier Review"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation_id",
+          "restaurant_id",
+          "restaurant_name",
+          "date",
+          "start_time",
+          "party_size",
+          "hidden_by_later_visit",
+          "replaces_earlier_review"
+        ],
+        "title": "PendingReview"
+      },
+      "PendingReviewsResponse": {
+        "properties": {
+          "author": {
+            "type": "string",
+            "title": "Author"
+          },
+          "reservations": {
+            "items": {
+              "$ref": "#/components/schemas/PendingReview"
+            },
+            "type": "array",
+            "title": "Reservations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "author",
+          "reservations"
+        ],
+        "title": "PendingReviewsResponse"
+      },
       "PreorderedOrderSummary": {
         "properties": {
           "status": {
@@ -3342,6 +3627,48 @@
         ],
         "title": "PublicDish"
       },
+      "PublicOpinion": {
+        "properties": {
+          "author": {
+            "type": "string",
+            "title": "Author"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "comment": {
+            "type": "string",
+            "title": "Comment"
+          },
+          "spend_per_person": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spend Per Person"
+          },
+          "visit_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Visit Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "author",
+          "rating",
+          "comment",
+          "spend_per_person",
+          "visit_date"
+        ],
+        "title": "PublicOpinion",
+        "description": "The latest review of a person, when it has a comment (spec 012, R14)."
+      },
       "PublicRestaurant": {
         "properties": {
           "id": {
@@ -3385,6 +3712,36 @@
               }
             ],
             "title": "Price Tier"
+          },
+          "average_spend_per_person": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Spend Per Person"
+          },
+          "spend_people": {
+            "type": "integer",
+            "title": "Spend People"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "review_count": {
+            "type": "integer",
+            "title": "Review Count"
           },
           "dietary_restrictions": {
             "items": {
@@ -3446,6 +3803,10 @@
           "description",
           "cuisine",
           "price_tier",
+          "average_spend_per_person",
+          "spend_people",
+          "rating",
+          "review_count",
           "dietary_restrictions",
           "address",
           "neighborhood",
@@ -3500,6 +3861,36 @@
               }
             ],
             "title": "Price Tier"
+          },
+          "average_spend_per_person": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Spend Per Person"
+          },
+          "spend_people": {
+            "type": "integer",
+            "title": "Spend People"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "review_count": {
+            "type": "integer",
+            "title": "Review Count"
           },
           "dietary_restrictions": {
             "items": {
@@ -3559,6 +3950,13 @@
             },
             "type": "array",
             "title": "Menu"
+          },
+          "opinions": {
+            "items": {
+              "$ref": "#/components/schemas/PublicOpinion"
+            },
+            "type": "array",
+            "title": "Opinions"
           }
         },
         "type": "object",
@@ -3568,6 +3966,10 @@
           "description",
           "cuisine",
           "price_tier",
+          "average_spend_per_person",
+          "spend_people",
+          "rating",
+          "review_count",
           "dietary_restrictions",
           "address",
           "neighborhood",
@@ -3575,7 +3977,8 @@
           "lng",
           "photo_url",
           "has_menu",
-          "menu"
+          "menu",
+          "opinions"
         ],
         "title": "PublicRestaurantDetail"
       },
@@ -3594,6 +3997,55 @@
           "restaurants"
         ],
         "title": "PublicRestaurantList"
+      },
+      "PublishedReviewResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "spend_per_person": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spend Per Person"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rating",
+          "comment",
+          "spend_per_person",
+          "published_at"
+        ],
+        "title": "PublishedReviewResponse"
       },
       "RegistrationRequest": {
         "properties": {
@@ -4383,6 +4835,194 @@
           "telefono"
         ],
         "title": "RestaurantResponse"
+      },
+      "RestaurantReview": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "author": {
+            "type": "string",
+            "title": "Author"
+          },
+          "visit_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Visit Date"
+          },
+          "visit_time": {
+            "type": "string",
+            "title": "Visit Time"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "spend_per_person": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spend Per Person"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Published At"
+          },
+          "counts_in_average": {
+            "type": "boolean",
+            "title": "Counts In Average"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "author",
+          "visit_date",
+          "visit_time",
+          "rating",
+          "comment",
+          "spend_per_person",
+          "published_at",
+          "counts_in_average"
+        ],
+        "title": "RestaurantReview"
+      },
+      "RestaurantReviewsResponse": {
+        "properties": {
+          "rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "review_count": {
+            "type": "integer",
+            "title": "Review Count"
+          },
+          "total_reviews": {
+            "type": "integer",
+            "title": "Total Reviews"
+          },
+          "price_tier": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Tier"
+          },
+          "average_spend_per_person": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Spend Per Person"
+          },
+          "spend_people": {
+            "type": "integer",
+            "title": "Spend People"
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/RestaurantReview"
+            },
+            "type": "array",
+            "title": "Reviews"
+          },
+          "next_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating",
+          "review_count",
+          "total_reviews",
+          "price_tier",
+          "average_spend_per_person",
+          "spend_people",
+          "reviews",
+          "next_offset"
+        ],
+        "title": "RestaurantReviewsResponse"
+      },
+      "ReviewRequest": {
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "spend_per_person": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000000.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spend Per Person"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating"
+        ],
+        "title": "ReviewRequest"
       },
       "SlotResponse": {
         "properties": {

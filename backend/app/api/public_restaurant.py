@@ -7,27 +7,34 @@ from app.db import SessionDep
 from app.models.restaurant import Restaurant
 from app.schemas.public_restaurant import (
     PublicDish,
+    PublicOpinion,
     PublicRestaurant,
     PublicRestaurantDetail,
     PublicRestaurantList,
 )
-from app.services.availability import bookable_condition
+from app.services import reviews
+from app.services.availability import BUENOS_AIRES, bookable_condition
 from app.services.menu import menu_dishes
 
 router = APIRouter(tags=["restaurant"])
 
-PRICE_TIERS = {"$", "$$", "$$$", "$$$$"}
 RESTAURANT_NOT_FOUND = "No encontramos ese restaurante."
 
 
 def public_fields(restaurant: Restaurant, session: SessionDep) -> dict:
     assert restaurant.latitud is not None and restaurant.longitud is not None
+    summary = reviews.rating_summary(session, restaurant.id_restaurante)
+    spend = reviews.spend_summary(session, restaurant.id_restaurante)
     return {
         "id": restaurant.id_restaurante,
         "name": restaurant.nombre,
         "description": restaurant.descripcion,
         "cuisine": restaurant.tipo_comida,
-        "price_tier": restaurant.rango_precio if restaurant.rango_precio in PRICE_TIERS else None,
+        "price_tier": reviews.public_price_tier(restaurant, spend.average),
+        "average_spend_per_person": spend.average,
+        "spend_people": spend.people,
+        "rating": summary.average,
+        "review_count": summary.count,
         "dietary_restrictions": restaurant.restricciones_tags or [],
         "address": restaurant.direccion,
         "neighborhood": restaurant.barrio,
@@ -75,5 +82,16 @@ def get_bookable_restaurant(restaurant_id: UUID, session: SessionDep) -> PublicR
                 dietary_restrictions=dish.restricciones_alimenticias,
             )
             for dish in dishes
+        ],
+        opinions=[
+            PublicOpinion(
+                author=reviews.author_name(diner.nombre),
+                rating=review.rating,
+                comment=review.comment,
+                spend_per_person=review.spend_per_person,
+                visit_date=reservation.starts_at.astimezone(BUENOS_AIRES).date(),
+            )
+            for review, reservation, diner in reviews.latest_reviews(session, restaurant_id)
+            if review.comment
         ],
     )
