@@ -265,41 +265,6 @@
   gap: 14px;
 }
 
-.reviewList {
-  display: grid;
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.review {
-  display: grid;
-  gap: 4px;
-  padding-bottom: 14px;
-  border-bottom: 1px dashed var(--color-line);
-}
-
-.review:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.reviewHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.reviewAuthor {
-  font-weight: 800;
-}
-
-.reviewText {
-  margin: 0;
-}
-
 .side {
   position: sticky;
   top: 90px;

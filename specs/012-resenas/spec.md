@@ -50,14 +50,14 @@ Como **Comensal**, quiero dejar un comentario sobre mi experiencia, para compart
 
 1. **Dado** que estoy dejando la reseña de una reserva terminada, **Cuando** escribo un comentario de hasta 500 caracteres, **Entonces** el comentario queda como parte de esa reseña, asociado a la reserva y a su restaurante al publicarla.
 2. **Dado** que estoy dejando una reseña, **Cuando** veo el formulario, **Entonces** se me pregunta cuánto gasté por persona, con una aclaración de que es opcional y de que el monto se publica en mi reseña.
-3. **Dado** que completé el formulario, **Cuando** avanzo, **Entonces** veo «Así se va a ver», con mi nombre y mi inicial, la fecha de la visita, las estrellas y, si los completé, el comentario y el gasto; se me avisa que la reseña es definitiva y todavía no se publicó nada.
+3. **Dado** que completé el formulario, **Cuando** avanzo, **Entonces** veo «Así se va a ver», con mi nombre y mi inicial, la fecha de la visita, las estrellas y, si los completé, el comentario y el gasto; se me avisa que la reseña es definitiva y todavía no se publicó nada, y dónde se va a ver, con el gasto si lo informé.
 4. **Dado** que estoy en «Así se va a ver», **Cuando** vuelvo atrás, **Entonces** recupero lo que escribí, puedo cambiarlo y nada se publicó.
-5. **Dado** que estoy en «Así se va a ver», **Cuando** elijo Publicar, **Entonces** la reseña se publica una sola vez, incluso si la acción se repite.
+5. **Dado** que estoy en «Así se va a ver», **Cuando** elijo Publicar, **Entonces** la reseña se publica una sola vez, incluso si la acción se repite, y un doble toque en «Continuar» no la publica.
 6. **Dado** que dejo vacíos el comentario o el gasto, o escribo solo espacios en el comentario, **Cuando** publico, **Entonces** la reseña se publica sin ese dato.
 7. **Dado** que escribo un comentario de más de 500 caracteres, o un gasto que no es un monto entero mayor a 0 y de hasta $1.000.000, **Cuando** quiero avanzar o el dato llega al sistema, **Entonces** no se acepta y se me indica qué corregir.
 8. **Dado** que se publicó una reseña con comentario que es la última de su autor en ese restaurante, **Cuando** cualquier persona, con o sin cuenta, abre el detalle del restaurante, **Entonces** ve en Opiniones el nombre y la inicial del autor, la fecha de la visita, las estrellas, el comentario y el gasto si lo informó, sin ningún otro dato personal.
-9. **Dado** que publiqué antes una opinión con comentario, **Cuando** publico la reseña de una visita más reciente al mismo restaurante, con o sin comentario, **Entonces** la opinión anterior deja de verse en público, y solo se muestra la nueva si tiene comentario.
-10. **Dado** que publico la reseña de una visita anterior a la de mi última reseña en ese restaurante, **Cuando** se publica, **Entonces** Opiniones sigue mostrando la de la visita más reciente.
+9. **Dado** que publiqué antes una opinión con comentario, **Cuando** publico la reseña de una visita más reciente al mismo restaurante, con o sin comentario, **Entonces** la opinión anterior deja de verse en público, y solo se muestra la nueva si tiene comentario. La revisión me lo avisa antes de publicar.
+10. **Dado** que publico la reseña de una visita anterior a la de mi última reseña en ese restaurante, **Cuando** se publica, **Entonces** Opiniones sigue mostrando la de la visita más reciente. El formulario y la revisión me avisan antes que esta reseña la ve solo el restaurante, y la revisión se titula «Así la va a ver el restaurante».
 11. **Dado** que una reseña no tiene comentario, **Cuando** alguien abre el detalle, **Entonces** no aparece en Opiniones, pero cuenta en el promedio y en la cantidad si es la última de su autor.
 
 ---
@@ -73,8 +73,8 @@ Como **Responsable del restaurante**, quiero ver las reseñas que dejan los come
 **Acceptance Scenarios**:
 
 1. **Dado** que mi restaurante tiene reseñas, **Cuando** abro Ver reseñas, **Entonces** veo todas, de la publicada más recientemente a la más antigua, cada una con el nombre y la inicial del autor, la fecha y el horario de la visita, las estrellas y, si los tiene, el comentario y el gasto por persona.
-2. **Dado** que una persona publicó varias reseñas de mi restaurante, **Cuando** abro Ver reseñas, **Entonces** veo todas, incluidas las que ya no se muestran en público ni cuentan en el promedio.
-3. **Dado** que abro Ver reseñas, **Cuando** miro el resumen, **Entonces** veo el promedio y la cantidad de personas que ven los comensales, y además la cantidad total de reseñas recibidas.
+2. **Dado** que una persona publicó varias reseñas de mi restaurante, **Cuando** abro Ver reseñas, **Entonces** veo todas, incluidas las que ya no se muestran en público ni cuentan en el promedio, marcadas como visita anterior.
+3. **Dado** que abro Ver reseñas, **Cuando** miro el resumen, **Entonces** veo el promedio y la cantidad de personas que ven los comensales, y además la cantidad total de reseñas recibidas. Si la categoría de precio es calculada, veo cuál es, de cuánta gente sale y que reemplaza a la que declaré.
 4. **Dado** que veo una reseña, **Cuando** busco cambiarla, **Entonces** no tengo ninguna opción para modificarla ni eliminarla, y el sistema rechaza cualquier intento.
 5. **Dado** que hay reseñas de otro restaurante, **Cuando** abro Ver reseñas, **Entonces** no aparecen, y un comensal o un visitante no pueden abrir esta pantalla.
 6. **Dado** que veo una reseña, **Cuando** la miro, **Entonces** no veo el email ni el teléfono del autor, ni un enlace a su reserva.
@@ -109,7 +109,8 @@ Todas las decisiones de esta sección son del equipo (05/11) y falta que la PO l
 - **Comensal sin email verificado** *(R8)*: ve la reserva en el bloque con el aviso de verificación, pero no puede completar la reseña. Es la misma regla que tiene el pedido (spec 009, P13). Cuando verifica, ya puede calificar.
 - **Última reseña de cada persona** *(R13, R14)*: es la de la visita más reciente de esa persona en ese restaurante, según la fecha de la reserva y no la de publicación. Si dos reservas empiezan a la misma hora, gana la publicada después.
 - **Lo que deja de verse en público** *(R14)*: una reseña nueva puede esconder una opinión anterior aunque la nueva no tenga comentario. Se acepta: en público, cada persona está representada por su última visita. La anterior no se borra y el restaurante la sigue viendo.
-- **Cantidad y lista de Opiniones** *(R12, R14)*: la cantidad cuenta una reseña por persona; Opiniones lista solo a las que tienen comentario en su última reseña, de la visita más reciente a la más antigua. Por eso la lista puede ser más corta que la cantidad, pero nunca más larga. Cuando nadie tiene comentario, la sección no se muestra.
+- **Cantidad y lista de Opiniones** *(R12, R14)*: la cantidad cuenta una reseña por persona; Opiniones lista solo a las que tienen comentario en su última reseña, de la visita más reciente a la más antigua. Por eso la lista puede ser más corta que la cantidad, pero nunca más larga. Cuando nadie tiene comentario, la sección no se muestra. Si la lista es más corta que la cantidad, Opiniones lo aclara («4 comentarios de 7 reseñas»). Se muestran 5 opiniones y el resto con «Ver más opiniones»; un comentario largo se acorta con «Leer más».
+- **Lo escrito antes de publicar**: se conserva por reserva mientras la pantalla sigue abierta, aunque se cierre el formulario. Al recargar se pierde. Al volver a abrirlo arranca en el formulario, no en la revisión.
 - **Promedio con pocas reseñas** *(R12)*: se muestra desde la primera, siempre con la cantidad al lado. Una sola reseña mala pesa mucho al principio y se acepta, porque US-27 pide que la calificación se refleje una vez enviada.
 - **Nombre del autor** *(R10, R17)*: la primera palabra del nombre y la inicial de la última («Juan Pablo Pérez» se ve «Juan P.»). Con una sola palabra, solo esa. Sin nombre cargado, se ve «Comensal». El nombre se toma al mostrar la reseña: si la persona lo cambia, cambia en todas.
 - **Gasto público** *(R11)*: el monto se publica en la reseña junto al nombre y la inicial del autor, y lo ve también el restaurante. El formulario y la revisión lo avisan.
@@ -132,14 +133,14 @@ Todas las decisiones de esta sección son del equipo (05/11) y falta que la PO l
 - **FR-006** *(US-27; R12, R13)*: El sistema MUST calcular el promedio de un restaurante real y su cantidad de personas con la última reseña de cada persona, y MUST mostrarlos desde la primera reseña en el mapa, el listado y el detalle. Si no hay reseñas, MUST NOT mostrar un promedio ni un aviso.
 - **FR-007** *(US-50; R1)*: El formulario MUST ofrecer un comentario opcional de hasta 500 caracteres.
 - **FR-008** *(US-50; R5, R11)*: El formulario MUST preguntar el gasto por persona, opcional, en pesos enteros, mayor a 0 y de hasta $1.000.000, y MUST avisar que se publica en la reseña.
-- **FR-009** *(US-50; R16)*: Antes de publicar, el sistema MUST mostrar siempre «Así se va a ver», con el aviso de que la reseña es definitiva, permitir volver sin perder lo escrito y MUST NOT publicar nada hasta la confirmación explícita.
+- **FR-009** *(US-50; R16)*: Antes de publicar, el sistema MUST mostrar siempre cómo va a quedar, con el aviso de que la reseña es definitiva y de quién la va a ver, permitir volver sin perder lo escrito y MUST NOT publicar nada hasta la confirmación explícita.
 - **FR-010** *(US-50; R3, R14)*: El detalle público MUST mostrar en Opiniones la última reseña de cada persona, solo si tiene comentario, y MUST NOT mostrar las anteriores de esa persona.
 - **FR-011** *(US-50; R10)*: Las opiniones públicas MUST mostrar solo el nombre y la inicial del autor, la fecha de la visita, las estrellas, el comentario y el gasto si lo tienen, y MUST NOT exponer otros datos del autor.
 - **FR-012** *(US-24; R17)*: El restaurante MUST poder ver todas las reseñas de su restaurante, de la publicada más recientemente a la más antigua, con el nombre y la inicial del autor, la fecha y el horario de la visita, las estrellas, y el comentario y el gasto si los tienen, 20 a la vez.
 - **FR-013** *(US-24)*: La pantalla del restaurante MUST mostrar el promedio y la cantidad de personas que ven los comensales, y la cantidad total de reseñas.
 - **FR-014** *(US-24)*: El sistema MUST mostrarle a cada restaurante solo sus propias reseñas, y MUST NOT ofrecer esa pantalla a comensales o visitantes.
 - **FR-015** *(US-24; R17)*: La pantalla del restaurante MUST NOT mostrar datos de contacto del autor ni enlazar a su reserva.
-- **FR-016** *(US-7; R6, R15)*: Con 5 o más personas distintas con un gasto informado, la categoría de precio pública de un restaurante real MUST salir de la media del gasto más reciente de cada una, y el detalle MUST mostrar esa media por persona. Por debajo de 5, MUST usarse la categoría declarada.
+- **FR-016** *(US-7; R6, R15)*: Con 5 o más personas distintas con un gasto informado, la categoría de precio pública de un restaurante real MUST salir de la media del gasto más reciente de cada una, y el detalle MUST mostrar esa media por persona y de cuántas personas sale. Por debajo de 5, MUST usarse la categoría declarada.
 - **FR-017** *(US-7; R6)*: El filtro de precio MUST usar la categoría pública del restaurante, sea calculada o declarada.
 
 ### Key Entities

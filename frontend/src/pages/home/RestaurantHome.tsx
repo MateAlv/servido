@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState, type ReactNode } from 'react'
 
 import {
@@ -6,6 +7,7 @@ import {
   type RestaurantProfile,
   type TableGroup,
 } from '../../api/restaurantConfiguration'
+import { fetchRestaurantReviews } from '../../api/reviews'
 import { sessionHeaders, type Account } from '../../api/session'
 import {
   Button,
@@ -15,10 +17,12 @@ import {
   IconClock,
   IconPin,
   IconSearch,
+  IconStar,
   IconUsers,
   Reveal,
   StatusPill,
 } from '../../components/ui'
+import { formatRating, formatReviewCount } from '../../lib/rating'
 import styles from './RestaurantHome.module.css'
 
 const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -56,6 +60,11 @@ export function RestaurantHome({ account }: { account: Account }) {
   const [tables, setTables] = useState<TableGroup[]>([])
   const [dishCount, setDishCount] = useState<number>()
   const [dashboardError, setDashboardError] = useState('')
+  const reviews = useQuery({
+    queryKey: ['restaurant', 'reviews', 'summary'],
+    queryFn: () => fetchRestaurantReviews(0),
+    retry: false,
+  })
 
   useEffect(() => {
     void Promise.all([
@@ -264,6 +273,26 @@ export function RestaurantHome({ account }: { account: Account }) {
             >
               <p>Consultá los pedidos confirmados y sus detalles.</p>
               <p className={styles.muted}>Revisá los platos, las cantidades y el estado de pago.</p>
+            </DashboardCard>
+          </Reveal>
+          <Reveal delay={360}>
+            <DashboardCard
+              title="Reseñas"
+              description="Lo que dicen los comensales de tu local."
+              icon={<IconStar />}
+              action={
+                <Button size="sm" to="/restaurante/resenas">
+                  Ver reseñas
+                </Button>
+              }
+            >
+              <p>
+                {reviews.data?.rating != null
+                  ? `${formatRating(reviews.data.rating)} · ${formatReviewCount(reviews.data.review_count)}`
+                  : reviews.data
+                    ? 'Todavía no tenés reseñas.'
+                    : 'Leé las calificaciones y los comentarios que te dejaron.'}
+              </p>
             </DashboardCard>
           </Reveal>
         </div>

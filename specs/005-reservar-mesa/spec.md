@@ -120,7 +120,7 @@ Como **Comensal**, quiero revisar los datos que seleccioné, para verificar que 
 
 - El comensal ya ingresó a su cuenta (US-1, US-3) y el restaurante ya fue seleccionado antes de crear la reserva.
 - Solo se pueden reservar restaurantes reales, cargados en la base con ubicación, turnos y mesas (spec 004). El mapa muestra esos restaurantes junto con los de prueba de la spec 002, que no se pueden reservar *(decisión del equipo, 28/10, D4; falta que la PO la valide)*.
-- Los restaurantes reales todavía no tienen datos de concurrencia, calificaciones ni opiniones: no se muestra ningún indicador ni sección vacía para eso, ni la foto, el menú o la dirección si el restaurante no los cargó *(decisión del equipo, 28/10; falta que la PO la valide)*.
+- Los restaurantes reales todavía no tienen datos de concurrencia, y las calificaciones y opiniones aparecen cuando tienen reseñas (spec 012): no se muestra ningún indicador ni sección vacía si no hay datos, ni la foto, el menú o la dirección si el restaurante no los cargó *(decisión del equipo, 28/10; falta que la PO la valide)*.
 - Cada reserva ocupa una única mesa.
 - La cantidad máxima de comensales por reserva la define el restaurante a partir de sus mesas habilitadas (spec 004); no hay un límite fijo del sistema.
 - Las fechas y horarios se interpretan en la zona horaria de Argentina (America/Argentina/Buenos_Aires).

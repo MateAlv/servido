@@ -3,6 +3,7 @@ import { UnverifiedNotice } from '../../components/access'
 import { RestaurantExplorer } from '../../components/restaurant'
 import { Reveal } from '../../components/ui'
 import styles from './DinerHome.module.css'
+import { PendingReviews } from './PendingReviews'
 import { UpcomingReservations } from './UpcomingReservations'
 
 function firstName(account: Account): string {
@@ -28,6 +29,7 @@ export function DinerHome({ account }: { account: Account }) {
         </Reveal>
       </header>
       <UpcomingReservations />
+      <PendingReviews account={account} />
       <RestaurantExplorer />
     </main>
   )

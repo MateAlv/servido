@@ -8,6 +8,7 @@ from app.models.order import Order
 from app.models.order_item import OrderItem
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
+from app.models.review import Review
 from app.models.table_inventory import TableInventoryGroup
 
 __all__ = [
@@ -22,5 +23,6 @@ __all__ = [
     "OrderItem",
     "Reservation",
     "Restaurant",
+    "Review",
     "TableInventoryGroup",
 ]

@@ -13,6 +13,16 @@ describe('StarRating', () => {
     expect(onChange).toHaveBeenCalledWith(4)
   })
 
+  it('moves the focus with the selection when using the arrows', () => {
+    const onChange = vi.fn()
+    render(<StarRating value={2} onChange={onChange} />)
+
+    fireEvent.keyDown(screen.getByRole('radio', { name: '2 estrellas' }), { key: 'ArrowRight' })
+
+    expect(onChange).toHaveBeenCalledWith(3)
+    expect(screen.getByRole('radio', { name: '3 estrellas' })).toHaveFocus()
+  })
+
   it('reads the average aloud when it is read-only', () => {
     render(<StarRating value={4.7} />)
 
