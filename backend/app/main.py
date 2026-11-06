@@ -63,6 +63,8 @@ VALUE_ERROR_PREFIX = "Value error, "
 def _message_for_users(error: dict) -> dict:
     """Pydantic prefixes our ValueError messages with 'Value error, '. The UI shows them as is."""
     message = error.get("msg", "")
+    if error.get("loc", ())[-1:] == ("terms_accepted",):
+        return {**error, "msg": "Primero aceptá los términos y condiciones."}
     if message.startswith(VALUE_ERROR_PREFIX):
         return {**error, "msg": message.removeprefix(VALUE_ERROR_PREFIX)}
     return error

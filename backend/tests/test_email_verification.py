@@ -18,7 +18,13 @@ LINK = re.compile(r"https://servido\.test/verificar-email\?token=([\w-]+)")
 
 def register(client: TestClient, email: str = EMAIL):
     return client.post(
-        "/api/comensales", json={"nombre": "Martín", "email": email, "password": "Segura123"}
+        "/api/comensales",
+        json={
+            "nombre": "Martín",
+            "email": email,
+            "password": "Segura123",
+            "terms_accepted": True,
+        },
     )
 
 

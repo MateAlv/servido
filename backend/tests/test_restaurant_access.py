@@ -16,6 +16,7 @@ def restaurant_payload(**changes: str) -> dict[str, str]:
         "cuit": VALID_CUIT,
         "telefono": "11 5555-4444",
         "password": "Segura123",
+        "terms_accepted": True,
     }
     return {**payload, **changes}
 

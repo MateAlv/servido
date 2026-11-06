@@ -6,11 +6,23 @@ import { NAME_MISSING, type GoogleSignUp } from './useGoogleSignUp'
 import styles from './Access.module.css'
 
 /** What happened with the sign-up: the missing-name field, or the error. */
-export function GoogleSignUpFeedback({ signUp }: { signUp: GoogleSignUp }) {
+export function GoogleSignUpFeedback({
+  signUp,
+  termsAccepted = true,
+  onTermsError = () => undefined,
+}: {
+  signUp: GoogleSignUp
+  termsAccepted?: boolean
+  onTermsError?: () => void
+}) {
   const [nombre, setNombre] = useState('')
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!termsAccepted) {
+      onTermsError()
+      return
+    }
     void signUp.completeWithName(nombre)
   }
 
