@@ -55,7 +55,7 @@
             }
           },
           "400": {
-            "description": "Datos de registro inválidos.",
+            "description": "Datos de registro inv\u00e1lidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -65,7 +65,7 @@
             }
           },
           "409": {
-            "description": "El email ya está registrado.",
+            "description": "El email ya est\u00e1 registrado.",
             "content": {
               "application/json": {
                 "schema": {
@@ -106,7 +106,7 @@
             }
           },
           "400": {
-            "description": "Falta la credencial, o Google no dio el nombre y no se envió.",
+            "description": "Falta la credencial, o Google no dio el nombre y no se envi\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -116,7 +116,7 @@
             }
           },
           "401": {
-            "description": "La credencial de Google no es válida.",
+            "description": "La credencial de Google no es v\u00e1lida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -167,7 +167,7 @@
             }
           },
           "400": {
-            "description": "Credenciales con formato inválido.",
+            "description": "Credenciales con formato inv\u00e1lido.",
             "content": {
               "application/json": {
                 "schema": {
@@ -177,7 +177,7 @@
             }
           },
           "401": {
-            "description": "Credenciales inválidas.",
+            "description": "Credenciales inv\u00e1lidas.",
             "content": {
               "application/json": {
                 "schema": {
@@ -228,7 +228,7 @@
             }
           },
           "401": {
-            "description": "La credencial de Google no es válida.",
+            "description": "La credencial de Google no es v\u00e1lida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -279,7 +279,7 @@
             }
           },
           "400": {
-            "description": "Credenciales con formato inválido.",
+            "description": "Credenciales con formato inv\u00e1lido.",
             "content": {
               "application/json": {
                 "schema": {
@@ -289,7 +289,7 @@
             }
           },
           "401": {
-            "description": "Credenciales inválidas.",
+            "description": "Credenciales inv\u00e1lidas.",
             "content": {
               "application/json": {
                 "schema": {
@@ -340,7 +340,7 @@
             }
           },
           "401": {
-            "description": "La credencial de Google no es válida.",
+            "description": "La credencial de Google no es v\u00e1lida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -391,7 +391,7 @@
             }
           },
           "400": {
-            "description": "Datos de registro inválidos.",
+            "description": "Datos de registro inv\u00e1lidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -401,7 +401,7 @@
             }
           },
           "409": {
-            "description": "El email o el CUIT ya están registrados.",
+            "description": "El email o el CUIT ya est\u00e1n registrados.",
             "content": {
               "application/json": {
                 "schema": {
@@ -442,7 +442,7 @@
             }
           },
           "400": {
-            "description": "Datos de registro inválidos.",
+            "description": "Datos de registro inv\u00e1lidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -452,7 +452,7 @@
             }
           },
           "401": {
-            "description": "La credencial de Google no es válida.",
+            "description": "La credencial de Google no es v\u00e1lida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -462,7 +462,7 @@
             }
           },
           "409": {
-            "description": "El email de Google o el CUIT ya están registrados.",
+            "description": "El email de Google o el CUIT ya est\u00e1n registrados.",
             "content": {
               "application/json": {
                 "schema": {
@@ -510,7 +510,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -520,7 +520,7 @@
             }
           },
           "403": {
-            "description": "Esta acción es solo para restaurantes.",
+            "description": "Esta acci\u00f3n es solo para restaurantes.",
             "content": {
               "application/json": {
                 "schema": {
@@ -561,7 +561,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -571,7 +571,7 @@
             }
           },
           "403": {
-            "description": "No tenés permiso.",
+            "description": "No ten\u00e9s permiso.",
             "content": {
               "application/json": {
                 "schema": {
@@ -624,7 +624,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -634,7 +634,7 @@
             }
           },
           "403": {
-            "description": "Esta acción es solo para restaurantes.",
+            "description": "Esta acci\u00f3n es solo para restaurantes.",
             "content": {
               "application/json": {
                 "schema": {
@@ -702,7 +702,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -712,7 +712,7 @@
             }
           },
           "403": {
-            "description": "No tenés permiso.",
+            "description": "No ten\u00e9s permiso.",
             "content": {
               "application/json": {
                 "schema": {
@@ -787,7 +787,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -797,7 +797,7 @@
             }
           },
           "403": {
-            "description": "Esta acción es solo para restaurantes.",
+            "description": "Esta acci\u00f3n es solo para restaurantes.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1244,7 +1244,7 @@
             }
           },
           "401": {
-            "description": "Sesión inválida o vencida.",
+            "description": "Sesi\u00f3n inv\u00e1lida o vencida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1291,7 +1291,7 @@
             }
           },
           "400": {
-            "description": "El enlace no es válido o venció.",
+            "description": "El enlace no es v\u00e1lido o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1323,7 +1323,7 @@
             }
           },
           "401": {
-            "description": "Sesión inválida o vencida.",
+            "description": "Sesi\u00f3n inv\u00e1lida o vencida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1333,7 +1333,7 @@
             }
           },
           "403": {
-            "description": "La sesión no es de un comensal.",
+            "description": "La sesi\u00f3n no es de un comensal.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1343,7 +1343,7 @@
             }
           },
           "409": {
-            "description": "El email ya está verificado.",
+            "description": "El email ya est\u00e1 verificado.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1417,7 +1417,7 @@
             }
           },
           "400": {
-            "description": "Fecha pasada o datos inválidos.",
+            "description": "Fecha pasada o datos inv\u00e1lidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1427,7 +1427,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1526,7 +1526,7 @@
             }
           },
           "400": {
-            "description": "Fecha u horario no válidos.",
+            "description": "Fecha u horario no v\u00e1lidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1536,7 +1536,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1602,10 +1602,10 @@
             }
           },
           "200": {
-            "description": "La misma confirmación ya había creado esta reserva."
+            "description": "La misma confirmaci\u00f3n ya hab\u00eda creado esta reserva."
           },
           "400": {
-            "description": "Datos inválidos.",
+            "description": "Datos inv\u00e1lidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1615,7 +1615,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1645,7 +1645,7 @@
             }
           },
           "409": {
-            "description": "Algo cambió durante la revisión: la reserva no se creó.",
+            "description": "Algo cambi\u00f3 durante la revisi\u00f3n: la reserva no se cre\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1691,7 +1691,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1742,7 +1742,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1805,7 +1805,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1892,7 +1892,7 @@
             }
           },
           "400": {
-            "description": "Datos inválidos, o no hay platos ni pedido que quitar.",
+            "description": "Datos inv\u00e1lidos, o no hay platos ni pedido que quitar.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1902,7 +1902,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1932,7 +1932,7 @@
             }
           },
           "409": {
-            "description": "El pedido ya no se puede cambiar, o el menú cambió.",
+            "description": "El pedido ya no se puede cambiar, o el men\u00fa cambi\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1991,7 +1991,7 @@
             }
           },
           "400": {
-            "description": "Datos inválidos.",
+            "description": "Datos inv\u00e1lidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2001,7 +2001,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2031,7 +2031,7 @@
             }
           },
           "409": {
-            "description": "El pedido ya no se puede cambiar, o un plato ya no está.",
+            "description": "El pedido ya no se puede cambiar, o un plato ya no est\u00e1.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2047,7 +2047,7 @@
           "order"
         ],
         "summary": "Delete Cart",
-        "description": "«Descartar cambios»: back to the confirmed order, if any.",
+        "description": "\u00abDescartar cambios\u00bb: back to the confirmed order, if any.",
         "operationId": "delete_cart_api_reservations__reservation_id__cart_delete",
         "security": [
           {
@@ -2071,7 +2071,7 @@
             "description": "Successful Response"
           },
           "401": {
-            "description": "Falta la sesión o venció.",
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2815,9 +2815,9 @@
             "title": "Nombre"
           },
           "terms_accepted": {
+            "type": "boolean",
             "const": true,
-            "title": "Terms Accepted",
-            "type": "boolean"
+            "title": "Terms Accepted"
           }
         },
         "type": "object",
@@ -3622,9 +3622,9 @@
             "title": "Nombre"
           },
           "terms_accepted": {
+            "type": "boolean",
             "const": true,
-            "title": "Terms Accepted",
-            "type": "boolean"
+            "title": "Terms Accepted"
           }
         },
         "type": "object",
@@ -3906,9 +3906,9 @@
             "title": "Credential"
           },
           "terms_accepted": {
+            "type": "boolean",
             "const": true,
-            "title": "Terms Accepted",
-            "type": "boolean"
+            "title": "Terms Accepted"
           }
         },
         "type": "object",
@@ -4281,9 +4281,9 @@
             "title": "Password"
           },
           "terms_accepted": {
+            "type": "boolean",
             "const": true,
-            "title": "Terms Accepted",
-            "type": "boolean"
+            "title": "Terms Accepted"
           }
         },
         "type": "object",
@@ -4450,7 +4450,7 @@
           "seating_area"
         ],
         "title": "TableChoice",
-        "description": "The table group the review showed: «Mesa para 4 · Terraza» (decision D2)."
+        "description": "The table group the review showed: \u00abMesa para 4 \u00b7 Terraza\u00bb (decision D2)."
       },
       "TableInventoryGroupPayload": {
         "properties": {
