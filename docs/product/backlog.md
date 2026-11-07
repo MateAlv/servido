@@ -33,10 +33,10 @@
 | 23 | Ver reserva activa | Comensal | 1 SP | 4 | — |
 | 24 | Ver Reseñas | Restaurante | 1 SP | 4 | — |
 | 25 | Confirmar cancelación | Comensal | 1 SP | 4 | — |
-| 26 | Confirmación de términos y condiciones | Restaurante | 1 SP | 4 | — |
+| 26 | Confirmación de términos y condiciones | Restaurante | 1 SP | 4 | [014-terminos-condiciones-restaurante](../../specs/014-terminos-condiciones-restaurante/spec.md) |
 | 27 | Dar un rating de la experiencia | Comensal | 2 SP | 4 | — |
 | 28 | Ingresar con Google | Restaurante | 1 SP | 4 | — |
-| 29 | Leer términos y condiciones | Comensal | 1 SP | 4 | — |
+| 29 | Leer términos y condiciones | Comensal | 1 SP | 4 | [013-terminos-condiciones-comensal](../../specs/013-terminos-condiciones-comensal/spec.md) |
 | 30 | Definir capacidad por turno | Restaurante | 1 SP | 4 | — |
 | 31 | Recuperar cuenta | Comensal | 2 SP | 4 | — |
 | 32 | Bloquear horarios no disponibles | Restaurante | 1 SP | 4 | — |

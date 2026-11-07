@@ -12,6 +12,7 @@ def _auth(client: TestClient) -> dict[str, str]:
             "cuit": "30712345671",
             "telefono": "1155554444",
             "password": "Segura123",
+            "terms_accepted": True,
         },
     )
     token = client.post(

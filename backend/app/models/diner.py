@@ -14,6 +14,11 @@ class Diner(Base):
         CheckConstraint("email ~* '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$'", name="email_format"),
         # Nullable only for accounts created before the name was asked at registration.
         CheckConstraint("nombre IS NULL OR length(trim(nombre)) > 0", name="nombre_not_blank"),
+        CheckConstraint(
+            "(terms_version IS NULL AND terms_accepted_at IS NULL) OR "
+            "(terms_version IS NOT NULL AND terms_accepted_at IS NOT NULL)",
+            name="terms_acceptance_complete",
+        ),
     )
 
     id_comensal: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -25,5 +30,9 @@ class Diner(Base):
     )
     # Spec 007: NULL until the diner opens the mailed link or signs in with Google.
     email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    terms_version: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    terms_accepted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

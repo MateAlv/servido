@@ -77,7 +77,13 @@ def add_bookable_restaurant(
 
 def diner_headers(client: TestClient, email: str = "martin@example.com") -> dict[str, str]:
     client.post(
-        "/api/comensales", json={"nombre": "Martín", "email": email, "password": "Segura123"}
+        "/api/comensales",
+        json={
+            "nombre": "Martín",
+            "email": email,
+            "password": "Segura123",
+            "terms_accepted": True,
+        },
     )
     token = client.post(
         "/api/auth/comensal", json={"email": email, "password": "Segura123"}

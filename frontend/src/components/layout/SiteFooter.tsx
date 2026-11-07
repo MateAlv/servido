@@ -10,7 +10,8 @@ export function SiteFooter() {
         <span>© 2026 Servido! · Reservá. Pedí. Disfrutá.</span>
         <nav className={styles.links} aria-label="Legales">
           <Link to="/privacidad">Privacidad</Link>
-          <Link to="/terminos">Términos</Link>
+          <Link to="/terminos">Términos y condiciones</Link>
+          <Link to="/terminos/restaurantes">Términos para restaurantes</Link>
         </nav>
         {import.meta.env.DEV && (
           <span className={styles.devTools}>

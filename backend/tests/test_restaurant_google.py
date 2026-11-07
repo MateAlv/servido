@@ -19,7 +19,8 @@ def details(**changes: str) -> dict[str, str]:
 
 def register_with_google(client: TestClient, credential: str, **changes: str):
     return client.post(
-        "/api/restaurantes/google", json={"credential": credential, **details(**changes)}
+        "/api/restaurantes/google",
+        json={"credential": credential, "terms_accepted": True, **details(**changes)},
     )
 
 
@@ -83,7 +84,7 @@ def test_us28_s2_google_account_with_a_restaurant_signs_in(
 ) -> None:
     client.post(
         "/api/restaurantes",
-        json={**details(), "email": GOOGLE_EMAIL, "password": "Segura123"},
+        json={**details(), "email": GOOGLE_EMAIL, "password": "Segura123", "terms_accepted": True},
     )
 
     response = sign_in_with_google(client, google_token(email=GOOGLE_EMAIL))
@@ -121,7 +122,10 @@ def test_us28_s4_invalid_google_token_is_rejected(
 def test_us28_edge_diner_with_that_email_does_not_sign_in_as_restaurant(
     client: TestClient, google_token: GoogleTokenFactory
 ) -> None:
-    client.post("/api/comensales/google", json={"credential": google_token(email=GOOGLE_EMAIL)})
+    client.post(
+        "/api/comensales/google",
+        json={"credential": google_token(email=GOOGLE_EMAIL), "terms_accepted": True},
+    )
 
     response = sign_in_with_google(client, google_token(email=GOOGLE_EMAIL))
 

@@ -39,6 +39,10 @@ function apiAnswers(status: number, detail: string) {
   return { data: undefined, error: { detail }, response: new Response(null, { status }) }
 }
 
+async function acceptTerms(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('checkbox', { name: /He leído y acepto/ }))
+}
+
 describe('auth pages', () => {
   beforeEach(() => {
     post.mockReset()
@@ -72,6 +76,7 @@ describe('auth pages', () => {
     await user.type(screen.getByLabelText('Email *'), 'no-es-email')
     await user.type(screen.getByLabelText('Contraseña *'), '1234567')
     await user.type(screen.getByLabelText('Confirmar contraseña *'), '1234567')
+    await acceptTerms(user)
     await user.click(screen.getByRole('button', { name: 'Crear cuenta' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ingresá un email válido.')
@@ -86,6 +91,7 @@ describe('auth pages', () => {
     await user.type(screen.getByLabelText('Email *'), 'martin@example.com')
     await user.type(screen.getByLabelText('Contraseña *'), 'Servido2026')
     await user.type(screen.getByLabelText('Confirmar contraseña *'), 'Servido2025')
+    await acceptTerms(user)
     await user.click(screen.getByRole('button', { name: 'Crear cuenta' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Las contraseñas no coinciden.')
@@ -98,6 +104,7 @@ describe('auth pages', () => {
 
     await user.type(screen.getByLabelText('Contraseña *'), 'Servido2026')
     await user.type(screen.getByLabelText('Confirmar contraseña *'), 'Servido2025')
+    await acceptTerms(user)
     await user.click(screen.getByRole('button', { name: 'Crear cuenta del restaurante' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Las contraseñas no coinciden.')
@@ -122,6 +129,7 @@ describe('auth pages', () => {
     await user.type(screen.getByLabelText('Email *'), 'martin@example.com')
     await user.type(screen.getByLabelText('Contraseña *'), 'Servido2026')
     await user.type(screen.getByLabelText('Confirmar contraseña *'), 'Servido2026')
+    await acceptTerms(user)
     await user.click(screen.getByRole('button', { name: 'Crear cuenta' }))
 
     expect(
@@ -143,10 +151,11 @@ describe('auth pages', () => {
     const user = userEvent.setup()
     renderWithProviders(<RegisterPage />)
 
+    await acceptTerms(user)
     await user.click(await screen.findByRole('button', { name: 'Registrarse con Google' }))
 
     expect(post).toHaveBeenCalledWith('/api/comensales/google', {
-      body: { credential: 'google-id-token', nombre: undefined },
+      body: { credential: 'google-id-token', nombre: undefined, terms_accepted: true },
     })
     expect(await screen.findByText('¡Listo! Tu cuenta está creada.')).toBeInTheDocument()
     expect(sessionStorage.getItem('servido-access-token')).toBe('session-token')
@@ -160,12 +169,13 @@ describe('auth pages', () => {
     const user = userEvent.setup()
     renderWithProviders(<RegisterPage />)
 
+    await acceptTerms(user)
     await user.click(await screen.findByRole('button', { name: 'Registrarse con Google' }))
     await user.type(await screen.findByLabelText('Tu nombre *'), 'Lucía')
     await user.click(screen.getByRole('button', { name: 'Terminar de crear mi cuenta' }))
 
     expect(post).toHaveBeenLastCalledWith('/api/comensales/google', {
-      body: { credential: 'google-id-token', nombre: 'Lucía' },
+      body: { credential: 'google-id-token', nombre: 'Lucía', terms_accepted: true },
     })
     expect(await screen.findByText('¡Listo! Tu cuenta está creada.')).toBeInTheDocument()
   })
@@ -177,6 +187,7 @@ describe('auth pages', () => {
     const user = userEvent.setup()
     renderWithProviders(<RegisterPage />)
 
+    await acceptTerms(user)
     await user.click(await screen.findByRole('button', { name: 'Registrarse con Google' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya existe una cuenta de Servido!')
@@ -205,6 +216,8 @@ describe('auth pages', () => {
     const user = userEvent.setup()
     renderWithProviders(<RestaurantRegisterPage />)
 
+    await acceptTerms(user)
+    expect(screen.getByRole('checkbox', { name: /He leído y acepto/ })).toBeChecked()
     await user.click(await screen.findByRole('button', { name: 'Registrarse con Google' }))
 
     expect(screen.queryByLabelText('Email *')).not.toBeInTheDocument()
@@ -221,6 +234,7 @@ describe('auth pages', () => {
         nombre: 'La Esquina de Palermo',
         cuit: '30-71234567-1',
         telefono: '11 5555-4444',
+        terms_accepted: true,
       },
     })
     expect(
@@ -250,6 +264,7 @@ describe('auth pages', () => {
     await user.type(screen.getByLabelText('Nombre del restaurante *'), 'La Esquina de Palermo')
     await user.type(screen.getByLabelText('CUIT *'), '30-71234567-1')
     await user.type(screen.getByLabelText('Teléfono *'), '11 5555-4444')
+    await acceptTerms(user)
     await user.click(screen.getByRole('button', { name: 'Crear cuenta del restaurante' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(

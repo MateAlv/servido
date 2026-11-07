@@ -15,7 +15,12 @@ def test_us51_edge_local_mode_verifies_new_diners(
 
     response = client.post(
         "/api/comensales",
-        json={"nombre": "Local", "email": "local@example.com", "password": "Segura123"},
+        json={
+            "nombre": "Local",
+            "email": "local@example.com",
+            "password": "Segura123",
+            "terms_accepted": True,
+        },
     )
 
     assert response.status_code == 201
