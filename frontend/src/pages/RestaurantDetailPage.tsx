@@ -17,10 +17,10 @@ import {
   StatusPill,
 } from '../components/ui'
 import { fetchRestaurant } from '../api/restaurants'
-import { averageRating } from '../data/restaurants.fixture'
+import { OpinionList } from '../components/review'
+import { averageRating, reviewCountLabel } from '../data/restaurants.fixture'
+import { formatRating } from '../lib/rating'
 import styles from './RestaurantDetailPage.module.css'
-
-const DATE_FORMAT = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long' })
 
 const PRICE_FORMAT = new Intl.NumberFormat('es-AR', {
   style: 'currency',
@@ -106,18 +106,19 @@ export function RestaurantDetailPage() {
                   {restaurant.averageSpendPerPerson !== null && (
                     <span className={styles.factNote}>
                       {PRICE_FORMAT.format(restaurant.averageSpendPerPerson)} por persona
+                      {restaurant.spendPeople ? `, según ${restaurant.spendPeople} comensales` : ''}
                     </span>
                   )}
                 </li>
               )}
               {rating !== null && (
                 <li className={styles.fact}>
-                  <span className={styles.factLabel}>Opiniones</span>
+                  <span className={styles.factLabel}>Calificación</span>
                   <span className={styles.rating}>
                     <StarRating value={rating} size={16} />
-                    {rating.toLocaleString('es-AR', { maximumFractionDigits: 1 })}
+                    <span aria-hidden="true">{formatRating(rating)}</span>
                   </span>
-                  <span className={styles.factNote}>{restaurant.reviews.length} reseñas</span>
+                  <span className={styles.factNote}>{reviewCountLabel(restaurant)}</span>
                 </li>
               )}
               {restaurant.occupancy && (
@@ -191,20 +192,10 @@ export function RestaurantDetailPage() {
             <Reveal delay={180}>
               <Card className={styles.reviews}>
                 <h2 className={styles.sectionTitle}>Opiniones</h2>
-                <ul className={styles.reviewList}>
-                  {restaurant.reviews.map((review) => (
-                    <li key={`${review.author}-${review.date}`} className={styles.review}>
-                      <div className={styles.reviewHead}>
-                        <span className={styles.reviewAuthor}>{review.author}</span>
-                        <StarRating value={review.rating} size={14} />
-                      </div>
-                      <p className={styles.reviewText}>{review.comment}</p>
-                      <span className={styles.factNote}>
-                        Visitó el {DATE_FORMAT.format(new Date(`${review.date}T12:00:00`))}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                <OpinionList
+                  opinions={restaurant.reviews}
+                  reviewCount={restaurant.reviewCount ?? restaurant.reviews.length}
+                />
               </Card>
             </Reveal>
           )}

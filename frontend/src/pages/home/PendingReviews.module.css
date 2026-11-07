@@ -1,0 +1,61 @@
+.section {
+  margin-bottom: 28px;
+}
+
+.title {
+  margin: 0 0 4px;
+  font: 800 var(--text-xl) / 1.15 var(--font-display);
+}
+
+.lead {
+  margin: 0 0 12px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: 6px;
+  height: 100%;
+}
+
+.restaurant {
+  margin: 0;
+  font: 800 var(--text-lg) var(--font-display);
+}
+
+.when {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.when::first-letter {
+  text-transform: uppercase;
+}
+
+.action {
+  margin-top: 6px;
+}
+
+.confirmation {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-small);
+  background: var(--color-ok-bg);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.confirmation p {
+  margin: 0;
+}
