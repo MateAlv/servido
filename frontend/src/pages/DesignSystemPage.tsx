@@ -35,6 +35,7 @@ import {
 import {
   Button,
   Card,
+  Checkbox,
   Chip,
   IconArrowRight,
   IconButton,
@@ -333,6 +334,15 @@ function FormsDemo() {
         note="Empieza oculta; el ojo la muestra u oculta y anuncia su estado con aria-pressed."
       >
         <PasswordField label="Contraseña" hint="Entre 8 y 128 caracteres." />
+      </Demo>
+      <Demo title="Casilla de aceptación" note="Empieza desmarcada y mantiene el foco visible.">
+        <Checkbox
+          label={
+            <>
+              He leído y acepto los <a href="/terminos">Términos y condiciones</a>
+            </>
+          }
+        />
       </Demo>
       <Demo title="Chips de filtro" note="Selección múltiple con aria-pressed.">
         <div className={styles.row}>

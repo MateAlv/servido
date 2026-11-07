@@ -3026,11 +3026,17 @@
               }
             ],
             "title": "Nombre"
+          },
+          "terms_accepted": {
+            "type": "boolean",
+            "const": true,
+            "title": "Terms Accepted"
           }
         },
         "type": "object",
         "required": [
-          "credential"
+          "credential",
+          "terms_accepted"
         ],
         "title": "GoogleSignUp",
         "description": "Google's ID token, plus the name when Google didn't give one (US-58 S3)."
@@ -4066,13 +4072,19 @@
             "maxLength": 60,
             "minLength": 1,
             "title": "Nombre"
+          },
+          "terms_accepted": {
+            "type": "boolean",
+            "const": true,
+            "title": "Terms Accepted"
           }
         },
         "type": "object",
         "required": [
           "email",
           "password",
-          "nombre"
+          "nombre",
+          "terms_accepted"
         ],
         "title": "RegistrationRequest"
       },
@@ -4344,6 +4356,11 @@
             "type": "string",
             "minLength": 1,
             "title": "Credential"
+          },
+          "terms_accepted": {
+            "type": "boolean",
+            "const": true,
+            "title": "Terms Accepted"
           }
         },
         "type": "object",
@@ -4351,7 +4368,8 @@
           "nombre",
           "cuit",
           "telefono",
-          "credential"
+          "credential",
+          "terms_accepted"
         ],
         "title": "RestaurantGoogleRegistration",
         "description": "US-2 S5: the email comes from the Google ID token, and there is no password."
@@ -4713,6 +4731,11 @@
             "maxLength": 128,
             "minLength": 1,
             "title": "Password"
+          },
+          "terms_accepted": {
+            "type": "boolean",
+            "const": true,
+            "title": "Terms Accepted"
           }
         },
         "type": "object",
@@ -4721,7 +4744,8 @@
           "cuit",
           "telefono",
           "email",
-          "password"
+          "password",
+          "terms_accepted"
         ],
         "title": "RestaurantRegistrationRequest"
       },

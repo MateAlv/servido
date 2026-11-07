@@ -22,6 +22,7 @@ class Credentials(BaseModel):
 
 class RegistrationRequest(Credentials):
     nombre: str = Field(min_length=1, max_length=60)
+    terms_accepted: Literal[True]
 
     @field_validator("nombre")
     @classmethod
@@ -51,6 +52,7 @@ class GoogleSignUp(GoogleCredential):
     """Google's ID token, plus the name when Google didn't give one (US-58 S3)."""
 
     nombre: str | None = Field(default=None, min_length=1, max_length=60)
+    terms_accepted: Literal[True]
 
     @field_validator("nombre")
     @classmethod

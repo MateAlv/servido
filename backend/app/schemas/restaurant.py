@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
@@ -47,6 +48,7 @@ class RestaurantRegistrationRequest(RestaurantDetails):
     # Order matters: the password rules compare against the email, validated first.
     email: str = Field(min_length=1, max_length=255)
     password: str = Field(min_length=1, max_length=128)
+    terms_accepted: Literal[True]
 
     @field_validator("email")
     @classmethod
@@ -69,6 +71,7 @@ class RestaurantGoogleRegistration(RestaurantDetails):
     """US-2 S5: the email comes from the Google ID token, and there is no password."""
 
     credential: str = Field(min_length=1)
+    terms_accepted: Literal[True]
 
 
 class RestaurantResponse(BaseModel):

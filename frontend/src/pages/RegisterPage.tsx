@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 
-import { Button, Card, PasswordField, TextField, useToast } from '../components/ui'
+import { Button, Card, Checkbox, PasswordField, TextField, useToast } from '../components/ui'
 import { api } from '../api/client'
 import { getApiErrorMessage, getRequestErrorMessage } from '../api/errors'
 import { GoogleSignUpButton, RedirectIfSignedIn } from '../components/access'
@@ -19,12 +19,17 @@ export function RegisterPage() {
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [confirmationError, setConfirmationError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
+    if (!termsAccepted) {
+      setError('Primero aceptá los términos y condiciones.')
+      return
+    }
     if (passwordConfirmation !== password) {
       setConfirmationError('Las contraseñas no coinciden.')
       return
@@ -32,7 +37,7 @@ export function RegisterPage() {
     setLoading(true)
     try {
       const { error } = await api.POST('/api/comensales', {
-        body: { nombre, email, password },
+        body: { nombre, email, password, terms_accepted: true },
       })
       if (error) throw new Error(getApiErrorMessage(error, 'No pudimos crear tu cuenta.'))
       toast('¡Listo! Tu cuenta está creada. Te mandamos un mail para verificar tu email.', {
@@ -90,6 +95,22 @@ export function RegisterPage() {
               autoComplete="new-password"
               required
             />
+            <Checkbox
+              checked={termsAccepted}
+              onChange={(event) => {
+                setTermsAccepted(event.target.checked)
+                if (event.target.checked) setError('')
+              }}
+              aria-describedby="terms-help"
+              label={
+                <>
+                  He leído y acepto los{' '}
+                  <a href="/terminos" target="_blank" rel="noopener" id="terms-help">
+                    Términos y condiciones
+                  </a>
+                </>
+              }
+            />
             {error && (
               <p className={styles.error} role="alert">
                 {error}
@@ -101,6 +122,8 @@ export function RegisterPage() {
           </form>
           <p className={styles.divider}>o</p>
           <GoogleSignUpButton
+            termsAccepted={termsAccepted}
+            onTermsError={() => setError('Primero aceptá los términos')}
             onSignedIn={() => {
               toast('¡Listo! Tu cuenta está creada.', { tone: 'ok' })
               navigate(returnPath(searchParams), { replace: true })

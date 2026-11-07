@@ -142,7 +142,7 @@ describe('LoginPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Crear cuenta con Google' }))
 
     expect(post).toHaveBeenLastCalledWith('/api/comensales/google', {
-      body: { credential: 'google-id-token', nombre: undefined },
+      body: { credential: 'google-id-token', nombre: undefined, terms_accepted: true },
     })
     expect(await screen.findByText('¡Hola, Lucía!')).toBeInTheDocument()
   })

@@ -838,6 +838,11 @@ export interface components {
             credential: string;
             /** Nombre */
             nombre?: string | null;
+            /**
+             * Terms Accepted
+             * @constant
+             */
+            terms_accepted: true;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1212,6 +1217,11 @@ export interface components {
             password: string;
             /** Nombre */
             nombre: string;
+            /**
+             * Terms Accepted
+             * @constant
+             */
+            terms_accepted: true;
         };
         /** ReservationDinerResponse */
         ReservationDinerResponse: {
@@ -1345,6 +1355,11 @@ export interface components {
             telefono: string;
             /** Credential */
             credential: string;
+            /**
+             * Terms Accepted
+             * @constant
+             */
+            terms_accepted: true;
         };
         /** RestaurantLoginResponse */
         RestaurantLoginResponse: {
@@ -1439,6 +1454,11 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+            /**
+             * Terms Accepted
+             * @constant
+             */
+            terms_accepted: true;
         };
         /** RestaurantReservationResponse */
         RestaurantReservationResponse: {
