@@ -27,6 +27,40 @@ export function RestaurantTermsPage() {
         consultan los comensales, incluyendo horarios, mesas y platos.
       </p>
 
+      <h2>Reservas y pedidos anticipados</h2>
+      <p>
+        Las reservas se confirman según la disponibilidad que cargues y las reglas que muestra
+        Servido!. Si ofrecés pedidos anticipados, los platos, precios y tiempos estimados deben
+        estar actualizados.
+      </p>
+      <p>
+        Los tiempos de preparación son estimados. Servido! no garantiza un tiempo exacto ni
+        reemplaza la organización interna del restaurante.
+      </p>
+
+      <h2>Responsabilidad del restaurante</h2>
+      <ul>
+        <li>
+          Sos responsable de que la información de tu local, menú, precios, horarios y mesas sea
+          verdadera y esté actualizada.
+        </li>
+        <li>
+          Sos responsable de las restricciones alimenticias que declares y de informar a los
+          comensales cualquier aclaración necesaria.
+        </li>
+        <li>
+          Debés respetar las reservas y comunicar por los canales disponibles cualquier
+          inconveniente que afecte la atención.
+        </li>
+      </ul>
+
+      <h2>Uso responsable</h2>
+      <ul>
+        <li>No cargues información falsa, ilegal o que pueda inducir a error.</li>
+        <li>No uses la plataforma para perjudicar a comensales u otros restaurantes.</li>
+        <li>No compartas las credenciales de tu cuenta ni permitas accesos no autorizados.</li>
+      </ul>
+
       <h2>Tus datos</h2>
       <p>
         Los datos de la cuenta se usan para operar la plataforma. La política de privacidad explica
@@ -36,11 +70,6 @@ export function RestaurantTermsPage() {
       <h2>Contacto</h2>
       <p>
         <a href={`mailto:${CONTACT}`}>{CONTACT}</a>
-      </p>
-
-      <h2>[REVISAR] Cláusulas pendientes</h2>
-      <p>
-        [REVISAR] El equipo debe validar el alcance comercial y legal definitivo de la adhesión.
       </p>
     </main>
   )

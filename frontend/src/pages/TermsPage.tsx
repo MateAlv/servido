@@ -25,8 +25,35 @@ export function TermsPage() {
       <h2>Disponibilidad</h2>
       <p>
         Podés consultar los restaurantes que estén disponibles, sus horarios, mesas y menú. La
-        disponibilidad puede cambiar mientras usás la plataforma.
+        disponibilidad puede cambiar mientras usás la plataforma. Una reserva queda sujeta a la
+        confirmación que muestra Servido! y a los datos informados por el restaurante.
       </p>
+
+      <h2>Reservas y pedidos anticipados</h2>
+      <p>
+        Podés reservar una mesa sin hacer un pedido. Si el restaurante ofrece pedidos anticipados,
+        podés elegir platos antes de tu llegada. El tiempo de preparación es estimado y no
+        garantiza una hora exacta de entrega.
+      </p>
+      <p>
+        Revisá los datos de la reserva y del pedido antes de confirmarlos. Las modificaciones y
+        cancelaciones están sujetas a los plazos y condiciones que muestra Servido! para cada
+        operación.
+      </p>
+
+      <h2>Información de los restaurantes</h2>
+      <p>
+        La información sobre horarios, mesas, menú, precios y restricciones alimenticias es
+        declarada por cada restaurante. Consultá las indicaciones del local si tenés una
+        restricción alimenticia o necesitás información adicional.
+      </p>
+
+      <h2>Uso responsable</h2>
+      <ul>
+        <li>No uses la plataforma para realizar reservas falsas o acaparar mesas.</li>
+        <li>No publiques contenido ofensivo, ilegal o que no esté relacionado con tu experiencia.</li>
+        <li>No intentes acceder a cuentas, datos o funciones que no te correspondan.</li>
+      </ul>
 
       <h2>Tus datos</h2>
       <p>
@@ -37,8 +64,6 @@ export function TermsPage() {
       <p>
         <a href={`mailto:${CONTACT}`}>{CONTACT}</a>
       </p>
-      <h2>[REVISAR] Cláusulas pendientes</h2>
-      <p>[REVISAR] El equipo debe validar el alcance legal definitivo de estos términos.</p>
     </main>
   )
 }

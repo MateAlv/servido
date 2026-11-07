@@ -38,7 +38,7 @@ description: "Task list for diner terms acceptance"
 - [ ] T010 [US29] Add the diner acceptance columns and paired-value database constraint through `backend/migrations/versions/2026_11_05_1716-add_terms_acceptance.py`
 - [ ] T011 [US29] Add reusable accessible `Checkbox` and styles in `frontend/src/components/ui/Checkbox.tsx`, `Checkbox.module.css`, and `frontend/src/components/ui/index.ts`
 - [ ] T012 [US29] Add the acceptance checkbox, new-tab `/terminos` link, blocked email submit, and Google guard to `frontend/src/pages/RegisterPage.tsx`, `frontend/src/components/access/GoogleSignUpButton.tsx`, and `frontend/src/components/access/GoogleSignUpFeedback.tsx`
-- [ ] T013 [US29] Replace the provisional diner legal copy in `frontend/src/pages/TermsPage.tsx` with Spanish version 1.0 text and mark unresolved legal clauses with `[REVISAR]`
+- [x] T013 [US29] Replace the provisional diner legal copy in `frontend/src/pages/TermsPage.tsx` with Spanish version 1.0 text
 - [ ] T014 [US29] Register `/terminos` as a lazy route in `frontend/src/router.tsx`, add both legal links in `frontend/src/components/layout/SiteFooter.tsx`, and document `Checkbox` in `docs/design/README.md` and `frontend/src/pages/DesignSystemPage.tsx`
 - [ ] T015 [US29] Regenerate `frontend/src/api/openapi.json` and `frontend/src/api/schema.d.ts` with `make api-types`
 

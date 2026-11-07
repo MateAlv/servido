@@ -34,7 +34,7 @@ description: "Task list for restaurant terms acceptance"
 
 - [ ] T007 [US26] Add `terms_accepted: Literal[True]` to restaurant email and Google schemas in `backend/app/schemas/restaurant.py` and persist version `1.0` plus UTC acceptance in `backend/app/api/restaurant.py`
 - [ ] T008 [US26] Add the restaurant acceptance checkbox, `/terminos/restaurantes` new-tab link, blocked email submit, and Google guard in `frontend/src/pages/RestaurantRegisterPage.tsx`
-- [ ] T009 [US26] Create Spanish restaurant version 1.0 legal copy and `[REVISAR]` markers in `frontend/src/pages/RestaurantTermsPage.tsx`
+- [x] T009 [US26] Create Spanish restaurant version 1.0 legal copy in `frontend/src/pages/RestaurantTermsPage.tsx`
 - [ ] T010 [US26] Register `/terminos/restaurantes` as a lazy route in `frontend/src/router.tsx` and retain both legal links in `frontend/src/components/layout/SiteFooter.tsx`
 - [ ] T011 [US26] Regenerate `frontend/src/api/openapi.json` and `frontend/src/api/schema.d.ts` with `make api-types`
 
