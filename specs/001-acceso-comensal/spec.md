@@ -112,7 +112,7 @@ Como **Comensal**, quiero ingresar a Servido! con mi usuario y contraseña, para
 
 - **Dentro**: alta con email y contraseña; ingreso con email y contraseña.
 
-- **Fuera**: términos y condiciones, verificación de email, recuperación de contraseña, alta e ingreso con Google (US-29, US-51, US-31, US-58, US-52).
+- **Fuera**: verificación de email, recuperación de contraseña, alta e ingreso con Google (US-51, US-31, US-58, US-52). Los términos y condiciones se especifican en US-29.
 
 ## Success Criteria *(mandatory)*
 

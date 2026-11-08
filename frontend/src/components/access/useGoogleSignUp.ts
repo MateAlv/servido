@@ -20,14 +20,18 @@ export function useGoogleSignUp(onSignedIn: (account: Account) => void) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function createAccount(googleCredential: string, nombre?: string) {
+  async function createAccount(
+    googleCredential: string,
+    nombre?: string,
+    termsAccepted: true = true,
+  ) {
     setCredential(googleCredential)
     setError('')
     setEmailTaken(false)
     setLoading(true)
     try {
       const { data, error, response } = await api.POST('/api/comensales/google', {
-        body: { credential: googleCredential, nombre },
+        body: { credential: googleCredential, nombre, terms_accepted: termsAccepted },
       })
       if (error || !data) {
         const message = getApiErrorMessage(error, SIGN_UP_FAILED)
@@ -49,7 +53,7 @@ export function useGoogleSignUp(onSignedIn: (account: Account) => void) {
 
   return {
     createAccount,
-    completeWithName: (nombre: string) => createAccount(credential, nombre),
+    completeWithName: (nombre: string) => createAccount(credential, nombre, true),
     needsName,
     emailTaken,
     error,

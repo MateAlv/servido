@@ -12,6 +12,7 @@ import { RestaurantOrdersPage } from './pages/RestaurantOrdersPage'
 import { RestaurantReservationsPage } from './pages/RestaurantReservationsPage'
 import { RestaurantCancellationsPage } from './pages/RestaurantCancellationsPage'
 import { RestaurantReservationDinerPage } from './pages/RestaurantReservationDinerPage'
+import { RestaurantReviewsPage } from './pages/RestaurantReviewsPage'
 
 export const router = createBrowserRouter([
   {
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
         path: '/restaurante/cancelaciones',
         element: <RestaurantCancellationsPage />,
       },
+      { path: '/restaurante/resenas', element: <RestaurantReviewsPage /> },
       {
         path: '/restaurante/reservas/:reservationId/comensal',
         element: <RestaurantReservationDinerPage />,
@@ -82,6 +84,12 @@ export const router = createBrowserRouter([
       {
         path: '/terminos',
         lazy: async () => ({ Component: (await import('./pages/TermsPage')).TermsPage }),
+      },
+      {
+        path: '/terminos/restaurantes',
+        lazy: async () => ({
+          Component: (await import('./pages/RestaurantTermsPage')).RestaurantTermsPage,
+        }),
       },
       {
         path: '/diseno',

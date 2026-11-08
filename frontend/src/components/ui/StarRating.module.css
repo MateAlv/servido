@@ -20,8 +20,13 @@
   transform: scale(1.15);
 }
 
-.empty {
-  color: var(--color-line);
+/* The outline keeps filled and empty stars apart without relying on the yellow. */
+.rating svg {
+  stroke: var(--color-text-muted);
+}
+
+.empty path {
+  fill: transparent;
 }
 
 .pop {

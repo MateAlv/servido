@@ -21,7 +21,9 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [007-cuenta-comensal-google-verificacion](007-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17 en la spec 009) |
 | [009-pedido-anticipado](009-pedido-anticipado/spec.md) | Comensal | 17, 19, 21 | 5 | 3 | ✅ | ✅ | ✅ | ✅ US-17, US-19, US-21 (decisiones P1–P14 del 30/10, falta que la PO las valide) |
 | [011-ver-platos-precios](011-ver-platos-precios/spec.md) | Comensal | 15 | 2 | 3 | ✅ | ✅ | ✅ | ✅ US-15 (D1–D4, falta que la PO las valide) |
-| [012-resenas](012-resenas/spec.md) | Comensal y Restaurante | 24, 27, 50 (y criterio pendiente de 7) | 5 | 4 (US-50 adelantada del 6) | ✅ | — | — | — (decisiones R1–R19 del 05/11, falta que la PO las valide) |
+| [012-resenas](012-resenas/spec.md) | Comensal y Restaurante | 24, 27, 50 (y criterio pendiente de 7) | 5 | 4 (US-50 adelantada del 6) | ✅ | ✅ | ✅ | ✅ US-24, US-27, US-50 y el criterio de US-7 (decisiones R1–R19 del 05/11, falta que la PO las valide) |
+| [013-terminos-condiciones-comensal](013-terminos-condiciones-comensal/spec.md) | Comensal | 29 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-29 |
+| [014-terminos-condiciones-restaurante](014-terminos-condiciones-restaurante/spec.md) | Restaurante | 26 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-26 |
 
 Arrastre de la spec 003: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002 muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
 
@@ -42,7 +44,8 @@ Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 están U
 
   Detalle en `specs/009-pedido-anticipado/research.md`. En la planilla, US-17 figura para el Integrante 4 y US-19 y US-21 para el 5; en la votación las tomó Mateo.
 - Spec 005 (US-13): falta sumar el escenario 6 a la US-13 en la planilla y exportar `backlog.md` (T033a), cargar los datos de demo en producción (T055) y hacer el pase en navegador a 360 px y con teclado (T024/T032). Las decisiones D1–D11 esperan la validación de la PO.
-- Spec 012 (US-24, US-27, US-50): antes de implementarla, falta que la PO la valide. US-50 pasa del Sprint 6 (Integrante 3) al Sprint 4 (Integrante 1): hay que actualizar la planilla y avisarle a Integrante 3. US-25 y US-38 deben impedir cancelar una reserva que ya terminó, y US-35 debe usar el promedio de esta spec.
+- Spec 012 (US-24, US-27, US-50): falta que la PO valide R1–R19; el equipo la implementó sin esperar esa validación por la defensa del 11/11. US-50 pasa del Sprint 6 (Integrante 3) al Sprint 4 (Integrante 1): hay que actualizar la planilla y avisarle a Integrante 3. US-25 y US-38 deben impedir cancelar una reserva que ya terminó, y US-35 debe usar el promedio de esta spec.
+- Specs 013 y 014 (US-29 y US-26): los textos legales fueron redactados como propuesta del equipo con autorización de la PO y deben revisarse antes de publicar la versión 1.0; también quedan pendientes de validación de la PO las propuestas de exigir aceptación en el registro con Google, guardar versión y fecha, no pedir reaceptación a cuentas existentes y no guardar aceptación si el registro falla.
 
 ### Numeración
 
@@ -57,6 +60,7 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las de la spec 002 se
 | 002 | Fuente y umbrales de la concurrencia (bajo/medio/alto) y frecuencia de actualización | Valor por restaurante provisto por los datos de prueba; la demo refresca cada 30 s. Los restaurantes reales todavía no tienen concurrencia y no muestran el indicador (D4, 28/10). Implementado así; falta que la PO lo confirme |
 | 002 | Ubicación denegada | Mapa centrado en Buenos Aires, sin distancias, con aviso y botón para reintentar. Implementado así; falta que la PO lo confirme |
 | 005 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Decididos por el equipo el 23/10 y el 28/10 (ver las decisiones D1–D11 abajo y `specs/005-reservar-mesa/research.md`). Falta que la PO los valide |
+| 013, 014 | Aplicación al registro con Google, constancia de versión y fecha, tratamiento de cuentas existentes y atomicidad ante fallos de registro | Propuesta del equipo: exigir aceptación también con Google, guardar `terms_version` y `terms_accepted_at`, no pedir reaceptación a cuentas existentes y guardar la aceptación en la misma transacción; falta que la PO lo valide |
 
 ## Decisiones del equipo
 

@@ -27,6 +27,7 @@ from app.services.auth import (
 from app.services.email_verification import mark_verified, send_verification_mail
 from app.services.google import InvalidGoogleTokenError, verify_google_id_token
 from app.services.roles import DINER, RESTAURANT
+from app.services.terms import acceptance_for
 
 router = APIRouter(tags=["auth"])
 
@@ -80,6 +81,7 @@ def register_diner(payload: RegistrationRequest, session: SessionDep) -> Diner:
         email=payload.email,
         password_hash=hash_password(payload.password),
     )
+    diner.terms_version, diner.terms_accepted_at = acceptance_for("diner")
     if settings.auto_verify_emails:
         mark_verified(diner)
     session.add(diner)
@@ -117,6 +119,7 @@ def register_diner_with_google(payload: GoogleSignUp, session: SessionDep) -> Lo
         # Nobody knows this secret, so the account has no usable password (research R10).
         password_hash=hash_password(secrets.token_urlsafe(32)),
     )
+    diner.terms_version, diner.terms_accepted_at = acceptance_for("diner")
     # Google already proved that the email is theirs: no verification mail (FR-015).
     mark_verified(diner)
     session.add(diner)

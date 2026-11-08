@@ -56,6 +56,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `Button`, `IconButton` | Acciones. `Button` tiene variantes `primary` (hundido 3D), `secondary`, `ghost`, tamaños, estado `loading` y `to` para navegar con look de botón |
 | `TextField` | Campos de formulario con ayuda y error (el error tiembla y se anuncia). `action` agrega un botón chico al final del campo |
 | `PasswordField` | Contraseña oculta con un ojo para mostrarla u ocultarla (`aria-pressed`). Usalo en todo campo de contraseña |
+| `Checkbox` | Casilla accesible con label asociado, foco visible y estado desmarcado por defecto |
 | `Chip` | Opciones que se alternan: filtros de selección múltiple (precio, restricciones) y grupos donde se elige una sola (horarios, tipo de mesa) |
 | `SegmentedControl` | Una opción entre pocas, con indicador que se desliza |
 | `Card` | Superficie base; `interactive` se eleva al pasar el mouse |
@@ -67,6 +68,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `ThemeToggle` | Cambio de tema claro / oscuro |
 | `Reveal` | Animación de entrada al hacer scroll |
 | `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido»), `maxHint` explica el «+» deshabilitado en el máximo, `announce={false}` apaga su anuncio cuando la página ya anuncia el cambio y `disabled` bloquea los dos botones |
+| `TextAreaField` | `TextField` para textos largos |
 | `StarRating` | Calificación interactiva o de solo lectura |
 | `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, …) |
 
@@ -90,6 +92,13 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 | `GoogleSignUpButton` | "Registrarse con Google": crea la cuenta del comensal ya verificada y abre la sesión; si Google no dio el nombre, lo pide. Va en `/registrarme` | 58 |
 
 `registerPathFor(role)` devuelve adónde lleva "Registrarme" para cada tipo de cuenta (`/registrarme` o `/suma-tu-local`).
+
+### Reseñas (`review/`)
+
+| Componente | Para qué | US |
+| --- | --- | --- |
+| `OpinionCard` | Una reseña como la lee la gente: autor, estrellas, comentario, fecha de la visita y gasto por persona. Es la misma en la revisión antes de publicar, en el detalle del restaurante y en el panel | 24, 50 |
+| `OpinionList` | Las opiniones de un restaurante, de a 5 con «Ver más opiniones», con la aclaración si son menos que la cantidad de reseñas | 27, 50 |
 
 ### Pedido (`order/`)
 

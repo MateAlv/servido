@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
@@ -11,8 +12,15 @@ class PublicRestaurant(BaseModel):
     name: str
     description: str | None
     cuisine: str | None
-    # "$" to "$$$$"; null when the restaurant typed something else.
+    # "$" to "$$$$": calculated from 5 people with a reported spend, else the declared one, and
+    # null when the restaurant typed something else (spec 012, R6).
     price_tier: str | None
+    # The mean behind a calculated price tier; null otherwise.
+    average_spend_per_person: int | None
+    spend_people: int
+    # From the latest review of each person (spec 012, R12, R13); null without reviews.
+    rating: float | None
+    review_count: int
     dietary_restrictions: list[str]
     address: str | None
     neighborhood: str | None
@@ -37,5 +45,16 @@ class PublicDish(BaseModel):
     dietary_restrictions: list[str]
 
 
+class PublicOpinion(BaseModel):
+    """The latest review of a person, when it has a comment (spec 012, R14)."""
+
+    author: str
+    rating: int
+    comment: str
+    spend_per_person: int | None
+    visit_date: date
+
+
 class PublicRestaurantDetail(PublicRestaurant):
     menu: list[PublicDish]
+    opinions: list[PublicOpinion]
