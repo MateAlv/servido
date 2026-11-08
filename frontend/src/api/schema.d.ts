@@ -573,6 +573,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurante/bloqueos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Closures */
+        get: operations["list_closures_api_restaurante_bloqueos_get"];
+        put?: never;
+        /** Create Closure */
+        post: operations["create_closure_api_restaurante_bloqueos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurante/bloqueos/{closure_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Closure */
+        delete: operations["delete_closure_api_restaurante_bloqueos__closure_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurants": {
         parameters: {
             query?: never;
@@ -635,6 +670,25 @@ export interface components {
              * @default true
              */
             email_verificado: boolean;
+        };
+        /** AffectedReservation */
+        AffectedReservation: {
+            /**
+             * Reservation Id
+             * Format: uuid
+             */
+            reservation_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start Time */
+            start_time: string;
+            /** End Time */
+            end_time: string;
+            /** Party Size */
+            party_size: number;
         };
         /** AvailabilityResponse */
         AvailabilityResponse: {
@@ -710,6 +764,70 @@ export interface components {
         /** CartSaveResponse */
         CartSaveResponse: {
             cart: components["schemas"]["CartResponse"] | null;
+        };
+        /** ClosureListResponse */
+        ClosureListResponse: {
+            /** Closures */
+            closures: components["schemas"]["ClosureResponse"][];
+        };
+        /** ClosureRequest */
+        ClosureRequest: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Confirmed
+             * @default false
+             */
+            confirmed: boolean;
+            /** Acknowledged Reservation Ids */
+            acknowledged_reservation_ids?: string[];
+        };
+        /** ClosureResponse */
+        ClosureResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start Time */
+            start_time: string | null;
+            /** End Time */
+            end_time: string | null;
+            /** All Day */
+            all_day: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ClosureWarningDetail */
+        ClosureWarningDetail: {
+            /** Message */
+            message: string;
+            /** Reservations */
+            reservations: components["schemas"]["AffectedReservation"][];
+        };
+        /** ClosureWarningResponse */
+        ClosureWarningResponse: {
+            detail: components["schemas"]["ClosureWarningDetail"];
         };
         /** ConfirmedOrderItemResponse */
         ConfirmedOrderItemResponse: {
@@ -3413,6 +3531,97 @@ export interface operations {
             };
             /** @description No tenés permiso. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_closures_api_restaurante_bloqueos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosureListResponse"];
+                };
+            };
+        };
+    };
+    create_closure_api_restaurante_bloqueos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClosureRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosureResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_closure_api_restaurante_bloqueos__closure_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                closure_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

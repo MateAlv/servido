@@ -13,6 +13,7 @@ import { RestaurantReservationsPage } from './pages/RestaurantReservationsPage'
 import { RestaurantCancellationsPage } from './pages/RestaurantCancellationsPage'
 import { RestaurantReservationDinerPage } from './pages/RestaurantReservationDinerPage'
 import { RestaurantReviewsPage } from './pages/RestaurantReviewsPage'
+import { RestaurantClosuresPage } from './pages/RestaurantClosuresPage'
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
         element: <RestaurantCancellationsPage />,
       },
       { path: '/restaurante/resenas', element: <RestaurantReviewsPage /> },
+      { path: '/restaurante/bloqueos', element: <RestaurantClosuresPage /> },
       {
         path: '/restaurante/reservas/:reservationId/comensal',
         element: <RestaurantReservationDinerPage />,

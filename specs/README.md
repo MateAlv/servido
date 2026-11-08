@@ -24,7 +24,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [012-resenas](012-resenas/spec.md) | Comensal y Restaurante | 24, 27, 50 (y criterio pendiente de 7) | 5 | 4 (US-50 adelantada del 6) | ✅ | ✅ | ✅ | ✅ US-24, US-27, US-50 y el criterio de US-7 (decisiones R1–R19 del 05/11, falta que la PO las valide) |
 | [013-terminos-condiciones-comensal](013-terminos-condiciones-comensal/spec.md) | Comensal | 29 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-29 |
 | [014-terminos-condiciones-restaurante](014-terminos-condiciones-restaurante/spec.md) | Restaurante | 26 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-26 |
-| [016-bloqueo-horarios](016-bloqueo-horarios/spec.md) | Restaurante | 32 | 1 | 4 | ✅ | ✅ | ✅ | — |
+| [016-bloqueo-horarios](016-bloqueo-horarios/spec.md) | Restaurante | 32 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-32 (propuestas FR-007 y de reservas parcialmente pasadas/cruzadas y reaviso pendientes de validación de la PO) |
 
 Arrastre de la spec 003: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002 muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
 

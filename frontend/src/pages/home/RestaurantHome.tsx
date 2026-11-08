@@ -236,6 +236,20 @@ export function RestaurantHome({ account }: { account: Account }) {
               <p className={styles.muted}>Agregá platos, precios y tiempos de preparación.</p>
             </DashboardCard>
           </Reveal>
+          <Reveal delay={240}>
+            <DashboardCard
+              title="Bloqueos de horario"
+              description="Cerrá fechas o franjas sin modificar tus turnos."
+              icon={<IconClock />}
+              action={
+                <Button size="sm" to="/restaurante/bloqueos">
+                  Gestionar bloqueos
+                </Button>
+              }
+            >
+              <p>Administrá cuándo no recibís reservas</p>
+            </DashboardCard>
+          </Reveal>
 
           <Reveal delay={240}>
             <DashboardCard
