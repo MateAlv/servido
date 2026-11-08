@@ -132,8 +132,8 @@ function OrderEditor({
   const [page, setPage] = useState(initialPage)
   const confirmedLines = useMemo(() => linesOfOrder(page.order), [page.order])
   const [initial] = useState(() => {
-    if (!initialPage.reservation.order_open) return { lines: [], changes: [] }
     if (initialPage.cart) return reconcile(linesOfCart(initialPage.cart), initialPage.menu)
+    if (!initialPage.reservation.order_open) return { lines: [], changes: [] }
     return withoutDeletedDishes(linesOfOrder(initialPage.order) ?? [])
   })
   const [changes, setChanges] = useState<string[]>(initial.changes)
@@ -202,8 +202,12 @@ function OrderEditor({
     }
     setPage(fresh)
     if (!fresh.reservation.order_open) {
-      resetLines([])
-      setChanges([])
+      const updated =
+        fresh.menu.length === 0 && fresh.reservation.status === 'confirmed'
+          ? reconcile(lines, fresh.menu)
+          : { lines: [], changes: [] }
+      resetLines(updated.lines)
+      setChanges(updated.changes)
       return
     }
     // The diner may have changed something while the reload was on its way: reconcile what the
@@ -222,8 +226,8 @@ function OrderEditor({
 
   // A saved cart whose dishes changed is brought up to date and saved again.
   useEffect(() => {
-    if (initial.changes.length) setLines(() => initial.lines)
-  }, [initial, setLines])
+    if (initial.changes.length && page.reservation.order_open) setLines(() => initial.lines)
+  }, [initial, setLines, page.reservation.order_open])
 
   useEffect(() => {
     if (changes.length) changesRef.current?.focus()
@@ -434,10 +438,24 @@ function OrderEditor({
     return (
       <main className={styles.container}>
         {header}
+        {changes.length > 0 && (
+          <div ref={changesRef} tabIndex={-1} role="alert" className={styles.warn}>
+            {changes.map((change) => (
+              <p key={change}>{change}</p>
+            ))}
+          </div>
+        )}
+        {page.menu.length === 0 && reservation.status === 'confirmed' && (
+          <p role="status">El restaurante no tiene platos disponibles por ahora.</p>
+        )}
         {page.order ? (
           <>
             <p ref={closedRef} tabIndex={-1} className={styles.notice} role="status">
-              Tu pedido ya está cerrado. Se podía cambiar hasta las {deadline}.
+              {page.menu.length === 0 ? (
+                'Tu pedido confirmado conserva sus datos.'
+              ) : (
+                <>Tu pedido ya está cerrado. Se podía cambiar hasta las {deadline}.</>
+              )}
             </p>
             <Card className={styles.section}>
               <h2 className={styles.sectionTitle}>Tu pedido</h2>
