@@ -39,7 +39,7 @@ export function timeInBuenosAires(isoDateTime: string): string {
   return BA_TIME_FORMAT.format(new Date(isoDateTime))
 }
 
-/** How far ahead a diner can book (decision D10 of spec 005, pending PO). */
+/** How far ahead a diner can book (decision D10 of spec 003, pending PO). */
 export const MAX_DAYS_AHEAD = 60
 
 /** The last date a diner can book (`YYYY-MM-DD`): today in Buenos Aires plus 60 days. */

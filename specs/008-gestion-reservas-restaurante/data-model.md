@@ -23,7 +23,7 @@ Source: `backend/app/models/reservation.py`.
 
 | `cancelled_at` | Nullable UTC timestamp; required when `status = cancelled` |
 
-`table_number` remains internal and is not returned, consistent with spec 005 D1.
+`table_number` remains internal and is not returned, consistent with spec 003 D1.
 
 ## Diner contact projection (US-16)
 

@@ -12,7 +12,7 @@ models for the requested `comensales` and `restaurantes` tables, using
 repository conventions: UUID identifiers, UTC-aware timestamps, named
 constraints, and Argon2 password hashes. This feature exposes the diner
 authentication API; restaurant registration and login were added later by spec
-003 on the same `restaurantes` table, and `GET /api/me` serves both roles.
+002-cuenta-restaurante on the same `restaurantes` table, and `GET /api/me` serves both roles.
 
 **Status (2026-10-21)**: implemented. Registration also asks for the diner's
 `nombre` (team decision, 21/10; second migration).
@@ -27,7 +27,7 @@ the existing design system
 
 **Storage**: PostgreSQL 17 in Docker; this feature adds only `comensales` and
 `restaurantes` (revision `001_add_account_tables`; `002_restaurant_names` adds
-`comensales.nombre` and the spec 003 columns)
+`comensales.nombre` and the spec 002-cuenta-restaurante columns)
 
 **Testing**: pytest against real PostgreSQL in `backend/tests/` · Vitest +
 Testing Library for UI-only scenarios
@@ -45,7 +45,7 @@ visible password fields; login returns a one-hour HS256 JWT in JSON, using a
 secret from an environment variable and no cookies
 
 **Scale/Scope**: US-1 registration and US-3 login for diners; restaurant auth
-belongs to spec 003; no email verification, recovery, Google login, rate
+belongs to spec 002-cuenta-restaurante; no email verification, recovery, Google login, rate
 limiting, reservations, or orders
 
 **New dependencies**: Add `argon2-cffi` with `uv add argon2-cffi` for mandatory
@@ -109,12 +109,12 @@ backend/
 ├── app/api/auth.py                  # + diner registration/login routes
 ├── app/api/account.py               # + GET /api/me (both roles)
 ├── app/models/diner.py             # + Diner model
-├── app/models/restaurant.py        # + Restaurant model (extended by spec 003)
+├── app/models/restaurant.py        # + Restaurant model (extended by spec 002-cuenta-restaurante)
 ├── app/models/__init__.py          # ~ import both models for Alembic
 ├── app/schemas/auth.py             # + request/response schemas
 ├── app/services/auth.py            # + password and credential rules
 ├── migrations/versions/001_add_account_tables.py # + both tables
-├── migrations/versions/002_restaurant_name.py    # + comensales.nombre, spec 003 columns
+├── migrations/versions/002_restaurant_name.py    # + comensales.nombre, spec 002-cuenta-restaurante columns
 └── tests/test_auth.py              # + acceptance and edge-case tests
 frontend/
 ├── src/api/openapi.json, schema.d.ts # ~ `make api-types`
@@ -128,7 +128,7 @@ frontend/
 **Structure Decision**: Keep the existing backend/frontend monorepo. Models and
 the migration remain in `backend`; API schemas/routes and authentication rules
 follow the existing backend directories; forms and auth state use the existing
-frontend structure. Restaurant routes and behavior belong to spec 003.
+frontend structure. Restaurant routes and behavior belong to spec 002-cuenta-restaurante.
 
 ## Complexity Tracking
 

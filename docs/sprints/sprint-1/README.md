@@ -65,7 +65,7 @@ Borrador a partir de lo que muestra el repositorio; el equipo lo completa en la 
 | 6 | Ingresar nombre y características del local | 2 | [004](../../../specs/004-local-horarios-mesas/spec.md) |
 | 8 | Definir horarios de atención | 2 | 004 |
 | 10 | Marcar mesas disponibles | 2 | 004 |
-| 11 | Crear reserva | 3 | [005](../../../specs/005-reservar-mesa/spec.md) |
+| 11 | Crear reserva | 3 | [003](../../../specs/003-reservar-mesa/spec.md) |
 | 12 | Agregar plato | 3 | [006](../../../specs/006-menu-platos/spec.md) |
 
-La spec 005 tiene dudas abiertas para la PO (cantidad de comensales, elección de mesa, duración de la reserva, tipos de mesa, aprobación del restaurante).
+La spec 003 tiene dudas abiertas para la PO (cantidad de comensales, elección de mesa, duración de la reserva, tipos de mesa, aprobación del restaurante).

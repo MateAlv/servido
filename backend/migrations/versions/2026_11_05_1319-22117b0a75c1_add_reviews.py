@@ -1,4 +1,4 @@
-"""The diner's reviews of finished reservations (spec 012, US-27, US-50).
+"""The diner's reviews of finished reservations (spec 014, US-27, US-50).
 
 Revision ID: 22117b0a75c1
 Revises: e0e674653e2f

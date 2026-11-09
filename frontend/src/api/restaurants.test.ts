@@ -22,7 +22,7 @@ const REAL = {
   photo_url: null,
 }
 
-describe('restaurants (decision D4 of spec 005)', () => {
+describe('restaurants (decision D4 of spec 003)', () => {
   it('lists the bookable restaurants first, next to the test ones', async () => {
     get.mockResolvedValue({ data: { restaurants: [REAL] }, error: undefined } as never)
 

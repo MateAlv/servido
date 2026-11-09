@@ -74,7 +74,7 @@ Authenticates a diner with email and password.
 The implementation must use the repository's Argon2 password hashing
 convention. No password, hash, or secret is logged or returned.
 
-Restaurant accounts log in through `POST /auth/restaurante` (spec 003), which
+Restaurant accounts log in through `POST /auth/restaurante` (spec 002-cuenta-restaurante), which
 answers with `restaurante` instead of `comensal` and `rol` `"restaurant"` in
 the token. A restaurant's credentials do not open a diner session.
 

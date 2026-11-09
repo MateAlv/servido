@@ -351,7 +351,8 @@ def list_restaurant_cancellations(
                 ),
                 status=reservation.status,
                 cancelled_at=reservation.cancelled_at.astimezone(availability.BUENOS_AIRES),
-                # The order of a cancelled reservation counts as cancelled (spec 009, P12).
+                # The order of a cancelled reservation counts as cancelled
+                # (spec 009-pedido-anticipado, P12).
                 preordered_order=PreorderedOrderSummary(status="cancelled")
                 if orders.has_order(session, reservation.id)
                 else None,

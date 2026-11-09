@@ -1,4 +1,5 @@
-"""The pre-order of a reservation and the cart it is built in (spec 009, US-17, US-19, US-21).
+"""The pre-order of a reservation and the cart it is built in (spec 009-pedido-anticipado,
+US-17, US-19, US-21).
 
 Every rule about orders lives here: what the menu is, when an order can change, its totals and
 estimate, and the arrival and preparation times the restaurant-side stories read (US-20, US-22).

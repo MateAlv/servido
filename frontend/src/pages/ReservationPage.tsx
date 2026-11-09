@@ -63,7 +63,7 @@ function paramsFromSelection(selection: Selection): URLSearchParams {
 }
 
 /**
- * Create a reservation (US-11, spec 005): date, time, party size and seating preference, then
+ * Create a reservation (US-11, spec 003): date, time, party size and seating preference, then
  * the review and the explicit confirmation (US-13, `?paso=revision`). The selection lives in the
  * URL, so reloading or going back keeps it; nothing is written until the diner confirms.
  */
@@ -274,7 +274,7 @@ export function ReservationPage() {
     )
   }
 
-  // The test restaurants of spec 002 aren't in the database: only real ones take reservations.
+  // The test restaurants of spec 002-elegir-restaurante aren't in the database: only real ones take reservations.
   if (!restaurant.bookable) {
     return (
       <main className={styles.container}>

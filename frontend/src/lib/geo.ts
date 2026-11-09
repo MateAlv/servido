@@ -1,6 +1,6 @@
 /**
  * Geographic helpers for the restaurant map (US-5).
- * Distances are straight-line, as decided in ADR 0003 and assumed by spec 002.
+ * Distances are straight-line, as decided in ADR 0003 and assumed by spec 002-elegir-restaurante.
  */
 
 export type GeoPoint = {
@@ -27,7 +27,7 @@ export function formatDistance(km: number): string {
   return `${km.toLocaleString('es-AR', { maximumFractionDigits: 1 })} km`
 }
 
-/** True when a point has coordinates Leaflet can place on the map (spec 002, FR-011). */
+/** True when a point has coordinates Leaflet can place on the map (spec 002-elegir-restaurante, FR-011). */
 export function isValidPoint(point: GeoPoint | null): point is GeoPoint {
   return (
     point !== null &&

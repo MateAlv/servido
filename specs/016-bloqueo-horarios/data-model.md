@@ -74,7 +74,7 @@ Reservation 1 ── 0..1 Cart
 10. **Applying a closure** (one transaction): insert the `Closure`; for every affected reservation
     set `status = 'cancelled'` and `cancelled_at = now` (UTC); delete its `Cart` (and its items by
     cascade). The associated `Order` is not modified: the existing restaurant views treat the
-    order of a cancelled reservation as cancelled (spec 008 US-18 S3; spec 009 P12). The table is
+    order of a cancelled reservation as cancelled (spec 008 US-18 S3; spec 009-pedido-anticipado P12). The table is
     freed because availability counts only `confirmed` reservations.
 11. **Idempotency**: a request whose `request_id` already belongs to a closure of the same
     restaurant returns that closure (`200`) without touching any reservation again. A request id
@@ -110,5 +110,5 @@ Reservation 1 ── 0..1 Cart
 
 - No recurrence rule ("todos los lunes"): out of scope.
 - No refund or payment state: US-38/US-56.
-- No `Order.status = 'cancelled'`: derived from the reservation (spec 009 P12).
+- No `Order.status = 'cancelled'`: derived from the reservation (spec 009-pedido-anticipado P12).
 - No diner notification record: the mail is best effort, like the verification mail.

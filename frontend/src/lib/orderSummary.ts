@@ -1,4 +1,4 @@
-/** Totals and estimate of an order, with the backend's rules (spec 009, P2 and P3). Money is
+/** Totals and estimate of an order, with the backend's rules (spec 009-pedido-anticipado, P2 and P3). Money is
  * handled in integer cents so prices like $100,50 add up exactly. */
 
 type SummaryLine = { quantity: number; unitPrice: string; prepTimeMinutes: number | null }

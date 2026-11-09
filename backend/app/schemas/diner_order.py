@@ -1,4 +1,4 @@
-"""What the diner reads and sends for the order of a reservation (spec 009)."""
+"""What the diner reads and sends for the order of a reservation (spec 009-pedido-anticipado)."""
 
 from datetime import datetime
 from decimal import Decimal

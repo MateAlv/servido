@@ -83,7 +83,7 @@ export function RestaurantHome({ account }: { account: Account }) {
     .reduce((total, group) => total + group.quantity, 0)
   const totalTables = tables.reduce((total, group) => total + group.quantity, 0)
   const configuredProfile = Boolean(profile?.nombre && profile.latitud !== null)
-  // The same rule as GET /api/restaurants (spec 005, D4): location, an active shift and tables.
+  // The same rule as GET /api/restaurants (spec 003, D4): location, an active shift and tables.
   const takesReservations = configuredProfile && activeHours.length > 0 && availableTables > 0
 
   return (

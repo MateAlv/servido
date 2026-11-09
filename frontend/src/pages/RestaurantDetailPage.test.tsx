@@ -94,7 +94,7 @@ describe('RestaurantDetailPage (US-15)', () => {
   })
 })
 
-describe('RestaurantDetailPage (spec 012)', () => {
+describe('RestaurantDetailPage (spec 014)', () => {
   const real = { ...restaurant, bookable: true }
 
   it('US-27 S11 shows the average next to the count', async () => {

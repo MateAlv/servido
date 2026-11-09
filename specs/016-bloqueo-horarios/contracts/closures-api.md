@@ -92,7 +92,7 @@ In one transaction:
 1. The `Closure` row is inserted.
 2. Every affected reservation changes to `status = "cancelled"` and gets `cancelled_at` (UTC).
 3. Its `Cart` is deleted. Its `Order` is not modified: the existing restaurant views treat the
-   order of a cancelled reservation as cancelled (spec 008 US-18 S3; spec 009 P12).
+   order of a cancelled reservation as cancelled (spec 008 US-18 S3; spec 009-pedido-anticipado P12).
 4. Its table is free again because availability counts only `confirmed` reservations.
 
 After the commit, one mail is sent to each affected diner with the restaurant name, the date and

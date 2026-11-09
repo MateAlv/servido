@@ -1,4 +1,4 @@
-/** Reviews of finished reservations (US-24, US-27, US-50, spec 012; `contracts/reviews-api.md`). */
+/** Reviews of finished reservations (US-24, US-27, US-50, spec 014; `contracts/reviews-api.md`). */
 import { api } from './client'
 import { getApiErrorMessage, SessionExpiredError } from './errors'
 import type { components } from './schema'

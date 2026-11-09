@@ -66,11 +66,11 @@ One dish of a cart, with the values the page showed when the diner added it. Sam
 
 A cart may have no items only while the reservation has an order: that is a confirmed order the diner emptied and hasn't confirmed yet (P11). An empty save with no order deletes the cart instead (rule 7).
 
-### `platos` (specs 006 and 007-agregar-plato, unchanged)
+### `platos` (specs 006 and 005-agregar-plato, unchanged)
 
-Read for the menu: `id_plato`, `id_restaurante`, `nombre`, `descripcion`, `categoria`, `precio`, `foto_url`, `restricciones_alimenticias`, `tiempo_preparacion_minutos`, `disponible`. "A dish on the menu" is decided by one helper (`menu_dishes(session, restaurant_id)`): since US-15 (spec 011) it is a dish with `disponible = true`, and a dish that stops being available counts as off the menu at confirmation (P9).
+Read for the menu: `id_plato`, `id_restaurante`, `nombre`, `descripcion`, `categoria`, `precio`, `foto_url`, `restricciones_alimenticias`, `tiempo_preparacion_minutos`, `disponible`. "A dish on the menu" is decided by one helper (`menu_dishes(session, restaurant_id)`): since US-15 (spec 009-ver-platos-precios) it is a dish with `disponible = true`, and a dish that stops being available counts as off the menu at confirmation (P9).
 
-### `reservations` (spec 005, unchanged)
+### `reservations` (spec 003, unchanged)
 
 Gives the order its restaurant (`restaurant_id`), its diner (`diner_id`), its arrival time (`starts_at`, P7) and whether it is still confirmed (`status`). A restaurant with reservations can't be deleted (`RESTRICT`), so its dishes never disappear under an order through a cascade.
 
@@ -96,7 +96,7 @@ For US-20, ordering the orders of a shift by arrival time, then by suggested pre
 
 1. Through the diner endpoints of this feature, only the diner of the reservation reads or writes its order and its cart; for anyone else the reservation doesn't exist (404). A restaurant account gets 403 (US-4 S3). Restaurants read the orders of their own reservations through their own endpoints (US-20, US-22, US-36), and never read carts.
 2. Writing an order or a cart requires the order to be open (`order_open`); otherwise 409, and nothing changes. Discarding a cart is always allowed.
-3. Confirming requires a verified email (spec 007, US-51 S5; P13); otherwise 403 with its own message. Saving a cart doesn't.
+3. Confirming requires a verified email (spec 019, US-51 S5; P13); otherwise 403 with its own message. Saving a cart doesn't.
 4. A confirmation is one transaction: lock the reservation row `FOR UPDATE`; read its order **after** the lock; check rules 2 and 3 on the locked row; check every item against the menu (rule 5); then delete the old items with one `DELETE` statement and flush before inserting the new ones, and set `confirmed_at`. With no items, delete the order (its items cascade). In the same transaction, delete the reservation's cart.
 5. Each item of a confirmation must name a dish on the menu of the reservation's restaurant, with the name, price and preparation time the page showed. A dish that is missing, belongs to another restaurant or has a different value answers 409 and changes nothing (P9).
 6. Confirmation checks run in this order, and the first failure answers: request shape (400), reservation not the diner's (404), not open (409), email not verified (403), no items and no order to remove (400), menu changed (409).

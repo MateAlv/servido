@@ -6,7 +6,7 @@
 
 ## Summary
 
-US-32 lets a restaurant close a whole date or a time range without touching its weekly shifts. A new `Closure` entity stores the local date and an optional local time range; the existing availability rules read it, so blocked starts disappear from the diner flow and cannot be confirmed. Creating a closure first answers with the confirmed reservations it would cancel; only a second request that acknowledges that list applies it, cancelling the reservations, freeing their tables, discarding their carts, treating their orders as cancelled (spec 009, P12) and mailing each affected diner. The restaurant can list current closures and delete them; deleting never restores cancelled reservations.
+US-32 lets a restaurant close a whole date or a time range without touching its weekly shifts. A new `Closure` entity stores the local date and an optional local time range; the existing availability rules read it, so blocked starts disappear from the diner flow and cannot be confirmed. Creating a closure first answers with the confirmed reservations it would cancel; only a second request that acknowledges that list applies it, cancelling the reservations, freeing their tables, discarding their carts, treating their orders as cancelled (spec 009-pedido-anticipado, P12) and mailing each affected diner. The restaurant can list current closures and delete them; deleting never restores cancelled reservations.
 
 ## Technical Context
 

@@ -36,22 +36,22 @@ export type RestaurantPublic = {
   name: string
   description: string
   cuisine: string
-  /** Mock average spend per person in pesos (spec 002). For real restaurants it comes from the
-   * reviews, from 5 people on (spec 012, R6); until then it is `null`. */
+  /** Mock average spend per person in pesos (spec 002-elegir-restaurante). For real restaurants it comes from the
+   * reviews, from 5 people on (spec 014, R6); until then it is `null`. */
   averageSpendPerPerson: number | null
   /** Derived from the average spend, or declared by a real restaurant; `null` when unknown. */
   priceTier: RestaurantPriceTier | null
   dietaryRestrictions: string[]
   /** Location must be valid so it appears on the map (FR-011). */
   location: GeoPoint & { address: string; neighborhood: string }
-  /** Concurrence indicator levels: low/medium/high (spec 002, FR-002); `null` without data,
+  /** Concurrence indicator levels: low/medium/high (spec 002-elegir-restaurante, FR-002); `null` without data,
    * and then no indicator is shown at all. */
   occupancy: OccupancyLevel | null
   /** Dishes with their current prices (US-9 S3). Empty until the restaurant loads its menu. */
   menu: MenuSection[]
   /** Opinions of past diners shown in the detail (US-9, US-50): mock for the test restaurants. */
   reviews: RestaurantReview[]
-  /** Average and count from the API (spec 012, R12); the test restaurants derive them. */
+  /** Average and count from the API (spec 014, R12); the test restaurants derive them. */
   rating?: number | null
   reviewCount?: number
   /** How many people's spend is behind a calculated `averageSpendPerPerson`. */

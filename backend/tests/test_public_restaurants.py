@@ -1,4 +1,4 @@
-"""Bookable restaurants for the diner's map, list and detail (spec 005, decision D4).
+"""Bookable restaurants for the diner's map, list and detail (spec 003, decision D4).
 
 A restaurant is bookable when it has coordinates, an active shift and an available table group.
 """

@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 012: reviews (US-27, US-50, US-24) and the price tier (US-7)."""
+"""Acceptance tests for spec 014: reviews (US-27, US-50, US-24) and the price tier (US-7)."""
 
 from datetime import date, time, timedelta
 from decimal import Decimal

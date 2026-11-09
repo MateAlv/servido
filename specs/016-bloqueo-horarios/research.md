@@ -69,7 +69,7 @@ column is unique. A repeated request with the same id returns the existing closu
 cancelling anything again.
 
 **Why**: The spec explicitly requires "doble confirmación del bloqueo: se aplica una sola vez y
-las reservas se cancelan una sola vez". This is the same mechanism spec 005 uses for reservations
+las reservas se cancelan una sola vez". This is the same mechanism spec 003 uses for reservations
 (`request_id`), so it is already understood by the team. Overlapping closures with different ids
 remain allowed (spec edge case).
 
@@ -81,9 +81,9 @@ overlapping closure; the spec allows overlaps, so this is not a conflict.
 **Decision**: Applying a closure sets `status = 'cancelled'` and `cancelled_at = now` (UTC) on each
 affected reservation and deletes its cart. The associated `Order` keeps its stored status; the
 existing restaurant views already treat the order of a cancelled reservation as cancelled
-(spec 008, US-18 S3; spec 009, P12). No `Order.status` value is added.
+(spec 008, US-18 S3; spec 009-pedido-anticipado, P12). No `Order.status` value is added.
 
-**Why**: Spec 009 (team decision P12, 30/10) already defines that "el pedido de una reserva
+**Why**: Spec 009-pedido-anticipado (team decision P12, 30/10) already defines that "el pedido de una reserva
 cancelada queda cancelado, sin borrarse" and the order status constraint only accepts
 `confirmed`/`pending`. Changing that model would modify another spec and its tests for no new
 user-visible behavior. Availability already counts only `confirmed` reservations, so changing the
@@ -153,7 +153,7 @@ endpoints (spec 008, US-16).
   Elegí una hora posterior o bloqueá el día completo."
 - `date == today` and a whole-day closure → allowed (it closes the rest of the day).
 - `date > today` → allowed, with no extra horizon. The spec does not set one and a closure has no
-  table reserved, so it cannot freeze inventory like a reservation (spec 005, D10).
+  table reserved, so it cannot freeze inventory like a reservation (spec 003, D10).
 
 **Why**: These are exactly FR-003 and the two edge cases about past dates and partially past
 ranges. Times come from a `time` input, so a range starting at the current minute is accepted

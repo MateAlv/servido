@@ -1,4 +1,4 @@
-"""When a restaurant can seat a party (spec 005, rules in data-model.md).
+"""When a restaurant can seat a party (spec 003, rules in data-model.md).
 
 Dates and times are local to Buenos Aires. Reservations last 90 minutes and start every 30
 minutes, and a start is offered only if its 90 minutes fit inside a shift.

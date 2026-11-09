@@ -23,7 +23,7 @@ The team first chose a cart in the browser (`localStorage`) on 30/10, and Mateo 
 
 **Decision**: the order's estimate is the longest preparation time among its dishes, whatever the quantities. Dishes without a time are left out, so with partial data the estimate is that of the slowest dish that has one; if none has one, no estimate is shown and nothing says it is missing.
 
-**Rationale**: a kitchen cooks the dishes of one table in parallel; the order is ready when its slowest dish is. US-19 only asks that the estimate "corresponde a los platos incluidos". Hiding a missing estimate follows the rule the team set on 28/10 for occupancy (spec 002): missing data is hidden, never announced. The preparation time is optional in spec 007-agregar-plato (FR-006), so the demo restaurants need their times loaded (task T037).
+**Rationale**: a kitchen cooks the dishes of one table in parallel; the order is ready when its slowest dish is. US-19 only asks that the estimate "corresponde a los platos incluidos". Hiding a missing estimate follows the rule the team set on 28/10 for occupancy (spec 002-elegir-restaurante): missing data is hidden, never announced. The preparation time is optional in spec 005-agregar-plato (FR-006), so the demo restaurants need their times loaded (task T037).
 
 **Alternatives rejected**: the sum of the dishes (four 20-minute dishes would read 80 minutes); the slowest dish plus a margin per extra dish (a made-up rule the team can't justify to the PO).
 
@@ -37,7 +37,7 @@ The team first chose a cart in the browser (`localStorage`) on 30/10, and Mateo 
 
 ## P4 — How the diner reaches the order
 
-**Decision**: «Armar pedido» on the confirmed reservation screen (spec 005, US-13 S5), and a minimal «Tus próximas reservas» list on the diner home with «Armar pedido», «Seguir armando» (a saved cart, on any device) or «Ver pedido» on each.
+**Decision**: «Armar pedido» on the confirmed reservation screen (spec 003, US-13 S5), and a minimal «Tus próximas reservas» list on the diner home with «Armar pedido», «Seguir armando» (a saved cart, on any device) or «Ver pedido» on each.
 
 **Rationale**: there is no "my reservations" screen until US-23 (Sprint 4). Without the home list, a diner who leaves the confirmation can't get back to the order. The list shows only what the order needs (restaurant, date, time, party size, whether it has an order); the reservation detail stays in US-23. «Ver pedido» covers most of US-47 (Sprint 5); the spec states what US-47 keeps.
 
@@ -55,7 +55,7 @@ The team first chose a cart in the browser (`localStorage`) on 30/10, and Mateo 
 | P10 | 1 to 20 units per dish, at most 50 different dishes per order | Bounds every input (lesson of PR #29's security review). A larger party orders more than one kind of dish; the cap can be raised if the PO asks |
 | P11 | Removing every dish of a confirmed order and confirming leaves the reservation without an order, after a confirmation dialog; an order never confirmed can't be confirmed empty | The diner can undo an order before the cutoff; nothing in the backlog forbids it |
 | P12 | An order of a cancelled reservation counts as cancelled; cancelling a reservation never deletes or edits its order | US-18 S3 (spec 008); there is no order status to keep in sync |
-| P13 | A diner with an unverified email can build an order but not confirm it; the page learns it from the confirmation's answer, not from a local check | Reading of spec 007, US-51 S5 («intento realizar un pedido… no me lo permite»): what is not allowed is placing it. Letting them build it keeps their work while they verify |
+| P13 | A diner with an unverified email can build an order but not confirm it; the page learns it from the confirmation's answer, not from a local check | Reading of spec 019, US-51 S5 («intento realizar un pedido… no me lo permite»): what is not allowed is placing it. Letting them build it keeps their work while they verify |
 | P14 | A reservation at a restaurant without dishes offers no order, and nothing says the menu is missing | The rule of 28/10: missing data is hidden, never announced |
 
 ## Technical choices

@@ -20,7 +20,7 @@ function hasContent({ rating, comment, spend }: ReviewFormValues) {
   return rating > 0 || comment.trim() !== '' || spend.trim() !== ''
 }
 
-/** «¿Cómo estuvo?» (spec 012, R7): the diner's finished reservations without a review. Hidden
+/** «¿Cómo estuvo?» (spec 014, R7): the diner's finished reservations without a review. Hidden
  * when there are none. What the diner typed stays until publishing, even with the form closed. */
 export function PendingReviews({ account }: { account: Account }) {
   const queryClient = useQueryClient()

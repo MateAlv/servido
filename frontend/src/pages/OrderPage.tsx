@@ -53,7 +53,7 @@ function dishCount(lines: CartLine[]): string {
 }
 
 /**
- * The pre-order of a reservation (US-17, spec 009), with its estimated preparation time (US-19)
+ * The pre-order of a reservation (US-17, spec 009-pedido-anticipado), with its estimated preparation time (US-19)
  * and the bill (US-21). What the diner builds is saved as their cart; the restaurant only sees
  * it once they confirm (P1).
  */

@@ -13,7 +13,7 @@ MAX_SPEND_PER_PERSON = 1_000_000
 
 
 class Review(Base):
-    """A diner's final review of one finished reservation (spec 012, R4).
+    """A diner's final review of one finished reservation (spec 014, R4).
 
     The diner and the restaurant come from the reservation, so they can't disagree with it.
     """

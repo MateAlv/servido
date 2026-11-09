@@ -95,7 +95,7 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 
 *Implementación provisoria (19/10)*: el mapa y el listado vuelven a pedir la concurrencia cada **30 segundos** mientras permanecen abiertos. Cada restaurante de prueba trae su nivel (bajo / medio / alto) ya asignado, sin umbrales calculados. La frecuencia y la fuente quedan pendientes de confirmación con la PO.
 
-**Criterio del filtro de precio** *(decisión del equipo, actualizada el 19/10)*: por ahora el filtro es provisorio. Cada restaurante de la demo tiene un gasto promedio por persona numérico mockeado, expresado en pesos argentinos; su categoría se deriva de ese monto: `$` para menos de $15.000; `$$` desde $15.000 hasta menos de $25.000; `$$$` desde $25.000 hasta $40.000 inclusive; `$$$$` para más de $40.000. Estos límites resuelven provisoriamente las superposiciones de la propuesta original. El filtro muestra los restaurantes de las categorías elegidas. Para los restaurantes reales, desde el 05/11 la categoría se calcula con la media de lo que informaron al menos 5 personas en sus reseñas, con estos mismos límites; con menos, se usa la que declaró el restaurante (spec 012, US-7, R6). El filtro se aplica a los marcadores del mapa (US-5) y al listado (US-33), y se conserva en la URL; todavía usa los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts`, no datos reales del backend.
+**Criterio del filtro de precio** *(decisión del equipo, actualizada el 19/10)*: por ahora el filtro es provisorio. Cada restaurante de la demo tiene un gasto promedio por persona numérico mockeado, expresado en pesos argentinos; su categoría se deriva de ese monto: `$` para menos de $15.000; `$$` desde $15.000 hasta menos de $25.000; `$$$` desde $25.000 hasta $40.000 inclusive; `$$$$` para más de $40.000. Estos límites resuelven provisoriamente las superposiciones de la propuesta original. El filtro muestra los restaurantes de las categorías elegidas. Para los restaurantes reales, desde el 05/11 la categoría se calcula con la media de lo que informaron al menos 5 personas en sus reseñas, con estos mismos límites; con menos, se usa la que declaró el restaurante (spec 014, US-7, R6). El filtro se aplica a los marcadores del mapa (US-5) y al listado (US-33), y se conserva en la URL; todavía usa los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts`, no datos reales del backend.
 
 - Sin restaurantes para mostrar o ninguno cumple el filtro: estado vacío informativo con acción para quitar el filtro.
 
@@ -137,7 +137,7 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 
 - **FR-014**  *(US-33)*: El sistema MUST mostrar, junto al mapa, el listado de los mismos restaurantes con distancia y concurrencia; el filtro de precio MUST aplicarse también al listado. *(Salvo los restaurantes reales sin datos de concurrencia, que no muestran el indicador: D4, 28/10, falta que la PO lo valide.)*
 
-- **FR-013**  *(US-9)*: El detalle MUST mostrar la descripción, al menos una foto y las opiniones del restaurante. En los restaurantes de prueba, las opiniones son datos de prueba; en los reales, son las reseñas de la spec 012.
+- **FR-013**  *(US-9)*: El detalle MUST mostrar la descripción, al menos una foto y las opiniones del restaurante. En los restaurantes de prueba, las opiniones son datos de prueba; en los reales, son las reseñas de la spec 014.
 
 ### Key Entities
 
@@ -172,7 +172,7 @@ Como **Comensal**, quiero un listado con todos los restaurantes cercanos, junto 
 ## Assumptions
 
 - Los datos del restaurante y su menú provienen de la carga realizada por el rol Restaurante.
-- *(Decisión del equipo, 28/10, D4; falta que la PO la valide)*: el mapa, el listado y el detalle muestran los restaurantes reales que se pueden reservar (con ubicación, turnos y mesas cargados, spec 004) junto con los de prueba. De los reales se muestra solo lo que existe: el rango de precios que cargó el restaurante, sin indicador de concurrencia hasta que exista, y con calificación y opiniones cuando tengan reseñas (spec 012) (cuando no hay datos no se muestra nada, en vez de avisar que faltan; tampoco se muestran la foto, el menú, las opiniones, la dirección o el barrio si no existen). Solo los reales se pueden reservar (spec 005).
+- *(Decisión del equipo, 28/10, D4; falta que la PO la valide)*: el mapa, el listado y el detalle muestran los restaurantes reales que se pueden reservar (con ubicación, turnos y mesas cargados, spec 004) junto con los de prueba. De los reales se muestra solo lo que existe: el rango de precios que cargó el restaurante, sin indicador de concurrencia hasta que exista, y con calificación y opiniones cuando tengan reseñas (spec 014) (cuando no hay datos no se muestra nada, en vez de avisar que faltan; tampoco se muestran la foto, el menú, las opiniones, la dirección o el barrio si no existen). Solo los reales se pueden reservar (spec 003).
 
 - La distancia se calcula en línea recta, salvo que se defina otra métrica.
 

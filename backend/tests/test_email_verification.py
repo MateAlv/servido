@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 007, US-51: verification mail when a diner registers."""
+"""Acceptance tests for spec 019, US-51: verification mail when a diner registers."""
 
 import re
 from datetime import UTC, datetime, timedelta

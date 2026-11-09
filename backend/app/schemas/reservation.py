@@ -70,9 +70,10 @@ class ReservationResponse(BaseModel):
     table: TableChoice
     status: str
     has_order: bool
-    # An unconfirmed cart the diner can keep building (spec 009, P1).
+    # An unconfirmed cart the diner can keep building (spec 009-pedido-anticipado, P1).
     has_cart: bool
-    # Whether the order can still be created or changed, and until when (spec 009, P6).
+    # Whether the order can still be created or changed, and until when
+    # (spec 009-pedido-anticipado, P6).
     order_open: bool
     order_deadline: datetime
 

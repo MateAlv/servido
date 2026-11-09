@@ -1,7 +1,7 @@
 /**
  * Restaurants for the diner's map, list and detail: the bookable restaurants stored in the
- * database (`GET /api/restaurants`, decision D4 of 28/10 in spec 005) next to the test
- * restaurants of spec 002. Only the real ones can be booked.
+ * database (`GET /api/restaurants`, decision D4 of 28/10 in spec 003) next to the test
+ * restaurants of spec 002-elegir-restaurante. Only the real ones can be booked.
  */
 import {
   RESTAURANTS_FIXTURE,

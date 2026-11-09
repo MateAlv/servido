@@ -4,7 +4,7 @@ import styles from './LegalPage.module.css'
 
 const CONTACT = 'servido.gdsi@gmail.com'
 
-/** Provisional privacy policy: Google requires one to publish the Google sign-in (spec 007). */
+/** Provisional privacy policy: Google requires one to publish the Google sign-in (spec 019). */
 export function PrivacyPage() {
   return (
     <main className={styles.container}>

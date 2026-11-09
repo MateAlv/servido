@@ -59,7 +59,7 @@ Confirmed-reservation conflict handling was represented by the replaceable
 reservation conflict-check stub in
 `contracts/restaurant-configuration-api.md`; it reports group capacity and
 consumed quantity, never a physical table identifier. Reservation creation
-belongs to the later reservation feature. *(Replaced 28/10 by spec 005: the
+belongs to the later reservation feature. *(Replaced 28/10 by spec 003: the
 check queries real reservations, decision D9.)*
 
 ## Constitution Check
@@ -87,7 +87,7 @@ check queries real reservations, decision D9.)*
 | US-8 S3 — inactive weekday offers no reservation hours | `backend/tests/test_opening_hours.py::test_us8_s3_inactive_weekday_has_no_opening_shifts` | Backend |
 | US-10 S1 — an available quantity slot in a group is eligible only when its capacity is at least the party size | `backend/tests/test_table_inventory.py::test_us10_s1_available_table_with_sufficient_capacity_is_selectable` | Backend |
 | US-10 S2 — unavailable groups are excluded from group-quantity availability | `backend/tests/test_table_inventory.py::test_us10_s2_unavailable_table_groups_are_excluded` | Backend |
-| US-10 S3 — reducing group quantity needed by confirmed reservations warns before mutation | `backend/tests/test_table_inventory.py::test_us10_s3_reducing_booked_tables_is_rejected` and `test_us10_edge_disabling_reserved_capacity_returns_conflict` with real reservations (since 28/10, spec 005) | Backend |
+| US-10 S3 — reducing group quantity needed by confirmed reservations warns before mutation | `backend/tests/test_table_inventory.py::test_us10_s3_reducing_booked_tables_is_rejected` and `test_us10_edge_disabling_reserved_capacity_returns_conflict` with real reservations (since 28/10, spec 003) | Backend |
 | Edge — table updates and reservation confirmation do not consume the same group quantity twice | `backend/tests/test_table_inventory.py::test_us10_edge_table_update_is_transaction_safe` using the reservation conflict stub | Backend/database |
 
 ## Project Structure
@@ -126,7 +126,7 @@ backend/
 └── tests/
    ├── test_restaurant_profile.py
    ├── test_opening_hours.py
-   └── test_table_inventory.py             # real reservations since 28/10 (spec 005)
+   └── test_table_inventory.py             # real reservations since 28/10 (spec 003)
 frontend/
 ├── src/pages/RestaurantProfilePage.tsx  # US-6 configuration flow
 ├── src/pages/OpeningHoursPage.tsx       # US-8 configuration flow
