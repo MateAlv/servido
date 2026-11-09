@@ -12,12 +12,13 @@ from app.models.opening_shift import OpeningShift
 from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
 from app.services.auth import hash_password
+from scripts.review_demo import load_demo
 
 RESTAURANT_EMAIL = "demo@servido.local"
-RESTAURANT_PASSWORD = "DemoRestaurante123"
+RESTAURANT_PASSWORD = "Demo12345"
 RESTAURANT_CUIT = "30712345678"
 DINER_EMAIL = "cliente@servido.local"
-DINER_PASSWORD = "ClienteDemo123"
+DINER_PASSWORD = "Demo12345"
 
 
 def seed() -> None:
@@ -35,6 +36,7 @@ def seed() -> None:
             session.flush()
 
         restaurant.nombre = "Restaurante Demo"
+        restaurant.password_hash = hash_password(RESTAURANT_PASSWORD)
         restaurant.telefono = "+54 11 5555-0101"
         restaurant.direccion = "Av. Corrientes 1234"
         restaurant.barrio = "Almagro"
@@ -46,14 +48,15 @@ def seed() -> None:
 
         diner = session.scalar(select(Diner).where(Diner.email == DINER_EMAIL))
         if diner is None:
-            session.add(
-                Diner(
-                    nombre="Cliente Demo",
-                    email=DINER_EMAIL,
-                    password_hash=hash_password(DINER_PASSWORD),
-                    email_verified_at=datetime.now(UTC),
-                )
+            diner = Diner(
+                nombre="Cliente Demo",
+                email=DINER_EMAIL,
+                password_hash=hash_password(DINER_PASSWORD),
+                email_verified_at=datetime.now(UTC),
             )
+            session.add(diner)
+            session.flush()
+        diner.password_hash = hash_password(DINER_PASSWORD)
 
         for day_of_week in range(1, 8):
             shift_exists = session.scalar(
@@ -129,6 +132,8 @@ def seed() -> None:
                 dish.precio = price
                 dish.foto_url = photo_url
                 dish.disponible = available
+
+        load_demo(session, restaurant, diner, DINER_PASSWORD)
 
     print("Seed listo.")
     print(f"Restaurante: {RESTAURANT_EMAIL} / {RESTAURANT_PASSWORD}")

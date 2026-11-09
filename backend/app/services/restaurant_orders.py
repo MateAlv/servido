@@ -54,7 +54,8 @@ def order_items(session: Session, order_id: UUID) -> list[OrderItemData]:
     items = session.scalars(
         select(OrderItem).where(OrderItem.order_id == order_id).order_by(OrderItem.id)
     ).all()
-    # The name the dish had when the diner confirmed (spec 009, P8), like the price.
+    # The name the dish had when the diner confirmed (spec 009-pedido-anticipado, P8), like the
+    # price.
     return [
         OrderItemData(
             dish_name=item.dish_name,

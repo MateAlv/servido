@@ -66,13 +66,13 @@ complete.
   [Consistency, Contract, Data model, Ambiguity]
 - [ ] CHK012 — Do the artifacts consistently describe the restaurant table as
   schema-only for spec 001 while explicitly preserving the ability for spec
-  003 to add or manage its account behavior retroactively?
+  002-cuenta-restaurante to add or manage its account behavior retroactively?
   [Consistency, Spec §MVP Boundaries, User-requested constraint]
 - [ ] CHK013 — Is the planned `restaurantes` schema reconciled with
-  `specs/003-cuenta-restaurante/spec.md`, especially its required `telefono`
+  `specs/002-cuenta-restaurante/spec.md`, especially its required `telefono`
   and `auth_provider`, without silently claiming that spec 001 implements
   restaurant registration?
-  [Conflict, Spec 003 §Key Entities, Data model]
+  [Conflict, Spec 002-cuenta-restaurante §Key Entities, Data model]
 - [ ] CHK014 — Are the blueprint deviations documented consistently, including
   renaming `usuarios` to `comensales`, replacing BIGINT with UUID, omitting
   diner profile fields, and choosing timezone-aware timestamps?
@@ -109,13 +109,13 @@ complete.
 ## Scope and Forward Compatibility
 
 - [ ] CHK021 — Is the requested inclusion of `restaurantes` explicitly
-  classified as schema preparation for spec 003 rather than a feature of
+  classified as schema preparation for spec 002-cuenta-restaurante rather than a feature of
   US-1/US-3?
   [Scope, User-requested constraint]
-- [ ] CHK022 — Does the data model define a reviewable path for spec 003 to
+- [ ] CHK022 — Does the data model define a reviewable path for spec 002-cuenta-restaurante to
   add its required restaurant-account fields and behavior through a later
   Alembic migration, without renaming or breaking the table created here?
-  [Forward compatibility, Spec 003, Gap]
+  [Forward compatibility, Spec 002-cuenta-restaurante, Gap]
 - [ ] CHK023 — Are future foreign-key naming and identifier expectations
   documented so later tables reference `comensales.id_comensal` and
   `restaurantes.id_restaurante` consistently?

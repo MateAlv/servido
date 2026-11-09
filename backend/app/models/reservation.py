@@ -21,7 +21,7 @@ RESERVATION_MINUTES = 90
 
 
 class Reservation(Base):
-    """A diner holds one table of a restaurant's table group for 90 minutes (spec 005).
+    """A diner holds one table of a restaurant's table group for 90 minutes (spec 003).
 
     Table groups are recreated every time the restaurant saves them, so a reservation names its
     table by the group's identity (capacity and seating area) plus a number inside the group

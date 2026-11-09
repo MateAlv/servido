@@ -1,4 +1,4 @@
-# Transactional mail (spec 007, US-51) through Amazon SES, sent as no-reply@<domain_name>.
+# Transactional mail (spec 019, US-51) through Amazon SES, sent as no-reply@<domain_name>.
 # Easy DKIM proves the domain: its three CNAMEs go in Cloudflare by hand, like the ACM
 # validation (terraform output ses_dkim_records). Leaving the SES sandbox is a one-time request
 # in the console (infra/README.md); until then SES only delivers to verified addresses.

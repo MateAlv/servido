@@ -1,7 +1,8 @@
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
-from sqlalchemy import ARRAY, CHAR, CheckConstraint, Numeric, String, Text
+from sqlalchemy import ARRAY, CHAR, CheckConstraint, DateTime, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -30,6 +31,11 @@ class Restaurant(Base):
             "(latitud IS NOT NULL AND longitud IS NOT NULL)",
             name="coordinates_together",
         ),
+        CheckConstraint(
+            "(terms_version IS NULL AND terms_accepted_at IS NULL) OR "
+            "(terms_version IS NOT NULL AND terms_accepted_at IS NOT NULL)",
+            name="terms_acceptance_complete",
+        ),
     )
 
     id_restaurante: Mapped[UUID] = mapped_column(
@@ -49,6 +55,10 @@ class Restaurant(Base):
     restricciones_tags: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     latitud: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
     longitud: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
+    terms_version: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    terms_accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     @property
     def tipo_cocina(self) -> str | None:

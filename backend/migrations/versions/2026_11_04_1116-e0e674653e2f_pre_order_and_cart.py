@@ -1,4 +1,5 @@
-"""The diner's pre-order: the cart, and what a confirmation keeps (spec 009, US-17).
+"""The diner's pre-order: the cart, and what a confirmation keeps
+(spec 009-pedido-anticipado, US-17).
 
 Revision ID: e0e674653e2f
 Revises: 8f3c1a2b4d5e

@@ -3,10 +3,15 @@ import { useMemo, useRef, useState } from 'react'
 import { useLocation, useSearchParams } from 'react-router'
 
 import { fetchRestaurants } from '../../api/restaurants'
-import { averageRating, type RestaurantPublic } from '../../data/restaurants.fixture'
+import {
+  averageRating,
+  reviewCountLabel,
+  type RestaurantPublic,
+} from '../../data/restaurants.fixture'
 import { cx } from '../../lib/cx'
 import { distanceKm, formatDistance, isValidPoint, type GeoPoint } from '../../lib/geo'
 import { OCCUPANCY_REFRESH_MS } from '../../lib/occupancy'
+import { formatRating } from '../../lib/rating'
 import { useGeolocation } from '../../lib/useGeolocation'
 import { LiveIndicator } from '../order'
 import { Button, IconPin, IconStar } from '../ui'
@@ -58,7 +63,7 @@ export function RestaurantExplorer() {
     refetchInterval: OCCUPANCY_REFRESH_MS,
   })
 
-  // Only restaurants with a usable location appear (spec 002, FR-011).
+  // Only restaurants with a usable location appear (spec 002-elegir-restaurante, FR-011).
   const located = useMemo(
     () => (restaurantsQuery.data ?? []).filter((restaurant) => isValidPoint(restaurant.location)),
     [restaurantsQuery.data],
@@ -187,15 +192,11 @@ export function RestaurantExplorer() {
                 </div>
                 <p className={styles.itemMeta}>
                   {averageRating(restaurant) !== null && (
-                    <span className={styles.stars}>
+                    <span className={styles.itemRating}>
                       <IconStar className={styles.star} />
-                      {averageRating(restaurant)?.toLocaleString('es-AR', {
-                        maximumFractionDigits: 1,
-                      })}
-                      {(restaurant.cuisine ||
-                        restaurant.location.neighborhood ||
-                        isValidPoint(diner)) &&
-                        ' · '}
+                      {formatRating(averageRating(restaurant) ?? 0)}
+                      <span className="visually-hidden"> de 5 estrellas</span> ·{' '}
+                      {reviewCountLabel(restaurant)}
                     </span>
                   )}
                   {[

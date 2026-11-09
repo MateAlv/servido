@@ -2,7 +2,7 @@
 
 **Feature**: `specs/009-pedido-anticipado` | All routes under `/api`, diner token required (`Authorization: Bearer …`).
 
-Common errors, as in spec 005: `401` no token or expired session (`SESSION_EXPIRED_DETAIL`, also when the diner no longer exists) · `403` restaurant account («Esta acción es solo para comensales.») · `400` invalid input (global validation handler, never 422). Checks run in the order of [data-model.md](../data-model.md) rule 6 (confirmation) and rule 7 (cart). Money is a decimal string with two places; datetimes are ISO 8601 with offset.
+Common errors, as in spec 003: `401` no token or expired session (`SESSION_EXPIRED_DETAIL`, also when the diner no longer exists) · `403` restaurant account («Esta acción es solo para comensales.») · `400` invalid input (global validation handler, never 422). Checks run in the order of [data-model.md](../data-model.md) rule 6 (confirmation) and rule 7 (cart). Money is a decimal string with two places; datetimes are ISO 8601 with offset.
 
 ## `GET /api/reservations/{reservation_id}/order`
 
@@ -76,7 +76,7 @@ Confirms the order: replaces it with the items sent (P1, rule 4) and deletes the
 | 400 | More than 50 items, a repeated `dish_id`, quantity outside 1–20, a name over 150 characters, a malformed price or time | Validation message |
 | 404 | Unknown reservation or another diner's | «No encontramos esa reserva.» |
 | 409 | Not open: the deadline passed, the reservation is cancelled or past, or the restaurant has no menu | «Ya no se puede cambiar el pedido de esta reserva.» |
-| 403 | Email not verified (spec 007, US-51 S5; P13) | «Verificá tu email para confirmar tu pedido.» |
+| 403 | Email not verified (spec 019, US-51 S5; P13) | «Verificá tu email para confirmar tu pedido.» |
 | 400 | No items and no order to remove | «Agregá al menos un plato para confirmar tu pedido.» |
 | 409 | The menu changed: a dish is gone or belongs to another restaurant, or its name, price or time differs (P9) | «El menú cambió. Revisá tu pedido antes de confirmarlo.» |
 
@@ -115,5 +115,5 @@ The diner home list «Tus próximas reservas» (P4): the diner's confirmed reser
 
 ## Changes to existing responses
 
-- **`ReservationResponse`** (spec 005: `POST /api/reservations`, `GET /api/reservations?date=`) gains `has_order`, `has_cart`, `order_open` and `order_deadline`, so the confirmed step and the home list can offer «Armar pedido», «Seguir armando» or «Ver pedido». `reservation_response` then needs the session and the clock.
+- **`ReservationResponse`** (spec 003: `POST /api/reservations`, `GET /api/reservations?date=`) gains `has_order`, `has_cart`, `order_open` and `order_deadline`, so the confirmed step and the home list can offer «Armar pedido», «Seguir armando» or «Ver pedido». `reservation_response` then needs the session and the clock.
 - `GET /api/restaurants/{id}` (`PublicDish`) does not change: the order page gets its menu from the order endpoint.

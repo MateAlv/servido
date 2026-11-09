@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { RESTAURANTS_FIXTURE } from '../data/restaurants.fixture'
+import { averageRating, RESTAURANTS_FIXTURE, reviewCountLabel } from '../data/restaurants.fixture'
 import { api } from './client'
 import { fetchRestaurant, fetchRestaurants } from './restaurants'
 
@@ -22,7 +22,7 @@ const REAL = {
   photo_url: null,
 }
 
-describe('restaurants (decision D4 of spec 005)', () => {
+describe('restaurants (decision D4 of spec 003)', () => {
   it('lists the bookable restaurants first, next to the test ones', async () => {
     get.mockResolvedValue({ data: { restaurants: [REAL] }, error: undefined } as never)
 
@@ -189,5 +189,64 @@ describe('restaurants (decision D4 of spec 005)', () => {
     get.mockClear()
     expect(await fetchRestaurant('r-la-esquina')).toMatchObject({ bookable: false })
     expect(get).not.toHaveBeenCalled()
+  })
+
+  it('US-27 S11 keeps the average and the count; US-7 S5 the calculated tier', async () => {
+    get.mockResolvedValue({
+      data: {
+        restaurants: [
+          {
+            ...REAL,
+            rating: 4.5,
+            review_count: 3,
+            price_tier: '$$$',
+            average_spend_per_person: 30000,
+          },
+        ],
+      },
+      error: undefined,
+    } as never)
+
+    const [restaurant] = await fetchRestaurants()
+
+    expect(restaurant).toMatchObject({
+      rating: 4.5,
+      reviewCount: 3,
+      priceTier: '$$$',
+      averageSpendPerPerson: 30000,
+    })
+    expect(averageRating(restaurant)).toBe(4.5)
+    expect(reviewCountLabel(restaurant)).toBe('3 reseñas')
+  })
+
+  it('US-50 S8 turns the opinions of the detail into reviews', async () => {
+    get.mockResolvedValue({
+      data: {
+        ...REAL,
+        menu: [],
+        opinions: [
+          {
+            author: 'Juan P.',
+            rating: 5,
+            comment: 'Muy rico.',
+            spend_per_person: 25000,
+            visit_date: '2026-11-02',
+          },
+        ],
+      },
+      error: undefined,
+    } as never)
+
+    const restaurant = await fetchRestaurant(REAL.id)
+
+    expect(restaurant?.reviews).toEqual([
+      {
+        author: 'Juan P.',
+        rating: 5,
+        comment: 'Muy rico.',
+        date: '2026-11-02',
+        spendPerPerson: 25000,
+      },
+    ])
   })
 })

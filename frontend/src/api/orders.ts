@@ -1,4 +1,4 @@
-/** The pre-order of a reservation and its cart (US-17, US-19, US-21, spec 009;
+/** The pre-order of a reservation and its cart (US-17, US-19, US-21, spec 009-pedido-anticipado;
  * `contracts/orders-api.md`). */
 import { api } from './client'
 import { getApiErrorMessage, SessionExpiredError } from './errors'

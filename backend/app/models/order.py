@@ -9,8 +9,8 @@ from app.models.base import Base
 
 
 class Order(Base):
-    """The pre-order of one reservation. US-17 (spec 009) only writes confirmed orders; the
-    order counts as cancelled when its reservation is (P12)."""
+    """The pre-order of one reservation. US-17 (spec 009-pedido-anticipado) only writes confirmed
+    orders; the order counts as cancelled when its reservation is (P12)."""
 
     __tablename__ = "pedidos"
     __table_args__ = (
@@ -34,7 +34,7 @@ class Order(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
-    # The diner's last confirmation (spec 009, P1).
+    # The diner's last confirmation (spec 009-pedido-anticipado, P1).
     confirmed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )

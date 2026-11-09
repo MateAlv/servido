@@ -38,6 +38,7 @@ Sprints de una semana, de jueves a miércoles. Cada sprint cierra el miércoles 
 | 5 | 12/11 – 18/11 | Ignacio | 20 | Reembolsos, horarios disponibles, cantidad de personas, detalle del plato, mails de validación y recuperar cuenta del restaurante | 35–47 |
 | 6 | 19/11 – 25/11 | Matías | 20 | Promociones, pago electrónico y en efectivo, Google, filtros y fotos. **Entrega final el 25/11** (cierre de código el martes 24/11) | 48–61 |
 
+- US-50 (2 SP) se adelantó del Sprint 6 al 4 el 05/11 (spec 014). En la planilla, el Sprint 4 pasa de 13 a 15 SP y el Sprint 6 de 17 a 15; esta tabla todavía tiene los puntos anteriores a los cambios de la planilla.
 - El MVP termina en el Sprint 4; los Sprints 5 y 6 funcionan como colchón.
 - US-33 (5 SP) se adelantó al Sprint 1: el Sprint 1 cerró con 21 SP y el Sprint 4 queda en 14. Lo que pasó en cada sprint está en [docs/sprints/](../sprints/).
 - Semanas con menos capacidad (entregas de otras materias y la FIUBA Talk del 04/11): Sprints 2, 3 y 5. En cada planning cada uno avisa su disponibilidad y se le asignan menos puntos.

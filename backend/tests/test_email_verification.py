@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 007, US-51: verification mail when a diner registers."""
+"""Acceptance tests for spec 019, US-51: verification mail when a diner registers."""
 
 import re
 from datetime import UTC, datetime, timedelta
@@ -18,7 +18,13 @@ LINK = re.compile(r"https://servido\.test/verificar-email\?token=([\w-]+)")
 
 def register(client: TestClient, email: str = EMAIL):
     return client.post(
-        "/api/comensales", json={"nombre": "Martín", "email": email, "password": "Segura123"}
+        "/api/comensales",
+        json={
+            "nombre": "Martín",
+            "email": email,
+            "password": "Segura123",
+            "terms_accepted": True,
+        },
     )
 
 

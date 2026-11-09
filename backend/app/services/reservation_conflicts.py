@@ -1,5 +1,5 @@
 """Whether a change to the table groups would leave a reservation without a table (spec 004,
-US-10 S3; rule 11 of specs/005-reservar-mesa/data-model.md, decision D9)."""
+US-10 S3; rule 11 of specs/003-reservar-mesa/data-model.md, decision D9)."""
 
 from dataclasses import dataclass
 from datetime import date, datetime, time

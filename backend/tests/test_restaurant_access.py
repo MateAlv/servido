@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 003: restaurant sign-up (US-2) and login (US-4)."""
+"""Acceptance tests for spec 002-cuenta-restaurante: restaurant sign-up (US-2) and login (US-4)."""
 
 import jwt
 import pytest
@@ -16,6 +16,7 @@ def restaurant_payload(**changes: str) -> dict[str, str]:
         "cuit": VALID_CUIT,
         "telefono": "11 5555-4444",
         "password": "Segura123",
+        "terms_accepted": True,
     }
     return {**payload, **changes}
 

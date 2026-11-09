@@ -862,3 +862,54 @@ describe('OrderPage', () => {
     expect(within(bill).getByRole('row', { name: /Total/ })).toHaveTextContent(money(33500))
   })
 })
+
+it('US-34 edge explains removal from a persisted cart when the menu becomes empty', async () => {
+  fetchMock.mockResolvedValue(
+    pageData(
+      {
+        menu: [],
+        cart: {
+          updated_at: '2026-11-03T12:00:00-03:00',
+          items: [
+            {
+              dish_id: PROVOLETA.id,
+              name: PROVOLETA.name,
+              unit_price: PROVOLETA.price,
+              quantity: 2,
+              prep_time_minutes: 10,
+            },
+          ],
+        },
+      },
+      false,
+    ),
+  )
+  renderWithProviders(
+    <Routes>
+      <Route path="/reservas/:reservaId/pedido" element={<OrderPage />} />
+    </Routes>,
+    { route: '/reservas/res-1/pedido' },
+  )
+  expect(await screen.findByText(/Provoleta ya no está en el menú/)).toBeInTheDocument()
+  expect(
+    screen.getByText('El restaurante no tiene platos disponibles por ahora.'),
+  ).toBeInTheDocument()
+  expect(confirmMock).not.toHaveBeenCalled()
+  expect(saveMock).not.toHaveBeenCalled()
+})
+
+it('US-34 edge explains the last dish disappearing during confirmation and keeps the confirmed receipt', async () => {
+  confirmMock.mockResolvedValue({ ok: false, kind: 'conflict' })
+  const original = orderOf([[PROVOLETA, 2]])
+  const user = await openPage(pageData({ order: original }))
+  await add(user, 'Flan')
+  fetchMock.mockResolvedValue(pageData({ order: original, menu: [] }, false))
+  await user.click(screen.getByRole('button', { name: 'Confirmar cambios' }))
+  expect(await screen.findByText(/Flan ya no está en el menú/)).toBeInTheDocument()
+  expect(
+    screen.getByText('El restaurante no tiene platos disponibles por ahora.'),
+  ).toBeInTheDocument()
+  expect(screen.getAllByText('Provoleta')[0]).toBeInTheDocument()
+  expect(screen.getByText('Tu pedido confirmado conserva sus datos.')).toBeInTheDocument()
+  expect(confirmMock).toHaveBeenCalledTimes(1)
+})

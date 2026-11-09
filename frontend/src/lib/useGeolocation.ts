@@ -13,7 +13,7 @@ export type GeolocationState = {
 /**
  * Asks the device for its current position (US-5, scenario 1).
  * When the browser has no geolocation or permission is denied, the state says so
- * and the map falls back to the default zone without distances (spec 002 edge case).
+ * and the map falls back to the default zone without distances (spec 002-elegir-restaurante edge case).
  */
 export function useGeolocation(): GeolocationState & { retry: () => void } {
   const [state, setState] = useState<GeolocationState>(() => ({

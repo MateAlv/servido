@@ -9,7 +9,7 @@ from app.models.base import Base
 
 
 class EmailVerification(Base):
-    """The mailed verification link of one diner (spec 007, data model)."""
+    """The mailed verification link of one diner (spec 019, data model)."""
 
     __tablename__ = "email_verifications"
 

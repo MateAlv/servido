@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 005: availability (US-11) and confirming a reservation (US-13).
+"""Acceptance tests for spec 003: availability (US-11) and confirming a reservation (US-13).
 
 Every test runs on Monday 2 November 2026 at 09:00 in Buenos Aires (`fixed_now` in conftest.py).
 The restaurant opens every day 12:00–15:00 and 20:00–23:30 unless a test says otherwise.

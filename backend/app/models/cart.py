@@ -20,8 +20,8 @@ MAX_UNITS_PER_DISH = 20
 
 
 class Cart(Base):
-    """The order a diner is building and hasn't confirmed (spec 009, P1). The restaurant never
-    reads it: only a confirmation writes `pedidos`."""
+    """The order a diner is building and hasn't confirmed (spec 009-pedido-anticipado, P1). The
+    restaurant never reads it: only a confirmation writes `pedidos`."""
 
     __tablename__ = "carts"
 

@@ -1,5 +1,5 @@
 /**
- * Availability of one restaurant for a date and a party size (US-11, spec 005;
+ * Availability of one restaurant for a date and a party size (US-11, spec 003;
  * `contracts/availability-api.md`). Tables are groups: capacity, seating area and how many are
  * free at that start.
  */

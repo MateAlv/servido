@@ -16,7 +16,7 @@ From a confirmed reservation, the diner opens its order page, adds dishes from t
 
 **Storage**: PostgreSQL 17 in Docker (locally, in CI and on the production instance)
 
-**Testing**: pytest against a real Postgres in `backend/tests/`, with the fixed clock of spec 005 (`fixed_now`; routers and services call `availability.current_time()` through the module so the patch applies) · Vitest + Testing Library in `frontend/src/**/*.test.tsx`
+**Testing**: pytest against a real Postgres in `backend/tests/`, with the fixed clock of spec 003 (`fixed_now`; routers and services call `availability.current_time()` through the module so the patch applies) · Vitest + Testing Library in `frontend/src/**/*.test.tsx`
 
 **Target Platform**: Mobile-first web app: static SPA plus JSON API under `/api`
 
@@ -30,7 +30,7 @@ From a confirmed reservation, the diner opens its order page, adds dishes from t
 
 **New dependencies**: None.
 
-**Open clarifications**: None in the spec. P1–P14 are team decisions of 30/10, pending PO validation ([research.md](research.md), `specs/README.md`); the PM accepted building ahead of that validation, as with specs 005 and 007. The open points for the PO and the team are at the end of research.md.
+**Open clarifications**: None in the spec. P1–P14 are team decisions of 30/10, pending PO validation ([research.md](research.md), `specs/README.md`); the PM accepted building ahead of that validation, as with specs 003 and 019. The open points for the PO and the team are at the end of research.md.
 
 ## Decisions (30/10, pending PO)
 
@@ -100,7 +100,7 @@ P1 the cart is saved in the diner's account in its own tables and becomes the or
 - Items whose dish left the menu are dropped, with the menu-changed notice.
 - `lib/orderSummary.ts` computes subtotals, the total and the estimate in integer cents, with the backend's rules. The confirmed order shows the backend's strings.
 
-**API.** `api/orders.ts`: `fetchOrder`, `confirmOrder`, `saveCart`, `discardCart`, `fetchUpcomingReservations`, with the `SessionExpiredError` handling of spec 005.
+**API.** `api/orders.ts`: `fetchOrder`, `confirmOrder`, `saveCart`, `discardCart`, `fetchUpcomingReservations`, with the `SessionExpiredError` handling of spec 003.
 
 **Entry points.**
 - `pages/reservation/ConfirmedStep.tsx`, when `order_open`:
@@ -145,7 +145,7 @@ Backend tests in `backend/tests/test_order.py`; frontend tests in `frontend/src/
 | US-17 edge: the menu changed (P9) | `test_us17_edge_changed_name_price_or_time_answers_409`, `test_us17_edge_dish_gone_answers_409`, `test_us17_edge_dish_of_another_restaurant_answers_409` | `US-17 edge says what changed in the menu` |
 | US-17 edge: frozen values (P8) | `test_us17_edge_confirmed_order_keeps_its_values_when_the_menu_changes` | — |
 | US-17 edge: empty confirmation (P11) | `test_us17_edge_confirming_no_dishes_removes_the_order`, `test_us17_edge_empty_first_order_is_rejected` | `US-17 edge asks before removing the whole order` |
-| US-17 edge: unverified email (P13; spec 007 US-51 S5) | `test_us51_s5_unverified_diner_cannot_order`, `test_us17_edge_closed_wins_over_unverified` | `US-17 edge asks an unverified diner to verify and keeps the dishes` |
+| US-17 edge: unverified email (P13; spec 019 US-51 S5) | `test_us51_s5_unverified_diner_cannot_order`, `test_us17_edge_closed_wins_over_unverified` | `US-17 edge asks an unverified diner to verify and keeps the dishes` |
 | US-17 edge: cancelled reservation (P12) | `test_us17_edge_cancelled_reservation_takes_no_order`, `test_us17_edge_cancelling_keeps_the_order` | — |
 | US-17 edge: deadline, menu order, deleted dish | `test_us17_edge_order_is_open_until_the_deadline`, `test_us17_edge_menu_follows_the_category_order`, `test_us17_edge_unavailable_dish_is_off_the_menu`, `test_us17_edge_restaurant_sees_the_confirmed_order` (US-20 reads what US-17 writes), `test_us17_edge_checks_answer_in_order`, `test_us17_edge_menu_changed_keeps_the_order_and_the_cart` | `US-17 S8 offers no order when it closed without one` |
 | US-17 edge: roles, privacy, input | `test_us17_edge_restaurant_token_gets_403`, `test_us17_edge_requires_a_token`, `test_us17_edge_rejects_out_of_bounds_items` (order and cart) | `US-17 edge sends a visitor to sign in and back` |

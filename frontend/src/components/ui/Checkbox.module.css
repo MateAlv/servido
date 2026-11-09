@@ -1,0 +1,30 @@
+.field {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.input {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  margin-top: 1px;
+  accent-color: var(--color-primary);
+}
+
+.input:focus-visible {
+  outline: 3px solid var(--color-primary-soft);
+  outline-offset: 2px;
+}
+
+.label {
+  cursor: pointer;
+}
+
+.label a {
+  color: var(--color-primary-dark);
+  font-weight: 800;
+}

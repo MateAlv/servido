@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState, type ReactNode } from 'react'
 
 import {
@@ -6,6 +7,7 @@ import {
   type RestaurantProfile,
   type TableGroup,
 } from '../../api/restaurantConfiguration'
+import { fetchRestaurantReviews } from '../../api/reviews'
 import { sessionHeaders, type Account } from '../../api/session'
 import {
   Button,
@@ -15,10 +17,12 @@ import {
   IconClock,
   IconPin,
   IconSearch,
+  IconStar,
   IconUsers,
   Reveal,
   StatusPill,
 } from '../../components/ui'
+import { formatRating, formatReviewCount } from '../../lib/rating'
 import styles from './RestaurantHome.module.css'
 
 const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
@@ -56,6 +60,11 @@ export function RestaurantHome({ account }: { account: Account }) {
   const [tables, setTables] = useState<TableGroup[]>([])
   const [dishCount, setDishCount] = useState<number>()
   const [dashboardError, setDashboardError] = useState('')
+  const reviews = useQuery({
+    queryKey: ['restaurant', 'reviews', 'summary'],
+    queryFn: () => fetchRestaurantReviews(0),
+    retry: false,
+  })
 
   useEffect(() => {
     void Promise.all([
@@ -74,7 +83,7 @@ export function RestaurantHome({ account }: { account: Account }) {
     .reduce((total, group) => total + group.quantity, 0)
   const totalTables = tables.reduce((total, group) => total + group.quantity, 0)
   const configuredProfile = Boolean(profile?.nombre && profile.latitud !== null)
-  // The same rule as GET /api/restaurants (spec 005, D4): location, an active shift and tables.
+  // The same rule as GET /api/restaurants (spec 003, D4): location, an active shift and tables.
   const takesReservations = configuredProfile && activeHours.length > 0 && availableTables > 0
 
   return (
@@ -227,6 +236,20 @@ export function RestaurantHome({ account }: { account: Account }) {
               <p className={styles.muted}>Agregá platos, precios y tiempos de preparación.</p>
             </DashboardCard>
           </Reveal>
+          <Reveal delay={240}>
+            <DashboardCard
+              title="Bloqueos de horario"
+              description="Cerrá fechas o franjas sin modificar tus turnos."
+              icon={<IconClock />}
+              action={
+                <Button size="sm" to="/restaurante/bloqueos">
+                  Gestionar bloqueos
+                </Button>
+              }
+            >
+              <p>Administrá cuándo no recibís reservas</p>
+            </DashboardCard>
+          </Reveal>
 
           <Reveal delay={240}>
             <DashboardCard
@@ -264,6 +287,26 @@ export function RestaurantHome({ account }: { account: Account }) {
             >
               <p>Consultá los pedidos confirmados y sus detalles.</p>
               <p className={styles.muted}>Revisá los platos, las cantidades y el estado de pago.</p>
+            </DashboardCard>
+          </Reveal>
+          <Reveal delay={360}>
+            <DashboardCard
+              title="Reseñas"
+              description="Lo que dicen los comensales de tu local."
+              icon={<IconStar />}
+              action={
+                <Button size="sm" to="/restaurante/resenas">
+                  Ver reseñas
+                </Button>
+              }
+            >
+              <p>
+                {reviews.data?.rating != null
+                  ? `${formatRating(reviews.data.rating)} · ${formatReviewCount(reviews.data.review_count)}`
+                  : reviews.data
+                    ? 'Todavía no tenés reseñas.'
+                    : 'Leé las calificaciones y los comentarios que te dejaron.'}
+              </p>
             </DashboardCard>
           </Reveal>
         </div>

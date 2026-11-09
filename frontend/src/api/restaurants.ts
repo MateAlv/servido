@@ -1,7 +1,7 @@
 /**
  * Restaurants for the diner's map, list and detail: the bookable restaurants stored in the
- * database (`GET /api/restaurants`, decision D4 of 28/10 in spec 005) next to the test
- * restaurants of spec 002. Only the real ones can be booked.
+ * database (`GET /api/restaurants`, decision D4 of 28/10 in spec 003) next to the test
+ * restaurants of spec 002-elegir-restaurante. Only the real ones can be booked.
  */
 import {
   RESTAURANTS_FIXTURE,
@@ -62,14 +62,19 @@ function menuSections(dishes: BookableRestaurantDetail['menu']): MenuSection[] {
 }
 
 /** What the database doesn't know yet stays empty, and the UI leaves it out. */
-function fromApi(restaurant: BookableRestaurant, menu: MenuSection[] = []): RestaurantPublic {
+function fromApi(
+  restaurant: BookableRestaurant,
+  menu: MenuSection[] = [],
+  opinions: BookableRestaurantDetail['opinions'] = [],
+): RestaurantPublic {
   const photo = restaurant.photo_url
   return {
     id: restaurant.id,
     name: restaurant.name,
     description: restaurant.description ?? '',
     cuisine: restaurant.cuisine ?? '',
-    averageSpendPerPerson: null,
+    averageSpendPerPerson: restaurant.average_spend_per_person,
+    spendPeople: restaurant.spend_people,
     priceTier: (restaurant.price_tier as RestaurantPriceTier | null) ?? null,
     dietaryRestrictions: restaurant.dietary_restrictions,
     location: {
@@ -80,7 +85,15 @@ function fromApi(restaurant: BookableRestaurant, menu: MenuSection[] = []): Rest
     },
     occupancy: null,
     menu,
-    reviews: [],
+    reviews: opinions.map((opinion) => ({
+      author: opinion.author,
+      rating: opinion.rating,
+      comment: opinion.comment,
+      date: opinion.visit_date,
+      spendPerPerson: opinion.spend_per_person,
+    })),
+    rating: restaurant.rating,
+    reviewCount: restaurant.review_count,
     photo: photo ? { cover: photo, thumb: photo } : null,
     hasMenu: restaurant.has_menu,
     bookable: true,
@@ -113,5 +126,5 @@ export async function fetchRestaurant(id: string): Promise<RestaurantPublic | un
   const { data } = await api.GET('/api/restaurants/{restaurant_id}', {
     params: { path: { restaurant_id: id } },
   })
-  return data ? fromApi(data, menuSections(data.menu)) : undefined
+  return data ? fromApi(data, menuSections(data.menu), data.opinions) : undefined
 }

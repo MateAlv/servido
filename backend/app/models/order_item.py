@@ -9,7 +9,8 @@ from app.models.base import Base
 
 
 class OrderItem(Base):
-    """A dish of an order, with the name, price and time it had at confirmation (spec 009, P8)."""
+    """A dish of an order, with the name, price and time it had at confirmation
+    (spec 009-pedido-anticipado, P8)."""
 
     __tablename__ = "pedido_items"
     __table_args__ = (

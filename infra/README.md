@@ -111,7 +111,7 @@ Without a domain, set `domain_name = null` in `terraform.tfvars`: the app keeps 
 
 ## Mail (Amazon SES)
 
-The API mails the diner's verification link (spec 007, US-51, [ADR 0009](../docs/decisions/0009-google-sign-in-and-ses-mail.md)). In production `MAIL_BACKEND=ses` (`infra/ec2/compose.yml`), or `smtp` while the Gmail fallback below is on. Locally the link is printed in the API log instead.
+The API mails the diner's verification link (spec 019, US-51, [ADR 0009](../docs/decisions/0009-google-sign-in-and-ses-mail.md)). In production `MAIL_BACKEND=ses` (`infra/ec2/compose.yml`), or `smtp` while the Gmail fallback below is on. Locally the link is printed in the API log instead.
 
 One-time setup:
 

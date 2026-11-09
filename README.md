@@ -15,7 +15,7 @@ make up        # Postgres, API and web app in Docker
 make up-local  # the same, plus demo data and sign-up without mail verification
 ```
 
-`make up-local` runs the seed of `make seed` (a bookable restaurant with a menu and a verified diner: `demo@servido.local` / `DemoRestaurante123` and `cliente@servido.local` / `ClienteDemo123`). Diners who sign up there start verified, and no mail goes out.
+`make up-local` runs the seed of `make seed` (a bookable restaurant with a menu and a verified diner: `demo@servido.local` / `Demo12345` and `cliente@servido.local` / `Demo12345`). Diners who sign up there start verified, and no mail goes out.
 
 - Web app: http://localhost:5173
 - API docs: http://localhost:8000/api/docs

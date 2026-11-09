@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 007, US-58: create the diner account with Google."""
+"""Acceptance tests for spec 019, US-58: create the diner account with Google."""
 
 from fastapi.testclient import TestClient
 
@@ -9,7 +9,10 @@ GOOGLE_EMAIL = "nueva@example.com"
 
 
 def sign_up_with_google(client: TestClient, credential: str, **extra: str):
-    return client.post("/api/comensales/google", json={"credential": credential, **extra})
+    return client.post(
+        "/api/comensales/google",
+        json={"credential": credential, "terms_accepted": True, **extra},
+    )
 
 
 def test_us58_s2_google_account_creates_a_verified_diner(
@@ -60,7 +63,12 @@ def test_us58_s5_existing_email_is_not_registered_again(
 ) -> None:
     client.post(
         "/api/comensales",
-        json={"nombre": "Martín", "email": GOOGLE_EMAIL, "password": "Segura123"},
+        json={
+            "nombre": "Martín",
+            "email": GOOGLE_EMAIL,
+            "password": "Segura123",
+            "terms_accepted": True,
+        },
     )
 
     response = sign_up_with_google(client, google_token(email=GOOGLE_EMAIL))

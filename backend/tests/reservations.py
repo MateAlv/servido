@@ -1,5 +1,5 @@
-"""Builders for the reservation and order tests (specs 005 and 009): a bookable restaurant, a
-diner, a reservation, dishes, an order and a cart."""
+"""Builders for the reservation and order tests (specs 003 and 009-pedido-anticipado): a bookable
+restaurant, a diner, a reservation, dishes, an order and a cart."""
 
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
@@ -77,7 +77,13 @@ def add_bookable_restaurant(
 
 def diner_headers(client: TestClient, email: str = "martin@example.com") -> dict[str, str]:
     client.post(
-        "/api/comensales", json={"nombre": "Martín", "email": email, "password": "Segura123"}
+        "/api/comensales",
+        json={
+            "nombre": "Martín",
+            "email": email,
+            "password": "Segura123",
+            "terms_accepted": True,
+        },
     )
     token = client.post(
         "/api/auth/comensal", json={"email": email, "password": "Segura123"}
@@ -118,7 +124,7 @@ def add_reservation(
 
 
 def verify_diner(session: Session, diner: UUID) -> None:
-    """Confirming an order requires a verified email (spec 007, US-51 S5)."""
+    """Confirming an order requires a verified email (spec 019, US-51 S5)."""
     session.get(Diner, diner).email_verified_at = NOW
     session.flush()
 

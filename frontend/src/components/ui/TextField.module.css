@@ -92,3 +92,8 @@
     transform: translateX(2px);
   }
 }
+
+.textarea {
+  min-height: 112px;
+  resize: vertical;
+}

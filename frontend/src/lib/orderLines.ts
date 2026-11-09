@@ -1,5 +1,5 @@
 /** The lines of an order being built, from the confirmed order, the saved cart or the menu
- * (spec 009). */
+ * (spec 009-pedido-anticipado). */
 import type { CartLine, ConfirmedOrder, MenuDish, SavedCart } from '../api/orders'
 import { formatPrice, toCents } from './orderSummary'
 

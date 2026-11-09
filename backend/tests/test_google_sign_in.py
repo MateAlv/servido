@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 007, US-52: sign in with Google."""
+"""Acceptance tests for spec 019, US-52: sign in with Google."""
 
 from datetime import UTC, datetime, timedelta
 
@@ -13,7 +13,13 @@ GOOGLE_EMAIL = "comensal@example.com"
 
 def register_diner(client: TestClient, email: str = GOOGLE_EMAIL) -> None:
     response = client.post(
-        "/api/comensales", json={"nombre": "Martín", "email": email, "password": "Segura123"}
+        "/api/comensales",
+        json={
+            "nombre": "Martín",
+            "email": email,
+            "password": "Segura123",
+            "terms_accepted": True,
+        },
     )
     assert response.status_code == 201
 
@@ -100,6 +106,7 @@ def test_us52_edge_restaurant_email_does_not_sign_in(
             "cuit": "30-71234567-1",
             "telefono": "11 5555-4444",
             "password": "Segura123",
+            "terms_accepted": True,
         },
     )
 

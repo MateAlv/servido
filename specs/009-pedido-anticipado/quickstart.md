@@ -15,7 +15,7 @@ cd frontend && npm run dev                # http://localhost:5173
 
 ## Prepare a restaurant and a reservation
 
-1. Register a restaurant at `/suma-tu-local`, then load its location (`/restaurante/perfil`), its shifts (`/restaurante/horarios`) and at least one table group (`/restaurante/mesas`), so it is bookable (spec 005, D4).
+1. Register a restaurant at `/suma-tu-local`, then load its location (`/restaurante/perfil`), its shifts (`/restaurante/horarios`) and at least one table group (`/restaurante/mesas`), so it is bookable (spec 003, D4).
 2. In `/restaurante/menu/nuevo-plato`, add three dishes: Provoleta $7.500 (10 min), Bife de chorizo $18.500 (25 min) and Flan $6.000 with no preparation time.
 3. Register a diner at `/registrarme` and verify the email (the link is printed in the API log with `MAIL_BACKEND=console`).
 4. As the diner, book a table in that restaurant for later today or tomorrow (`/reservar/<id>`), more than 45 minutes ahead.

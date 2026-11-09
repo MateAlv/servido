@@ -1,5 +1,5 @@
 /**
- * Google Identity Services, which renders the "Sign in with Google" button (spec 007, US-52).
+ * Google Identity Services, which renders the "Sign in with Google" button (spec 019, US-52).
  * The client ID is public: it identifies the "Servido! web" OAuth client (infra/README.md).
  */
 export const GOOGLE_CLIENT_ID =

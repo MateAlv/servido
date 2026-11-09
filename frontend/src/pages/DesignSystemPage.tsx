@@ -21,6 +21,7 @@ import {
   Steam,
 } from '../components/order'
 import { ConfirmationStamp, Ticket, TicketDivider, Timeline } from '../components/reservation'
+import { OpinionCard, OpinionList } from '../components/review'
 import {
   MapPin,
   matchesPriceFilter,
@@ -34,6 +35,7 @@ import {
 import {
   Button,
   Card,
+  Checkbox,
   Chip,
   IconArrowRight,
   IconButton,
@@ -49,6 +51,7 @@ import {
   SkeletonText,
   StarRating,
   StatusPill,
+  TextAreaField,
   TextField,
   ThemeToggle,
   useToast,
@@ -332,6 +335,15 @@ function FormsDemo() {
       >
         <PasswordField label="Contraseña" hint="Entre 8 y 128 caracteres." />
       </Demo>
+      <Demo title="Casilla de aceptación" note="Empieza desmarcada y mantiene el foco visible.">
+        <Checkbox
+          label={
+            <>
+              He leído y acepto los <a href="/terminos">Términos y condiciones</a>
+            </>
+          }
+        />
+      </Demo>
       <Demo title="Chips de filtro" note="Selección múltiple con aria-pressed.">
         <div className={styles.row}>
           {DIETS.map((diet) => (
@@ -358,6 +370,42 @@ function FormsDemo() {
       >
         <StarRating value={stars} onChange={setStars} label="Tu calificación" />
         <StarRating value={4.6} size={18} />
+      </Demo>
+      <Demo title="Comentario" note="Campo de texto para respuestas largas.">
+        <TextAreaField
+          label="Tu comentario (opcional)"
+          hint="0 de 500 caracteres"
+          defaultValue=""
+        />
+      </Demo>
+      <Demo
+        title="Opinión"
+        note="Una reseña como la lee la gente: en el detalle, en la revisión y en el panel."
+      >
+        <OpinionCard
+          author="Ana P."
+          rating={5}
+          comment="Pedimos antes de salir y no esperamos nada."
+          spendPerPerson={28000}
+          visit="Visitó el martes, 3 de noviembre"
+        />
+      </Demo>
+      <Demo
+        title="Opiniones"
+        note="Las opiniones de un restaurante, de a 5, con la aclaración si la lista es más corta que la cantidad."
+      >
+        <OpinionList
+          opinions={[
+            {
+              author: 'Ana P.',
+              rating: 5,
+              comment: 'Pedimos antes de salir y no esperamos nada.',
+              date: '2026-11-03',
+              spendPerPerson: 28000,
+            },
+          ]}
+          reviewCount={3}
+        />
       </Demo>
     </>
   )

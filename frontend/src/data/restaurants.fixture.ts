@@ -1,6 +1,7 @@
 import type { OccupancyLevel } from '../components/restaurant'
 import { priceTierFromAverageSpend } from '../components/restaurant/priceFilterUtils'
 import type { GeoPoint } from '../lib/geo'
+import { formatReviewCount } from '../lib/rating'
 
 export type RestaurantPriceTier = '$' | '$$' | '$$$' | '$$$$'
 
@@ -26,6 +27,8 @@ export type RestaurantReview = {
   comment: string
   /** ISO date of the visit. */
   date: string
+  /** What the author reported spending per person (US-50), when they did. */
+  spendPerPerson?: number | null
 }
 
 export type RestaurantPublic = {
@@ -33,21 +36,26 @@ export type RestaurantPublic = {
   name: string
   description: string
   cuisine: string
-  /** Mock average spend per person in pesos (spec 002); later it comes from reviews (US-50).
-   * `null` for real restaurants, which declare their price tier instead. */
+  /** Mock average spend per person in pesos (spec 002-elegir-restaurante). For real restaurants it comes from the
+   * reviews, from 5 people on (spec 014, R6); until then it is `null`. */
   averageSpendPerPerson: number | null
   /** Derived from the average spend, or declared by a real restaurant; `null` when unknown. */
   priceTier: RestaurantPriceTier | null
   dietaryRestrictions: string[]
   /** Location must be valid so it appears on the map (FR-011). */
   location: GeoPoint & { address: string; neighborhood: string }
-  /** Concurrence indicator levels: low/medium/high (spec 002, FR-002); `null` without data,
+  /** Concurrence indicator levels: low/medium/high (spec 002-elegir-restaurante, FR-002); `null` without data,
    * and then no indicator is shown at all. */
   occupancy: OccupancyLevel | null
   /** Dishes with their current prices (US-9 S3). Empty until the restaurant loads its menu. */
   menu: MenuSection[]
-  /** Opinions of past diners shown in the detail (US-9); real reviews arrive with US-24. */
+  /** Opinions of past diners shown in the detail (US-9, US-50): mock for the test restaurants. */
   reviews: RestaurantReview[]
+  /** Average and count from the API (spec 014, R12); the test restaurants derive them. */
+  rating?: number | null
+  reviewCount?: number
+  /** How many people's spend is behind a calculated `averageSpendPerPerson`. */
+  spendPeople?: number
   /** Cover photo, and a square version for lists (`frontend/public/restaurants`); `null` for a
    * real restaurant without a photo, which then shows none. */
   photo: { cover: string; thumb: string } | null
@@ -377,9 +385,15 @@ export const RESTAURANTS_FIXTURE: RestaurantPublic[] = TEST_RESTAURANTS.map((res
 
 /** Average of the reviews, or null when there are none yet. */
 export function averageRating(restaurant: RestaurantPublic): number | null {
+  if (restaurant.rating !== undefined) return restaurant.rating
   if (restaurant.reviews.length === 0) return null
   const total = restaurant.reviews.reduce((sum, review) => sum + review.rating, 0)
   return total / restaurant.reviews.length
+}
+
+/** «1 reseña», «3 reseñas»: what the average is based on. */
+export function reviewCountLabel(restaurant: RestaurantPublic): string {
+  return formatReviewCount(restaurant.reviewCount ?? restaurant.reviews.length)
 }
 
 /** The test restaurant with this id; real restaurants come from `src/api/restaurants.ts`. */
