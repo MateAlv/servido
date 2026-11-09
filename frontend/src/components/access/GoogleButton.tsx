@@ -15,7 +15,7 @@ type GoogleButtonProps = {
 
 /**
  * Google's own button, drawn by Google's script (its brand rules don't allow redrawing it).
- * The ID token it hands back goes to the API, which checks it (spec 007).
+ * The ID token it hands back goes to the API, which checks it (spec 019).
  */
 export function GoogleButton({ text, onCredential }: GoogleButtonProps) {
   const container = useRef<HTMLDivElement>(null)

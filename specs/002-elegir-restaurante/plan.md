@@ -1,6 +1,6 @@
 # Implementation plan: choose a restaurant (frontend)
 
-Scope: spec 002, US-5 (map), US-7 (price filter), US-9 (detail) and US-33 (list, brought forward from Sprint 4 on 21/10). Status (2026-10-21): implemented in the frontend for the Sprint 1 demo. There is no restaurants endpoint yet (spec 004), so every screen reads `frontend/src/data/restaurants.fixture.ts`.
+Scope: spec 002-elegir-restaurante, US-5 (map), US-7 (price filter), US-9 (detail) and US-33 (list, brought forward from Sprint 4 on 21/10). Status (2026-10-21): implemented in the frontend for the Sprint 1 demo. There is no restaurants endpoint yet (spec 004), so every screen reads `frontend/src/data/restaurants.fixture.ts`.
 
 ## Design
 

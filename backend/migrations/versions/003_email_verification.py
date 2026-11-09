@@ -1,4 +1,4 @@
-"""Email verification of diners (spec 007, US-51).
+"""Email verification of diners (spec 019, US-51).
 
 Revision ID: 003_email_verification
 Revises: 002_restaurant_names
@@ -21,7 +21,7 @@ def upgrade() -> None:
         "comensales",
         sa.Column("email_verified_at", sa.DateTime(timezone=True), nullable=True),
     )
-    # Accounts created before this feature count as verified (spec 007, assumptions).
+    # Accounts created before this feature count as verified (spec 019, assumptions).
     op.execute("UPDATE comensales SET email_verified_at = CURRENT_TIMESTAMP")
 
     op.create_table(

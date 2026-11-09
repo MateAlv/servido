@@ -5,7 +5,7 @@
 
 ## Context
 
-Spec 007 brings the first two pieces that depend on outside services.
+Spec 019 brings the first two pieces that depend on outside services.
 
 - **US-52, Ingresar con Google:** diners sign in with their Google account.
 - **US-51, Recibir mail de verificación:** diners receive a verification link by mail when they register.
@@ -30,7 +30,7 @@ Until now authentication was built in-house with email and password (spec 001), 
 - **Two new backend dependencies:**
   - `cryptography`, through `pyjwt[crypto]`, for Google's RS256 signatures;
   - `boto3`, for SES.
-- **Sign-up with Google (US-58, added 25/10) reuses the same token check.** The account gets no usable password (spec 007, research R10), so its owner signs in only with Google until account recovery (US-31) exists.
+- **Sign-up with Google (US-58, added 25/10) reuses the same token check.** The account gets no usable password (spec 019, research R10), so its owner signs in only with Google until account recovery (US-31) exists.
 - **Sign-in depends on Google being reachable.** The email and password login stays as the fallback.
 - **The Google consent screen is published.** Google requires the provisional `/privacidad` and `/terminos` pages for that; US-29 replaces the terms. Without brand verification, the consent screen shows the domain instead of the app name.
 - **SES starts in the sandbox:**

@@ -1,4 +1,4 @@
-"""Reviews of finished reservations and what is derived from them (spec 012)."""
+"""Reviews of finished reservations and what is derived from them (spec 014)."""
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -176,7 +176,7 @@ def spend_summary(session: Session, restaurant_id: UUID) -> SpendSummary:
 
 
 def price_tier_from_spend(spend: int) -> str:
-    """The limits of spec 002."""
+    """The limits of spec 002-elegir-restaurante."""
     if spend < 15_000:
         return "$"
     if spend < 25_000:

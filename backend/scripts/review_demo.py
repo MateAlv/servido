@@ -1,4 +1,4 @@
-"""Finished reservations and reviews for a demo restaurant (spec 012, R18).
+"""Finished reservations and reviews for a demo restaurant (spec 014, R18).
 
 A reservation can't be created in the past, so the demo of reviews needs this data loaded directly.
 It only works on a restaurant with "demo" in its name, loading it again replaces what it created,

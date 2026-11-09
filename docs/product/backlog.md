@@ -9,20 +9,20 @@
 | US | Título | Rol | SP | Sprint | Spec |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Completar formulario de registro | Comensal | 3 SP | 1 | [001-acceso-comensal](../../specs/001-acceso-comensal/spec.md) |
-| 2 | Ingresar datos obligatorios para Registrarme | Restaurante | 3 SP | 1 | [003-cuenta-restaurante](../../specs/003-cuenta-restaurante/spec.md) |
+| 2 | Ingresar datos obligatorios para Registrarme | Restaurante | 3 SP | 1 | [002-cuenta-restaurante](../../specs/002-cuenta-restaurante/spec.md) |
 | 3 | Ingresar usuario y contraseña | Comensal | 1 SP | 1 | [001-acceso-comensal](../../specs/001-acceso-comensal/spec.md) |
-| 4 | Ingresar usuario y contraseña | Restaurante | 1 SP | 1 | [003-cuenta-restaurante](../../specs/003-cuenta-restaurante/spec.md) |
+| 4 | Ingresar usuario y contraseña | Restaurante | 1 SP | 1 | [002-cuenta-restaurante](../../specs/002-cuenta-restaurante/spec.md) |
 | 5 | Ver mapa de restaurantes 🗺️ | Comensal | 5 SP | 1 | [002-elegir-restaurante](../../specs/002-elegir-restaurante/spec.md) |
 | 6 | Ingresar nombre y características | Restaurante | 2 SP | 2 | [004-local-horarios-mesas](../../specs/004-local-horarios-mesas/spec.md) |
 | 7 | Filtrar restaurantes por precios del menú | Comensal | 2 SP | 1 | [002-elegir-restaurante](../../specs/002-elegir-restaurante/spec.md) |
 | 8 | Definir horarios de atención | Restaurante | 2 SP | 2 | [004-local-horarios-mesas](../../specs/004-local-horarios-mesas/spec.md) |
 | 9 | Ver detalle de restaurante | Comensal | 1 SP | 1 | [002-elegir-restaurante](../../specs/002-elegir-restaurante/spec.md) |
 | 10 | Registrar disponibilidad de mesas | Restaurante | 2 SP | 2 | [004-local-horarios-mesas](../../specs/004-local-horarios-mesas/spec.md) |
-| 11 | Crear reserva | Comensal | 3 SP | 2 | [005-reservar-mesa](../../specs/005-reservar-mesa/spec.md) |
+| 11 | Crear reserva | Comensal | 3 SP | 2 | [003-reservar-mesa](../../specs/003-reservar-mesa/spec.md) |
 | 12 | Agregar plato | Restaurante | 3 SP | 2 | [006-menu-platos](../../specs/006-menu-platos/spec.md) |
-| 13 | Confirmar datos | Comensal | 2 SP | 3 | [005-reservar-mesa](../../specs/005-reservar-mesa/spec.md) |
+| 13 | Confirmar datos | Comensal | 2 SP | 3 | [003-reservar-mesa](../../specs/003-reservar-mesa/spec.md) |
 | 14 | Ver calendario de reservas | Restaurante | 3 SP | 3 | — |
-| 15 | Ver platos y precios | Comensal | 2 SP | 3 | [011-ver-platos-precios](../../specs/011-ver-platos-precios/spec.md) |
+| 15 | Ver platos y precios | Comensal | 2 SP | 3 | [009-ver-platos-precios](../../specs/009-ver-platos-precios/spec.md) |
 | 16 | Ver cliente | Restaurante | 1 SP | 3 | — |
 | 17 | Crear pedido | Comensal | 3 SP | 3 | [009-pedido-anticipado](../../specs/009-pedido-anticipado/spec.md) |
 | 18 | Ver cancelaciones | Restaurante | 1 SP | 3 | — |
@@ -33,10 +33,10 @@
 | 23 | Ver reserva activa | Comensal | 1 SP | 4 | — |
 | 24 | Ver Reseñas | Restaurante | 1 SP | 4 | — |
 | 25 | Confirmar cancelación | Comensal | 1 SP | 4 | — |
-| 26 | Confirmación de términos y condiciones | Restaurante | 1 SP | 4 | [014-terminos-condiciones-restaurante](../../specs/014-terminos-condiciones-restaurante/spec.md) |
+| 26 | Confirmación de términos y condiciones | Restaurante | 1 SP | 4 | [015-terminos-condiciones-restaurante](../../specs/015-terminos-condiciones-restaurante/spec.md) |
 | 27 | Dar un rating de la experiencia | Comensal | 2 SP | 4 | — |
 | 28 | Ingresar con Google | Restaurante | 1 SP | 4 | — |
-| 29 | Leer términos y condiciones | Comensal | 1 SP | 4 | [013-terminos-condiciones-comensal](../../specs/013-terminos-condiciones-comensal/spec.md) |
+| 29 | Leer términos y condiciones | Comensal | 1 SP | 4 | [012-terminos-condiciones-comensal](../../specs/012-terminos-condiciones-comensal/spec.md) |
 | 30 | Definir capacidad por turno | Restaurante | 1 SP | 4 | — |
 | 31 | Recuperar cuenta | Comensal | 2 SP | 4 | — |
 | 32 | Bloquear horarios no disponibles | Restaurante | 1 SP | 4 | — |
@@ -90,7 +90,7 @@ comensales por mesa | Comensal | 1 SP | 6 | — |
 
 ### US-2 — Ingresar datos obligatorios para Registrarme
 
-**Rol**: Restaurante · **Estimación**: 3 SP · **Sprint**: 1 · **Asignada a**: Integrantes 1 y 4 · **Spec**: [003-cuenta-restaurante](../../specs/003-cuenta-restaurante/spec.md)
+**Rol**: Restaurante · **Estimación**: 3 SP · **Sprint**: 1 · **Asignada a**: Integrantes 1 y 4 · **Spec**: [002-cuenta-restaurante](../../specs/002-cuenta-restaurante/spec.md)
 
 > Como Responsable del restaurante  
 > quiero Completar un formulario con los datos obligatorios de mi restaurante  
@@ -122,7 +122,7 @@ comensales por mesa | Comensal | 1 SP | 6 | — |
 
 ### US-4 — Ingresar usuario y contraseña
 
-**Rol**: Restaurante · **Estimación**: 1 SP · **Sprint**: 1 · **Asignada a**: Integrantes 1 y 4 · **Spec**: [003-cuenta-restaurante](../../specs/003-cuenta-restaurante/spec.md)
+**Rol**: Restaurante · **Estimación**: 1 SP · **Sprint**: 1 · **Asignada a**: Integrantes 1 y 4 · **Spec**: [002-cuenta-restaurante](../../specs/002-cuenta-restaurante/spec.md)
 
 > Como Responsable del restaurante  
 > quiero Ingresar a Servido! utilizando mi usuario y contraseña  
@@ -232,7 +232,7 @@ comensales por mesa | Comensal | 1 SP | 6 | — |
 
 ### US-11 — Crear reserva
 
-**Rol**: Comensal · **Estimación**: 3 SP · **Sprint**: 2 · **Asignada a**: Integrante 2 · **Spec**: [005-reservar-mesa](../../specs/005-reservar-mesa/spec.md)
+**Rol**: Comensal · **Estimación**: 3 SP · **Sprint**: 2 · **Asignada a**: Integrante 2 · **Spec**: [003-reservar-mesa](../../specs/003-reservar-mesa/spec.md)
 
 > Como Comensal  
 > quiero Crear una reserva  
@@ -265,7 +265,7 @@ comensales por mesa | Comensal | 1 SP | 6 | — |
 
 ### US-13 — Confirmar datos
 
-**Rol**: Comensal · **Estimación**: 2 SP · **Sprint**: 3 · **Asignada a**: Integrante 2 · **Spec**: [005-reservar-mesa](../../specs/005-reservar-mesa/spec.md)
+**Rol**: Comensal · **Estimación**: 2 SP · **Sprint**: 3 · **Asignada a**: Integrante 2 · **Spec**: [003-reservar-mesa](../../specs/003-reservar-mesa/spec.md)
 
 > Como Comensal  
 > quiero Revisar los datos que seleccioné  

@@ -26,7 +26,7 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
 ## Phase 0: Specification
 
 - [X] T001 Take decisions P1–P4 with the team before writing the spec (30/10); propose P5–P14 with them. Recorded in `specs/009-pedido-anticipado/research.md` and `specs/README.md`
-- [X] T002 Write `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/orders-api.md`, `quickstart.md` and this file; link US-17, US-19 and US-21 to spec 009 in `docs/product/backlog.md`
+- [X] T002 Write `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/orders-api.md`, `quickstart.md` and this file; link US-17, US-19 and US-21 to spec 009-pedido-anticipado in `docs/product/backlog.md`
 - [X] T003 Independent review by four agents (backlog fidelity, technical design against the code, UX and accessibility, impact on the other stories); every finding applied or recorded as an open point in research.md. Then P1 changed from a browser cart to a server cart in its own tables (Mateo, 30/10), across every document
 - [X] T004 Review of the spec PR by teammates (approved on the team's WhatsApp, 30/10): whoever took US-20 and US-22 in the Sprint 3 poll, and Ezequiel for US-18 (spec 008, PR #30). Each confirms (a) the model covers their reads, (b) `arrival_time`, `prep_start_time` and the ordering, (c) that payment fields wait for US-45, US-56 and US-60, (d) the derived cancellation with no order status, (e) that carts are never read by the restaurant side. Merge before T006
 - [ ] T005 PO validation of P1–P14 and answers to the open points of research.md (sprint review); record them in `specs/README.md`
@@ -81,7 +81,7 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
 - [X] T019 [P] [US17] Backend edges in `backend/tests/test_order.py`. Every name listed in the plan's test map under US-17 edges and FR-011, including:
   - `test_us17_edge_dish_of_another_restaurant_answers_409`
   - `test_us17_edge_empty_first_order_is_rejected`
-  - `test_us51_s5_unverified_diner_cannot_order` (the name spec 007's plan reserved for US-51 S5)
+  - `test_us51_s5_unverified_diner_cannot_order` (the name spec 019's plan reserved for US-51 S5)
   - `test_us17_edge_closed_wins_over_unverified`
   - `test_us17_edge_restaurant_without_menu_takes_no_order`
   - `test_us17_edge_arrival_and_suggested_preparation_start`
@@ -147,7 +147,7 @@ description: "Task list for pedido anticipado (US-17, US-19, US-21, Sprint 3)"
   - `AGENTS.md`: "Where things stand", routes and endpoints, glossary rows `OrderItem` and `Cart` / `CartItem` (Pedido en armado);
   - `specs/README.md`: index, implemented;
   - `docs/design/README.md`, if a component was added;
-  - `specs/007-cuenta-comensal-google-verificacion/plan.md` and `specs/README.md`: US-51 S5 covered by `test_us51_s5_unverified_diner_cannot_order`;
+  - `specs/019-cuenta-comensal-google-verificacion/plan.md` and `specs/README.md`: US-51 S5 covered by `test_us51_s5_unverified_diner_cannot_order`;
   - optionally the domain diagram in `docs/architecture/diagrams.py` («Pedido»).
 - [ ] T036 Run review agents (functional, security, accessibility, UI/UX) on the implementation PR and fix what they find
 - [ ] T037 After merging, try the quickstart in production with the demo restaurant. Its dishes need preparation times (P2)

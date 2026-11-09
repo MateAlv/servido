@@ -1,4 +1,4 @@
-"""The demo data of spec 012 (R18): only on a demo restaurant, repeatable and removable."""
+"""The demo data of spec 014 (R18): only on a demo restaurant, repeatable and removable."""
 
 from datetime import time
 

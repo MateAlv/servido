@@ -1,4 +1,4 @@
-"""Seating area of table groups and reservations (spec 005, US-13; decisions of 28/10).
+"""Seating area of table groups and reservations (spec 003, US-13; decisions of 28/10).
 
 Revision ID: 006_reservations
 Revises: 005_merge_feature_heads

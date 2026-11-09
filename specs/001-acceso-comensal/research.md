@@ -51,7 +51,7 @@ features outside spec 001. Adding `telefono` or `auth_provider` would require
 scope from the restaurant-account spec and is therefore deferred.
 
 **Later change (21/10):** revision `002_restaurant_names` added a nullable
-`comensales.nombre` (registration now asks for the name) and, for spec 003, a
+`comensales.nombre` (registration now asks for the name) and, for spec 002-cuenta-restaurante, a
 required `restaurantes.telefono`. `auth_provider` was never added. See
 `data-model.md`.
 

@@ -1085,7 +1085,7 @@ export interface components {
         };
         /**
          * PublicOpinion
-         * @description The latest review of a person, when it has a comment (spec 012, R14).
+         * @description The latest review of a person, when it has a comment (spec 014, R14).
          */
         PublicOpinion: {
             /** Author */

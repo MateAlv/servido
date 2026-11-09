@@ -1,4 +1,5 @@
-"""Acceptance tests for spec 003: sign-up (US-2 S5, S6) and sign-in (US-28) with Google."""
+"""Acceptance tests for spec 002-cuenta-restaurante: sign-up (US-2 S5, S6) and sign-in (US-28)
+with Google."""
 
 import pytest
 from fastapi.testclient import TestClient

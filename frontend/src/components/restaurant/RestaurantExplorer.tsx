@@ -63,7 +63,7 @@ export function RestaurantExplorer() {
     refetchInterval: OCCUPANCY_REFRESH_MS,
   })
 
-  // Only restaurants with a usable location appear (spec 002, FR-011).
+  // Only restaurants with a usable location appear (spec 002-elegir-restaurante, FR-011).
   const located = useMemo(
     () => (restaurantsQuery.data ?? []).filter((restaurant) => isValidPoint(restaurant.location)),
     [restaurantsQuery.data],

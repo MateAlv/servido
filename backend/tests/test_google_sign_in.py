@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 007, US-52: sign in with Google."""
+"""Acceptance tests for spec 019, US-52: sign in with Google."""
 
 from datetime import UTC, datetime, timedelta
 

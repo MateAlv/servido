@@ -76,10 +76,10 @@ table twice or create the over-reservation edge case from the spec.
 
 **Rationale:** US-10 needs a conflict check against confirmed reservations,
 but the repository has no reservation implementation yet and US-11/US-13 are
-in spec 005. This plan defines the inventory-side boundary and conflict
+in spec 003. This plan defines the inventory-side boundary and conflict
 response without introducing reservation endpoints or entities outside spec
 004. The implementation must integrate with the reservation model when spec
-005 is planned.
+003 is planned.
 
 **Alternatives considered:** Adding a minimal reservation model now was
 rejected as out-of-scope and would invent behavior not specified in 004.

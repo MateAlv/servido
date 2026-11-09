@@ -1,4 +1,5 @@
-"""Acceptance tests for spec 009: the pre-order (US-17), its estimate (US-19) and bill (US-21)."""
+"""Acceptance tests for spec 009-pedido-anticipado: the pre-order (US-17), its estimate (US-19)
+and bill (US-21)."""
 
 from dataclasses import dataclass
 from datetime import time, timedelta

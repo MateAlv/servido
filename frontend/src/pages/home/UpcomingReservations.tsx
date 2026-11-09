@@ -53,7 +53,7 @@ function OrderState({ reservation }: { reservation: UpcomingReservation }) {
   return null
 }
 
-/** «Tus próximas reservas» (spec 009, P4): how the diner gets back to an order. Hidden when
+/** «Tus próximas reservas» (spec 009-pedido-anticipado, P4): how the diner gets back to an order. Hidden when
  * there are none; the reservation detail stays in US-23. */
 export function UpcomingReservations() {
   const queryClient = useQueryClient()

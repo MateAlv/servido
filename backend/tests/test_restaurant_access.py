@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 003: restaurant sign-up (US-2) and login (US-4)."""
+"""Acceptance tests for spec 002-cuenta-restaurante: restaurant sign-up (US-2) and login (US-4)."""
 
 import jwt
 import pytest

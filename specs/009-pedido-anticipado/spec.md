@@ -80,7 +80,7 @@ Todas las decisiones de esta sección son del equipo (30/10) y falta que la PO l
 - **Cantidades** *(P10)*: de 1 a 20 unidades por plato, y hasta 50 platos distintos por pedido. Disminuir desde 1 equivale a quitar el plato.
 - **Quitar todos los platos** *(P11)*: si el comensal quita todos los platos de un pedido confirmado y confirma, la reserva queda sin pedido; antes se le pide que lo confirme, aclarando que la reserva sigue en pie. Un pedido que nunca se confirmó no se puede confirmar vacío.
 - **Reserva cancelada o pasada** *(P12)*: no admite pedido nuevo ni cambios. Si una reserva con pedido se cancela, el pedido queda cancelado con ella, sin borrarse (lo informa US-18, escenario 3). La cancelación en sí es de US-25 y US-38.
-- **Comensal sin email verificado** *(P13, lectura de la spec 007, US-51 S5)*: puede armar el pedido, pero no confirmarlo. Al intentarlo se le indica que primero verifique su email, con la opción de reenviar el mail, y sus platos quedan guardados.
+- **Comensal sin email verificado** *(P13, lectura de la spec 019, US-51 S5)*: puede armar el pedido, pero no confirmarlo. Al intentarlo se le indica que primero verifique su email, con la opción de reenviar el mail, y sus platos quedan guardados.
 - **Restaurante sin menú** *(P14)*: si el restaurante no tiene platos cargados, la reserva no ofrece armar un pedido, sin avisar que falta el menú.
 - **Dos pestañas o dos dispositivos** *(P1)*: el pedido en armado es uno por reserva y se ve igual desde cualquier dispositivo con la cuenta del comensal. Si lo cambia desde dos lugares a la vez, queda el último cambio guardado; si confirma desde dos lugares, queda la última confirmación. Una página abierta muestra los cambios hechos en otro lugar al recargarla.
 - **Reserva de otro comensal**: nadie más que el comensal que reservó puede ver o cambiar su pedido desde las pantallas del comensal. Un responsable de restaurante no puede crear ni cambiar pedidos; los ve desde sus propias US (US-20, US-36).
@@ -102,7 +102,7 @@ Todas las decisiones de esta sección son del equipo (30/10) y falta que la PO l
 - **FR-006** *(US-17)*: El sistema MUST NOT aceptar un pedido nuevo ni cambios cuando faltan 45 minutos o menos para el inicio de la reserva, ni cuando la reserva está cancelada o ya pasó, y MUST informarlo al comensal.
 - **FR-007** *(US-17)*: El sistema MUST guardar, con cada plato del pedido confirmado, el nombre, el precio y el tiempo de preparación que tenía en el menú al confirmar.
 - **FR-008** *(US-17)*: Si al confirmar algún plato ya no está en el menú o cambió su nombre, su precio o su tiempo, el sistema MUST NOT confirmar y MUST mostrarle al comensal qué cambió y el pedido actualizado antes de que confirme.
-- **FR-009** *(US-17, spec 007 US-51 S5)*: El sistema MUST NOT permitir confirmar un pedido a un comensal con el email sin verificar, y MUST indicarle que verifique su email sin perder los platos elegidos.
+- **FR-009** *(US-17, spec 019 US-51 S5)*: El sistema MUST NOT permitir confirmar un pedido a un comensal con el email sin verificar, y MUST indicarle que verifique su email sin perder los platos elegidos.
 - **FR-010** *(US-17)*: El sistema MUST permitir que, entre los comensales, solo el que hizo la reserva vea y cambie su pedido.
 - **FR-011** *(US-17)*: El sistema MUST ofrecer armar o ver el pedido desde la confirmación de la reserva y desde una lista de las próximas reservas del comensal en su inicio, salvo que la reserva no lo admita (no tiene pedido y ya no se puede crear, o el restaurante no tiene menú).
 - **FR-012** *(US-19)*: El sistema MUST mostrar como tiempo estimado de preparación del pedido el mayor tiempo de preparación entre sus platos, y MUST actualizarlo con cada cambio del pedido.
@@ -115,8 +115,8 @@ Todas las decisiones de esta sección son del equipo (30/10) y falta que la PO l
 - **Pedido**: los platos que el comensal pide para una reserva, para todo el grupo. Pertenece a una sola reserva y una reserva tiene como máximo uno. Registra el momento de su última confirmación. Su estado se deriva de la reserva (confirmado mientras la reserva lo está, cancelado si la reserva se cancela), y su total y su tiempo estimado se calculan a partir de sus platos. La hora de llegada es la de la reserva.
 - **Ítem del pedido**: un plato del pedido con su cantidad (1 a 20), y el nombre, el precio unitario y el tiempo de preparación que tenía el plato al confirmar. Su subtotal es cantidad por precio unitario.
 - **Pedido en armado**: los platos que el comensal eligió para una reserva y todavía no confirmó, con la cantidad de cada uno y el nombre, el precio y el tiempo que vio al elegirlos (para poder decirle qué cambió en el menú). Hay como máximo uno por reserva, se guarda en la cuenta del comensal y solo él lo ve; desaparece al confirmar o descartar.
-- **Plato** (specs 006 y 007-agregar-plato): nombre, precio y tiempo de preparación opcional, del menú del restaurante.
-- **Reserva** (spec 005): el pedido toma de ella el restaurante, el comensal, el horario de llegada y si está confirmada.
+- **Plato** (specs 006 y 005-agregar-plato): nombre, precio y tiempo de preparación opcional, del menú del restaurante.
+- **Reserva** (spec 003): el pedido toma de ella el restaurante, el comensal, el horario de llegada y si está confirmada.
 
 ## Límites de alcance *(MVP Boundaries)*
 
@@ -145,7 +145,7 @@ Todas las decisiones de esta sección son del equipo (30/10) y falta que la PO l
 
 ## Assumptions
 
-- Los platos y sus tiempos de preparación los carga el restaurante (spec 007-agregar-plato, US-12). El tiempo de preparación es opcional y en minutos.
+- Los platos y sus tiempos de preparación los carga el restaurante (spec 005-agregar-plato, US-12). El tiempo de preparación es opcional y en minutos.
 - Hoy todos los platos del menú se pueden pedir: no existe la disponibilidad por plato (ver US-15 en los límites de alcance).
 - La lista de próximas reservas del inicio muestra solo las reservas confirmadas del comensal que todavía no empezaron, con el restaurante, la fecha, el horario, la cantidad de personas y si tienen pedido.
 - Idioma de la interfaz y de los mensajes: español (Argentina).

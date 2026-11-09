@@ -28,12 +28,12 @@ SQLAlchemy model: `Restaurant`
 | `cuit` | `CHAR(11)` | no | Unique; exactly 11 digits |
 | `email` | `VARCHAR(255)` | no | Unique; email-shape check |
 | `telefono` | `VARCHAR(30)` | no | Must contain non-whitespace text |
-| `password_hash` | `VARCHAR(255)` | no | Argon2 hash; used by restaurant login (spec 003) |
+| `password_hash` | `VARCHAR(255)` | no | Argon2 hash; used by restaurant login (spec 002-cuenta-restaurante) |
 | `direccion` | `VARCHAR(200)` | yes | Must contain non-whitespace text when present; filled in later (US-6, US-8) |
 | `barrio` | `VARCHAR(60)` | yes | Must contain non-whitespace text when present; filled in later (US-6, US-8) |
 | `tipo_comida` | `VARCHAR(60)` | yes | Must contain non-whitespace text when present; filled in later (US-6, US-8) |
 
-This feature created the table; spec 003 (US-2, US-4) later added `telefono`,
+This feature created the table; spec 002-cuenta-restaurante (US-2, US-4) later added `telefono`,
 made the profile columns nullable, and exposes restaurant registration
 (`POST /api/restaurantes`) and login (`POST /api/auth/restaurante`). Those
 endpoints are outside this feature's contract.
@@ -75,7 +75,7 @@ The migration must be generated with the repository's Alembic configuration,
 reviewed, and applied with `make migrate`. It must not create any table from
 the remaining SQL blueprint.
 
-## Restaurant-account migration (spec 003)
+## Restaurant-account migration (spec 002-cuenta-restaurante)
 
 The second revision (`002_restaurant_names`, file
 `backend/migrations/versions/002_restaurant_name.py`) evolves both tables with

@@ -1,4 +1,4 @@
-/** Confirming a reservation and the diner's reservations of a day (US-13, spec 005;
+/** Confirming a reservation and the diner's reservations of a day (US-13, spec 003;
  * `contracts/reservations-api.md`). */
 import { api } from './client'
 import { getApiErrorMessage, SessionExpiredError } from './errors'

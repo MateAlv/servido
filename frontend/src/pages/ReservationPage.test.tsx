@@ -25,7 +25,7 @@ vi.mock('../api/availability', async (importOriginal) => {
 })
 
 // RESTAURANT_ID is a real (bookable) restaurant; TEST_RESTAURANT_ID is one of the test
-// restaurants of spec 002, which can't be booked (decision D4).
+// restaurants of spec 002-elegir-restaurante, which can't be booked (decision D4).
 const TEST_RESTAURANT_ID = 'r-bodegon'
 // A real restaurant that loaded only its name, location, shifts and tables.
 const PARTIAL_RESTAURANT_ID = 'parcial'

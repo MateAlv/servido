@@ -1,4 +1,4 @@
-"""Acceptance tests for spec 007, US-58: create the diner account with Google."""
+"""Acceptance tests for spec 019, US-58: create the diner account with Google."""
 
 from fastapi.testclient import TestClient
 
