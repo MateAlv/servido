@@ -2687,6 +2687,127 @@
         }
       }
     },
+    "/api/restaurante/bloqueos": {
+      "get": {
+        "tags": [
+          "closure"
+        ],
+        "summary": "List Closures",
+        "operationId": "list_closures_api_restaurante_bloqueos_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClosureListResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "closure"
+        ],
+        "summary": "Create Closure",
+        "operationId": "create_closure_api_restaurante_bloqueos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClosureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClosureResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/restaurante/bloqueos/{closure_id}": {
+      "delete": {
+        "tags": [
+          "closure"
+        ],
+        "summary": "Delete Closure",
+        "operationId": "delete_closure_api_restaurante_bloqueos__closure_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "closure_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Closure Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurants": {
       "get": {
         "tags": [
@@ -2809,6 +2930,41 @@
         ],
         "title": "AccountResponse",
         "description": "The account behind the token, whatever its role. Used to show who is signed in."
+      },
+      "AffectedReservation": {
+        "properties": {
+          "reservation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reservation Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time"
+          },
+          "party_size": {
+            "type": "integer",
+            "title": "Party Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation_id",
+          "date",
+          "start_time",
+          "end_time",
+          "party_size"
+        ],
+        "title": "AffectedReservation"
       },
       "AvailabilityResponse": {
         "properties": {
@@ -3114,6 +3270,169 @@
           "cart"
         ],
         "title": "CartSaveResponse"
+      },
+      "ClosureListResponse": {
+        "properties": {
+          "closures": {
+            "items": {
+              "$ref": "#/components/schemas/ClosureResponse"
+            },
+            "type": "array",
+            "title": "Closures"
+          }
+        },
+        "type": "object",
+        "required": [
+          "closures"
+        ],
+        "title": "ClosureListResponse"
+      },
+      "ClosureRequest": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "title": "Confirmed",
+            "default": false
+          },
+          "acknowledged_reservation_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Acknowledged Reservation Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "request_id"
+        ],
+        "title": "ClosureRequest"
+      },
+      "ClosureResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "all_day": {
+            "type": "boolean",
+            "title": "All Day"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "date",
+          "start_time",
+          "end_time",
+          "all_day",
+          "created_at"
+        ],
+        "title": "ClosureResponse"
+      },
+      "ClosureWarningDetail": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "reservations": {
+            "items": {
+              "$ref": "#/components/schemas/AffectedReservation"
+            },
+            "type": "array",
+            "title": "Reservations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "reservations"
+        ],
+        "title": "ClosureWarningDetail"
+      },
+      "ClosureWarningResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/ClosureWarningDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "ClosureWarningResponse"
       },
       "ConfirmedOrderItemResponse": {
         "properties": {
