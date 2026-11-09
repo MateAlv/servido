@@ -21,6 +21,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [009-pedido-anticipado](009-pedido-anticipado/spec.md) | Comensal | 17, 19, 21 | 5 | 3 | ✅ | ✅ | ✅ | ✅ US-17, US-19, US-21 (decisiones P1–P14 del 30/10, falta que la PO las valide) |
 | [009-ver-platos-precios](009-ver-platos-precios/spec.md) | Comensal | 15 | 2 | 3 | ✅ | ✅ | ✅ | ✅ US-15 (D1–D4, falta que la PO las valide) |
 | [012-terminos-condiciones-comensal](012-terminos-condiciones-comensal/spec.md) | Comensal | 29 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-29 |
+| [013-recuperar-cuenta-comensal](013-recuperar-cuenta-comensal/spec.md) | Comensal | 31 | 2 | 4 | ✅ | ✅ | ✅ | ✅ US-31 (falta que la PO valide el mismo mensaje para cualquier correo, el cierre de sesiones abiertas y el límite de envíos) |
 | [014-resenas](014-resenas/spec.md) | Comensal y Restaurante | 24, 27, 50 (y criterio pendiente de 7) | 5 | 4 (US-50 adelantada del 6) | ✅ | ✅ | ✅ | ✅ US-24, US-27, US-50 y el criterio de US-7 (decisiones R1–R19 del 05/11, falta que la PO las valide) |
 | [015-terminos-condiciones-restaurante](015-terminos-condiciones-restaurante/spec.md) | Restaurante | 26 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-26 |
 | [016-bloqueo-horarios](016-bloqueo-horarios/spec.md) | Restaurante | 32 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-32 (propuestas FR-007 y de reservas parcialmente pasadas/cruzadas y reaviso pendientes de validación de la PO) |
@@ -47,6 +48,7 @@ Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 están U
 - Spec 003 (US-13): falta sumar el escenario 6 a la US-13 en la planilla y exportar `backlog.md` (T033a), cargar los datos de demo en producción (T055) y hacer el pase en navegador a 360 px y con teclado (T024/T032). Las decisiones D1–D11 esperan la validación de la PO.
 - Spec 014 (US-24, US-27, US-50): falta que la PO valide R1–R19; el equipo la implementó sin esperar esa validación por la defensa del 11/11. US-50 pasa del Sprint 6 (Integrante 3) al Sprint 4 (Integrante 1): hay que actualizar la planilla y avisarle a Integrante 3. US-25 y US-38 deben impedir cancelar una reserva que ya terminó, y US-35 debe usar el promedio de esta spec.
 - Specs 012 y 015 (US-29 y US-26): los textos legales fueron redactados como propuesta del equipo con autorización de la PO y deben revisarse antes de publicar la versión 1.0; también quedan pendientes de validación de la PO las propuestas de exigir aceptación en el registro con Google, guardar versión y fecha, no pedir reaceptación a cuentas existentes y no guardar aceptación si el registro falla.
+- Spec 013 (US-31): falta que la PO valide las propuestas del equipo (mismo mensaje para cualquier correo, cerrar las sesiones abiertas al cambiar la contraseña y el límite de 5 envíos cada media hora), el 502 cuando falla el envío del correo, y hacer el pase por navegador a 360 px y con teclado.
 
 ### Numeración
 
@@ -133,6 +135,8 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 05/11 | 014 | R5: el gasto por persona se pide y es opcional. R6: desde 5 personas con un gasto informado, la media reemplaza la categoría declarada (US-7). R7: se califica desde el bloque «¿Cómo estuvo?» del inicio. R8: hay que tener el email verificado. R9: hasta 30 días después de la reserva. Falta que la PO lo valide |
 | 05/11 | 014 | R10: en público, el autor se ve como nombre e inicial, con la fecha de la visita. R11: el gasto por persona es público. R12: el promedio se muestra desde la primera reseña, con la cantidad. R13: solo cuenta la última reseña de cada persona, según la visita más reciente. R14: en público solo se ve esa reseña, si tiene comentario; el restaurante ve todas. R15: para US-7 se usa el último gasto informado de cada persona. Falta que la PO lo valide |
 | 05/11 | 014 | R16: siempre se revisa «Así se va a ver» antes de publicar. R17: el restaurante ve nombre e inicial, fecha y horario de la visita, estrellas, comentario y gasto, sin contacto ni enlace a la reserva. R18: un script carga datos de demo en producción, solo en el restaurante de demo y de forma reversible. R19: sin moderación ni denuncia en el MVP. Falta que la PO lo valide |
+| 09/11 | 013 | El link de recuperación vence a los 15 minutos, sirve una sola vez y el pedido de uno nuevo invalida el anterior. El correo que no tiene cuenta recibe el mismo mensaje que uno que sí, y el límite de 5 pedidos por correo cada media hora se aplica igual a los dos, para no revelar qué correos están registrados. Las cuentas creadas con Google reciben un correo que las manda a «Ingresar con Google», sin link. Al cambiar la contraseña se cierran las sesiones abiertas. Falta que la PO lo valide |
+| 09/11 | 013, 019 | El aviso de «no pudimos enviar el correo» (502) es la única respuesta que distingue una cuenta existente, porque solo se ve cuando hubo un envío; se acepta para que el comensal sepa que el mail no salió y pueda reintentar |
 
 ## Notas de formato
 

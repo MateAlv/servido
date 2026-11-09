@@ -52,6 +52,11 @@ export function LoginPage() {
             onSignedIn={welcome}
             onRegister={() => navigate(withReturnPath(registerPathFor(role), searchParams))}
           />
+          {role === 'diner' && (
+            <p className={styles.footer}>
+              <Link to="/recuperar">¿Olvidaste tu contraseña?</Link>
+            </p>
+          )}
           <p className={styles.divider}>o</p>
           <GoogleSignInButton role={role} onSignedIn={welcome} />
           <p className={styles.footer}>

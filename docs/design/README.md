@@ -93,6 +93,8 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 
 `registerPathFor(role)` devuelve adónde lleva "Registrarme" para cada tipo de cuenta (`/registrarme` o `/suma-tu-local`).
 
+La recuperación de la cuenta del comensal no agrega componentes: `/recuperar` pide el email con `TextField` y `Button`, y `/restablecer` (el destino del link del mail) pide la nueva contraseña con dos `PasswordField` y `Button`, dentro de la misma `Card` que las otras páginas de acceso.
+
 ### Reseñas (`review/`)
 
 | Componente | Para qué | US |

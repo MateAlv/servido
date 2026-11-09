@@ -98,5 +98,29 @@ class VerificationRequest(BaseModel):
     token: str = Field(min_length=1)
 
 
+class RecoveryRequest(BaseModel):
+    """The email of the account whose access is lost (US-31)."""
+
+    email: str = Field(min_length=1, max_length=255)
+
+    @field_validator("email")
+    @classmethod
+    def email_must_be_valid(cls, value: str) -> str:
+        normalized = normalize_email(value)
+        if not validate_email(normalized):
+            raise ValueError("Ingresá un email válido.")
+        return normalized
+
+
+class RecoveryLinkRequest(BaseModel):
+    """The token of the mailed recovery link. Checked on its own, then with the new password."""
+
+    token: str = Field(min_length=1)
+
+
+class PasswordResetRequest(RecoveryLinkRequest):
+    password: str = Field(min_length=1, max_length=128)
+
+
 class MessageResponse(BaseModel):
     detail: str

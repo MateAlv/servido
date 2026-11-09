@@ -80,6 +80,18 @@ export const router = createBrowserRouter([
         }),
       },
       {
+        path: '/recuperar',
+        lazy: async () => ({
+          Component: (await import('./pages/RecoverAccountPage')).RecoverAccountPage,
+        }),
+      },
+      {
+        path: '/restablecer',
+        lazy: async () => ({
+          Component: (await import('./pages/ResetPasswordPage')).ResetPasswordPage,
+        }),
+      },
+      {
         path: '/privacidad',
         lazy: async () => ({ Component: (await import('./pages/PrivacyPage')).PrivacyPage }),
       },

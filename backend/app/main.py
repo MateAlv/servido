@@ -44,7 +44,7 @@ def custom_openapi() -> dict:
             for response_status, response in operation.get("responses", {}).items():
                 if not isinstance(response, dict):
                     continue
-                if response_status in {"400", "401", "403", "404", "409"}:
+                if response_status in {"400", "401", "403", "404", "409", "429", "502"}:
                     response["content"] = {
                         "application/json": {
                             "schema": {"$ref": "#/components/schemas/ErrorResponse"}
