@@ -1,5 +1,6 @@
 from app.models.base import Base
 from app.models.cart import Cart, CartItem
+from app.models.closure import Closure
 from app.models.diner import Diner
 from app.models.dish import Dish
 from app.models.email_verification import EmailVerification
@@ -15,6 +16,7 @@ __all__ = [
     "Base",
     "Cart",
     "CartItem",
+    "Closure",
     "Diner",
     "Dish",
     "EmailVerification",

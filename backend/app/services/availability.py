@@ -13,6 +13,7 @@ from sqlalchemy import and_, exists, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.models.closure import Closure
 from app.models.opening_shift import OpeningShift
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
@@ -180,6 +181,28 @@ def check_date(day: date, now: datetime) -> None:
         raise UnavailableStartError(TOO_FAR_AHEAD)
 
 
+def blocked(session: Session, restaurant_id: UUID, starts_at: datetime, ends_at: datetime) -> bool:
+    for closure in session.scalars(
+        select(Closure).where(
+            Closure.restaurant_id == restaurant_id,
+            Closure.date.in_(
+                [starts_at.astimezone(BUENOS_AIRES).date(), ends_at.astimezone(BUENOS_AIRES).date()]
+            ),
+        )
+    ):
+        closure_start, closure_end = (
+            datetime.combine(closure.date, closure.start_time or time.min, tzinfo=BUENOS_AIRES),
+            datetime.combine(
+                closure.date + timedelta(days=1) if closure.start_time is None else closure.date,
+                closure.end_time or time.min,
+                tzinfo=BUENOS_AIRES,
+            ),
+        )
+        if starts_at < closure_end and ends_at > closure_start:
+            return True
+    return False
+
+
 def check_start(
     session: Session, restaurant_id: UUID, day: date, start: time, now: datetime
 ) -> datetime:
@@ -192,6 +215,8 @@ def check_start(
     starts_at = local_datetime(day, start)
     if starts_at <= now:
         raise UnavailableStartError(PAST_START)
+    if blocked(session, restaurant_id, starts_at, starts_at + DURATION):
+        raise UnavailableStartError("Ese horario está bloqueado.")
     return starts_at
 
 
@@ -203,6 +228,18 @@ def day_availability(
     groups = available_groups(session, restaurant_id)
     cap = max_party_size(groups)
     areas = [area for area in SEATING_AREAS if any(g.seating_area == area for g in groups)]
+    if (
+        session.scalar(
+            select(Closure.id).where(
+                Closure.restaurant_id == restaurant_id,
+                Closure.date == day,
+                Closure.start_time.is_(None),
+                Closure.end_time.is_(None),
+            )
+        )
+        is not None
+    ):
+        return DayAvailability(open=False, max_party_size=cap, slots=[], seating_areas=areas)
     if not shifts:
         return DayAvailability(open=False, max_party_size=cap, slots=[], seating_areas=areas)
     if party_size > cap:
@@ -213,7 +250,13 @@ def day_availability(
         if starts_at <= now:
             continue
         free = free_groups(session, restaurant_id, groups, party_size, starts_at)
-        slots.append(Slot(start=start, available=bool(free)))
+        slots.append(
+            Slot(
+                start=start,
+                available=bool(free)
+                and not blocked(session, restaurant_id, starts_at, starts_at + DURATION),
+            )
+        )
     return DayAvailability(open=True, max_party_size=cap, slots=slots, seating_areas=areas)
 
 
@@ -376,6 +419,8 @@ def confirm_reservation(
     shifts = active_shifts(session, choice.restaurant_id, choice.day)
     if choice.start not in starts_in(shifts, choice.day):
         raise ConfirmationConflictError(NO_LONGER_OPEN)
+    if blocked(session, choice.restaurant_id, starts_at, starts_at + DURATION):
+        raise ConfirmationConflictError("Ese horario ya no está disponible. Elegí otro.")
 
     taken = taken_tables(session, choice.restaurant_id, starts_at).get(
         (group.capacity, group.seating_area), set()

@@ -79,7 +79,11 @@ def menu_dishes(session: Session, restaurant_id: UUID) -> list[Dish]:
     return list(
         session.scalars(
             select(Dish)
-            .where(Dish.id_restaurante == restaurant_id, Dish.disponible.is_(True))
+            .where(
+                Dish.id_restaurante == restaurant_id,
+                Dish.disponible.is_(True),
+                Dish.deleted_at.is_(None),
+            )
             .order_by(category_rank, Dish.nombre)
         )
     )
@@ -88,7 +92,13 @@ def menu_dishes(session: Session, restaurant_id: UUID) -> list[Dish]:
 def has_menu(session: Session, restaurant_id: UUID) -> bool:
     return bool(
         session.scalar(
-            select(exists().where(Dish.id_restaurante == restaurant_id, Dish.disponible.is_(True)))
+            select(
+                exists().where(
+                    Dish.id_restaurante == restaurant_id,
+                    Dish.disponible.is_(True),
+                    Dish.deleted_at.is_(None),
+                )
+            )
         )
     )
 
@@ -152,8 +162,8 @@ def has_order(session: Session, reservation_id: UUID) -> bool:
 
 
 def open_cart(session: Session, reservation: Reservation, now: datetime) -> Cart | None:
-    """The diner's cart, unless the order is closed: a closed order's cart is ignored."""
-    if not order_open(session, reservation, now):
+    """Keep the draft reviewable within its time window, even when its menu is now empty."""
+    if reservation.status != "confirmed" or now >= order_deadline(reservation):
         return None
     return cart_of(session, reservation.id)
 
@@ -211,14 +221,15 @@ def confirm_order(
     (P11), and deletes the cart. Checks follow data-model.md rule 6."""
     reservation = diner_reservation(session, diner_id, reservation_id, lock=True)
     order = order_of(session, reservation.id)
-    if not order_open(session, reservation, now):
+    if reservation.status != "confirmed" or now >= order_deadline(reservation):
         raise OrderClosedError
     if session.get(Diner, diner_id).email_verified_at is None:
         raise EmailNotVerifiedError
+    check_against_menu(session, reservation.restaurant_id, items)
+    if not has_menu(session, reservation.restaurant_id):
+        raise OrderClosedError
     if not items and order is None:
         raise NothingToConfirmError
-    check_against_menu(session, reservation.restaurant_id, items)
-
     session.execute(delete(Cart).where(Cart.reservation_id == reservation.id))
     if not items:
         session.delete(order)

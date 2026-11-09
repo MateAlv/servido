@@ -8,10 +8,11 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Index,
     Numeric,
     String,
     Text,
-    UniqueConstraint,
+    text,
     true,
 )
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -23,7 +24,15 @@ from app.models.base import Base
 class Dish(Base):
     __tablename__ = "platos"
     __table_args__ = (
-        UniqueConstraint("id_restaurante", "nombre", name="uq_platos_restaurante_nombre"),
+        Index(
+            "uq_platos_live_restaurante_nombre",
+            "id_restaurante",
+            "nombre",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
+        CheckConstraint("revision > 0", name="revision_positive"),
+        CheckConstraint("deleted_at IS NULL OR disponible = false", name="deleted_unavailable"),
         CheckConstraint("length(trim(nombre)) > 0", name="nombre_not_blank"),
         CheckConstraint("precio > 0", name="precio_positive"),
         CheckConstraint(
@@ -51,3 +60,6 @@ class Dish(Base):
     )
     tiempo_preparacion_minutos: Mapped[int | None] = mapped_column(nullable=True)
     creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revision: Mapped[int] = mapped_column(nullable=False, default=1, server_default="1")

@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api import (
     account,
     auth,
+    closure,
     dish,
     email_verification,
     health,
@@ -23,4 +24,5 @@ api_router.include_router(email_verification.router)
 api_router.include_router(reservation.router)
 api_router.include_router(order.router)
 api_router.include_router(review.router)
+api_router.include_router(closure.router)
 api_router.include_router(public_restaurant.router)

@@ -348,6 +348,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurant/dishes/{dish_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Dish */
+        get: operations["get_dish_api_restaurant_dishes__dish_id__get"];
+        /** Edit Dish */
+        put: operations["edit_dish_api_restaurant_dishes__dish_id__put"];
+        post?: never;
+        /** Remove Dish */
+        delete: operations["remove_dish_api_restaurant_dishes__dish_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurant/dishes/{dish_id}/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set Availability */
+        patch: operations["set_availability_api_restaurant_dishes__dish_id__availability_patch"];
+        trace?: never;
+    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -573,6 +609,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurante/bloqueos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Closures */
+        get: operations["list_closures_api_restaurante_bloqueos_get"];
+        put?: never;
+        /** Create Closure */
+        post: operations["create_closure_api_restaurante_bloqueos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurante/bloqueos/{closure_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Closure */
+        delete: operations["delete_closure_api_restaurante_bloqueos__closure_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurants": {
         parameters: {
             query?: never;
@@ -636,6 +707,25 @@ export interface components {
              */
             email_verificado: boolean;
         };
+        /** AffectedReservation */
+        AffectedReservation: {
+            /**
+             * Reservation Id
+             * Format: uuid
+             */
+            reservation_id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start Time */
+            start_time: string;
+            /** End Time */
+            end_time: string;
+            /** Party Size */
+            party_size: number;
+        };
         /** AvailabilityResponse */
         AvailabilityResponse: {
             /**
@@ -679,6 +769,33 @@ export interface components {
             /** Foto */
             foto?: string | null;
         };
+        /** Body_edit_dish_api_restaurant_dishes__dish_id__put */
+        Body_edit_dish_api_restaurant_dishes__dish_id__put: {
+            /** Name */
+            name: string;
+            /** Category */
+            category: string;
+            /** Price */
+            price: string;
+            /**
+             * Photo Action
+             * @enum {string}
+             */
+            photo_action: "keep" | "replace" | "remove";
+            /** Expected Revision */
+            expected_revision: number;
+            /** Description */
+            description?: string | null;
+            /**
+             * Dietary Restrictions
+             * @default []
+             */
+            dietary_restrictions: string[];
+            /** Prep Time Minutes */
+            prep_time_minutes?: string | null;
+            /** Photo */
+            photo?: string | null;
+        };
         /** Body_upload_restaurant_photo_api_restaurante_perfil_foto_post */
         Body_upload_restaurant_photo_api_restaurante_perfil_foto_post: {
             /** Foto */
@@ -710,6 +827,70 @@ export interface components {
         /** CartSaveResponse */
         CartSaveResponse: {
             cart: components["schemas"]["CartResponse"] | null;
+        };
+        /** ClosureListResponse */
+        ClosureListResponse: {
+            /** Closures */
+            closures: components["schemas"]["ClosureResponse"][];
+        };
+        /** ClosureRequest */
+        ClosureRequest: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /**
+             * Confirmed
+             * @default false
+             */
+            confirmed: boolean;
+            /** Acknowledged Reservation Ids */
+            acknowledged_reservation_ids?: string[];
+        };
+        /** ClosureResponse */
+        ClosureResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Start Time */
+            start_time: string | null;
+            /** End Time */
+            end_time: string | null;
+            /** All Day */
+            all_day: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ClosureWarningDetail */
+        ClosureWarningDetail: {
+            /** Message */
+            message: string;
+            /** Reservations */
+            reservations: components["schemas"]["AffectedReservation"][];
+        };
+        /** ClosureWarningResponse */
+        ClosureWarningResponse: {
+            detail: components["schemas"]["ClosureWarningDetail"];
         };
         /** ConfirmedOrderItemResponse */
         ConfirmedOrderItemResponse: {
@@ -771,6 +952,39 @@ export interface components {
             /** Email Verificado */
             readonly email_verificado: boolean;
         };
+        /** DishAvailabilityRequest */
+        DishAvailabilityRequest: {
+            /** Available */
+            available: boolean;
+            /** Expected Revision */
+            expected_revision: number;
+        };
+        /** DishManagementResponse */
+        DishManagementResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string | null;
+            /** Category */
+            category: string;
+            /** Price */
+            price: string;
+            /** Photo Url */
+            photo_url: string | null;
+            /** Dietary Restrictions */
+            dietary_restrictions: string[];
+            /** Prep Time Minutes */
+            prep_time_minutes: number | null;
+            /** Available */
+            available: boolean;
+            /** Revision */
+            revision: number;
+        };
         /** DishResponse */
         DishResponse: {
             /**
@@ -794,6 +1008,12 @@ export interface components {
             foto_url: string | null;
             /** Disponible */
             disponible: boolean;
+        };
+        /** DishWriteResponse */
+        DishWriteResponse: {
+            dish: components["schemas"]["DishManagementResponse"];
+            /** Changed Since Open */
+            changed_since_open: boolean;
         };
         /** FreeGroupResponse */
         FreeGroupResponse: {
@@ -2613,6 +2833,280 @@ export interface operations {
             };
         };
     };
+    get_dish_api_restaurant_dishes__dish_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dish_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DishManagementResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo el restaurante dueño puede administrar este plato. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No encontramos ese plato. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ya existe un plato con ese nombre. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    edit_dish_api_restaurant_dishes__dish_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dish_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_edit_dish_api_restaurant_dishes__dish_id__put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DishWriteResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo el restaurante dueño puede administrar este plato. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No encontramos ese plato. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ya existe un plato con ese nombre. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_dish_api_restaurant_dishes__dish_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dish_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo el restaurante dueño puede administrar este plato. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No encontramos ese plato. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ya existe un plato con ese nombre. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_availability_api_restaurant_dishes__dish_id__availability_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dish_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DishAvailabilityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DishWriteResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo el restaurante dueño puede administrar este plato. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No encontramos ese plato. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ya existe un plato con ese nombre. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_account_api_me_get: {
         parameters: {
             query?: never;
@@ -3413,6 +3907,97 @@ export interface operations {
             };
             /** @description No tenés permiso. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_closures_api_restaurante_bloqueos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosureListResponse"];
+                };
+            };
+        };
+    };
+    create_closure_api_restaurante_bloqueos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClosureRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClosureResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_closure_api_restaurante_bloqueos__closure_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                closure_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

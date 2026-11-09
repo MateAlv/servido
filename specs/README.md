@@ -23,6 +23,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [012-terminos-condiciones-comensal](012-terminos-condiciones-comensal/spec.md) | Comensal | 29 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-29 |
 | [014-resenas](014-resenas/spec.md) | Comensal y Restaurante | 24, 27, 50 (y criterio pendiente de 7) | 5 | 4 (US-50 adelantada del 6) | ✅ | ✅ | ✅ | ✅ US-24, US-27, US-50 y el criterio de US-7 (decisiones R1–R19 del 05/11, falta que la PO las valide) |
 | [015-terminos-condiciones-restaurante](015-terminos-condiciones-restaurante/spec.md) | Restaurante | 26 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-26 |
+| [016-bloqueo-horarios](016-bloqueo-horarios/spec.md) | Restaurante | 32 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-32 (propuestas FR-007 y de reservas parcialmente pasadas/cruzadas y reaviso pendientes de validación de la PO) |
 | [019-cuenta-comensal-google-verificacion](019-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17 en la spec 009-pedido-anticipado) |
 
 Arrastre de la spec 002-cuenta-restaurante: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002-elegir-restaurante muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
@@ -79,6 +80,7 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las de la spec 002-el
 | 002-elegir-restaurante | Ubicación denegada | Mapa centrado en Buenos Aires, sin distancias, con aviso y botón para reintentar. Implementado así; falta que la PO lo confirme |
 | 003 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Decididos por el equipo el 23/10 y el 28/10 (ver las decisiones D1–D11 abajo y `specs/003-reservar-mesa/research.md`). Falta que la PO los valide |
 | 012, 015 | Aplicación al registro con Google, constancia de versión y fecha, tratamiento de cuentas existentes y atomicidad ante fallos de registro | Propuesta del equipo: exigir aceptación también con Google, guardar `terms_version` y `terms_accepted_at`, no pedir reaceptación a cuentas existentes y guardar la aceptación en la misma transacción; falta que la PO lo valide |
+| 016 | Aviso al comensal por mail (FR-007), franja de hoy ya comenzada, reservas que cruzan el borde de la franja y reserva nueva entre la advertencia y la confirmación | Propuesta del equipo: mail con restaurante, fecha y horario; se rechaza la franja de hoy cuyo inicio ya pasó y se permite el día completo; se considera afectada toda reserva que se superpone; si la lista cambió, se vuelve a advertir antes de aplicar. Falta que la PO lo valide |
 
 ## Decisiones del equipo
 
