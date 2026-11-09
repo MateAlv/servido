@@ -44,6 +44,10 @@ export const router = createBrowserRouter([
         lazy: async () => ({ Component: (await import('./pages/AddDishPage')).AddDishPage }),
       },
       {
+        path: '/restaurante/menu/:dishId/editar',
+        lazy: async () => ({ Component: (await import('./pages/EditDishPage')).EditDishPage }),
+      },
+      {
         path: '/restaurante/menu',
         lazy: async () => ({ Component: (await import('./pages/MenuPage')).MenuPage }),
       },

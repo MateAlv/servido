@@ -3,3 +3,10 @@
 __pycache__
 .pytest_cache
 .ruff_cache
+
+.git
+node_modules
+*.log*
+.env.*
+coverage
+uploads

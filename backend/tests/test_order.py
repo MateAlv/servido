@@ -5,6 +5,7 @@ from datetime import time, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -729,3 +730,45 @@ def test_us17_edge_restaurant_sees_the_confirmed_order(
     }
     # The kitchen starts with the slowest dish: 25 minutes before the 21:00 arrival.
     assert detail.json()["prep_start_time"] == "20:35"
+
+
+def test_us34_edge_last_available_dish_retains_review_cart(client, session):
+    s = setup(client, session)
+    items = [item_of(s.provoleta)]
+    assert confirm(client, s, items).status_code == 200
+    assert save(client, s, items).status_code == 200
+    before = page(client, s)["order"]
+    for dish in (s.provoleta, s.bife, s.flan):
+        dish.disponible = False
+    session.commit()
+    response = confirm(client, s, items)
+    assert response.status_code == 409
+    assert response.json()["detail"] == orders.MENU_CHANGED
+    fresh = page(client, s)
+    assert fresh["reservation"]["order_open"] is False
+    assert fresh["cart"] is not None
+    assert fresh["order"] == before
+    assert save(client, s, items).status_code == 409
+    assert confirm(client, s, []).status_code == 409
+    s.provoleta.disponible = True
+    session.commit()
+    assert page(client, s)["order"] == before
+
+
+@pytest.mark.parametrize("closed_by", ["cutoff", "cancelled"])
+def test_us34_edge_empty_menu_does_not_expose_ineligible_cart(client, session, closed_by):
+    s = setup(client, session)
+    add_cart(session, s.reservation, [(s.provoleta, 2)])
+    for dish in (s.provoleta, s.bife, s.flan):
+        dish.disponible = False
+    if closed_by == "cancelled":
+        s.reservation.status = "cancelled"
+        s.reservation.cancelled_at = NOW
+    else:
+        s.reservation.starts_at = NOW + timedelta(minutes=45)
+        s.reservation.ends_at = NOW + timedelta(minutes=135)
+    session.commit()
+    fresh = page(client, s)
+    assert fresh["cart"] is None
+    assert fresh["reservation"]["order_open"] is False
+    assert confirm(client, s, [item_of(s.provoleta)]).json()["detail"] == orders.ORDER_CLOSED

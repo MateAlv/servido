@@ -158,3 +158,28 @@ def test_us15_edge_new_dishes_are_available_by_default(
 
     assert created.status_code == 201
     assert created.json()["disponible"] is True
+
+
+def test_us34_edge_recreate_removed_name(client, session):
+    from tests.test_order import restaurant_headers
+
+    restaurant = add_bookable_restaurant(session)
+    headers = restaurant_headers(client, restaurant)
+    data = {"nombre": "Reutilizable", "categoria": "entrada", "precio": "1000"}
+    created = client.post("/api/restaurantes/me/platos", headers=headers, data=data)
+    assert created.status_code == 201
+    dish_id = created.json()["id"]
+    path = f"/api/restaurant/dishes/{dish_id}"
+    assert (
+        client.patch(
+            path + "/availability",
+            headers=headers,
+            json={"available": False, "expected_revision": 1},
+        ).status_code
+        == 200
+    )
+    assert client.post("/api/restaurantes/me/platos", headers=headers, data=data).status_code == 409
+    assert client.delete(path, headers=headers).status_code == 204
+    recreated = client.post("/api/restaurantes/me/platos", headers=headers, data=data)
+    assert recreated.status_code == 201
+    assert recreated.json()["id"] != dish_id

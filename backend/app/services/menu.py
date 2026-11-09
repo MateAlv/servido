@@ -17,7 +17,11 @@ def menu_dishes(session: Session, restaurant_id: UUID) -> list[Dish]:
     return list(
         session.scalars(
             select(Dish)
-            .where(Dish.id_restaurante == restaurant_id, Dish.disponible.is_(True))
+            .where(
+                Dish.id_restaurante == restaurant_id,
+                Dish.disponible.is_(True),
+                Dish.deleted_at.is_(None),
+            )
             .order_by(category_order, Dish.nombre)
         )
     )
