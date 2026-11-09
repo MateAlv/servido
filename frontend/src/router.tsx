@@ -12,12 +12,14 @@ import { RestaurantOrdersPage } from './pages/RestaurantOrdersPage'
 import { RestaurantReservationsPage } from './pages/RestaurantReservationsPage'
 import { RestaurantCancellationsPage } from './pages/RestaurantCancellationsPage'
 import { RestaurantReservationDinerPage } from './pages/RestaurantReservationDinerPage'
+import { DinerReservationsPage } from './pages/DinerReservationsPage'
 
 export const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
       { path: '/', element: <HomePage /> },
+      { path: '/reservas', element: <DinerReservationsPage /> },
       { path: '/ingresar', element: <LoginPage /> },
       { path: '/registrarme', element: <RegisterPage /> },
       { path: '/suma-tu-local', element: <RestaurantRegisterPage /> },

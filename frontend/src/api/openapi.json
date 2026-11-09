@@ -1769,6 +1769,140 @@
         ]
       }
     },
+    "/api/reservations/active": {
+      "get": {
+        "tags": [
+          "reservation"
+        ],
+        "summary": "List Active Reservations",
+        "operationId": "list_active_reservations_api_reservations_active_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActiveReservationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/reservations/{reservation_id}": {
+      "delete": {
+        "tags": [
+          "reservation"
+        ],
+        "summary": "Cancel Diner Reservation",
+        "operationId": "cancel_diner_reservation_api_reservations__reservation_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationCancellationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o es de otro comensal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La reserva ya est\u00e1 cancelada o no se puede cancelar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reservations/{reservation_id}/order": {
       "get": {
         "tags": [
@@ -2235,6 +2369,22 @@
         ],
         "title": "AccountResponse",
         "description": "The account behind the token, whatever its role. Used to show who is signed in."
+      },
+      "ActiveReservationsResponse": {
+        "properties": {
+          "reservations": {
+            "items": {
+              "$ref": "#/components/schemas/ReservationResponse"
+            },
+            "type": "array",
+            "title": "Reservations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservations"
+        ],
+        "title": "ActiveReservationsResponse"
       },
       "AvailabilityResponse": {
         "properties": {
@@ -3623,6 +3773,23 @@
           "nombre"
         ],
         "title": "RegistrationRequest"
+      },
+      "ReservationCancellationResponse": {
+        "properties": {
+          "reservation": {
+            "$ref": "#/components/schemas/ReservationResponse"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation",
+          "message"
+        ],
+        "title": "ReservationCancellationResponse"
       },
       "ReservationDinerResponse": {
         "properties": {
