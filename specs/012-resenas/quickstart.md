@@ -8,9 +8,9 @@ make up-local
 
 The seed loads the review demo on «Restaurante Demo», and loading it again replaces it, so each start brings the two pending reservations back.
 
-1. **Diner**: sign in at <http://localhost:5173/ingresar> with `cliente@servido.local` / `ClienteDemo123`. Under «¿Cómo estuvo?», choose «Dejar reseña», pick the stars, write a comment and a spend, review and publish.
+1. **Diner**: sign in at <http://localhost:5173/ingresar> with `cliente@servido.local` / `Demo12345`. Under «¿Cómo estuvo?», choose «Dejar reseña», pick the stars, write a comment and a spend, review and publish.
 2. **Public**: open the restaurant's detail. It shows the average, the count, the opinions and a `$` tier calculated from the spend, which replaces the declared `$$`.
-3. **Restaurant**: sign in with `demo@servido.local` / `DemoRestaurante123` and choose «Ver reseñas». It lists everything, including Ana's older visit, marked because the public doesn't see it.
+3. **Restaurant**: sign in with `demo@servido.local` / `Demo12345` and choose «Ver reseñas». It lists everything, including Ana's older visit, marked because the public doesn't see it.
 
 ## Demo data on another database
 

@@ -11,8 +11,8 @@ Dura unos 4 minutos. Los números son los de la demo recién cargada, con una re
    ```
 
 2. Abrir <http://localhost:5173> en dos ventanas:
-   - **Normal**: comensal, `cliente@servido.local` / `ClienteDemo123`.
-   - **Incógnito**: restaurante, `demo@servido.local` / `DemoRestaurante123`.
+   - **Normal**: comensal, `cliente@servido.local` / `Demo12345`.
+   - **Incógnito**: restaurante, `demo@servido.local` / `Demo12345`.
 3. Comprobar que «Restaurante Demo» muestre 4,3 · 6 reseñas.
 
 ## Guion
