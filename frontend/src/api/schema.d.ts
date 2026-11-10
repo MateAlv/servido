@@ -513,6 +513,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reservations/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Active Reservations */
+        get: operations["list_active_reservations_api_reservations_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/{reservation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancel Diner Reservation */
+        delete: operations["cancel_diner_reservation_api_reservations__reservation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reservations/{reservation_id}/order": {
         parameters: {
             query?: never;
@@ -706,6 +740,11 @@ export interface components {
              * @default true
              */
             email_verificado: boolean;
+        };
+        /** ActiveReservationsResponse */
+        ActiveReservationsResponse: {
+            /** Reservations */
+            reservations: components["schemas"]["ReservationResponse"][];
         };
         /** AffectedReservation */
         AffectedReservation: {
@@ -1442,6 +1481,12 @@ export interface components {
              * @constant
              */
             terms_accepted: true;
+        };
+        /** ReservationCancellationResponse */
+        ReservationCancellationResponse: {
+            reservation: components["schemas"]["ReservationResponse"];
+            /** Message */
+            message: string;
         };
         /** ReservationDinerResponse */
         ReservationDinerResponse: {
@@ -3493,6 +3538,111 @@ export interface operations {
             };
             /** @description Solo para comensales. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_active_reservations_api_reservations_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveReservationsResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_diner_reservation_api_reservations__reservation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservationCancellationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o es de otro comensal. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva ya está cancelada o no se puede cancelar. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

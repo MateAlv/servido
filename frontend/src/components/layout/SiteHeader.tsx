@@ -43,6 +43,7 @@ export function SiteHeader() {
           </span>
           {isPending ? null : account ? (
             <>
+              {account.rol === 'diner' && <NavLink to="/reservas">Mis reservas</NavLink>}
               <span className={styles.who}>
                 <span className={styles.avatar} aria-hidden="true">
                   {name.charAt(0).toUpperCase()}
