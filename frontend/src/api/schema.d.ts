@@ -444,6 +444,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/comensales/recuperacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reset Password
+         * @description Sets the new password with the token of the link. It never signs in (S5).
+         */
+        put: operations["reset_password_api_comensales_recuperacion_put"];
+        /**
+         * Request Recovery
+         * @description Mails a recovery link if the email has an account. The answer is the same either way.
+         */
+        post: operations["request_recovery_api_comensales_recuperacion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/comensales/recuperacion/validacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Recovery Link
+         * @description Checks the link before showing the form. It does not use the link up.
+         */
+        post: operations["check_recovery_link_api_comensales_recuperacion_validacion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurants/{restaurant_id}/availability": {
         parameters: {
             query?: never;
@@ -1282,6 +1326,13 @@ export interface components {
             /** Prep Time Minutes */
             prep_time_minutes: number | null;
         };
+        /** PasswordResetRequest */
+        PasswordResetRequest: {
+            /** Token */
+            token: string;
+            /** Password */
+            password: string;
+        };
         /** PendingReview */
         PendingReview: {
             /**
@@ -1467,6 +1518,22 @@ export interface components {
              * Format: date-time
              */
             published_at: string;
+        };
+        /**
+         * RecoveryLinkRequest
+         * @description The token of the mailed recovery link. Checked on its own, then with the new password.
+         */
+        RecoveryLinkRequest: {
+            /** Token */
+            token: string;
+        };
+        /**
+         * RecoveryRequest
+         * @description The email of the account whose access is lost (US-31).
+         */
+        RecoveryRequest: {
+            /** Email */
+            email: string;
         };
         /** RegistrationRequest */
         RegistrationRequest: {
@@ -3252,6 +3319,123 @@ export interface operations {
             };
             /** @description El email ya está verificado. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reset_password_api_comensales_recuperacion_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El link no se puede usar, o la contraseña no cumple los requisitos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    request_recovery_api_comensales_recuperacion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El email no tiene un formato válido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Demasiadas solicitudes para ese email. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No se pudo enviar el correo. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    check_recovery_link_api_comensales_recuperacion_validacion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El link ya se usó, venció o no existe. */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

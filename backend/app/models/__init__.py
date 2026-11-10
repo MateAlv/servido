@@ -7,6 +7,7 @@ from app.models.email_verification import EmailVerification
 from app.models.opening_shift import OpeningShift
 from app.models.order import Order
 from app.models.order_item import OrderItem
+from app.models.password_reset import PasswordReset, PasswordResetRequest
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.models.review import Review
@@ -23,6 +24,8 @@ __all__ = [
     "OpeningShift",
     "Order",
     "OrderItem",
+    "PasswordReset",
+    "PasswordResetRequest",
     "Reservation",
     "Restaurant",
     "Review",

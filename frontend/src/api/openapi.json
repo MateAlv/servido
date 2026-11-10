@@ -1721,6 +1721,150 @@
         ]
       }
     },
+    "/api/comensales/recuperacion": {
+      "put": {
+        "tags": [
+          "account recovery"
+        ],
+        "summary": "Reset Password",
+        "description": "Sets the new password with the token of the link. It never signs in (S5).",
+        "operationId": "reset_password_api_comensales_recuperacion_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El link no se puede usar, o la contrase\u00f1a no cumple los requisitos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "account recovery"
+        ],
+        "summary": "Request Recovery",
+        "description": "Mails a recovery link if the email has an account. The answer is the same either way.",
+        "operationId": "request_recovery_api_comensales_recuperacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El email no tiene un formato v\u00e1lido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Demasiadas solicitudes para ese email.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "No se pudo enviar el correo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comensales/recuperacion/validacion": {
+      "post": {
+        "tags": [
+          "account recovery"
+        ],
+        "summary": "Check Recovery Link",
+        "description": "Checks the link before showing the form. It does not use the link up.",
+        "operationId": "check_recovery_link_api_comensales_recuperacion_validacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El link ya se us\u00f3, venci\u00f3 o no existe.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurants/{restaurant_id}/availability": {
       "get": {
         "tags": [
@@ -4517,6 +4661,27 @@
         ],
         "title": "OrderResponse"
       },
+      "PasswordResetRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Token"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "PasswordResetRequest"
+      },
       "PendingReview": {
         "properties": {
           "reservation_id": {
@@ -5082,6 +5247,37 @@
           "published_at"
         ],
         "title": "PublishedReviewResponse"
+      },
+      "RecoveryLinkRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "RecoveryLinkRequest",
+        "description": "The token of the mailed recovery link. Checked on its own, then with the new password."
+      },
+      "RecoveryRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "RecoveryRequest",
+        "description": "The email of the account whose access is lost (US-31)."
       },
       "RegistrationRequest": {
         "properties": {
