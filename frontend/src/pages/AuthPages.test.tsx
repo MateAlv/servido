@@ -137,6 +137,46 @@ describe('auth pages', () => {
     ).toBeInTheDocument()
   })
 
+  it('US-44 S1 asks the restaurant to check the verification mail', async () => {
+    post.mockResolvedValue({
+      data: {
+        id: 'restaurant-1',
+        nombre: 'La Esquina de Palermo',
+        email: 'local@example.com',
+        cuit: '30712345671',
+        telefono: '11 5555-4444',
+        email_verificado: false,
+      },
+      error: undefined,
+      response: new Response(null, { status: 201 }),
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantRegisterPage />)
+
+    await user.type(screen.getByLabelText('Nombre del restaurante *'), 'La Esquina de Palermo')
+    await user.type(screen.getByLabelText('Email *'), 'local@example.com')
+    await user.type(screen.getByLabelText('CUIT *'), '30-71234567-1')
+    await user.type(screen.getByLabelText('Teléfono *'), '11 5555-4444')
+    await user.type(screen.getByLabelText('Contraseña *'), 'Servido2026')
+    await user.type(screen.getByLabelText('Confirmar contraseña *'), 'Servido2026')
+    await acceptTerms(user)
+    await user.click(screen.getByRole('button', { name: 'Crear cuenta del restaurante' }))
+
+    expect(post).toHaveBeenCalledWith('/api/restaurantes', {
+      body: {
+        nombre: 'La Esquina de Palermo',
+        email: 'local@example.com',
+        cuit: '30-71234567-1',
+        telefono: '11 5555-4444',
+        password: 'Servido2026',
+        terms_accepted: true,
+      },
+    })
+    expect(
+      await screen.findByText(/Te mandamos un mail para verificar la cuenta/),
+    ).toBeInTheDocument()
+  })
+
   it('US-58 S1 offers Google sign-up to diners', async () => {
     renderWithProviders(<RegisterPage />)
 

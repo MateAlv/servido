@@ -90,10 +90,11 @@ El inicio cambia según quién entra: visitante (presentación y una tarjeta por
 | `GoogleButton` | El botón oficial de Google, que dibuja el script de Google con su propio estilo (las reglas de marca de Google no permiten rehacerlo) y devuelve la credencial. Lo usan los dos botones de abajo y `/suma-tu-local` | 52, 58, 28, 2 |
 | `GoogleSignInButton` | "Iniciar sesión con Google" para el rol elegido: manda la credencial a la API, abre la sesión o muestra el error. Si el email no tiene cuenta de ese rol, ofrece crearla con esa misma cuenta de Google: al comensal ahí mismo, y al restaurante lo lleva a `/suma-tu-local` para completar sus datos. Va en `/ingresar` | 52, 58, 28 |
 | `GoogleSignUpButton` | "Registrarse con Google": crea la cuenta del comensal ya verificada y abre la sesión; si Google no dio el nombre, lo pide. Va en `/registrarme` | 58 |
+| `UnverifiedNotice` | Aviso de email sin verificar, con "Reenviar mail de verificación". Sirve para el comensal y para el restaurante: el reenvío va al endpoint del rol de la cuenta. Va en el inicio del comensal, en el panel del restaurante y en el pedido | 51, 44 |
 
 `registerPathFor(role)` devuelve adónde lleva "Registrarme" para cada tipo de cuenta (`/registrarme` o `/suma-tu-local`).
 
-La recuperación de la cuenta del comensal no agrega componentes: `/recuperar` pide el email con `TextField` y `Button`, y `/restablecer` (el destino del link del mail) pide la nueva contraseña con dos `PasswordField` y `Button`, dentro de la misma `Card` que las otras páginas de acceso.
+La recuperación de la cuenta no agrega componentes: `/recuperar` (comensal) y `/restaurante/recuperar` (restaurante) piden el email con `TextField` y `Button`; `/restablecer` y `/restaurante/restablecer` (el destino del link del mail) piden la nueva contraseña con dos `PasswordField` y `Button`, dentro de la misma `Card` que las otras páginas de acceso. La verificación del email tampoco: `/verificar-email` y `/restaurante/verificar-email` son la misma página con el rol de la cuenta.
 
 ### Reseñas (`review/`)
 

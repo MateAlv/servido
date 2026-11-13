@@ -10,8 +10,11 @@ import styles from './AuthPage.module.css'
 const INVALID_LINK = 'Ese link no es válido. Pedí uno nuevo.'
 const PASSWORD_HINT = 'Entre 8 y 128 caracteres, con al menos una letra y un número.'
 
-/** Opened from the mailed link (US-31): sets a new password with the token of the link. */
-export function ResetPasswordPage() {
+type Role = 'diner' | 'restaurant'
+
+/** Opened from the mailed link (US-31, US-46): sets a new password with the token of the link. */
+export function ResetPasswordPage({ role = 'diner' }: { role?: Role }) {
+  const restaurant = role === 'restaurant'
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const [password, setPassword] = useState('')
@@ -23,8 +26,8 @@ export function ResetPasswordPage() {
 
   // A query, not an effect: React runs effects twice in development.
   const link = useQuery({
-    queryKey: ['password-recovery-link', token],
-    queryFn: () => checkRecoveryLink(token),
+    queryKey: ['password-recovery-link', role, token],
+    queryFn: () => checkRecoveryLink(token, role),
     enabled: token !== '',
     retry: false,
     staleTime: Infinity,
@@ -39,7 +42,7 @@ export function ResetPasswordPage() {
     }
     setLoading(true)
     try {
-      setChanged(await resetPassword(token, password))
+      setChanged(await resetPassword(token, password, role))
     } catch (requestError) {
       setError(getRequestErrorMessage(requestError, INVALID_LINK))
     } finally {
@@ -47,11 +50,16 @@ export function ResetPasswordPage() {
     }
   }
 
+  const signInPath = restaurant ? '/ingresar?rol=restaurante' : '/ingresar'
+  const recoverPath = restaurant ? '/restaurante/recuperar' : '/recuperar'
+
   return (
     <main className={styles.page}>
       <Card className={styles.card}>
         <div className={styles.head}>
-          <p className={styles.eyebrow}>Cuenta de comensal</p>
+          <p className={styles.eyebrow}>
+            {restaurant ? 'Cuenta de restaurante' : 'Cuenta de comensal'}
+          </p>
           <h1 className={styles.title}>Elegí tu nueva contraseña</h1>
         </div>
         {changed && (
@@ -60,7 +68,7 @@ export function ResetPasswordPage() {
               {changed}
             </p>
             <p className={styles.footer}>
-              <Link to="/ingresar">Ingresar con mi nueva contraseña</Link>
+              <Link to={signInPath}>Ingresar con mi nueva contraseña</Link>
             </p>
           </>
         )}
@@ -106,12 +114,12 @@ export function ResetPasswordPage() {
               {link.error?.message ?? INVALID_LINK}
             </p>
             <p className={styles.footer}>
-              <Link to="/recuperar">Pedir un link nuevo</Link>
+              <Link to={recoverPath}>Pedir un link nuevo</Link>
             </p>
           </>
         )}
         <p className={styles.footer}>
-          <Link to="/ingresar">Volver a ingresar</Link>
+          <Link to={signInPath}>Volver a ingresar</Link>
         </p>
       </Card>
     </main>

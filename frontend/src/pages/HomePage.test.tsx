@@ -45,9 +45,17 @@ function upcomingReservation(id: string, order: Record<string, unknown>) {
   }
 }
 
-function signedInAs(rol: 'diner' | 'restaurant', nombre: string) {
+function signedInAs(rol: 'diner' | 'restaurant', nombre: string, emailVerificado = true) {
   sessionStorage.setItem('servido-access-token', `token-${rol}`)
-  answerMe({ data: { rol, id: '1c9d2e4f-3a5b-4c6d-8e7f-9a0b1c2d3e4f', nombre, email: 'a@b.com' } })
+  answerMe({
+    data: {
+      rol,
+      id: '1c9d2e4f-3a5b-4c6d-8e7f-9a0b1c2d3e4f',
+      nombre,
+      email: 'a@b.com',
+      email_verificado: emailVerificado,
+    },
+  })
 }
 
 afterEach(() => {
@@ -163,6 +171,19 @@ describe('HomePage', () => {
     expect(screen.getByRole('heading', { name: 'Platos y menú' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Reservas' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Soy restaurante' })).not.toBeInTheDocument()
+  })
+
+  it('US-44 S3 tells an unverified restaurant that it is still hidden', async () => {
+    signedInAs('restaurant', 'La Esquina', false)
+    renderWithProviders(<HomePage />)
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Hola, La Esquina' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Verificación de email' })).toBeInTheDocument()
+    expect(screen.getByText(/para publicar tu restaurante/)).toBeInTheDocument()
+    expect(screen.getByText('Pendiente de verificación')).toBeInTheDocument()
+    expect(screen.getByText(/Verificá tu email para que los comensales/)).toBeInTheDocument()
   })
 
   it('US-18 edge the restaurant panel links to its cancellations', async () => {

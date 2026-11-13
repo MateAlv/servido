@@ -12,6 +12,8 @@ from app.api import (
     public_restaurant,
     reservation,
     restaurant,
+    restaurant_recovery,
+    restaurant_verification,
     review,
 )
 
@@ -23,6 +25,8 @@ api_router.include_router(dish.router)
 api_router.include_router(account.router)
 api_router.include_router(email_verification.router)
 api_router.include_router(account_recovery.router)
+api_router.include_router(restaurant_verification.router)
+api_router.include_router(restaurant_recovery.router)
 api_router.include_router(reservation.router)
 api_router.include_router(order.router)
 api_router.include_router(review.router)

@@ -90,7 +90,7 @@ class AccountResponse(BaseModel):
     id: UUID
     nombre: str | None
     email: str
-    # Restaurants are not verified by mail (spec 019 covers diners only).
+    # Restaurants verify their email too (spec 026, US-44).
     email_verificado: bool = True
 
 

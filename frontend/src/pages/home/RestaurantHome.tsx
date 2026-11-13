@@ -9,6 +9,7 @@ import {
 } from '../../api/restaurantConfiguration'
 import { fetchRestaurantReviews } from '../../api/reviews'
 import { sessionHeaders, type Account } from '../../api/session'
+import { UnverifiedNotice } from '../../components/access'
 import {
   Button,
   Card,
@@ -22,6 +23,7 @@ import {
   Reveal,
   StatusPill,
 } from '../../components/ui'
+import { cx } from '../../lib/cx'
 import { formatRating, formatReviewCount } from '../../lib/rating'
 import styles from './RestaurantHome.module.css'
 
@@ -83,8 +85,10 @@ export function RestaurantHome({ account }: { account: Account }) {
     .reduce((total, group) => total + group.quantity, 0)
   const totalTables = tables.reduce((total, group) => total + group.quantity, 0)
   const configuredProfile = Boolean(profile?.nombre && profile.latitud !== null)
-  // The same rule as GET /api/restaurants (spec 003, D4): location, an active shift and tables.
-  const takesReservations = configuredProfile && activeHours.length > 0 && availableTables > 0
+  // The same rule as GET /api/restaurants (spec 003, D4, spec 026): verified account,
+  // location, an active shift and tables.
+  const takesReservations =
+    account.email_verificado && configuredProfile && activeHours.length > 0 && availableTables > 0
 
   return (
     <main className={styles.page}>
@@ -107,13 +111,16 @@ export function RestaurantHome({ account }: { account: Account }) {
           No pudimos cargar todo el estado del local. {dashboardError}
         </p>
       )}
+      <UnverifiedNotice account={account} />
 
       <div className={styles.top}>
         <Reveal delay={150}>
           <Card className={styles.account}>
             <div className={styles.cardHead}>
               <h2 className={styles.cardTitle}>Tu cuenta</h2>
-              <StatusPill tone="ok">Activa</StatusPill>
+              <StatusPill tone={account.email_verificado ? 'ok' : 'warn'}>
+                {account.email_verificado ? 'Activa' : 'Pendiente de verificación'}
+              </StatusPill>
             </div>
             <dl className={styles.data}>
               <div>
@@ -125,8 +132,15 @@ export function RestaurantHome({ account }: { account: Account }) {
                 <dd>{account.email}</dd>
               </div>
             </dl>
-            <p className={styles.check}>
-              <IconCheck /> Registro completo
+            <p className={cx(styles.check, !account.email_verificado && styles.checkWarn)}>
+              {account.email_verificado ? (
+                <IconCheck />
+              ) : (
+                <span className={styles.glyph} aria-hidden="true">
+                  ▲
+                </span>
+              )}{' '}
+              {account.email_verificado ? 'Registro completo' : 'Falta verificar el email'}
             </p>
           </Card>
         </Reveal>
@@ -268,9 +282,11 @@ export function RestaurantHome({ account }: { account: Account }) {
               }
             >
               <p>
-                {takesReservations
-                  ? 'Los comensales ya pueden reservar en tu local.'
-                  : 'Completá tus datos con la dirección, tus horarios y tus mesas para recibir reservas.'}
+                {!account.email_verificado
+                  ? 'Verificá tu email para que los comensales puedan encontrar tu local.'
+                  : takesReservations
+                    ? 'Los comensales ya pueden reservar en tu local.'
+                    : 'Completá tus datos con la dirección, tus horarios y tus mesas para recibir reservas.'}
               </p>
             </DashboardCard>
           </Reveal>

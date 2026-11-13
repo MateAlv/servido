@@ -8,8 +8,11 @@ import styles from './AuthPage.module.css'
 
 const FAILED = 'No pudimos enviar el correo. Probá de nuevo.'
 
-/** US-31: asks for the email and requests a recovery link. */
-export function RecoverAccountPage() {
+type Role = 'diner' | 'restaurant'
+
+/** US-31 (diner) and US-46 (restaurant): asks for the email and requests a recovery link. */
+export function RecoverAccountPage({ role = 'diner' }: { role?: Role }) {
+  const restaurant = role === 'restaurant'
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState('')
   const [error, setError] = useState('')
@@ -20,7 +23,7 @@ export function RecoverAccountPage() {
     setError('')
     setLoading(true)
     try {
-      setSent(await requestRecovery(email))
+      setSent(await requestRecovery(email, role))
     } catch (requestError) {
       setError(getRequestErrorMessage(requestError, FAILED))
     } finally {
@@ -32,11 +35,16 @@ export function RecoverAccountPage() {
     <main className={styles.page}>
       <Card className={styles.card}>
         <div className={styles.head}>
-          <p className={styles.eyebrow}>Cuenta de comensal</p>
-          <h1 className={styles.title}>Recuperá tu cuenta</h1>
+          <p className={styles.eyebrow}>
+            {restaurant ? 'Cuenta de restaurante' : 'Cuenta de comensal'}
+          </p>
+          <h1 className={styles.title}>
+            {restaurant ? 'Recuperá la cuenta de tu restaurante' : 'Recuperá tu cuenta'}
+          </h1>
           <p className={styles.lead}>
-            Escribí el email con el que te registraste y te mandamos un link para elegir una
-            contraseña nueva.
+            {restaurant
+              ? 'Escribí el email del responsable del restaurante y te mandamos un link para elegir una contraseña nueva.'
+              : 'Escribí el email con el que te registraste y te mandamos un link para elegir una contraseña nueva.'}
           </p>
         </div>
         {sent ? (
@@ -64,7 +72,7 @@ export function RecoverAccountPage() {
           </form>
         )}
         <p className={styles.footer}>
-          <Link to="/ingresar">Volver a ingresar</Link>
+          <Link to={restaurant ? '/ingresar?rol=restaurante' : '/ingresar'}>Volver a ingresar</Link>
         </p>
       </Card>
     </main>

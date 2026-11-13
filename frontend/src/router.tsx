@@ -25,6 +25,27 @@ export const router = createBrowserRouter([
       { path: '/ingresar', element: <LoginPage /> },
       { path: '/registrarme', element: <RegisterPage /> },
       { path: '/suma-tu-local', element: <RestaurantRegisterPage /> },
+      {
+        path: '/restaurante/verificar-email',
+        lazy: async () => {
+          const { VerifyEmailPage } = await import('./pages/VerifyEmailPage')
+          return { Component: () => <VerifyEmailPage role="restaurant" /> }
+        },
+      },
+      {
+        path: '/restaurante/recuperar',
+        lazy: async () => {
+          const { RecoverAccountPage } = await import('./pages/RecoverAccountPage')
+          return { Component: () => <RecoverAccountPage role="restaurant" /> }
+        },
+      },
+      {
+        path: '/restaurante/restablecer',
+        lazy: async () => {
+          const { ResetPasswordPage } = await import('./pages/ResetPasswordPage')
+          return { Component: () => <ResetPasswordPage role="restaurant" /> }
+        },
+      },
       { path: '/restaurante/perfil', element: <RestaurantProfilePage /> },
       { path: '/restaurante/horarios', element: <OpeningHoursPage /> },
       { path: '/restaurante/mesas', element: <TableInventoryPage /> },

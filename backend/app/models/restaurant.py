@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
-from sqlalchemy import ARRAY, CHAR, CheckConstraint, DateTime, Numeric, String, Text
+from sqlalchemy import ARRAY, CHAR, Boolean, CheckConstraint, DateTime, Numeric, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -57,6 +57,18 @@ class Restaurant(Base):
     longitud: Mapped[Decimal | None] = mapped_column(Numeric(9, 6), nullable=True)
     terms_version: Mapped[str | None] = mapped_column(String(20), nullable=True)
     terms_accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # Spec 026: NULL until the Responsable opens the mailed link or signs up with Google.
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # Spec 026, like the diner (spec 013): false for an account created with Google.
+    has_password: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=text("true")
+    )
+    # Spec 026: tokens issued before this moment are refused (FR-012).
+    password_changed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
