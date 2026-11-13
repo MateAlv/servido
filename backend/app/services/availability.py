@@ -275,9 +275,10 @@ def groups_at(
 
 
 def bookable_condition():
-    """Where clause for restaurants a diner can book: coordinates, an active shift and an
-    available table group (decision D4)."""
+    """Where clause for restaurants a diner can book: a verified account (spec 026, FR-005),
+    coordinates, an active shift and an available table group (decision D4)."""
     return and_(
+        Restaurant.email_verified_at.is_not(None),
         Restaurant.latitud.is_not(None),
         exists().where(
             OpeningShift.restaurant_id == Restaurant.id_restaurante,

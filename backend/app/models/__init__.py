@@ -10,6 +10,7 @@ from app.models.order_item import OrderItem
 from app.models.password_reset import PasswordReset, PasswordResetRequest
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
+from app.models.restaurant_access import RestaurantEmailVerification, RestaurantPasswordReset
 from app.models.review import Review
 from app.models.table_inventory import TableInventoryGroup
 
@@ -28,6 +29,8 @@ __all__ = [
     "PasswordResetRequest",
     "Reservation",
     "Restaurant",
+    "RestaurantEmailVerification",
+    "RestaurantPasswordReset",
     "Review",
     "TableInventoryGroup",
 ]

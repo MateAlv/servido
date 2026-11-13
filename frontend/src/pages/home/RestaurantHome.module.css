@@ -102,6 +102,14 @@
   font-weight: 800;
 }
 
+.checkWarn {
+  color: var(--color-warn);
+}
+
+.glyph {
+  font-size: 0.85em;
+}
+
 .sectionTitle {
   margin: 0 0 14px;
   font: 800 28px / 1.1 var(--font-display);

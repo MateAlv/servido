@@ -48,20 +48,25 @@ describe('LoginPage', () => {
     expect(await screen.findByRole('button', { name: 'Acceder con Google' })).toBeInTheDocument()
   })
 
-  it('US-31 S1 offers the recovery to diners', async () => {
-    const user = userEvent.setup()
+  it('US-31 S1 offers the recovery to diners', () => {
     renderWithProviders(<LoginPage />)
 
     expect(screen.getByRole('link', { name: '¿Olvidaste tu contraseña?' })).toHaveAttribute(
       'href',
       '/recuperar',
     )
+  })
+
+  it('US-46 S1 offers the recovery to restaurants', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<LoginPage />)
 
     await user.click(screen.getByRole('radio', { name: 'Restaurante' }))
 
-    expect(
-      screen.queryByRole('link', { name: '¿Olvidaste tu contraseña?' }),
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '¿Olvidaste tu contraseña?' })).toHaveAttribute(
+      'href',
+      '/restaurante/recuperar',
+    )
   })
 
   it('keeps one login form when switching account types repeatedly', async () => {

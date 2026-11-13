@@ -9,6 +9,7 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import TokenClaimsDep
+from app.api.restaurant import restaurant_from_claims
 from app.db import SessionDep
 from app.models.dish import Dish
 from app.schemas.dish import (
@@ -19,29 +20,19 @@ from app.schemas.dish import (
     DishResponse,
     DishWriteResponse,
 )
-from app.services.roles import RESTAURANT
 
 router = APIRouter(tags=["dishes"])
 DISH_UPLOADS_DIR = Path("uploads/dishes")
 
 
-def restaurant_id(claims: dict) -> UUID:
-    if claims.get("rol") != RESTAURANT:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo los restaurantes pueden administrar platos.",
-        )
-    try:
-        return UUID(claims["sub"])
-    except (KeyError, ValueError) as error:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Tu sesión no es válida o venció."
-        ) from error
+def restaurant_id(claims: dict, session: SessionDep) -> UUID:
+    """The signed-in restaurant, or 401/403. A token from before a password change is refused."""
+    return restaurant_from_claims(claims, session).id_restaurante
 
 
 @router.get("/restaurantes/me/platos", response_model=list[DishResponse])
 def list_dishes(claims: TokenClaimsDep, session: SessionDep) -> list[Dish]:
-    restaurant = restaurant_id(claims)
+    restaurant = restaurant_id(claims, session)
     return list(
         session.scalars(
             select(Dish)
@@ -67,7 +58,7 @@ def create_dish(
     tiempo_preparacion_minutos: int | None = Form(None),
     foto: UploadFile | None = File(None),  # noqa: B008
 ) -> Dish:
-    id_restaurante = restaurant_id(claims)
+    id_restaurante = restaurant_id(claims, session)
     try:
         payload = DishCreateRequest(
             nombre=nombre,
@@ -132,7 +123,7 @@ def store_photo(photo: UploadFile) -> Path:
 
 
 def owned_dish(session: SessionDep, claims: dict, dish_id: UUID, *, include_deleted=False) -> Dish:
-    owner = restaurant_id(claims)
+    owner = restaurant_id(claims, session)
     dish = session.get(Dish, dish_id)
     if dish is None:
         raise HTTPException(status_code=404, detail="No encontramos ese plato.")

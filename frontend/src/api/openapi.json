@@ -1865,6 +1865,239 @@
         }
       }
     },
+    "/api/restaurantes/verificacion": {
+      "post": {
+        "tags": [
+          "restaurant verification"
+        ],
+        "summary": "Verify Restaurant Email",
+        "description": "Verifies a restaurant's email with the token of the mailed link (FR-002).",
+        "operationId": "verify_restaurant_email_api_restaurantes_verificacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El enlace no es v\u00e1lido o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurantes/verificacion/reenvio": {
+      "post": {
+        "tags": [
+          "restaurant verification"
+        ],
+        "summary": "Resend Restaurant Verification",
+        "description": "Mails the signed-in restaurant a new link; the previous one stops working (FR-004).",
+        "operationId": "resend_restaurant_verification_api_restaurantes_verificacion_reenvio_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesi\u00f3n inv\u00e1lida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "La sesi\u00f3n no es de un restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El email ya est\u00e1 verificado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/restaurantes/recuperacion": {
+      "put": {
+        "tags": [
+          "restaurant recovery"
+        ],
+        "summary": "Reset Restaurant Password",
+        "description": "Sets the new password with the token of the link. It never signs in (S3).",
+        "operationId": "reset_restaurant_password_api_restaurantes_recuperacion_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El link no se puede usar, o la contrase\u00f1a no cumple los requisitos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "restaurant recovery"
+        ],
+        "summary": "Request Restaurant Recovery",
+        "description": "Mails a recovery link if the email has an account. The answer is the same either way.",
+        "operationId": "request_restaurant_recovery_api_restaurantes_recuperacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El email no tiene un formato v\u00e1lido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Un minuto entre pedidos, o demasiadas solicitudes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurantes/recuperacion/validacion": {
+      "post": {
+        "tags": [
+          "restaurant recovery"
+        ],
+        "summary": "Check Restaurant Recovery Link",
+        "description": "Checks the link before showing the form. It does not use the link up.",
+        "operationId": "check_restaurant_recovery_link_api_restaurantes_recuperacion_validacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El link ya se us\u00f3, venci\u00f3 o no existe.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurants/{restaurant_id}/availability": {
       "get": {
         "tags": [
@@ -6091,6 +6324,11 @@
               }
             ],
             "title": "Foto Url"
+          },
+          "email_verificado": {
+            "type": "boolean",
+            "title": "Email Verificado",
+            "readOnly": true
           }
         },
         "type": "object",
@@ -6099,7 +6337,8 @@
           "nombre",
           "email",
           "cuit",
-          "telefono"
+          "telefono",
+          "email_verificado"
         ],
         "title": "RestaurantResponse"
       },

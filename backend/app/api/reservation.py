@@ -34,7 +34,8 @@ PartySize = Annotated[int, Query(ge=1, le=MAX_TABLE_CAPACITY)]
 
 def existing_restaurant(session: SessionDep, restaurant_id: UUID) -> Restaurant:
     restaurant = session.get(Restaurant, restaurant_id)
-    if restaurant is None:
+    # An unverified account is not shown to diners (spec 026, FR-005), not even by its id.
+    if restaurant is None or restaurant.email_verified_at is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=RESTAURANT_NOT_FOUND)
     return restaurant
 

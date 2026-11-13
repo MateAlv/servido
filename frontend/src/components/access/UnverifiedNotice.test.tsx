@@ -19,6 +19,14 @@ const diner: Account = {
   email_verificado: false,
 }
 
+const restaurant: Account = {
+  rol: 'restaurant',
+  id: 'restaurant-1',
+  nombre: 'La Esquina de Palermo',
+  email: 'local@example.com',
+  email_verificado: false,
+}
+
 describe('UnverifiedNotice', () => {
   beforeEach(() => {
     post.mockReset()
@@ -46,6 +54,32 @@ describe('UnverifiedNotice', () => {
 
   it('is not shown once the email is verified', () => {
     renderWithProviders(<UnverifiedNotice account={{ ...diner, email_verificado: true }} />)
+
+    expect(screen.queryByRole('button', { name: /Reenviar/ })).not.toBeInTheDocument()
+  })
+
+  it('US-44 S4 resends the verification mail of the restaurant', async () => {
+    post.mockResolvedValue({
+      data: { detail: 'Te enviamos un nuevo mail de verificación.' },
+      error: undefined,
+      response: new Response(null, { status: 202 }),
+    })
+    const user = userEvent.setup()
+    renderWithProviders(<UnverifiedNotice account={restaurant} />)
+
+    expect(screen.getByText(/para publicar tu restaurante/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Reenviar mail de verificación' }))
+
+    expect(post).toHaveBeenCalledWith('/api/restaurantes/verificacion/reenvio', {
+      headers: { Authorization: 'Bearer session-token' },
+    })
+    expect(
+      await screen.findByText('Te enviamos un nuevo mail de verificación.'),
+    ).toBeInTheDocument()
+  })
+
+  it('US-44 is not shown to a verified restaurant', () => {
+    renderWithProviders(<UnverifiedNotice account={{ ...restaurant, email_verificado: true }} />)
 
     expect(screen.queryByRole('button', { name: /Reenviar/ })).not.toBeInTheDocument()
   })

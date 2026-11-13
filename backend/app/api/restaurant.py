@@ -9,7 +9,8 @@ from sqlalchemy import delete, or_, select
 from sqlalchemy.exc import IntegrityError
 
 from app.api.auth import google_claims, restaurant_session
-from app.api.deps import TokenClaimsDep
+from app.api.deps import SESSION_EXPIRED_DETAIL, TokenClaimsDep, session_is_current
+from app.config import settings
 from app.db import SessionDep
 from app.models.diner import Diner
 from app.models.opening_shift import OpeningShift
@@ -58,6 +59,7 @@ from app.services.restaurant_orders import (
     restaurant_order,
     restaurant_orders,
 )
+from app.services.restaurant_verification import mark_verified, send_verification_mail
 from app.services.roles import RESTAURANT
 from app.services.table_inventory import ReservationConflictError, replace_inventory
 from app.services.terms import acceptance_for
@@ -109,7 +111,14 @@ def register_restaurant(payload: RestaurantRegistrationRequest, session: Session
         password_hash=hash_password(payload.password),
     )
     restaurant.terms_version, restaurant.terms_accepted_at = acceptance_for("restaurant")
-    return save_restaurant(session, restaurant)
+    # Local mode (`make up-local`): the demo doesn't need to open a mail, as with diners.
+    if settings.auto_verify_emails:
+        mark_verified(restaurant)
+    restaurant = save_restaurant(session, restaurant)
+    if not settings.auto_verify_emails:
+        # Spec 026, US-44 S1: the account is not visible to diners until this link is opened.
+        send_verification_mail(session, restaurant)
+    return restaurant
 
 
 @router.post(
@@ -133,6 +142,10 @@ def register_restaurant_with_google(
         telefono=payload.telefono,
         password_hash=hash_password(secrets.token_urlsafe(32)),
     )
+    # Spec 026: nobody knows this secret, so the account has no usable password, and Google
+    # already proved the email, so it needs no verification mail.
+    restaurant.has_password = False
+    mark_verified(restaurant)
     restaurant.terms_version, restaurant.terms_accepted_at = acceptance_for("restaurant")
     return restaurant_session(save_restaurant(session, restaurant))
 
@@ -147,10 +160,8 @@ def restaurant_from_claims(claims: dict[str, object], session: SessionDep) -> Re
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Sesión inválida."
         ) from error
     restaurant = session.get(Restaurant, restaurant_id)
-    if restaurant is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Restaurante no encontrado."
-        )
+    if restaurant is None or not session_is_current(claims, restaurant):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=SESSION_EXPIRED_DETAIL)
     return restaurant
 
 

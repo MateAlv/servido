@@ -1,8 +1,16 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    ValidationInfo,
+    computed_field,
+    field_validator,
+    model_validator,
+)
 
 from app.services.auth import normalize_email, validate_email, validate_password
 from app.services.restaurant import has_cuit_length, is_valid_cuit, is_valid_phone, normalize_cuit
@@ -81,8 +89,14 @@ class RestaurantResponse(BaseModel):
     cuit: str
     telefono: str
     foto_url: str | None = None
+    email_verified_at: datetime | None = Field(default=None, exclude=True)
 
     model_config = {"from_attributes": True}
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def email_verificado(self) -> bool:
+        return self.email_verified_at is not None
 
 
 class RestaurantLoginResponse(BaseModel):

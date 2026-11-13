@@ -3,6 +3,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from html import escape
+from typing import Protocol
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
@@ -27,6 +28,13 @@ class LinkState(Enum):
     USED = "used"
     EXPIRED = "expired"
     INVALID = "invalid"
+
+
+class TokenLink(Protocol):
+    """What reading a link's state needs; the diner's and the restaurant's links both have it."""
+
+    used_at: datetime | None
+    expires_at: datetime
 
 
 def hash_token(token: str) -> str:
@@ -75,7 +83,7 @@ def find_link(session: Session, token: str) -> PasswordReset | None:
     )
 
 
-def link_state(reset: PasswordReset | None) -> LinkState:
+def link_state(reset: TokenLink | None) -> LinkState:
     """Whether a link can be used: unknown, already used, expired, or ready (FR-007, FR-008)."""
     if reset is None:
         return LinkState.INVALID

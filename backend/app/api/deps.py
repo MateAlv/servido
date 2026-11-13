@@ -8,6 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.config import settings
 from app.db import SessionDep
 from app.models.diner import Diner
+from app.models.restaurant import Restaurant
 from app.services.auth import password_session_version
 from app.services.roles import DINER
 
@@ -34,9 +35,9 @@ def get_token_claims(
 TokenClaimsDep = Annotated[dict[str, Any], Depends(get_token_claims)]
 
 
-def session_is_current(claims: dict[str, Any], diner: Diner) -> bool:
-    """A token from before the last password change is refused (spec 013, FR-011)."""
-    return claims.get("pwd") == password_session_version(diner.password_changed_at)
+def session_is_current(claims: dict[str, Any], account: Diner | Restaurant) -> bool:
+    """A token from before the last password change is refused (spec 013 FR-011, spec 026)."""
+    return claims.get("pwd") == password_session_version(account.password_changed_at)
 
 
 def require_diner(claims: TokenClaimsDep, session: SessionDep) -> UUID:
