@@ -2965,6 +2965,190 @@
         }
       }
     },
+    "/api/restaurant/reviews/{review_id}/reply": {
+      "post": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Reply To Review",
+        "operationId": "reply_to_review_api_restaurant_reviews__review_id__reply_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Review Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewReplyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La rese\u00f1a no existe o es de otro restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La rese\u00f1a ya tiene respuesta o no se ve en Opiniones.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Edit Reply",
+        "operationId": "edit_reply_api_restaurant_reviews__review_id__reply_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Review Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewReplyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La rese\u00f1a no existe, es de otro restaurante o no tiene respuesta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurante/bloqueos": {
       "get": {
         "tags": [
@@ -4857,6 +5041,16 @@
             "type": "string",
             "format": "date",
             "title": "Visit Date"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicReply"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -4865,10 +5059,36 @@
           "rating",
           "comment",
           "spend_per_person",
-          "visit_date"
+          "visit_date",
+          "reply"
         ],
         "title": "PublicOpinion",
         "description": "The latest review of a person, when it has a comment (spec 014, R14)."
+      },
+      "PublicReply": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "edited": {
+            "type": "boolean",
+            "title": "Edited"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "date",
+          "edited"
+        ],
+        "title": "PublicReply",
+        "description": "The restaurant's reply to an opinion (spec 025, US-42): the current text only (C3)."
       },
       "PublicRestaurant": {
         "properties": {
@@ -5313,6 +5533,19 @@
           "terms_accepted"
         ],
         "title": "RegistrationRequest"
+      },
+      "ReplyRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ReplyRequest"
       },
       "ReservationCancellationResponse": {
         "properties": {
@@ -6157,6 +6390,20 @@
           "counts_in_average": {
             "type": "boolean",
             "title": "Counts In Average"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReplyResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "can_reply": {
+            "type": "boolean",
+            "title": "Can Reply"
           }
         },
         "type": "object",
@@ -6169,7 +6416,9 @@
           "comment",
           "spend_per_person",
           "published_at",
-          "counts_in_average"
+          "counts_in_average",
+          "reply",
+          "can_reply"
         ],
         "title": "RestaurantReview"
       },
@@ -6251,6 +6500,38 @@
           "next_offset"
         ],
         "title": "RestaurantReviewsResponse"
+      },
+      "ReviewReplyResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "edited_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "created_at",
+          "edited_at"
+        ],
+        "title": "ReviewReplyResponse"
       },
       "ReviewRequest": {
         "properties": {
