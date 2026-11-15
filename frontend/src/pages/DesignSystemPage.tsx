@@ -23,21 +23,27 @@ import {
 import { ConfirmationStamp, Ticket, TicketDivider, Timeline } from '../components/reservation'
 import { OpinionCard, OpinionList } from '../components/review'
 import {
+  ActiveFilters,
+  FilterPanel,
   MapPin,
   matchesPriceFilter,
+  NO_FILTERS,
   priceTierFromAverageSpend,
   OccupancyMeter,
   PriceFilter,
   RestaurantMap,
   type OccupancyLevel,
   type PriceTier,
+  type SearchFilters,
 } from '../components/restaurant'
 import {
   Button,
   Card,
   Checkbox,
   Chip,
+  Drawer,
   IconArrowRight,
+  IconFilter,
   IconButton,
   IconClose,
   IconPlus,
@@ -66,6 +72,7 @@ const SECTIONS = [
   ['acciones', 'Acciones'],
   ['formularios', 'Formularios'],
   ['filtro-precio', 'Filtro de precio'],
+  ['filtros-busqueda', 'Filtros de búsqueda'],
   ['estados', 'Estados y carga'],
   ['pedido', 'Pedido'],
   ['reserva', 'Reserva'],
@@ -289,6 +296,60 @@ function PriceFilterDemo() {
         )}
       </div>
     </Demo>
+  )
+}
+
+function SearchFiltersDemo() {
+  const [filters, setFilters] = useState<SearchFilters>({
+    ...NO_FILTERS,
+    priceTiers: ['$$'],
+    minRating: 4,
+    restrictions: ['sin_tacc'],
+    partySize: 6,
+  })
+  const [open, setOpen] = useState(false)
+  // A new key starts the day and time controls over after clearing.
+  const [panelKey, setPanelKey] = useState(0)
+
+  return (
+    <>
+      <Demo
+        title="Filtros activos"
+        note="ActiveFilters: cada filtro aplicado es una etiqueta que lo quita, más «Quitar todos». Arriba del mapa y del listado (spec 027, F7)."
+        wide
+      >
+        <ActiveFilters filters={filters} onChange={setFilters} />
+      </Demo>
+      <Demo
+        title="Panel de filtros"
+        note="FilterPanel dentro de un Drawer: precio, calificación, restricciones, día y horario (hora o rango) y personas. Aplica cada cambio al instante."
+      >
+        <Button icon={<IconFilter />} variant="secondary" onClick={() => setOpen(true)}>
+          Filtros
+        </Button>
+        <Drawer
+          open={open}
+          onClose={() => setOpen(false)}
+          title="Filtros"
+          footer={
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setFilters(NO_FILTERS)
+                  setPanelKey((key) => key + 1)
+                }}
+              >
+                Limpiar filtros
+              </Button>
+              <Button onClick={() => setOpen(false)}>Ver resultados</Button>
+            </>
+          }
+        >
+          <FilterPanel key={panelKey} filters={filters} onChange={setFilters} />
+        </Drawer>
+      </Demo>
+    </>
   )
 }
 
@@ -649,6 +710,7 @@ function MapDemo() {
 function FeedbackDemo() {
   const toast = useToast()
   const [open, setOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   return (
     <>
       <Demo title="Avisos" note="useToast(): mensajes breves que se van solos.">
@@ -691,6 +753,22 @@ function FeedbackDemo() {
         >
           <p>Podés cancelar sin costo hasta 30 minutos antes de tu reserva.</p>
         </Modal>
+      </Demo>
+      <Demo
+        title="Drawer"
+        note="Panel lateral sobre el diálogo nativo: en el celular sube desde abajo y en pantallas anchas entra desde la derecha. Contenido con scroll y pie fijo. Con movimiento reducido solo aparece."
+      >
+        <Button size="sm" onClick={() => setDrawerOpen(true)}>
+          Abrir panel
+        </Button>
+        <Drawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          title="Panel"
+          footer={<Button onClick={() => setDrawerOpen(false)}>Listo</Button>}
+        >
+          <p>Cerralo con la cruz, con Escape o tocando afuera.</p>
+        </Drawer>
       </Demo>
     </>
   )
@@ -824,6 +902,14 @@ export function DesignSystemPage() {
         lead="Selección múltiple con actualización inmediata y limpieza exclusiva del precio (US-7)."
       >
         <PriceFilterDemo />
+      </Section>
+
+      <Section
+        id="filtros-busqueda"
+        title="Filtros de búsqueda"
+        lead="Todos los filtros del mapa en un panel, y los activos como etiquetas que se quitan (US-35, US-53, US-59, US-61)."
+      >
+        <SearchFiltersDemo />
       </Section>
 
       <Section

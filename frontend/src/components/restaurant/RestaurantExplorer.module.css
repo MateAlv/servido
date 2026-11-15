@@ -22,11 +22,50 @@
   min-width: 0;
 }
 
-.panel {
-  padding: 16px;
-  border: 2px solid var(--color-line);
+.toolbar {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+}
+
+.badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  margin-left: 2px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: var(--text-xs);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 2px dashed var(--color-line);
   border-radius: var(--radius-card);
-  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.empty p {
+  margin: 0;
 }
 
 .status {

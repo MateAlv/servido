@@ -1,3 +1,5 @@
+export { ActiveFilters } from './ActiveFilters'
+export { FilterPanel } from './FilterPanel'
 export { MapPin } from './MapPin'
 export { OccupancyMeter, type OccupancyLevel } from './OccupancyMeter'
 export { PriceFilter } from './PriceFilter'
@@ -9,3 +11,9 @@ export {
 } from './priceFilterUtils'
 export { RestaurantExplorer } from './RestaurantExplorer'
 export { RestaurantMap } from './RestaurantMap'
+export {
+  NO_FILTERS,
+  readSearchFilters,
+  reservationSearch,
+  type SearchFilters,
+} from './searchFilters'

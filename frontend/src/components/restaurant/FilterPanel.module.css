@@ -1,0 +1,110 @@
+.panel {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.section {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-5) 0 0;
+  border: 0;
+  border-top: 2px solid var(--color-line);
+}
+
+/* The legend of a fieldset doesn't take part in its grid: float it into the flow. */
+.legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--space-1);
+  padding: 0;
+  font-weight: 800;
+}
+
+.section > :not(.legend) {
+  clear: both;
+}
+
+.section > * {
+  max-width: 100%;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.star {
+  color: var(--color-star);
+}
+
+[aria-pressed='true'] > .star {
+  color: currentcolor;
+}
+
+.note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.select {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-field);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: 700 16px / 1.3 var(--font-body);
+  transition: border-color var(--duration-base) var(--ease-out);
+}
+
+.select:hover {
+  border-color: var(--color-text-muted);
+}
+
+.select:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-soft);
+}
+
+.wide {
+  width: 100%;
+}
+
+.range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.party {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}

@@ -35,6 +35,8 @@ type RestaurantMapProps = {
   selectedId?: string
   /** Router state for the "Ver detalle" link, so the detail can send the diner back here. */
   detailState?: unknown
+  /** Query string for the "Ver detalle" link, e.g. the filtered day and party (spec 027, F9). */
+  detailSearch?: string
 }
 
 function Recenter({ center }: { center: GeoPoint }) {
@@ -60,6 +62,7 @@ export function RestaurantMap({
   onSelect,
   selectedId,
   detailState,
+  detailSearch = '',
 }: RestaurantMapProps) {
   const selectedPoint = restaurants.find((restaurant) => restaurant.id === selectedId)?.location
   const center = useMemo(() => (isValidPoint(diner) ? diner : DEFAULT_CENTER), [diner])
@@ -184,7 +187,7 @@ export function RestaurantMap({
                   <Button
                     size="sm"
                     fullWidth
-                    to={`/restaurantes/${restaurant.id}`}
+                    to={`/restaurantes/${restaurant.id}${detailSearch}`}
                     linkState={detailState}
                   >
                     Ver detalle
