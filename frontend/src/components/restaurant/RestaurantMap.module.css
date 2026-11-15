@@ -176,6 +176,32 @@
   }
 }
 
+/* On a phone the card has to fit in a short map with «Ver detalle» in view: no cover photo,
+   tighter spacing, and the price kept clear of the close button. */
+@media (max-width: 480px) {
+  .map {
+    min-height: 380px;
+  }
+
+  .cover {
+    display: none;
+  }
+
+  .cardBody {
+    gap: 8px;
+    padding: 12px 14px 14px;
+  }
+
+  .cardHead {
+    padding-right: 34px;
+  }
+
+  .facts {
+    gap: 4px 12px;
+    padding-top: 8px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .map :global(.leaflet-marker-icon) {
     transition: none !important;
