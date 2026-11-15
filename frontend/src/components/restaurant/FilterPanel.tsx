@@ -101,7 +101,7 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
   const tomorrow = addDays(today, 1)
   const now = currentTimeInBuenosAires()
   const draft = timeDraft
-  const { error: timeError } = timeFromDraft(draft)
+  const { time: draftTime, error: timeError } = timeFromDraft(draft)
   const pending = timeError ? undefined : pendingMessage(draft, filters.time)
   const hourId = useId()
   // Buttons that disappear when used hand the focus to what takes their place.
@@ -122,15 +122,16 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
     // An hour of today that already started can't be chosen (spec 027, «Hoy»).
     const fixed = next.day === today && next.hour && next.hour <= now ? { ...next, hour: '' } : next
     onTimeDraftChange(fixed)
-    // An incomplete day and time removes the filter. An invalid one (an inverted range, a day
-    // out of the window) is not applied either, but the last valid filter stays until the
-    // diner fixes it (spec 027, «Rango invertido»).
-    const { time, error } = timeFromDraft(fixed)
-    if (!error && !sameTime(time, filters.time)) onChange({ ...filters, time })
+    // Only a complete, valid day and time is applied. While the controls are incomplete (a
+    // time typed digit by digit passes through empty) or invalid (an inverted range, a day out
+    // of the window), the last valid filter stays (spec 027, «Rango invertido»).
+    const { time } = timeFromDraft(fixed)
+    if (time && !sameTime(time, filters.time)) onChange({ ...filters, time })
   }
 
   function clearTime() {
-    changeDraft(timeDraftFrom(null))
+    onTimeDraftChange(timeDraftFrom(null))
+    if (filters.time) onChange({ ...filters, time: null })
     todayChip.current?.focus()
   }
 
@@ -284,7 +285,7 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
           <p className={styles.pending} role="status">
             {pending}
           </p>
-        ) : timeError && filters.time ? (
+        ) : filters.time && !sameTime(draftTime, filters.time) ? (
           <p className={styles.note}>
             Mientras tanto sigue aplicado {timeFilterLabel(filters.time)}.
           </p>

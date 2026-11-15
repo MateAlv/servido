@@ -8,13 +8,14 @@
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-3) var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .tag {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -31,6 +32,13 @@
   transition:
     background-color var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out);
+}
+
+/* The chip looks 36 px tall but takes taps over 44 px. */
+.tag::before {
+  position: absolute;
+  inset: -6px 0;
+  content: '';
 }
 
 .tag:hover {

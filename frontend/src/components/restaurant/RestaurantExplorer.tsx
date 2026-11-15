@@ -200,7 +200,14 @@ export function RestaurantExplorer() {
         {dayNotice && (
           <div className={cx(styles.notice, styles.dismissible)} role="status">
             <p>{DROPPED_DAY_NOTICES[dayNotice]}</p>
-            <IconButton label="Cerrar aviso" variant="ghost" onClick={() => setDayNotice(null)}>
+            <IconButton
+              label="Cerrar aviso"
+              variant="ghost"
+              onClick={() => {
+                setDayNotice(null)
+                filtersButton.current?.focus()
+              }}
+            >
               <IconClose />
             </IconButton>
           </div>

@@ -627,6 +627,26 @@ describe('Filters, focus and pending choices (spec 027, QA)', () => {
     expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '20:00', '23:00')
   })
 
+  it('US-59 edge keeps the last valid time while a field is retyped', async () => {
+    const user = userEvent.setup()
+    renderMap(`/mapa?dia=${tomorrow}&desde=20:00&hasta=22:00`)
+    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
+    const panel = await openFilters(user)
+
+    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '' } })
+
+    expect(new URLSearchParams(address()).get('hasta')).toBe('22:00')
+    expect(
+      within(panel).getByText(
+        `Mientras tanto sigue aplicado ${shortDayLabel(tomorrow)} · 20:00–22:00.`,
+      ),
+    ).toBeInTheDocument()
+    expect(listed()).toEqual(['Huerta Real'])
+
+    await user.click(within(panel).getByRole('button', { name: 'Quitar día y horario' }))
+    expect(new URLSearchParams(address()).get('dia')).toBeNull()
+  })
+
   it('US-59 S3 switching a range that starts off the half hour to an hour rounds it up', async () => {
     const user = userEvent.setup()
     renderMap(`/mapa?dia=${tomorrow}&desde=20:15&hasta=22:00`)
@@ -693,6 +713,7 @@ describe('Filters, focus and pending choices (spec 027, QA)', () => {
     await user.click(await screen.findByRole('button', { name: 'Cerrar aviso' }))
 
     expect(screen.queryByText(/El día del enlace ya pasó/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Filtros/ })).toHaveFocus()
   })
 
   it('US-61 edge explains the maximum of 20 people', async () => {
