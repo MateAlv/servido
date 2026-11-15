@@ -1,6 +1,6 @@
 # Feature Specification: Filtrar Restaurantes (Rating, Restricciones, Horario y Personas)
 
-**Created**: 2026-11-12 (versión del Drive) · actualizada el 2026-11-15 con las decisiones F1–F10
+**Created**: 2026-11-12 (versión del Drive) · actualizada el 2026-11-15 con las decisiones F1–F10 · actualizada el 2026-11-15 (F4: el día solo filtra, pedido del equipo)
 
 **Input**: Backlog Servido! — US-35, US-53, US-59, US-61
 
@@ -62,6 +62,7 @@ Como **Comensal**, quiero filtrar los restaurantes según los horarios disponibl
 2. **Dado** que veo los restaurantes, **Cuando** elijo un día y un rango horario (desde y hasta), **Entonces** solo quedan los restaurantes en los que ese día se puede empezar una reserva en algún horario dentro del rango, incluidos sus extremos *(F4)*.
 3. **Dado** que hay un día y un horario aplicados, **Cuando** cambio el día, la hora o el rango, **Entonces** el resultado se actualiza.
 4. **Dado** que hay un día y un horario aplicados, **Cuando** quito el filtro, **Entonces** vuelvo a ver todos los restaurantes que los demás filtros permiten.
+5. **Dado** que veo los restaurantes, **Cuando** elijo solo un día, **Entonces** solo quedan los restaurantes en los que ese día se puede empezar alguna reserva *(F4)*.
 
 ---
 
@@ -86,10 +87,10 @@ Como **Comensal**, quiero filtrar según la cantidad de personas que van conmigo
 Estos escenarios valen para los cinco filtros (los cuatro de esta spec y el de precio). Sus tests llevan el número de la US que prueba cada caso.
 
 1. **Dado** que tengo filtros de distinto tipo aplicados, **Cuando** miro el mapa o el listado, **Entonces** solo aparecen los restaurantes que cumplen todos a la vez *(F6)*.
-2. **Dado** que tengo filtros aplicados, **Cuando** miro el mapa o el listado, **Entonces** veo cada filtro activo como una etiqueta que lo describe (por ejemplo «4 o más ★», «Sin TACC», «Sáb 22/11 · 21:00», «6 personas»), con una acción para quitarlo, y una acción para quitar todos *(F7)*.
+2. **Dado** que tengo filtros aplicados, **Cuando** miro el mapa o el listado, **Entonces** veo cada filtro activo como una etiqueta que lo describe (por ejemplo «4 o más ★», «Sin TACC», «Sáb 22/11», «Sáb 22/11 · 21:00», «Sáb 22/11 · 20:00–22:00», «6 personas»), con una acción para quitarlo, y una acción para quitar todos *(F7)*.
 3. **Dado** que ningún restaurante cumple los filtros, **Cuando** miro el mapa o el listado, **Entonces** se me informa que no hay resultados y se me ofrece quitar los filtros.
 4. **Dado** que tengo filtros aplicados, **Cuando** abro el detalle de un restaurante y vuelvo, o recargo la página, **Entonces** los filtros siguen aplicados *(F8)*.
-5. **Dado** que filtré por día, horario o cantidad de personas, **Cuando** elijo reservar en un restaurante del resultado, **Entonces** la reserva empieza con ese día, esa cantidad de personas y, si elegí una hora puntual, esa hora, y puedo cambiarlos *(F9)*.
+5. **Dado** que filtré por día, horario o cantidad de personas, **Cuando** elijo reservar en un restaurante del resultado, **Entonces** la reserva empieza con ese día, esa cantidad de personas y, si elegí una hora puntual, esa hora (con el día solo o con un rango, sin hora), y puedo cambiarlos *(F9)*.
 
 ### Edge Cases
 
@@ -112,12 +113,12 @@ Estos escenarios valen para los cinco filtros (los cuatro de esta spec y el de p
 - **F1 — Rating mínimo**: las opciones son «3 o más», «4 o más» y «4,5 o más» estrellas. Los restaurantes sin reseñas quedan afuera mientras el filtro está activo, porque no hay cómo saber si cumplen.
 - **F2 — Restricciones por plato**: un restaurante cumple una restricción si tiene al menos un plato disponible del menú marcado con ella. Las etiquetas del perfil del restaurante no cuentan, porque pueden no coincidir con el menú (riesgo 5: la restricción se muestra siempre como la declaró el restaurante).
 - **F3 — Varias restricciones a la vez**: con más de una elegida, tiene que haber un mismo plato que cumpla todas. Una persona celíaca y vegana necesita un plato sin TACC y vegano, no dos platos distintos.
-- **F4 — Horario reservable**: el comensal elige un día y una hora puntual o un rango. Un restaurante cumple si ese día tiene un horario en el que se puede empezar una reserva: dentro de un turno, con los 90 minutos de la reserva adentro del turno (spec 003, D5) y sin un bloqueo que lo cubra (spec 016-bloqueo-horarios). No se miran las mesas ya reservadas.
+- **F4 — Horario reservable**: el comensal elige un día y, si quiere, lo acota con una hora puntual o un rango; el día solo vale como cualquier horario de ese día. Un restaurante cumple si ese día tiene un horario en el que se puede empezar una reserva (en la hora o el rango, si se eligieron): dentro de un turno, con los 90 minutos de la reserva adentro del turno (spec 003, D5) y sin un bloqueo que lo cubra (spec 016-bloqueo-horarios). No se miran las mesas ya reservadas.
 - **F5 — Cantidad de personas**: de 1 a 20. Un restaurante cumple si su mesa habilitada más grande alcanza para esa cantidad, que es el máximo que acepta una reserva (spec 003, FR-013).
 - **F6 — Combinación**: los filtros de distinto tipo se combinan con «y»: el restaurante tiene que cumplir todos, incluido el de precio.
 - **F7 — Presentación**: un botón «Filtros» abre un panel con todos los filtros, precio incluido. En el celular el panel sube desde abajo y en pantallas grandes se abre al costado. Los filtros activos se ven como etiquetas arriba del mapa y del listado, cada una con su acción para quitarla, más una para quitar todos.
 - **F8 — Conservación**: los filtros forman parte de la dirección de la página. Se conservan al abrir un detalle y volver, al recargar y al compartir el enlace. No se guardan en la cuenta.
-- **F9 — Precarga de la reserva**: con día, horario o personas filtrados, la reserva empieza con esos datos y el comensal los puede cambiar. Con esto se cumple el criterio de US-39 «el sistema te pregunta cuántos y cuándo antes de elegir un restaurante», como opción y no como paso obligatorio.
+- **F9 — Precarga de la reserva**: con día, horario o personas filtrados, la reserva empieza con esos datos y el comensal los puede cambiar. La hora se precarga solo si se eligió una hora puntual; con el día solo o con un rango, la reserva empieza con el día y las personas. Con esto se cumple el criterio de US-39 «el sistema te pregunta cuántos y cuándo antes de elegir un restaurante», como opción y no como paso obligatorio.
 - **F10 — Restaurantes de prueba**: no tienen turnos ni mesas, así que quedan fuera de los filtros de horario y de personas. Para que el filtro de restricciones funcione con ellos, sus platos de prueba llevan restricciones coherentes con las que ya muestran.
 
 ## Requirements *(mandatory)*
@@ -126,7 +127,7 @@ Estos escenarios valen para los cinco filtros (los cuatro de esta spec y el de p
 
 - **FR-001** *(US-35; F1)*: El sistema MUST permitir filtrar por rating mínimo (3, 4 o 4,5 estrellas) y mostrar solo los restaurantes con promedio igual o mayor, y MUST NOT mostrar los que no tienen reseñas mientras el filtro está activo.
 - **FR-002** *(US-53; F2, F3)*: El sistema MUST permitir elegir una o más restricciones alimenticias y mostrar solo los restaurantes con al menos un plato disponible que cumpla todas las elegidas.
-- **FR-003** *(US-59; F4)*: El sistema MUST permitir elegir un día (desde hoy hasta 60 días adelante) y una hora puntual o un rango horario, y mostrar solo los restaurantes en los que ese día se puede empezar una reserva en ese horario según sus turnos, la duración de la reserva y sus bloqueos.
+- **FR-003** *(US-59; F4)*: El sistema MUST permitir elegir un día (desde hoy hasta 60 días adelante), solo o acotado con una hora puntual o un rango horario, y mostrar solo los restaurantes en los que ese día se puede empezar una reserva (en ese horario, si se eligió) según sus turnos, la duración de la reserva y sus bloqueos.
 - **FR-004** *(US-61; F5)*: El sistema MUST permitir indicar de 1 a 20 personas y mostrar solo los restaurantes cuya mesa habilitada más grande alcanza para esa cantidad.
 - **FR-005** *(US-35, US-53, US-59, US-61)*: El sistema MUST permitir cambiar y quitar cada filtro, y al quitarlos MUST volver a mostrar todos los restaurantes que los demás filtros permiten.
 - **FR-006** *(F6)*: El sistema MUST aplicar todos los filtros activos a la vez, incluido el de precio, tanto en el mapa como en el listado.
@@ -139,7 +140,7 @@ Estos escenarios valen para los cinco filtros (los cuatro de esta spec y el de p
 
 ### Key Entities
 
-- **Filtros de búsqueda**: lo que eligió el comensal: rating mínimo, restricciones alimenticias, día con hora puntual o rango, cantidad de personas y categoría de precio. Viven en la dirección de la página, no en la cuenta.
+- **Filtros de búsqueda**: lo que eligió el comensal: rating mínimo, restricciones alimenticias, día (solo o con hora puntual o rango), cantidad de personas y categoría de precio. Viven en la dirección de la página, no en la cuenta.
 - **Restaurante** (sin cambios): su promedio (spec 014-resenas), sus platos disponibles con sus restricciones (spec 009-ver-platos-precios), sus turnos y bloqueos (specs 004 y 016-bloqueo-horarios) y sus mesas habilitadas (spec 004).
 
 ## Límites de alcance *(MVP Boundaries)*
