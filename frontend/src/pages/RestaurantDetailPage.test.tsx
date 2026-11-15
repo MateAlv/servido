@@ -200,7 +200,7 @@ describe('RestaurantDetailPage (spec 014)', () => {
     expect(screen.getByText(/final/)).toBeInTheDocument()
   })
 
-  function withReply(edited: boolean) {
+  function withReply(edited: boolean, text = 'Ya ajustamos la cocina.') {
     return {
       ...real,
       rating: 2,
@@ -211,7 +211,7 @@ describe('RestaurantDetailPage (spec 014)', () => {
           rating: 2,
           comment: 'Tardaron mucho.',
           date: '2026-11-02',
-          reply: { text: 'Ya ajustamos la cocina.', date: '2026-11-04', edited },
+          reply: { text, date: '2026-11-04', edited },
         },
       ],
     }
@@ -222,18 +222,30 @@ describe('RestaurantDetailPage (spec 014)', () => {
     renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
 
     const opinion = await screen.findByRole('article', { name: 'Reseña de Juan P.' })
-    const reply = within(opinion).getByRole('region', { name: 'Respuesta de La Mesa' })
+    const reply = within(opinion).getByRole('group', { name: 'Respuesta de La Mesa' })
     expect(reply).toHaveTextContent('Ya ajustamos la cocina.')
-    expect(reply).toHaveTextContent(/4 de noviembre/)
+    expect(reply).toHaveTextContent('Respondió el miércoles, 4 de noviembre')
     expect(within(reply).queryByText('Editada')).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Respuesta de La Mesa' })).toBeNull()
+  })
+
+  it('US-42 S2 shortens a long reply until asked, so it stays below the review', async () => {
+    const long = `${'Gracias por venir y por contarnos cómo fue la noche. '.repeat(4)}Final.`
+    vi.mocked(fetchRestaurant).mockResolvedValue(withReply(false, long))
+    renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
+
+    const reply = await screen.findByRole('group', { name: 'Respuesta de La Mesa' })
+    expect(reply).not.toHaveTextContent('Final.')
+    fireEvent.click(within(reply).getByRole('button', { name: 'Leer más' }))
+    expect(reply).toHaveTextContent('Final.')
   })
 
   it('US-42 S4 marks an edited reply', async () => {
     vi.mocked(fetchRestaurant).mockResolvedValue(withReply(true))
     renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
 
-    const reply = await screen.findByRole('region', { name: 'Respuesta de La Mesa' })
-    expect(within(reply).getByText('Editada')).toBeInTheDocument()
+    const reply = await screen.findByRole('group', { name: 'Respuesta de La Mesa' })
+    expect(reply).toHaveTextContent('Respondió el miércoles, 4 de noviembre · Editada')
   })
 
   it('US-50 S11 counts a review without comment, with no section for it', async () => {

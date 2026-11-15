@@ -3,15 +3,10 @@ import { useState, type ReactNode } from 'react'
 import { formatPesos } from '../../lib/rating'
 import { StarRating } from '../ui'
 import styles from './OpinionCard.module.css'
+import { shorten } from './shorten'
 
 const LONG_COMMENT = 280
 const SHORT_COMMENT = 240
-
-function shorten(comment: string): string {
-  const cut = comment.slice(0, SHORT_COMMENT)
-  const lastSpace = cut.lastIndexOf(' ')
-  return `${(lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`
-}
 
 type OpinionCardProps = {
   author: string
@@ -48,7 +43,7 @@ export function OpinionCard({
       </div>
       {comment && (
         <p className={styles.comment}>
-          {isLong && !expanded ? shorten(comment) : comment}{' '}
+          {isLong && !expanded ? shorten(comment, SHORT_COMMENT) : comment}{' '}
           {isLong && !expanded && (
             <button type="button" className={styles.readMore} onClick={() => setExpanded(true)}>
               Leer más

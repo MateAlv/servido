@@ -63,12 +63,12 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `StatusPill` | Estado corto: disponibilidad, pago, reserva |
 | `Skeleton`, `SkeletonText` | Placeholders con brillo mientras carga una lista |
 | `Spinner` | Carga dentro de un botón o de un texto |
-| `Modal` | Diálogos (en el celular se abre como hoja desde abajo) |
+| `Modal` | Diálogos (en el celular se abre como hoja desde abajo). `onClosed` avisa cuando terminó de cerrarse, para devolver el foco a la página |
 | `ToastProvider`, `useToast` | Avisos breves que se van solos. Una página con barra inferior (el pedido) los sube con la variable `--toast-bottom` |
 | `ThemeToggle` | Cambio de tema claro / oscuro |
 | `Reveal` | Animación de entrada al hacer scroll |
 | `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido»), `maxHint` explica el «+» deshabilitado en el máximo, `announce={false}` apaga su anuncio cuando la página ya anuncia el cambio y `disabled` bloquea los dos botones |
-| `TextAreaField` | `TextField` para textos largos |
+| `TextAreaField` | `TextField` para textos largos, en peso regular para que un párrafo se lea bien. `hintTone="error"` pinta la ayuda de rojo, por ejemplo un contador pasado del límite |
 | `StarRating` | Calificación interactiva o de solo lectura |
 | `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, …) |
 
@@ -101,7 +101,7 @@ La recuperación de la cuenta del comensal no agrega componentes: `/recuperar` p
 | --- | --- | --- |
 | `OpinionCard` | Una reseña como la lee la gente: autor, estrellas, comentario, fecha de la visita y gasto por persona. Es la misma en la revisión antes de publicar, en el detalle del restaurante y en el panel | 24, 50 |
 | `OpinionList` | Las opiniones de un restaurante, de a 5 con «Ver más opiniones», con la aclaración si son menos que la cantidad de reseñas, cada una con la respuesta del restaurante si la tiene | 27, 50, 42 |
-| `OpinionReply` | La respuesta del restaurante debajo de su reseña: más chica, con sangría y fondo hundido, con quién responde, la fecha y la marca «Editada» si cambió. Va dentro de `OpinionCard`, que acepta `children` | 42 |
+| `OpinionReply` | La respuesta del restaurante debajo de su reseña: más chica, con sangría, borde rojo de marca y fondo hundido, con quién responde y «Respondió el …», más «· Editada» si cambió. Con `collapsible` (en Opiniones) se acorta a unas tres líneas con «Leer más», como los comentarios. Es un grupo con nombre, no una región. Va dentro de `OpinionCard`, que acepta `children` | 42 |
 
 ### Pedido (`order/`)
 

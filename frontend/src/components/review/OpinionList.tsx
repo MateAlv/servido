@@ -46,6 +46,7 @@ export function OpinionList({ opinions, reviewCount, restaurantName }: OpinionLi
                   text={opinion.reply.text}
                   date={opinion.reply.date}
                   edited={opinion.reply.edited}
+                  collapsible
                 />
               )}
             </OpinionCard>
