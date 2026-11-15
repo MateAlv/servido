@@ -61,9 +61,9 @@ The text is trimmed before it is checked and stored. Another restaurant's review
 
 ### UI
 
-- `RestaurantReviewsPage`: «Responder» only when `can_reply`; a `TextAreaField` with «Te quedan N caracteres» (counts the trimmed text), «Publicar respuesta» and «Cancelar». A published reply shows under its review as «Tu respuesta», with its date and «Editada», and «Editar respuesta» opens the same form with the current text. A 409 on publishing reloads the list: if the review now has a reply, the form switches to editing it and says so («Respondida desde otra pestaña»).
-- `RestaurantDetailPage` (Opiniones): the reply under its opinion, indented and smaller, labelled «Respuesta de <restaurante>», with its date and «Editada».
-- `OpinionReply` (new, `components/review/`): the reply block both screens use, inside `OpinionCard` through `children`. Added to `/diseno` and the design guide.
+- `RestaurantReviewsPage`: «Responder» only when `can_reply`; a `TextAreaField` with «Te quedan N caracteres» (counts code points of the trimmed text, as the server does, and turns red over the limit), «Publicar respuesta» and «Cancelar». A published reply shows under its review as «Tu respuesta» with «Respondió el …» and «· Editada», and «Editar respuesta» opens the same form with the current text and the caret at its end. Emptying it while editing says it can be edited but not deleted (C4). Escape cancels. Cancelling, or opening another review's form, asks before losing a changed, non-empty draft; once the form closes the focus goes back to that review's button. A 409 on publishing reloads the list: if the review now has a reply, the form switches to editing it, says so («Respondida desde otra pestaña») and keeps what the restaurant typed next to it, with «Usar lo que escribiste»; if the review left Opiniones, the message shows with the typed text.
+- `RestaurantDetailPage` (Opiniones): the reply under its opinion, indented and smaller, labelled «Respuesta de <restaurante>», with «Respondió el …» and «· Editada», shortened to about three lines with «Leer más» like the comments (spec 014).
+- `OpinionReply` (new, `components/review/`): the reply block both screens use, a labelled group (not a landmark), inside `OpinionCard` through `children`. Added to `/diseno` and the design guide. `Modal` gains `onClosed`, so the page can move the focus once the confirmation is gone, and `TextAreaField` gains `hintTone` and regular-weight text.
 - The test restaurants of `restaurants.fixture.ts` have no replies.
 
 ## Constitution Check
@@ -83,11 +83,11 @@ Backend tests are in `backend/tests/test_review_replies.py`. Frontend: `ReviewsP
 | Scenario | Backend | Frontend |
 | --- | --- | --- |
 | S1 — reply and see it in the list | `test_us42_s1_reply_is_stored_and_shown_under_the_review` | `ReviewsPage` › `US-42 S1 publishes a reply and shows it under the review` |
-| S2 — public, with name and date | `test_us42_s2_anyone_sees_the_reply_under_the_opinion` | `Detail` › `US-42 S2 shows the reply under its opinion as the restaurant's`; `api` › `US-42 S2 keeps the reply of each opinion` |
-| S3 — no second reply, edit offered | `test_us42_s3_second_reply_is_refused_and_the_first_one_kept` | `ReviewsPage` › `US-42 S3 offers editing instead of a second reply`, `US-42 S3 switches to editing when the review was already replied` |
+| S2 — public, with name and date | `test_us42_s2_anyone_sees_the_reply_under_the_opinion` | `Detail` › `US-42 S2 shows the reply under its opinion as the restaurant's`; `US-42 S2 shortens a long reply until asked, so it stays below the review`; `api` › `US-42 S2 keeps the reply of each opinion` |
+| S3 — no second reply, edit offered | `test_us42_s3_second_reply_is_refused_and_the_first_one_kept` | `ReviewsPage` › `US-42 S3 offers editing instead of a second reply`, `US-42 S3 switches to editing the existing reply and keeps what was typed` |
 | S4 — edit, «Editada» | `test_us42_s4_edited_reply_replaces_the_text_and_is_marked` | `ReviewsPage` › `US-42 S4 edits the reply and marks it`; `Detail` › `US-42 S4 marks an edited reply` |
-| S5 — blank, over 500, counter | `test_us42_s5_empty_or_too_long_reply_is_refused`, `test_us42_s5_500_characters_are_accepted` | `ReviewsPage` › `US-42 S5 counts the remaining characters and refuses an empty or long reply` |
-| S6 — give up | `test_us42_s6_review_stays_without_reply_until_one_is_published` | `ReviewsPage` › `US-42 S6 cancelling leaves the review without reply` |
+| S5 — blank, over 500, counter | `test_us42_s5_empty_or_too_long_reply_is_refused`, `test_us42_s5_500_characters_are_accepted` | `ReviewsPage` › `US-42 S5 counts the remaining characters and refuses an empty or long reply`, `US-42 S5 counts an emoji as one character, as the server does`, `US-42 S5 says a reply can be edited but not emptied` |
+| S6 — give up | `test_us42_s6_review_stays_without_reply_until_one_is_published` | `ReviewsPage` › `US-42 S6 cancelling an empty reply closes it and returns the focus`, `US-42 S6 asks before discarding what was typed`, `US-42 S6 asks before leaving a draft to answer another review` |
 | S7 — not in Opiniones | `test_us42_s7_review_without_comment_cannot_be_replied`, `test_us42_s7_older_visit_of_the_same_person_cannot_be_replied` | `ReviewsPage` › `US-42 S7 offers no reply on a review that is not public` |
 | S8 — another restaurant | `test_us42_s8_cannot_reply_or_edit_on_another_restaurant` | |
 
