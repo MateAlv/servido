@@ -97,6 +97,11 @@
   gap: 10px;
 }
 
+/* Without a cover photo the close button sits over the head: keep the price clear of it. */
+.cardBody:first-child .cardHead {
+  padding-right: 34px;
+}
+
 .popupTitle {
   margin: 0;
   font: 800 19px / 1.15 var(--font-display);
