@@ -20,11 +20,18 @@ export const HALF_HOURS = Array.from({ length: 48 }, (_, index) =>
 )
 
 /**
- * A day and the times a reservation may start, inclusive. A point hour (`hora`) has
- * `from === to`; a range (`rango`) stays a range even with equal ends, so it never prefills
- * an hour (F9).
+ * A day and the times a reservation may start, inclusive. A day alone (`dia`) covers the whole
+ * day; a point hour (`hora`) has `from === to`; a range (`rango`) stays a range even with equal
+ * ends. Only a point hour prefills an hour (F4, F9).
  */
-export type TimeFilter = { day: string; mode: 'hora' | 'rango'; from: string; to: string }
+export type TimeFilter = { day: string; mode: 'dia' | 'hora' | 'rango'; from: string; to: string }
+
+/** The times of a day alone: any start that day (F4). */
+export const WHOLE_DAY = { from: '00:00', to: '23:59' } as const
+
+export function wholeDay(day: string): TimeFilter {
+  return { day, mode: 'dia', ...WHOLE_DAY }
+}
 
 export type SearchFilters = {
   priceTiers: PriceTier[]
@@ -67,7 +74,8 @@ export function isPointHour(time: TimeFilter): boolean {
   return time.mode === 'hora'
 }
 
-function readTime(params: URLSearchParams, day: string): TimeFilter | null {
+/** The hour or range with the day; without a valid one, the day alone (and the rest is cleaned). */
+function readTime(params: URLSearchParams, day: string): TimeFilter {
   const hour = params.get(FILTER_PARAMS.hour) ?? ''
   if (HALF_HOURS.includes(hour)) return { day, mode: 'hora', from: hour, to: hour }
   const from = params.get(FILTER_PARAMS.from) ?? ''
@@ -75,7 +83,7 @@ function readTime(params: URLSearchParams, day: string): TimeFilter | null {
   if (TIME_PATTERN.test(from) && TIME_PATTERN.test(to) && from <= to) {
     return { day, mode: 'rango', from, to }
   }
-  return null
+  return wholeDay(day)
 }
 
 /** The parameters in a fixed order, to compare two URLs whatever order they were written in. */
@@ -129,7 +137,7 @@ export function writeSearchFilters(
     next.set(FILTER_PARAMS.day, filters.time.day)
     if (isPointHour(filters.time)) {
       next.set(FILTER_PARAMS.hour, filters.time.from)
-    } else {
+    } else if (filters.time.mode === 'rango') {
       next.set(FILTER_PARAMS.from, filters.time.from)
       next.set(FILTER_PARAMS.to, filters.time.to)
     }
@@ -209,8 +217,12 @@ export function longDayLabel(isoDate: string): string {
   return dayLabel(isoDate, Infinity)
 }
 
-/** «Sáb 22/11 · 21:00» or «Sáb 22/11 · 20:00–22:00»; a range with equal ends reads as one hour. */
+/**
+ * «Sáb 22/11» for a day alone, «Sáb 22/11 · 21:00» or «Sáb 22/11 · 20:00–22:00»; a range with
+ * equal ends reads as one hour.
+ */
 export function timeFilterLabel(time: TimeFilter): string {
+  if (time.mode === 'dia') return shortDayLabel(time.day)
   const hours = time.from === time.to ? time.from : `${time.from}–${time.to}`
   return `${shortDayLabel(time.day)} · ${hours}`
 }
@@ -307,7 +319,8 @@ export function prefillLabel(filters: SearchFilters): string {
     .join(' · ')
 }
 
-/** The booking page's own parameters (`?fecha=…&hora=…&personas=…`); a range gives no hour. */
+/** The booking page's own parameters (`?fecha=…&hora=…&personas=…`); only a point hour gives an
+ * hour. */
 export function reservationSearch(filters: SearchFilters): string {
   const params = new URLSearchParams()
   if (filters.time) {
@@ -330,6 +343,7 @@ export type TimeDraft = {
 
 export function timeDraftFrom(time: TimeFilter | null): TimeDraft {
   if (!time) return { day: '', mode: 'hora', hour: '', from: '', to: '' }
+  if (time.mode === 'dia') return { day: time.day, mode: 'hora', hour: '', from: '', to: '' }
   return isPointHour(time)
     ? { day: time.day, mode: 'hora', hour: time.from, from: '', to: '' }
     : { day: time.day, mode: 'rango', hour: '', from: time.from, to: time.to }
@@ -349,13 +363,9 @@ export function switchTimeMode(draft: TimeDraft, mode: TimeDraft['mode']): TimeD
   return { ...draft, mode, hour: hour ?? '' }
 }
 
-/** A draft with a day and no applicable time yet: the day alone doesn't filter. */
-export function isTimeDraftPending(draft: TimeDraft, time: TimeFilter | null): boolean {
-  return draft.day !== '' && time === null
-}
-
 /**
- * The time filter the draft applies, or `null` while it is incomplete or invalid. An inverted
+ * The time filter the draft applies, or `null` while it is incomplete or invalid. A day with no
+ * hour (or an empty range) is the day alone; an hour or a range narrows it (F4). An inverted
  * range or a day out of the booking window is not applied, and `error` says why.
  */
 export function timeFromDraft(
@@ -368,10 +378,12 @@ export function timeFromDraft(
     return { time: null, error: DAY_OUT_OF_RANGE }
   }
   if (draft.mode === 'hora') {
+    if (!draft.hour) return { time: wholeDay(draft.day) }
     return HALF_HOURS.includes(draft.hour)
       ? { time: { day: draft.day, mode: 'hora', from: draft.hour, to: draft.hour } }
       : { time: null }
   }
+  if (!draft.from && !draft.to) return { time: wholeDay(draft.day) }
   if (!TIME_PATTERN.test(draft.from) || !TIME_PATTERN.test(draft.to)) return { time: null }
   if (draft.to < draft.from) return { time: null, error: INVERTED_RANGE }
   return { time: { day: draft.day, mode: 'rango', from: draft.from, to: draft.to } }

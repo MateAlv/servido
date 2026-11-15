@@ -304,8 +304,11 @@ describe('Day and time filter (US-59)', () => {
     expect(within(panel).getByRole('alert')).toHaveTextContent(
       'El «hasta» no puede ser anterior al «desde».',
     )
-    expect(fetchOpenRestaurantIds).not.toHaveBeenCalled()
-    expect(listed()).toHaveLength(ALL.length)
+    // The day alone chosen before stays applied.
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(today, '00:00', '23:59')
+    expect(
+      within(panel).getByText(`Mientras tanto sigue aplicado ${shortDayLabel(today)}.`),
+    ).toBeInTheDocument()
   })
 
   it('US-59 edge offers only half hours for a point hour', async () => {
@@ -553,25 +556,48 @@ describe('Filters, focus and pending choices (spec 027, QA)', () => {
     expect(listed()).toHaveLength(ALL.length)
   })
 
-  it('US-59 edge keeps a day waiting for its hour, flagged, after closing the panel', async () => {
+  it('US-59 S5 keeps the restaurants where a reservation can start some time that day', async () => {
     const user = userEvent.setup()
     renderMap()
     let panel = await openFilters(user)
 
     await user.click(within(panel).getByRole('button', { name: 'Mañana' }))
-    expect(within(panel).getByText(/Falta la hora: el día solo no filtra/)).toBeInTheDocument()
-    await user.click(within(panel).getByRole('button', { name: 'Cerrar' }))
-    expect(listed()).toHaveLength(ALL.length)
 
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '00:00', '23:59')
+    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
+    expect(new URLSearchParams(address()).toString()).toBe(`dia=${tomorrow}`)
+    expect(
+      screen.getByRole('button', { name: `Quitar filtro ${shortDayLabel(tomorrow)}` }),
+    ).toBeInTheDocument()
+    expect(within(panel).queryByText(/Falta/)).not.toBeInTheDocument()
+
+    await user.click(within(panel).getByRole('button', { name: 'Cerrar' }))
     panel = await openFilters(user)
     expect(within(panel).getByRole('button', { name: 'Mañana' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
-    expect(within(panel).getByText(/Falta la hora/)).toBeInTheDocument()
     expect(within(panel).getByLabelText('Otro día')).toHaveAccessibleDescription(
       longDayLabel(tomorrow),
     )
+
+    // An hour narrows it.
+    await user.selectOptions(within(panel).getByLabelText('Hora'), '21:00')
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '21:00', '21:00')
+  })
+
+  it('US-59 S5 opens a shared link with a day alone and prefills only the date and people', async () => {
+    const user = userEvent.setup()
+    renderMap(`/mapa?dia=${tomorrow}&personas=2`)
+    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
+
+    await user.click(screen.getAllByRole('link', { name: 'Ver detalle' })[0])
+
+    expect(await screen.findByRole('link', { name: 'Reservar mesa' })).toHaveAttribute(
+      'href',
+      `/reservar/${HUERTA.id}?fecha=${tomorrow}&personas=2`,
+    )
+    expect(screen.getByText(`${shortDayLabel(tomorrow)} · 2 personas`)).toBeInTheDocument()
   })
 
   it('US-59 S3 switching from hour to range keeps the applied time', async () => {

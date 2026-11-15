@@ -117,6 +117,27 @@ def test_us59_s3_changing_the_day_or_time_changes_the_result(
     }
 
 
+def test_us59_s5_a_day_alone_lists_restaurants_with_any_start_that_day(
+    client: TestClient,
+    three_restaurants: tuple[Restaurant, Restaurant, Restaurant],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    dinner, lunch, closed = three_restaurants
+
+    # The browser asks for a day alone as the whole day; the closed one blocked tomorrow.
+    assert open_ids(client, TOMORROW, "00:00", "23:59") == {
+        restaurant_id(dinner),
+        restaurant_id(lunch),
+    }
+
+    # Today, only the starts that haven't begun count: after lunch only the dinners are left.
+    monkeypatch.setattr(availability, "current_time", lambda: NOW.replace(hour=16))
+    assert open_ids(client, TODAY, "00:00", "23:59") == {
+        restaurant_id(dinner),
+        restaurant_id(closed),
+    }
+
+
 def test_us59_edge_the_ninety_minutes_must_fit_inside_the_shift(
     client: TestClient, session: Session
 ) -> None:

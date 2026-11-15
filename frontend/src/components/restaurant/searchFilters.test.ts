@@ -12,12 +12,12 @@ import {
   NO_FILTERS,
   readSearchFilters,
   reservationSearch,
-  isTimeDraftPending,
   longDayLabel,
   prefillLabel,
   shortDayLabel,
   switchTimeMode,
   timeFromDraft,
+  wholeDay,
   writeSearchFilters,
   type SearchFilters,
   type TimeFilter,
@@ -92,14 +92,17 @@ describe('readSearchFilters and writeSearchFilters (F8)', () => {
     const { filters, needsCleanup } = read(
       'rating=5&restriccion=sin_lactosa&dia=2026-11-22&hora=21:10&personas=21&precio=caro',
     )
-    expect(filters).toEqual(NO_FILTERS)
+    // The day stays, alone: an hour off the half hour is dropped.
+    expect(filters).toEqual({ ...NO_FILTERS, time: wholeDay('2026-11-22') })
     expect(needsCleanup).toBe(true)
     expect(read('rating=9&personas=50&restriccion=foo&precio=xyz&otro=1')).toEqual({
       filters: NO_FILTERS,
       droppedDay: null,
       needsCleanup: true,
     })
-    expect(read('dia=2026-11-22&desde=22:00&hasta=20:00').filters.time).toBeNull()
+    expect(read('dia=2026-11-22&desde=22:00&hasta=20:00').filters.time).toEqual(
+      wholeDay('2026-11-22'),
+    )
     expect(read('dia=2027-01-15&hora=21:00').filters.time).toBeNull()
     expect(read('personas=0').filters.partySize).toBeNull()
   })
@@ -318,16 +321,50 @@ describe('timeFromDraft (US-59)', () => {
     expect(switchTimeMode({ ...range, from: '', to: '' }, 'hora').hour).toBe('')
   })
 
-  it('US-59 edge flags a day still waiting for its hour', () => {
-    expect(isTimeDraftPending(draft, null)).toBe(true)
-    expect(isTimeDraftPending({ ...draft, day: '' }, null)).toBe(false)
+  it('US-59 S5 applies a day alone, with no hour or an empty range', () => {
+    expect(timeFromDraft(draft, TODAY, LATEST)).toEqual({ time: wholeDay('2026-11-22') })
+    expect(timeFromDraft({ ...draft, mode: 'rango' }, TODAY, LATEST)).toEqual({
+      time: wholeDay('2026-11-22'),
+    })
   })
 
-  it('US-59 edge waits for the day and the time', () => {
-    expect(timeFromDraft(draft, TODAY, LATEST)).toEqual({ time: null })
+  it('US-59 edge waits for a day, and for both ends of a range', () => {
     expect(timeFromDraft({ ...draft, day: '', hour: '21:00' }, TODAY, LATEST)).toEqual({
       time: null,
     })
+    expect(timeFromDraft({ ...draft, mode: 'rango', from: '20:00' }, TODAY, LATEST)).toEqual({
+      time: null,
+    })
+  })
+})
+
+describe('a day alone (US-59 S5)', () => {
+  const day = wholeDay('2026-11-23')
+
+  it('US-59 S5 reads, writes and labels a day alone', () => {
+    expect(read('dia=2026-11-23').filters.time).toEqual(day)
+    expect(writeSearchFilters(new URLSearchParams(), { ...NO_FILTERS, time: day }).toString()).toBe(
+      'dia=2026-11-23',
+    )
+    expect(filterTags({ ...NO_FILTERS, time: day })[0].label).toBe('Lun 23/11')
+    expect(read('dia=2026-11-23').needsCleanup).toBe(false)
+  })
+
+  it('US-59 S5 asks for any start that day and leaves the test restaurants out', () => {
+    expect(day).toMatchObject({ from: '00:00', to: '23:59' })
+    const filters = { ...NO_FILTERS, time: day }
+    expect(matchesSearchFilters(REAL, filters, new Set(['real-1']))).toBe(true)
+    expect(matchesSearchFilters(RESTAURANTS_FIXTURE[0], filters, new Set(['r-la-esquina']))).toBe(
+      false,
+    )
+  })
+
+  it('US-59 S5 prefills only the date and the people', () => {
+    expect(reservationSearch({ ...NO_FILTERS, time: day, partySize: 4 })).toBe(
+      '?fecha=2026-11-23&personas=4',
+    )
+    expect(prefillLabel({ ...NO_FILTERS, time: day, partySize: 4 })).toBe('Lun 23/11 · 4 personas')
+    expect(detailSearch({ ...NO_FILTERS, time: day })).toBe('?dia=2026-11-23')
   })
 })
 

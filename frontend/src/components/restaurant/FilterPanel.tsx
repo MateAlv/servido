@@ -24,7 +24,6 @@ import {
   DAY_OUT_OF_RANGE,
   HALF_HOURS,
   INVERTED_RANGE,
-  isTimeDraftPending,
   longDayLabel,
   MAX_PARTY_SIZE,
   MIN_RATINGS,
@@ -72,15 +71,12 @@ function sameTime(first: TimeFilter | null, second: TimeFilter | null): boolean 
   )
 }
 
-/** What is missing for the day and time to filter, or `undefined` when nothing is. */
-function pendingMessage(draft: TimeDraft, applied: TimeFilter | null): string | undefined {
+/** An hour or a range needs a day to filter: says so, or `undefined` when nothing is missing. */
+function pendingMessage(draft: TimeDraft): string | undefined {
   if (!draft.day && (draft.hour || draft.from || draft.to)) {
     return 'Falta el día: elegí Hoy, Mañana u otro día para aplicar este filtro.'
   }
-  if (!isTimeDraftPending(draft, applied)) return undefined
-  return draft.mode === 'hora'
-    ? 'Falta la hora: el día solo no filtra. Elegí una hora para aplicar este filtro.'
-    : 'Falta el rango: el día solo no filtra. Elegí desde y hasta qué hora.'
+  return undefined
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -102,7 +98,7 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
   const now = currentTimeInBuenosAires()
   const draft = timeDraft
   const { time: draftTime, error: timeError } = timeFromDraft(draft)
-  const pending = timeError ? undefined : pendingMessage(draft, filters.time)
+  const pending = timeError ? undefined : pendingMessage(draft)
   const hourId = useId()
   // Buttons that disappear when used hand the focus to what takes their place.
   const todayChip = useRef<HTMLButtonElement>(null)
@@ -256,7 +252,7 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
               value={draft.hour}
               onChange={(event) => changeDraft({ ...draft, hour: event.target.value })}
             >
-              <option value="">Elegí una hora</option>
+              <option value="">Cualquier hora</option>
               {HALF_HOURS.map((hour) => (
                 <option key={hour} value={hour} disabled={draft.day === today && hour <= now}>
                   {hour}
@@ -290,7 +286,10 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
             Mientras tanto sigue aplicado {timeFilterLabel(filters.time)}.
           </p>
         ) : (
-          <p className={styles.note}>Solo aparecen los restaurantes que ya toman reservas.</p>
+          <p className={styles.note}>
+            Con solo el día, aparecen los restaurantes en los que ese día se puede empezar alguna
+            reserva; una hora o un rango lo acotan. Solo aparecen los que ya toman reservas.
+          </p>
         )}
         <Button
           variant="ghost"
