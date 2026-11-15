@@ -41,7 +41,11 @@ export function ChoiceChips<T extends string>({
     const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key]
     if (!step) return
     event.preventDefault()
-    const next = (index + step + options.length) % options.length
+    // From the focused chip, not the chosen value: two quick presses may arrive before the
+    // new value comes back, and each one must still move one option.
+    const focused = buttons.current.findIndex((button) => button === document.activeElement)
+    const from = focused >= 0 ? focused : index
+    const next = (from + step + options.length) % options.length
     onChange(options[next].value)
     buttons.current[next]?.focus()
   }

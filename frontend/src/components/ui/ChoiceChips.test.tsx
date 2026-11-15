@@ -32,4 +32,16 @@ describe('ChoiceChips', () => {
 
     expect(onChange.mock.calls).toEqual([['4.5'], ['4.5']])
   })
+
+  it('moves one option per arrow press even before the new value comes back', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(<ChoiceChips label="Calificación" options={OPTIONS} value="todas" onChange={onChange} />)
+
+    await user.tab()
+    await user.keyboard('{ArrowRight}{ArrowRight}')
+
+    expect(onChange.mock.calls).toEqual([['4'], ['4.5']])
+    expect(screen.getByRole('radio', { name: '4,5 o más estrellas' })).toHaveFocus()
+  })
 })
