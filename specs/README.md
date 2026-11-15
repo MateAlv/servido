@@ -27,7 +27,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [016-bloqueo-horarios](016-bloqueo-horarios/spec.md) | Restaurante | 32 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-32 (propuestas FR-007 y de reservas parcialmente pasadas/cruzadas y reaviso pendientes de validación de la PO) |
 | [019-cuenta-comensal-google-verificacion](019-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17 en la spec 009-pedido-anticipado) |
 | [025-responder-resenas](025-responder-resenas/spec.md) | Restaurante | 42 | 1 | 5 | ✅ | — | — | — (decisiones C1–C5 del 15/11, falta que la PO las valide) |
-| [027-filtros-busqueda](027-filtros-busqueda/spec.md) | Comensal | 35, 53, 59, 61 | 4 | 5 (US-53, US-59 y US-61 adelantadas del 6) | ✅ | — | — | — (decisiones F1–F10 del 15/11, falta que la PO las valide) |
+| [027-filtros-busqueda](027-filtros-busqueda/spec.md) | Comensal | 35, 53, 59, 61 | 4 | 5 (US-53, US-59 y US-61 adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-35, US-53, US-59, US-61 (decisiones F1–F10 del 15/11, falta que la PO las valide) |
 
 Arrastre de la spec 002-cuenta-restaurante: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002-elegir-restaurante muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
 
@@ -142,6 +142,8 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 05/11 | 014 | R16: siempre se revisa «Así se va a ver» antes de publicar. R17: el restaurante ve nombre e inicial, fecha y horario de la visita, estrellas, comentario y gasto, sin contacto ni enlace a la reserva. R18: un script carga datos de demo en producción, solo en el restaurante de demo y de forma reversible. R19: sin moderación ni denuncia en el MVP. Falta que la PO lo valide |
 | 09/11 | 013 | El link de recuperación vence a los 15 minutos, sirve una sola vez y el pedido de uno nuevo invalida el anterior. El correo que no tiene cuenta recibe el mismo mensaje que uno que sí, y el límite de 5 pedidos por correo cada media hora se aplica igual a los dos, para no revelar qué correos están registrados. Las cuentas creadas con Google reciben un correo que las manda a «Ingresar con Google», sin link. Al cambiar la contraseña se cierran las sesiones abiertas. Falta que la PO lo valide |
 | 09/11 | 013, 019 | El aviso de «no pudimos enviar el correo» (502) es la única respuesta que distingue una cuenta existente, porque solo se ve cuando hubo un envío; se acepta para que el comensal sepa que el mail no salió y pueda reintentar |
+| 15/11 | 027-filtros-busqueda | F4 cambia a pedido del equipo: el día solo filtra (cualquier horario en el que ese día se pueda empezar una reserva) y la hora o el rango lo acotan. Con el día solo, la reserva empieza con el día y las personas, sin hora. Falta que la PO lo valide |
+| 15/11 | 027-filtros-busqueda | F4, F7 y F8 cambian a pedido del equipo: la hora y los extremos del rango se eligen cada 30 minutos con una rueda o un reloj, «hasta» sigue a «desde» + 1 h 30 mientras no se elige, y el navegador recuerda los últimos filtros para cuando se vuelve sin filtros en la dirección (un enlace con filtros manda). Falta que la PO lo valide |
 
 ## Notas de formato
 

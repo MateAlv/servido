@@ -1,4 +1,4 @@
-.PHONY: up up-local down db logs test test-backend test-frontend lint format migrate migration seed api-types
+.PHONY: up up-local down reset-db db logs test test-backend test-frontend lint format migrate migration seed api-types
 
 up: ## Run db, backend and frontend in Docker (http://localhost:5173)
 	docker compose up --build
@@ -8,6 +8,9 @@ up-local: ## Like up, plus demo data and sign-up without mail verification (comp
 
 down:
 	docker compose down
+
+reset-db: ## Delete the local database and volumes, e.g. when it has a migration from another branch
+	docker compose down -v
 
 db: ## Run only Postgres, for running backend/frontend natively
 	docker compose up -d --wait db

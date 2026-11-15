@@ -24,7 +24,8 @@ export function DinerHome({ account }: { account: Account }) {
         </Reveal>
         <Reveal delay={120}>
           <p className={styles.lead}>
-            Elegí un restaurante: filtrá por precio, mirá cuánta gente hay ahora y entrá a su menú.
+            Elegí un restaurante: filtrá por lo que necesites, mirá cuánta gente hay ahora y entrá a
+            su menú.
           </p>
         </Reveal>
       </header>

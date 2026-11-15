@@ -1,0 +1,162 @@
+.panel {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.section {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-5) 0 0;
+  border: 0;
+  border-top: 2px solid var(--color-line);
+}
+
+/* The legend of a fieldset doesn't take part in its grid: float it into the flow. */
+.legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--space-1);
+  padding: 0;
+  font-weight: 800;
+}
+
+.section > :not(.legend) {
+  clear: both;
+}
+
+.section > * {
+  max-width: 100%;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.star {
+  color: var(--color-star);
+}
+
+[aria-checked='true'] > .star {
+  color: currentcolor;
+}
+
+.note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.wide {
+  width: 100%;
+}
+
+.time {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+/* The two ends of a range: the pressed one is the one the wheel edits. */
+.ends {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.end {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  min-height: 76px;
+  padding: 10px 14px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: start;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.end[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.end:focus-visible {
+  outline: 3px solid var(--color-location);
+  outline-offset: 2px;
+}
+
+.endLabel {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+}
+
+.endValue {
+  font: 700 30px / 1.1 var(--font-display);
+  animation: value-in var(--duration-base) var(--ease-out);
+}
+
+.wheelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+@keyframes value-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .end {
+    transition: none;
+  }
+
+  .endValue {
+    animation: none;
+  }
+}
+
+/* A ghost button lines its text up with the chips and headings above it, with a 44 px
+   touch target. */
+.flush {
+  min-height: 44px;
+  margin-inline-start: calc(-1 * var(--space-4));
+}
+
+/* A day still waiting for its hour: easy to notice, since it doesn't filter yet. */
+.pending {
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-field);
+  background: var(--color-warn-bg);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}

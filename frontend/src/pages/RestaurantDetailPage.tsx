@@ -1,10 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Link, useLocation, useParams } from 'react-router'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 
 import { useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
-import { OccupancyMeter } from '../components/restaurant'
+import {
+  OccupancyMeter,
+  prefillLabel,
+  readSearchFilters,
+  reservationSearch,
+} from '../components/restaurant'
 import type { RestaurantPublic } from '../data/restaurants.fixture'
 import {
   Button,
@@ -38,6 +43,11 @@ function useBackTo(): string {
 export function RestaurantDetailPage() {
   const { id = '' } = useParams<{ id: string }>()
   const backTo = useBackTo()
+  // The day, point hour and party size filtered on the map start the reservation (spec 027, F9).
+  const [searchParams] = useSearchParams()
+  const { filters } = readSearchFilters(searchParams)
+  const reservePath = `/reservar/${id}${reservationSearch(filters)}`
+  const prefill = prefillLabel(filters)
   const { data: restaurant, isPending } = useQuery({
     queryKey: ['restaurants', id],
     queryFn: () => fetchRestaurant(id),
@@ -209,12 +219,18 @@ export function RestaurantDetailPage() {
                   Reservas abiertas
                 </StatusPill>
                 <h2 className={styles.sectionTitle}>Reservá tu mesa</h2>
+                {prefill && account?.rol !== 'restaurant' && (
+                  <p className={styles.prefill}>
+                    <span className={styles.factLabel}>Con tu búsqueda</span>
+                    {prefill}
+                  </p>
+                )}
                 {account === null ? (
                   <>
                     <p className={styles.muted}>Ingresá con tu cuenta de comensal para reservar.</p>
                     <Button
                       fullWidth
-                      to={`/ingresar?rol=comensal&volver=${encodeURIComponent(`/reservar/${restaurant.id}`)}`}
+                      to={`/ingresar?rol=comensal&volver=${encodeURIComponent(reservePath)}`}
                     >
                       Ingresá para reservar
                     </Button>
@@ -224,10 +240,11 @@ export function RestaurantDetailPage() {
                 ) : (
                   <>
                     <p className={styles.muted}>
-                      Elegí la fecha, el horario y cuántos van a ser. Después revisás los datos y
-                      confirmás.
+                      {prefill
+                        ? 'La reserva empieza con los datos de tu búsqueda y los podés cambiar. Después revisás todo y confirmás.'
+                        : 'Elegí la fecha, el horario y cuántos van a ser. Después revisás los datos y confirmás.'}
                     </p>
-                    <Button fullWidth to={`/reservar/${restaurant.id}`}>
+                    <Button fullWidth to={reservePath}>
                       Reservar mesa
                     </Button>
                   </>

@@ -739,6 +739,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurants/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Open Restaurants
+         * @description Bookable restaurants where a reservation can start that day between both times,
+         *     inclusive (spec 027, F4). A point hour sends the same time twice.
+         */
+        get: operations["list_open_restaurants_api_restaurants_open_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurants/{restaurant_id}": {
         parameters: {
             query?: never;
@@ -1175,6 +1196,14 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /**
+         * OpenRestaurants
+         * @description Bookable restaurants where a reservation can start in the requested time (spec 027, F4).
+         */
+        OpenRestaurants: {
+            /** Restaurant Ids */
+            restaurant_ids: string[];
+        };
         /** OpeningHoursResponse */
         OpeningHoursResponse: {
             /** Day Of Week */
@@ -1452,6 +1481,10 @@ export interface components {
             photo_url: string | null;
             /** Has Menu */
             has_menu: boolean;
+            /** Max Party Size */
+            max_party_size: number;
+            /** Dish Restriction Sets */
+            dish_restriction_sets: string[][];
         };
         /** PublicRestaurantDetail */
         PublicRestaurantDetail: {
@@ -1490,6 +1523,10 @@ export interface components {
             photo_url: string | null;
             /** Has Menu */
             has_menu: boolean;
+            /** Max Party Size */
+            max_party_size: number;
+            /** Dish Restriction Sets */
+            dish_restriction_sets: string[][];
             /** Menu */
             menu: components["schemas"]["PublicDish"][];
             /** Opinions */
@@ -4357,6 +4394,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicRestaurantList"];
+                };
+            };
+        };
+    };
+    list_open_restaurants_api_restaurants_open_get: {
+        parameters: {
+            query: {
+                date: string;
+                start_from: string;
+                start_to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenRestaurants"];
+                };
+            };
+            /** @description Día fuera del plazo o rango invertido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

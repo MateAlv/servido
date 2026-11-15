@@ -3107,6 +3107,70 @@
         }
       }
     },
+    "/api/restaurants/open": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "List Open Restaurants",
+        "description": "Bookable restaurants where a reservation can start that day between both times,\ninclusive (spec 027, F4). A point hour sends the same time twice.",
+        "operationId": "list_open_restaurants_api_restaurants_open_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Date"
+            }
+          },
+          {
+            "name": "start_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "time",
+              "title": "Start From"
+            }
+          },
+          {
+            "name": "start_to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "time",
+              "title": "Start To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenRestaurants"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "D\u00eda fuera del plazo o rango invertido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurants/{restaurant_id}": {
       "get": {
         "tags": [
@@ -4281,6 +4345,24 @@
         ],
         "title": "MessageResponse"
       },
+      "OpenRestaurants": {
+        "properties": {
+          "restaurant_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Restaurant Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "restaurant_ids"
+        ],
+        "title": "OpenRestaurants",
+        "description": "Bookable restaurants where a reservation can start in the requested time (spec 027, F4)."
+      },
       "OpeningHoursResponse": {
         "properties": {
           "day_of_week": {
@@ -4995,6 +5077,20 @@
           "has_menu": {
             "type": "boolean",
             "title": "Has Menu"
+          },
+          "max_party_size": {
+            "type": "integer",
+            "title": "Max Party Size"
+          },
+          "dish_restriction_sets": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Dish Restriction Sets"
           }
         },
         "type": "object",
@@ -5014,7 +5110,9 @@
           "lat",
           "lng",
           "photo_url",
-          "has_menu"
+          "has_menu",
+          "max_party_size",
+          "dish_restriction_sets"
         ],
         "title": "PublicRestaurant",
         "description": "A bookable restaurant as the diner's map, list and detail show it (decision D4)."
@@ -5145,6 +5243,20 @@
             "type": "boolean",
             "title": "Has Menu"
           },
+          "max_party_size": {
+            "type": "integer",
+            "title": "Max Party Size"
+          },
+          "dish_restriction_sets": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Dish Restriction Sets"
+          },
           "menu": {
             "items": {
               "$ref": "#/components/schemas/PublicDish"
@@ -5178,6 +5290,8 @@
           "lng",
           "photo_url",
           "has_menu",
+          "max_party_size",
+          "dish_restriction_sets",
           "menu",
           "opinions"
         ],
