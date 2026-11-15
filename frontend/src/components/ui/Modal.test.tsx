@@ -17,4 +17,23 @@ describe('Modal', () => {
 
     expect(onClose).toHaveBeenCalledOnce()
   })
+
+  it('says when it finished closing, so the page can take the focus back', () => {
+    const onClosed = vi.fn()
+    const { rerender } = render(
+      <Modal open onClose={vi.fn()} onClosed={onClosed} title="Cancelar reserva">
+        <p>Podés cancelar sin costo.</p>
+      </Modal>,
+    )
+    rerender(
+      <Modal open={false} onClose={vi.fn()} onClosed={onClosed} title="Cancelar reserva">
+        <p>Podés cancelar sin costo.</p>
+      </Modal>,
+    )
+    expect(onClosed).not.toHaveBeenCalled()
+
+    fireEvent.animationEnd(screen.getByRole('dialog', { hidden: true }))
+
+    expect(onClosed).toHaveBeenCalledOnce()
+  })
 })
