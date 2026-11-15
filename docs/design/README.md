@@ -65,7 +65,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `Skeleton`, `SkeletonText` | Placeholders con brillo mientras carga una lista |
 | `Spinner` | Carga dentro de un botón o de un texto |
 | `Modal` | Diálogos (en el celular se abre como hoja desde abajo) |
-| `Drawer` | Panel sobre el diálogo nativo, como `Modal` (atrapa el foco, se cierra con Escape, con la cruz o tocando afuera): en el celular sube desde abajo y en pantallas anchas entra desde la derecha. Solo el contenido hace scroll (el panel nunca entero): el encabezado y el pie quedan fijos; la última acción del pie ocupa el ancho que sobra. Anima al abrir y al cerrar; con movimiento reducido solo aparece con un fundido corto. Lo usan los filtros del mapa |
+| `Drawer` | Panel sobre el diálogo nativo, como `Modal` (atrapa el foco, se cierra con Escape, con la cruz o tocando afuera): en el celular sube desde abajo y en pantallas anchas entra desde la derecha. Solo el contenido hace scroll (el panel nunca entero, ni la página de atrás mientras está abierto): el encabezado y el pie quedan fijos; la última acción del pie ocupa el ancho que sobra. Anima al abrir y al cerrar; con movimiento reducido solo aparece con un fundido corto. Lo usan los filtros del mapa |
 | `ToastProvider`, `useToast` | Avisos breves que se van solos. Una página con barra inferior (el pedido) los sube con la variable `--toast-bottom` |
 | `ThemeToggle` | Cambio de tema claro / oscuro |
 | `Reveal` | Animación de entrada al hacer scroll |

@@ -23,6 +23,17 @@ export function Drawer({ open, onClose, title, children, footer }: DrawerProps) 
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
 
+  // The page behind doesn't scroll while the panel is open.
+  useEffect(() => {
+    if (!open) return
+    const root = document.documentElement
+    const previous = root.style.overflow
+    root.style.overflow = 'hidden'
+    return () => {
+      root.style.overflow = previous
+    }
+  }, [open])
+
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return

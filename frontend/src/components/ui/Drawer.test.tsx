@@ -43,4 +43,20 @@ describe('Drawer', () => {
     expect(drawer).not.toHaveAttribute('open')
     expect(drawer).not.toHaveAttribute('data-closing')
   })
+
+  it('locks the page scroll while it is open', () => {
+    const { rerender } = render(
+      <Drawer open onClose={vi.fn()} title="Filtros">
+        <p>Precio</p>
+      </Drawer>,
+    )
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    rerender(
+      <Drawer open={false} onClose={vi.fn()} title="Filtros">
+        <p>Precio</p>
+      </Drawer>,
+    )
+    expect(document.documentElement.style.overflow).toBe('')
+  })
 })
