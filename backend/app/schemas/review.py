@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import ClassVar
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -53,6 +54,8 @@ class PendingReviewsResponse(BaseModel):
 
 
 class ReplyRequest(BaseModel):
+    EMPTY_MESSAGE: ClassVar[str] = "Escribí tu respuesta."
+
     text: str
 
     @field_validator("text")
@@ -62,10 +65,17 @@ class ReplyRequest(BaseModel):
             raise ValueError("La respuesta tiene caracteres que no se pueden guardar.")
         value = value.strip()
         if not value:
-            raise ValueError("Escribí tu respuesta.")
+            raise ValueError(cls.EMPTY_MESSAGE)
         if len(value) > MAX_REPLY_LENGTH:
             raise ValueError(f"La respuesta puede tener hasta {MAX_REPLY_LENGTH} caracteres.")
         return value
+
+
+class ReplyEditRequest(ReplyRequest):
+    # A reply can be edited but not deleted (spec 025, C4).
+    EMPTY_MESSAGE: ClassVar[str] = (
+        "La respuesta no puede quedar vacía. Podés editarla, pero no borrarla."
+    )
 
 
 class ReviewReplyResponse(BaseModel):

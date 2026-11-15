@@ -13,6 +13,7 @@ from app.schemas.review import (
     PendingReview,
     PendingReviewsResponse,
     PublishedReviewResponse,
+    ReplyEditRequest,
     ReplyRequest,
     RestaurantReview,
     RestaurantReviewsResponse,
@@ -207,7 +208,7 @@ def reply_to_review(
     },
 )
 def edit_reply(
-    review_id: UUID, body: ReplyRequest, claims: TokenClaimsDep, session: SessionDep
+    review_id: UUID, body: ReplyEditRequest, claims: TokenClaimsDep, session: SessionDep
 ) -> ReviewReplyResponse:
     restaurant = restaurant_from_claims(claims, session)
     try:

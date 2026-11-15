@@ -3090,7 +3090,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReplyRequest"
+                "$ref": "#/components/schemas/ReplyEditRequest"
               }
             }
           }
@@ -5533,6 +5533,19 @@
           "terms_accepted"
         ],
         "title": "RegistrationRequest"
+      },
+      "ReplyEditRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ReplyEditRequest"
       },
       "ReplyRequest": {
         "properties": {

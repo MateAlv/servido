@@ -1583,6 +1583,11 @@ export interface components {
              */
             terms_accepted: true;
         };
+        /** ReplyEditRequest */
+        ReplyEditRequest: {
+            /** Text */
+            text: string;
+        };
         /** ReplyRequest */
         ReplyRequest: {
             /** Text */
@@ -4315,7 +4320,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReplyRequest"];
+                "application/json": components["schemas"]["ReplyEditRequest"];
             };
         };
         responses: {

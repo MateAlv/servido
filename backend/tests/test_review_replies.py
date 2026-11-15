@@ -139,17 +139,22 @@ def test_us42_s4_edited_reply_replaces_the_text_and_is_marked(
     assert "Texto anterior." not in detail.text
 
 
+EMPTY = "Escribí tu respuesta."
+EMPTIED = "La respuesta no puede quedar vacía. Podés editarla, pero no borrarla."
+TOO_LONG = "La respuesta puede tener hasta 500 caracteres."
+
+
 @pytest.mark.parametrize(
-    ("text", "message"),
+    ("text", "on_create", "on_edit"),
     [
-        ("", "Escribí tu respuesta."),
-        ("   \n ", "Escribí tu respuesta."),
-        ("a" * 501, "La respuesta puede tener hasta 500 caracteres."),
+        ("", EMPTY, EMPTIED),
+        ("   \n ", EMPTY, EMPTIED),
+        ("a" * 501, TOO_LONG, TOO_LONG),
     ],
     ids=["empty", "spaces", "501 characters"],
 )
 def test_us42_s5_empty_or_too_long_reply_is_refused(
-    client: TestClient, session: Session, text: str, message: str
+    client: TestClient, session: Session, text: str, on_create: str, on_edit: str
 ) -> None:
     restaurant = add_bookable_restaurant(session)
     review = reviewed(client, session, restaurant)
@@ -160,17 +165,20 @@ def test_us42_s5_empty_or_too_long_reply_is_refused(
     edited = client.put(reply_url(review), json={"text": text}, headers=headers)
 
     assert (created.status_code, edited.status_code) == (400, 400)
-    assert created.json()["detail"][0]["msg"] == message
-    assert edited.json()["detail"][0]["msg"] == message
+    assert created.json()["detail"][0]["msg"] == on_create
+    assert edited.json()["detail"][0]["msg"] == on_edit
     assert session.query(ReviewReply).one().text == "Gracias."
 
 
-def test_us42_s5_500_characters_are_accepted(client: TestClient, session: Session) -> None:
+@pytest.mark.parametrize("text", ["a" * 500, "😀" * 500], ids=["letters", "emoji"])
+def test_us42_s5_500_characters_are_accepted(
+    client: TestClient, session: Session, text: str
+) -> None:
     restaurant = add_bookable_restaurant(session)
     review = reviewed(client, session, restaurant)
 
     response = client.post(
-        reply_url(review), json={"text": "a" * 500}, headers=restaurant_headers(client, restaurant)
+        reply_url(review), json={"text": text}, headers=restaurant_headers(client, restaurant)
     )
 
     assert response.status_code == 201
