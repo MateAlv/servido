@@ -17,7 +17,7 @@ services:
 
   backend:
     build: ./backend
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "sh scripts/migrate.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     environment:
       DATABASE_URL: postgresql+psycopg://servido:servido@db:5432/servido
     ports:
