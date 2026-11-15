@@ -30,10 +30,21 @@ class PublicRestaurant(BaseModel):
     # Restaurants without a menu don't take part in the price filter
     # (spec 002-elegir-restaurante, US-7).
     has_menu: bool
+    # The largest available table, the most one reservation seats (spec 027, F5).
+    max_party_size: int
+    # The distinct restriction sets of the available dishes that have any, so the filter can ask
+    # for one dish that meets every chosen restriction (spec 027, F2 and F3).
+    dish_restriction_sets: list[list[str]]
 
 
 class PublicRestaurantList(BaseModel):
     restaurants: list[PublicRestaurant]
+
+
+class OpenRestaurants(BaseModel):
+    """Bookable restaurants where a reservation can start in the requested time (spec 027, F4)."""
+
+    restaurant_ids: list[UUID]
 
 
 class PublicDish(BaseModel):
