@@ -27,6 +27,13 @@ import styles from './RestaurantMap.module.css'
 
 const DEFAULT_CENTER: GeoPoint = { lat: -34.6037, lng: -58.3816 } // Buenos Aires
 const POPUP_WIDTH = 280
+// The popup and its pan padding (56 px left for the zoom buttons, 16 px right) must fit in the
+// map, which on a phone is the screen minus the page gutters and the map border.
+const POPUP_SIDE_ROOM = 112
+
+function popupWidth(): number {
+  return Math.max(200, Math.min(POPUP_WIDTH, window.innerWidth - POPUP_SIDE_ROOM))
+}
 
 type RestaurantMapProps = {
   restaurants: RestaurantPublic[]
@@ -125,8 +132,8 @@ export function RestaurantMap({
           >
             <Popup
               className={styles.popup}
-              minWidth={POPUP_WIDTH}
-              maxWidth={POPUP_WIDTH}
+              minWidth={popupWidth()}
+              maxWidth={popupWidth()}
               autoPanPaddingTopLeft={[56, 16]}
               autoPanPaddingBottomRight={[16, 16]}
             >
@@ -136,7 +143,7 @@ export function RestaurantMap({
                     className={styles.cover}
                     src={restaurant.foto_url ?? restaurant.photo?.cover}
                     alt=""
-                    width={POPUP_WIDTH}
+                    width={popupWidth()}
                     height={120}
                   />
                 )}
