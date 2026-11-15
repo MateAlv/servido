@@ -117,9 +117,17 @@
   }
 }
 
-/* On phones the home page cards already offer "Crear cuenta". */
-@media (max-width: 480px) {
-  .signUp {
+/* On phones the home page cards already offer "Crear cuenta". Two classes, so this beats the
+   display of the button's own class whatever order the stylesheets load in. */
+@media (max-width: 520px) {
+  .actions .signUp {
+    display: none;
+  }
+}
+
+/* Signed in, the avatar gives its room to the wordmark and the actions. */
+@media (max-width: 520px) {
+  .who {
     display: none;
   }
 }

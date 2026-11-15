@@ -11,7 +11,7 @@ export type LogoAnimation = 'none' | 'intro' | 'outro' | 'idle'
 
 type LogoProps = {
   /** `full` shows the pin and the "Servido!" wordmark; `mark` only the pin; `responsive` is
-   * `full` that keeps only the pin up to 480 px wide, where the header is tight. */
+   * `full` that keeps only the pin up to 440 px wide, where the header is tight. */
   variant?: 'full' | 'mark' | 'responsive'
   layout?: 'inline' | 'stacked'
   size?: 'sm' | 'md' | 'lg' | 'xl'
