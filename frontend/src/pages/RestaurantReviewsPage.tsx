@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 
 import {
@@ -7,20 +7,85 @@ import {
   retryUnlessSessionExpired,
   SessionExpiredError,
 } from '../api/errors'
-import { fetchRestaurantReviews } from '../api/reviews'
+import { fetchRestaurantReviews, type RestaurantReview } from '../api/reviews'
 import { signOut, useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
-import { OpinionCard } from '../components/review'
+import { OpinionCard, OpinionReply } from '../components/review'
 import { Button, Card, IconArrowLeft, StarRating } from '../components/ui'
-import { longDate } from '../lib/date'
+import { dateInBuenosAires, longDate } from '../lib/date'
 import { formatPesos, formatRating, formatReviewCount } from '../lib/rating'
 import styles from './RestaurantReviewsPage.module.css'
+import { ReplyForm } from './reviews/ReplyForm'
 
 const LOAD_FAILED = 'No pudimos cargar las reseñas.'
 const OLDER_VISIT = 'Visita anterior: no cuenta en el promedio ni se ve en público.'
 
+type ReplySectionProps = {
+  review: RestaurantReview
+  open: boolean
+  notice?: string
+  onOpen: () => void
+  onClose: () => void
+  onSaved: () => Promise<void>
+  onConflict: (message: string) => Promise<void>
+}
+
+/** The reply under a review (US-42): offered only on the reviews shown in Opiniones (C1),
+ * edited but never deleted (C4). */
+function ReplySection({
+  review,
+  open,
+  notice,
+  onOpen,
+  onClose,
+  onSaved,
+  onConflict,
+}: ReplySectionProps) {
+  const { reply } = review
+  if (open && (reply || review.can_reply)) {
+    return (
+      <ReplyForm
+        key={reply ? 'edit' : 'reply'}
+        reviewId={review.id}
+        author={review.author}
+        current={reply?.text}
+        notice={notice}
+        onSaved={onSaved}
+        onCancel={onClose}
+        onConflict={onConflict}
+      />
+    )
+  }
+  return (
+    <>
+      {reply && (
+        <OpinionReply
+          label="Tu respuesta"
+          text={reply.text}
+          date={dateInBuenosAires(reply.created_at)}
+          edited={reply.edited_at !== null}
+        />
+      )}
+      {notice && (
+        <p className={styles.replyError} role="alert">
+          {notice}
+        </p>
+      )}
+      {(reply || review.can_reply) && (
+        <div className={styles.replyAction}>
+          <Button variant="secondary" size="sm" onClick={onOpen}>
+            {reply ? 'Editar respuesta' : 'Responder'}
+          </Button>
+        </div>
+      )}
+    </>
+  )
+}
+
 function ReviewsList() {
   const queryClient = useQueryClient()
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [notice, setNotice] = useState<{ reviewId: string; message: string } | null>(null)
   const reviews = useInfiniteQuery({
     queryKey: ['restaurant', 'reviews'],
     queryFn: ({ pageParam }) => fetchRestaurantReviews(pageParam),
@@ -32,6 +97,11 @@ function ReviewsList() {
   useEffect(() => {
     if (reviews.error instanceof SessionExpiredError) signOut(queryClient)
   }, [reviews.error, queryClient])
+
+  async function refreshReviews() {
+    void queryClient.invalidateQueries({ queryKey: ['restaurants'] })
+    await queryClient.invalidateQueries({ queryKey: ['restaurant', 'reviews'] })
+  }
 
   if (reviews.isPending) return <p role="status">Cargando reseñas…</p>
   if (reviews.isError)
@@ -86,7 +156,30 @@ function ReviewsList() {
                 spendPerPerson={review.spend_per_person}
                 visit={`Visitó el ${longDate(review.visit_date)} a las ${review.visit_time}`}
                 remark={review.counts_in_average ? undefined : OLDER_VISIT}
-              />
+              >
+                <ReplySection
+                  review={review}
+                  open={openId === review.id}
+                  notice={notice?.reviewId === review.id ? notice.message : undefined}
+                  onOpen={() => {
+                    setOpenId(review.id)
+                    setNotice(null)
+                  }}
+                  onClose={() => {
+                    setOpenId(null)
+                    setNotice(null)
+                  }}
+                  onSaved={async () => {
+                    await refreshReviews()
+                    setOpenId(null)
+                    setNotice(null)
+                  }}
+                  onConflict={async (message) => {
+                    await refreshReviews()
+                    setNotice({ reviewId: review.id, message })
+                  }}
+                />
+              </OpinionCard>
             </Card>
           </li>
         ))}
@@ -112,7 +205,7 @@ function ReviewsList() {
   )
 }
 
-/** The reviews the restaurant received (US-24): to read, never to change. */
+/** The reviews the restaurant received (US-24): it can't change them, only reply (US-42). */
 export function RestaurantReviewsPage() {
   const { data: account, isPending } = useAccount()
 

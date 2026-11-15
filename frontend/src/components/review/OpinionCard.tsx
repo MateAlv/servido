@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { formatPesos } from '../../lib/rating'
 import { StarRating } from '../ui'
@@ -22,6 +22,8 @@ type OpinionCardProps = {
   visit: string
   /** A remark for whoever reads the list, such as why this review doesn't count. */
   remark?: string
+  /** What goes under the review, such as the restaurant's reply (US-42). */
+  children?: ReactNode
 }
 
 /** One review as people read it: the same in the restaurant's detail, in the diner's preview
@@ -33,6 +35,7 @@ export function OpinionCard({
   spendPerPerson,
   visit,
   remark,
+  children,
 }: OpinionCardProps) {
   const [expanded, setExpanded] = useState(false)
   const isLong = comment != null && comment.length > LONG_COMMENT
@@ -58,6 +61,7 @@ export function OpinionCard({
         <p className={styles.note}>{formatPesos(spendPerPerson)} por persona</p>
       )}
       {remark && <p className={styles.remark}>{remark}</p>}
+      {children}
     </article>
   )
 }

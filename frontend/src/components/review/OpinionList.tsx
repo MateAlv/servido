@@ -5,6 +5,7 @@ import { longDate } from '../../lib/date'
 import { formatReviewCount } from '../../lib/rating'
 import { Button } from '../ui'
 import { OpinionCard } from './OpinionCard'
+import { OpinionReply } from './OpinionReply'
 import styles from './OpinionList.module.css'
 
 const STEP = 5
@@ -12,10 +13,12 @@ const STEP = 5
 type OpinionListProps = {
   opinions: RestaurantReview[]
   reviewCount: number
+  /** Labels the restaurant's replies: «Respuesta de …». */
+  restaurantName: string
 }
 
 /** A restaurant's public opinions, a few at a time so they don't bury what comes after them. */
-export function OpinionList({ opinions, reviewCount }: OpinionListProps) {
+export function OpinionList({ opinions, reviewCount, restaurantName }: OpinionListProps) {
   const [shown, setShown] = useState(STEP)
   const remaining = opinions.length - shown
 
@@ -36,7 +39,16 @@ export function OpinionList({ opinions, reviewCount }: OpinionListProps) {
               comment={opinion.comment}
               spendPerPerson={opinion.spendPerPerson}
               visit={`Visitó el ${longDate(opinion.date)}`}
-            />
+            >
+              {opinion.reply && (
+                <OpinionReply
+                  label={`Respuesta de ${restaurantName}`}
+                  text={opinion.reply.text}
+                  date={opinion.reply.date}
+                  edited={opinion.reply.edited}
+                />
+              )}
+            </OpinionCard>
           </li>
         ))}
       </ul>

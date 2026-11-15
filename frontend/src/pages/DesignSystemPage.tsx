@@ -21,7 +21,7 @@ import {
   Steam,
 } from '../components/order'
 import { ConfirmationStamp, Ticket, TicketDivider, Timeline } from '../components/reservation'
-import { OpinionCard, OpinionList } from '../components/review'
+import { OpinionCard, OpinionList, OpinionReply } from '../components/review'
 import {
   MapPin,
   matchesPriceFilter,
@@ -402,9 +402,22 @@ function FormsDemo() {
               comment: 'Pedimos antes de salir y no esperamos nada.',
               date: '2026-11-03',
               spendPerPerson: 28000,
+              reply: { text: '¡Gracias, Ana! Te esperamos.', date: '2026-11-04', edited: false },
             },
           ]}
           reviewCount={3}
+          restaurantName="La Esquina de Palermo"
+        />
+      </Demo>
+      <Demo
+        title="Respuesta del restaurante"
+        note="Va debajo de su reseña, más chica y con sangría. Marca «Editada» si cambió."
+      >
+        <OpinionReply
+          label="Respuesta de La Esquina de Palermo"
+          text="Gracias por avisarnos: ya ajustamos los tiempos de la cocina."
+          date="2026-11-04"
+          edited
         />
       </Demo>
     </>

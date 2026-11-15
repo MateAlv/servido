@@ -71,3 +71,14 @@
 .empty {
   margin: 0;
 }
+
+.replyAction {
+  margin-top: var(--space-2);
+}
+
+.replyError {
+  margin: var(--space-2) 0 0;
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}

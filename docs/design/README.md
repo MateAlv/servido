@@ -100,7 +100,8 @@ La recuperación de la cuenta del comensal no agrega componentes: `/recuperar` p
 | Componente | Para qué | US |
 | --- | --- | --- |
 | `OpinionCard` | Una reseña como la lee la gente: autor, estrellas, comentario, fecha de la visita y gasto por persona. Es la misma en la revisión antes de publicar, en el detalle del restaurante y en el panel | 24, 50 |
-| `OpinionList` | Las opiniones de un restaurante, de a 5 con «Ver más opiniones», con la aclaración si son menos que la cantidad de reseñas | 27, 50 |
+| `OpinionList` | Las opiniones de un restaurante, de a 5 con «Ver más opiniones», con la aclaración si son menos que la cantidad de reseñas, cada una con la respuesta del restaurante si la tiene | 27, 50, 42 |
+| `OpinionReply` | La respuesta del restaurante debajo de su reseña: más chica, con sangría y fondo hundido, con quién responde, la fecha y la marca «Editada» si cambió. Va dentro de `OpinionCard`, que acepta `children` | 42 |
 
 ### Pedido (`order/`)
 
