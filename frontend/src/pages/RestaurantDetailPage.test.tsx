@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { fetchRestaurant } from '../api/restaurants'
@@ -198,6 +198,42 @@ describe('RestaurantDetailPage (spec 014)', () => {
     expect(screen.queryByText(/final/)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Leer más' }))
     expect(screen.getByText(/final/)).toBeInTheDocument()
+  })
+
+  function withReply(edited: boolean) {
+    return {
+      ...real,
+      rating: 2,
+      reviewCount: 1,
+      reviews: [
+        {
+          author: 'Juan P.',
+          rating: 2,
+          comment: 'Tardaron mucho.',
+          date: '2026-11-02',
+          reply: { text: 'Ya ajustamos la cocina.', date: '2026-11-04', edited },
+        },
+      ],
+    }
+  }
+
+  it("US-42 S2 shows the reply under its opinion as the restaurant's", async () => {
+    vi.mocked(fetchRestaurant).mockResolvedValue(withReply(false))
+    renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
+
+    const opinion = await screen.findByRole('article', { name: 'Reseña de Juan P.' })
+    const reply = within(opinion).getByRole('region', { name: 'Respuesta de La Mesa' })
+    expect(reply).toHaveTextContent('Ya ajustamos la cocina.')
+    expect(reply).toHaveTextContent(/4 de noviembre/)
+    expect(within(reply).queryByText('Editada')).not.toBeInTheDocument()
+  })
+
+  it('US-42 S4 marks an edited reply', async () => {
+    vi.mocked(fetchRestaurant).mockResolvedValue(withReply(true))
+    renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
+
+    const reply = await screen.findByRole('region', { name: 'Respuesta de La Mesa' })
+    expect(within(reply).getByText('Editada')).toBeInTheDocument()
   })
 
   it('US-50 S11 counts a review without comment, with no section for it', async () => {

@@ -219,6 +219,31 @@ describe('restaurants (decision D4 of spec 003)', () => {
     expect(reviewCountLabel(restaurant)).toBe('3 reseñas')
   })
 
+  it('US-42 S2 keeps the reply of each opinion', async () => {
+    const reply = { text: 'Gracias.', date: '2026-11-04', edited: true }
+    get.mockResolvedValue({
+      data: {
+        ...REAL,
+        menu: [],
+        opinions: [
+          {
+            author: 'Juan P.',
+            rating: 5,
+            comment: 'Muy rico.',
+            spend_per_person: null,
+            visit_date: '2026-11-02',
+            reply,
+          },
+        ],
+      },
+      error: undefined,
+    } as never)
+
+    const restaurant = await fetchRestaurant(REAL.id)
+
+    expect(restaurant?.reviews[0].reply).toEqual(reply)
+  })
+
   it('US-50 S8 turns the opinions of the detail into reviews', async () => {
     get.mockResolvedValue({
       data: {
