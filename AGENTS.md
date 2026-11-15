@@ -128,6 +128,7 @@ Run from the repository root. `make` wraps everything; the raw commands are in t
 | Run everything in Docker (web on :5173, API on :8000, Postgres on :55432) | `make up` |
 | The same in local mode: demo data and sign-up without mail verification (`compose.local.yml`, `backend/scripts/seed.py`) | `make up-local` |
 | Start only Postgres (to run backend or frontend natively) | `make db` |
+| Delete the local database, when `make up` stops with "Can't locate revision" (a migration from another branch) (the tests use their own database, `servido_test`, created again on every run) | `make reset-db` |
 | Backend dev server | `cd backend && uv run uvicorn app.main:app --reload` |
 | Frontend dev server | `cd frontend && npm run dev` |
 | All tests | `make test` |
