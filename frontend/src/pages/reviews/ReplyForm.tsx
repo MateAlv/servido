@@ -21,9 +21,11 @@ function characters(text: string): number {
 
 function remainingHint(remaining: number): string {
   if (remaining < 0) {
-    return `Te pasaste por ${-remaining} ${remaining === -1 ? 'carácter' : 'caracteres'}.`
+    const over = remaining === -1 ? '1 carácter' : `${-remaining} caracteres`
+    return `Te pasaste por ${over} del máximo de ${MAX_REPLY_LENGTH}.`
   }
-  return remaining === 1 ? 'Te queda 1 carácter.' : `Te quedan ${remaining} caracteres.`
+  const left = remaining === 1 ? 'Te queda 1 carácter.' : `Te quedan ${remaining} caracteres.`
+  return `${left} Se publica en la página del restaurante.`
 }
 
 type ReplyFormProps = {
@@ -35,6 +37,8 @@ type ReplyFormProps = {
   notice?: string
   /** What the restaurant had typed when that happened, kept so it isn't lost. */
   draft?: string
+  /** Changes when the page wants the focus back in the text, e.g. after «Seguir escribiendo». */
+  focusRequest: number
   /** Whether closing the form now would lose text the restaurant wrote. */
   onDirtyChange: (dirty: boolean) => void
   onSaved: () => Promise<void>
@@ -52,6 +56,7 @@ export function ReplyForm({
   current,
   notice,
   draft,
+  focusRequest,
   onDirtyChange,
   onSaved,
   onCancel,
@@ -74,7 +79,12 @@ export function ReplyForm({
     if (!field) return
     field.focus()
     field.setSelectionRange(field.value.length, field.value.length)
+    field.scrollTop = field.scrollHeight
   }, [])
+
+  useEffect(() => {
+    if (focusRequest > 0) fieldRef.current?.focus()
+  }, [focusRequest])
 
   useEffect(() => {
     onDirtyChange(dirty)
@@ -89,7 +99,10 @@ export function ReplyForm({
       setError(editing ? EMPTIED : EMPTY)
       return
     }
-    if (remaining < 0) return
+    if (remaining < 0) {
+      setError(TOO_LONG)
+      return
+    }
     setError('')
     setSaving(true)
     try {
@@ -158,9 +171,9 @@ export function ReplyForm({
       <TextAreaField
         ref={fieldRef}
         label={editing ? `Editá tu respuesta a ${author}` : `Tu respuesta a ${author}`}
-        hint={`${remainingHint(remaining)} Se publica en la página del restaurante.`}
+        hint={error ? undefined : remainingHint(remaining)}
         hintTone={remaining < 0 ? 'error' : 'muted'}
-        error={remaining < 0 ? TOO_LONG : error}
+        error={error}
         value={text}
         rows={4}
         onChange={(event) => {

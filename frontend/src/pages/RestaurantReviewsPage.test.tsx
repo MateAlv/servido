@@ -243,20 +243,26 @@ describe('RestaurantReviewsPage (US-42)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Escribí tu respuesta.')
 
     fireEvent.change(field, { target: { value: 'a'.repeat(501) } })
-    expect(field).toHaveAccessibleDescription(/Te pasaste por 1 carácter\./)
-    expect(screen.getByRole('alert')).toHaveTextContent(
+    expect(field).toHaveAccessibleDescription('Te pasaste por 1 carácter del máximo de 500.')
+    expect(screen.queryByRole('alert')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar respuesta' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
       'La respuesta puede tener hasta 500 caracteres.',
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Publicar respuesta' }))
+    expect(field).toHaveAccessibleDescription('La respuesta puede tener hasta 500 caracteres.')
     expect(api.publishReply).not.toHaveBeenCalled()
   })
 
-  it('US-42 S5 counts an emoji as one character, as the server does', async () => {
+  it('US-42 S5 counts characters as the server does, an emoji as one', async () => {
     await openReply('Responder')
     const field = screen.getByLabelText('Tu respuesta a Ana P.')
 
     fireEvent.change(field, { target: { value: '😀'.repeat(500) } })
+    expect(field).toHaveAccessibleDescription(/Te quedan 0 caracteres\./)
 
+    // A skin tone is a second code point, for the server too.
+    fireEvent.change(field, { target: { value: '👍🏽'.repeat(250) } })
     expect(field).toHaveAccessibleDescription(/Te quedan 0 caracteres\./)
     expect(screen.queryByRole('alert')).toBeNull()
   })
@@ -289,9 +295,11 @@ describe('RestaurantReviewsPage (US-42)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(discardDialog()).toBeInTheDocument()
+    screen.getByRole('button', { name: 'Cancelar' }).focus()
     fireEvent.click(screen.getByRole('button', { name: 'Seguir escribiendo' }))
     await waitFor(() => expect(discardDialog()).toBeNull())
     expect(screen.getByLabelText('Tu respuesta a Ana P.')).toHaveValue('Gracias.')
+    await waitFor(() => expect(screen.getByLabelText('Tu respuesta a Ana P.')).toHaveFocus())
 
     fireEvent.keyDown(screen.getByLabelText('Tu respuesta a Ana P.'), { key: 'Escape' })
     expect(discardDialog()).toBeInTheDocument()

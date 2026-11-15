@@ -29,6 +29,7 @@ type ReplySectionProps = {
   notice?: ReplyNotice
   /** Move the focus to this review's reply button, e.g. after closing its form. */
   takeFocus: boolean
+  formFocus: number
   onFocusTaken: () => void
   onDirtyChange: (dirty: boolean) => void
   onOpen: () => void
@@ -44,6 +45,7 @@ function ReplySection({
   open,
   notice,
   takeFocus,
+  formFocus,
   onFocusTaken,
   onDirtyChange,
   onOpen,
@@ -75,6 +77,7 @@ function ReplySection({
         current={reply?.text}
         notice={notice?.message}
         draft={notice?.draft}
+        focusRequest={formFocus}
         onDirtyChange={onDirtyChange}
         onSaved={onSaved}
         onCancel={onCancel}
@@ -114,6 +117,8 @@ function ReviewsList() {
   const [openId, setOpenId] = useState<string | null>(null)
   const [notice, setNotice] = useState<ReplyNotice | null>(null)
   const [focusId, setFocusId] = useState<string | null>(null)
+  // Bumped to put the focus back in the open form once the discard question is dismissed.
+  const [formFocus, setFormFocus] = useState(0)
   // What to do once the restaurant agrees to lose its draft; null while nothing is asked.
   const [discarding, setDiscarding] = useState<{ then: () => void } | null>(null)
   const afterDiscard = useRef<(() => void) | null>(null)
@@ -217,6 +222,7 @@ function ReviewsList() {
                   open={openId === review.id}
                   notice={notice?.reviewId === review.id ? notice : undefined}
                   takeFocus={focusId === review.id}
+                  formFocus={formFocus}
                   onFocusTaken={focusTaken}
                   onDirtyChange={markDirty}
                   onOpen={() => keepingDrafts(() => openForm(review.id))}
@@ -241,7 +247,8 @@ function ReviewsList() {
         onClosed={() => {
           const action = afterDiscard.current
           afterDiscard.current = null
-          action?.()
+          if (action) action()
+          else setFormFocus((request) => request + 1)
         }}
         title="¿Descartás tu respuesta?"
         footer={
