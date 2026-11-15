@@ -10,6 +10,8 @@
   background: var(--color-surface);
   color: var(--color-text);
   box-shadow: var(--shadow-pop);
+  /* Only the body scrolls: the header and the footer never leave the panel. */
+  overflow: hidden;
   overscroll-behavior: contain;
 }
 
@@ -64,7 +66,10 @@
   font: 800 var(--text-xl) / 1.15 var(--font-display);
 }
 
+/* Positioned, so absolutely placed content (such as visually hidden text) stays inside the
+   scrolling body instead of stretching the dialog. */
 .body {
+  position: relative;
   flex: 1;
   min-height: 0;
   padding: var(--space-4) var(--space-5) var(--space-5);

@@ -1,4 +1,6 @@
 .stepper {
+  /* Keeps its visually hidden maximum hint next to it. */
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;

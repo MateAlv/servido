@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 
 import { cx } from '../../lib/cx'
 import { IconButton } from './IconButton'
@@ -41,6 +41,16 @@ export function QuantityStepper({
 }: QuantityStepperProps) {
   const hintId = useId()
   const atMax = value >= max
+  const decrease = useRef<HTMLButtonElement>(null)
+  const increase = useRef<HTMLButtonElement>(null)
+
+  // A button that reaches the limit gets disabled: the focus moves to the other one.
+  function step(by: 1 | -1) {
+    const next = value + by
+    onChange(next)
+    if (by === 1 && next >= max) decrease.current?.focus()
+    if (by === -1 && next <= min) increase.current?.focus()
+  }
   return (
     <div
       role="group"
@@ -48,11 +58,12 @@ export function QuantityStepper({
       className={cx(styles.stepper, size === 'lg' && styles.large)}
     >
       <IconButton
+        ref={decrease}
         label={decreaseLabel}
         variant="ghost"
         className={styles.button}
         disabled={disabled || value <= min}
-        onClick={() => onChange(value - 1)}
+        onClick={() => step(-1)}
       >
         <IconMinus />
       </IconButton>
@@ -60,12 +71,13 @@ export function QuantityStepper({
         <RollingNumber value={value} />
       </output>
       <IconButton
+        ref={increase}
         label={increaseLabel}
         variant="ghost"
         className={styles.button}
         disabled={disabled || atMax}
         aria-describedby={atMax && maxHint ? hintId : undefined}
-        onClick={() => onChange(value + 1)}
+        onClick={() => step(1)}
       >
         <IconPlus />
       </IconButton>
