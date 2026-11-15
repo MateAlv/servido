@@ -19,8 +19,12 @@ export const HALF_HOURS = Array.from({ length: 48 }, (_, index) =>
   [Math.floor(index / 2), (index % 2) * 30].map((part) => String(part).padStart(2, '0')).join(':'),
 )
 
-/** A day and the times a reservation may start, inclusive; a point hour has `from === to`. */
-export type TimeFilter = { day: string; from: string; to: string }
+/**
+ * A day and the times a reservation may start, inclusive. A point hour (`hora`) has
+ * `from === to`; a range (`rango`) stays a range even with equal ends, so it never prefills
+ * an hour (F9).
+ */
+export type TimeFilter = { day: string; mode: 'hora' | 'rango'; from: string; to: string }
 
 export type SearchFilters = {
   priceTiers: PriceTier[]
@@ -53,48 +57,61 @@ export const FILTER_PARAMS = {
 export const INVERTED_RANGE = 'El «hasta» no puede ser anterior al «desde».'
 export const DAY_OUT_OF_RANGE = 'Elegí un día entre hoy y los próximos 60 días.'
 
+/** Why a shared link lost its day (F8): it already passed, or it is beyond the 60 days. */
+export type DroppedDay = 'past' | 'far' | null
+
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
 
 export function isPointHour(time: TimeFilter): boolean {
-  return time.from === time.to
+  return time.mode === 'hora'
 }
 
 function readTime(params: URLSearchParams, day: string): TimeFilter | null {
   const hour = params.get(FILTER_PARAMS.hour) ?? ''
-  if (HALF_HOURS.includes(hour)) return { day, from: hour, to: hour }
+  if (HALF_HOURS.includes(hour)) return { day, mode: 'hora', from: hour, to: hour }
   const from = params.get(FILTER_PARAMS.from) ?? ''
   const to = params.get(FILTER_PARAMS.to) ?? ''
-  if (TIME_PATTERN.test(from) && TIME_PATTERN.test(to) && from <= to) return { day, from, to }
+  if (TIME_PATTERN.test(from) && TIME_PATTERN.test(to) && from <= to) {
+    return { day, mode: 'rango', from, to }
+  }
   return null
 }
 
+/** The parameters in a fixed order, to compare two URLs whatever order they were written in. */
+function sortedEntries(params: URLSearchParams): string {
+  return JSON.stringify([...params.entries()].sort())
+}
+
 /**
- * The filters in the URL. What is invalid is ignored, so a hand-edited link never applies it;
- * `pastDay` says the link had a day that already passed, which is dropped and announced (F8).
+ * The filters in the URL. What is invalid is ignored, so a hand-edited link never applies it,
+ * and `needsCleanup` says the URL holds something that should be taken out. `droppedDay` says
+ * the link had a day out of the booking window, which is dropped and announced (F8).
  */
 export function readSearchFilters(
   params: URLSearchParams,
   today = todayInBuenosAires(),
   latest = latestBookableDate(),
-): { filters: SearchFilters; pastDay: boolean } {
+): { filters: SearchFilters; droppedDay: DroppedDay; needsCleanup: boolean } {
   const chosenTiers = params.getAll(FILTER_PARAMS.price)
   const chosenRestrictions = params.getAll(FILTER_PARAMS.restriction)
   const rating = Number(params.get(FILTER_PARAMS.rating))
   const day = params.get(FILTER_PARAMS.day) ?? ''
   const dayIsValid = DATE_PATTERN.test(day) && day >= today && day <= latest
   const party = Number(params.get(FILTER_PARAMS.party))
+  const filters: SearchFilters = {
+    priceTiers: PRICE_TIERS.filter((tier) => chosenTiers.includes(tier)),
+    minRating: MIN_RATINGS.find((option) => option === rating) ?? null,
+    restrictions: DIETARY_RESTRICTIONS.map((restriction) => restriction.code).filter((code) =>
+      chosenRestrictions.includes(code),
+    ),
+    time: dayIsValid ? readTime(params, day) : null,
+    partySize: Number.isInteger(party) && party >= 1 && party <= MAX_PARTY_SIZE ? party : null,
+  }
   return {
-    filters: {
-      priceTiers: PRICE_TIERS.filter((tier) => chosenTiers.includes(tier)),
-      minRating: MIN_RATINGS.find((option) => option === rating) ?? null,
-      restrictions: DIETARY_RESTRICTIONS.map((restriction) => restriction.code).filter((code) =>
-        chosenRestrictions.includes(code),
-      ),
-      time: dayIsValid ? readTime(params, day) : null,
-      partySize: Number.isInteger(party) && party >= 1 && party <= MAX_PARTY_SIZE ? party : null,
-    },
-    pastDay: DATE_PATTERN.test(day) && day < today,
+    filters,
+    droppedDay: !DATE_PATTERN.test(day) ? null : day < today ? 'past' : day > latest ? 'far' : null,
+    needsCleanup: sortedEntries(writeSearchFilters(params, filters)) !== sortedEntries(params),
   }
 }
 
@@ -174,13 +191,22 @@ export function minRatingLabel(minRating: MinRating): string {
   return `${String(minRating).replace('.', ',')} o más`
 }
 
-const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+const WEEKDAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
-/** «Sáb 22/11» for 2026-11-22. */
-export function shortDayLabel(isoDate: string): string {
+function dayLabel(isoDate: string, weekdayLength: number): string {
   const [year, month, day] = isoDate.split('-').map(Number)
   const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
-  return `${weekday} ${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}`
+  return `${weekday.slice(0, weekdayLength)} ${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}`
+}
+
+/** «Dom 22/11» for 2026-11-22. */
+export function shortDayLabel(isoDate: string): string {
+  return dayLabel(isoDate, 3)
+}
+
+/** «Domingo 22/11» for 2026-11-22. */
+export function longDayLabel(isoDate: string): string {
+  return dayLabel(isoDate, Infinity)
 }
 
 /** «Sáb 22/11 · 21:00» or «Sáb 22/11 · 20:00–22:00». */
@@ -196,6 +222,8 @@ export function partySizeLabel(partySize: number): string {
 export type FilterTag = {
   key: string
   label: string
+  /** What a screen reader says: «4 o más estrellas» instead of «4 o más ★». */
+  spokenLabel: string
   /** The filters without this one. */
   without: (filters: SearchFilters) => SearchFilters
 }
@@ -206,6 +234,7 @@ export function filterTags(filters: SearchFilters): FilterTag[] {
     ...filters.priceTiers.map((tier) => ({
       key: `precio-${tier}`,
       label: tier,
+      spokenLabel: tier,
       without: (current: SearchFilters) => ({
         ...current,
         priceTiers: current.priceTiers.filter((chosen) => chosen !== tier),
@@ -217,12 +246,14 @@ export function filterTags(filters: SearchFilters): FilterTag[] {
           {
             key: 'rating',
             label: `${minRatingLabel(filters.minRating)} ★`,
+            spokenLabel: `${minRatingLabel(filters.minRating)} estrellas`,
             without: (current: SearchFilters) => ({ ...current, minRating: null }),
           },
         ]),
     ...filters.restrictions.map((code) => ({
       key: `restriccion-${code}`,
       label: restrictionLabel(code),
+      spokenLabel: restrictionLabel(code),
       without: (current: SearchFilters) => ({
         ...current,
         restrictions: current.restrictions.filter((chosen) => chosen !== code),
@@ -234,6 +265,7 @@ export function filterTags(filters: SearchFilters): FilterTag[] {
           {
             key: 'horario',
             label: timeFilterLabel(filters.time),
+            spokenLabel: timeFilterLabel(filters.time),
             without: (current: SearchFilters) => ({ ...current, time: null }),
           },
         ]),
@@ -243,6 +275,7 @@ export function filterTags(filters: SearchFilters): FilterTag[] {
           {
             key: 'personas',
             label: partySizeLabel(filters.partySize),
+            spokenLabel: partySizeLabel(filters.partySize),
             without: (current: SearchFilters) => ({ ...current, partySize: null }),
           },
         ]),
@@ -261,6 +294,17 @@ export function detailSearch(filters: SearchFilters): string {
   })
   const search = params.toString()
   return search ? `?${search}` : ''
+}
+
+/** What the reservation will start with, e.g. «Lun 16/11 · 21:00 · 3 personas»; `''` if nothing. */
+export function prefillLabel(filters: SearchFilters): string {
+  const { time, partySize } = filters
+  return [
+    time && (isPointHour(time) ? timeFilterLabel(time) : shortDayLabel(time.day)),
+    partySize !== null && partySizeLabel(partySize),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }
 
 /** The booking page's own parameters (`?fecha=…&hora=…&personas=…`); a range gives no hour. */
@@ -292,6 +336,24 @@ export function timeDraftFrom(time: TimeFilter | null): TimeDraft {
 }
 
 /**
+ * The draft in the other mode, keeping what was chosen when it still means the same: an hour
+ * becomes a range with both ends at that hour, and a range becomes the hour it starts at when
+ * that is a half hour.
+ */
+export function switchTimeMode(draft: TimeDraft, mode: TimeDraft['mode']): TimeDraft {
+  if (mode === draft.mode) return draft
+  if (mode === 'rango') {
+    return { ...draft, mode, from: draft.hour || draft.from, to: draft.hour || draft.to }
+  }
+  return { ...draft, mode, hour: HALF_HOURS.includes(draft.from) ? draft.from : '' }
+}
+
+/** A draft with a day and no applicable time yet: the day alone doesn't filter. */
+export function isTimeDraftPending(draft: TimeDraft, time: TimeFilter | null): boolean {
+  return draft.day !== '' && time === null
+}
+
+/**
  * The time filter the draft applies, or `null` while it is incomplete or invalid. An inverted
  * range or a day out of the booking window is not applied, and `error` says why.
  */
@@ -306,10 +368,10 @@ export function timeFromDraft(
   }
   if (draft.mode === 'hora') {
     return HALF_HOURS.includes(draft.hour)
-      ? { time: { day: draft.day, from: draft.hour, to: draft.hour } }
+      ? { time: { day: draft.day, mode: 'hora', from: draft.hour, to: draft.hour } }
       : { time: null }
   }
   if (!TIME_PATTERN.test(draft.from) || !TIME_PATTERN.test(draft.to)) return { time: null }
   if (draft.to < draft.from) return { time: null, error: INVERTED_RANGE }
-  return { time: { day: draft.day, from: draft.from, to: draft.to } }
+  return { time: { day: draft.day, mode: 'rango', from: draft.from, to: draft.to } }
 }

@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Route, Routes } from 'react-router'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { Route, Routes, useLocation } from 'react-router'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { fetchOpenRestaurantIds, fetchRestaurant, fetchRestaurants } from '../../api/restaurants'
 import { RESTAURANTS_FIXTURE, type RestaurantPublic } from '../../data/restaurants.fixture'
@@ -9,7 +9,7 @@ import { addDays, todayInBuenosAires } from '../../lib/date'
 import { MapPage } from '../../pages/MapPage'
 import { RestaurantDetailPage } from '../../pages/RestaurantDetailPage'
 import { renderWithProviders } from '../../test/renderWithProviders'
-import { shortDayLabel } from './searchFilters'
+import { longDayLabel, shortDayLabel } from './searchFilters'
 
 vi.mock('../../api/restaurants', () => ({
   fetchRestaurants: vi.fn(),
@@ -80,15 +80,31 @@ beforeEach(() => {
     .mockImplementation(async (id) => ALL.find((restaurant) => restaurant.id === id))
 })
 
+/** Shows the current query string, to check what stays in the URL. */
+function Search() {
+  return <output aria-label="Dirección">{useLocation().search}</output>
+}
+
 function renderMap(route = '/mapa') {
   return renderWithProviders(
-    <Routes>
-      <Route path="/mapa" element={<MapPage />} />
-      <Route path="/restaurantes/:id" element={<RestaurantDetailPage />} />
-    </Routes>,
+    <>
+      <Routes>
+        <Route path="/mapa" element={<MapPage />} />
+        <Route path="/restaurantes/:id" element={<RestaurantDetailPage />} />
+      </Routes>
+      <Search />
+    </>,
     { route },
   )
 }
+
+function address() {
+  return screen.getByRole('status', { name: 'Dirección' }).textContent ?? ''
+}
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 /** Names in the list; the map shows the same restaurants as markers. */
 function listed(): string[] {
@@ -126,7 +142,7 @@ describe('Rating filter (US-35)', () => {
     renderMap()
     const panel = await openFilters(user)
 
-    await user.click(within(panel).getByRole('button', { name: '4 o más' }))
+    await user.click(within(panel).getByRole('radio', { name: '4 o más estrellas' }))
 
     expect(listed()).toEqual(RATED_4)
     // 3,96 shows as 4,0 but doesn't reach «4 o más».
@@ -142,7 +158,7 @@ describe('Rating filter (US-35)', () => {
     expect(listed()).toEqual(RATED_4)
 
     const panel = await openFilters(user)
-    await user.click(within(panel).getByRole('button', { name: '3 o más' }))
+    await user.click(within(panel).getByRole('radio', { name: '3 o más estrellas' }))
 
     expect(listed()).toEqual([...RATED_4, 'Parrilla Real', 'Pizzería del Centro'].sort())
   })
@@ -152,7 +168,7 @@ describe('Rating filter (US-35)', () => {
     renderMap('/mapa?rating=4')
     await screen.findByTitle('Huerta Real')
 
-    await user.click(screen.getByRole('button', { name: 'Quitar filtro 4 o más ★' }))
+    await user.click(screen.getByRole('button', { name: 'Quitar filtro 4 o más estrellas' }))
 
     expect(listed()).toHaveLength(ALL.length)
   })
@@ -163,7 +179,7 @@ describe('Rating filter (US-35)', () => {
     await screen.findByTitle('Huerta Real')
     expect(onMap('Bodegón Nuevo')).not.toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Quitar filtro 3 o más ★' }))
+    await user.click(screen.getByRole('button', { name: 'Quitar filtro 3 o más estrellas' }))
 
     expect(await screen.findByTitle('Bodegón Nuevo')).toBeInTheDocument()
   })
@@ -344,7 +360,7 @@ describe('Party size filter (US-61)', () => {
 
     await user.click(within(panel).getByRole('button', { name: 'Indicar cuántos van' }))
     for (let count = 2; count < 6; count += 1) {
-      await user.click(within(panel).getByRole('button', { name: 'Agregar uno' }))
+      await user.click(within(panel).getByRole('button', { name: 'Una persona más' }))
     }
 
     expect(listed()).toEqual(['Huerta Real'])
@@ -450,6 +466,26 @@ describe('Every filter together (spec 027, common scenarios)', () => {
       'href',
       `/reservar/${HUERTA.id}?fecha=${tomorrow}&hora=21%3A00&personas=6`,
     )
+    expect(screen.getByText(`${shortDayLabel(tomorrow)} · 21:00 · 6 personas`)).toBeInTheDocument()
+  })
+
+  it('US-59 common S5 keeps a range with equal ends as a range, without an hour', async () => {
+    const user = userEvent.setup()
+    renderMap(`/mapa?dia=${tomorrow}&desde=12:00&hasta=12:00`)
+    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
+    const params = new URLSearchParams(address())
+    expect([params.get('desde'), params.get('hasta'), params.get('hora')]).toEqual([
+      '12:00',
+      '12:00',
+      null,
+    ])
+
+    await user.click(screen.getAllByRole('link', { name: 'Ver detalle' })[0])
+
+    expect(await screen.findByRole('link', { name: 'Reservar mesa' })).toHaveAttribute(
+      'href',
+      `/reservar/${HUERTA.id}?fecha=${tomorrow}`,
+    )
   })
 
   it('US-59 common S5 starts the reservation without an hour for a range, from the map', async () => {
@@ -469,5 +505,150 @@ describe('Every filter together (spec 027, common scenarios)', () => {
       'href',
       `/reservar/${HUERTA.id}?fecha=${tomorrow}`,
     )
+  })
+})
+
+describe('Filters, focus and pending choices (spec 027, QA)', () => {
+  it('US-35 edge moves the focus to the next tag, then to «Filtros» when none remain', async () => {
+    const user = userEvent.setup()
+    renderMap('/mapa?rating=3&restriccion=sin_tacc&personas=2')
+    await screen.findByRole('list', { name: 'Filtros activos' })
+
+    await user.click(screen.getByRole('button', { name: 'Quitar filtro Sin TACC' }))
+    expect(screen.getByRole('button', { name: 'Quitar filtro 2 personas' })).toHaveFocus()
+
+    await user.click(screen.getByRole('button', { name: 'Quitar filtro 2 personas' }))
+    expect(screen.getByRole('button', { name: 'Quitar filtro 3 o más estrellas' })).toHaveFocus()
+
+    await user.click(screen.getByRole('button', { name: 'Quitar todos' }))
+    expect(screen.getByRole('button', { name: /^Filtros/ })).toHaveFocus()
+  })
+
+  it('US-61 edge keeps the focus in the panel when its buttons come and go', async () => {
+    const user = userEvent.setup()
+    renderMap()
+    const panel = await openFilters(user)
+
+    await user.click(within(panel).getByRole('button', { name: 'Indicar cuántos van' }))
+    expect(within(panel).getByRole('button', { name: 'Una persona menos' })).toHaveFocus()
+    await user.click(within(panel).getByRole('button', { name: 'Quitar cantidad de personas' }))
+    expect(within(panel).getByRole('button', { name: 'Indicar cuántos van' })).toHaveFocus()
+
+    await user.click(within(panel).getByRole('button', { name: 'Mañana' }))
+    await user.click(within(panel).getByRole('button', { name: 'Quitar día y horario' }))
+    expect(within(panel).getByRole('button', { name: 'Hoy' })).toHaveFocus()
+  })
+
+  it('US-35 edge offers the minimum rating as one choice among «Todas» and the minimums', async () => {
+    const user = userEvent.setup()
+    renderMap('/mapa?rating=4')
+    const panel = await openFilters(user)
+
+    const group = within(panel).getByRole('radiogroup', { name: 'Calificación mínima' })
+    expect(within(group).getByRole('radio', { name: '4 o más estrellas' })).toBeChecked()
+    await user.click(within(group).getByRole('radio', { name: 'Todas' }))
+
+    expect(listed()).toHaveLength(ALL.length)
+  })
+
+  it('US-59 edge keeps a day waiting for its hour, flagged, after closing the panel', async () => {
+    const user = userEvent.setup()
+    renderMap()
+    let panel = await openFilters(user)
+
+    await user.click(within(panel).getByRole('button', { name: 'Mañana' }))
+    expect(within(panel).getByText(/Falta la hora: el día solo no filtra/)).toBeInTheDocument()
+    await user.click(within(panel).getByRole('button', { name: 'Cerrar' }))
+    expect(listed()).toHaveLength(ALL.length)
+
+    panel = await openFilters(user)
+    expect(within(panel).getByRole('button', { name: 'Mañana' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(within(panel).getByText(/Falta la hora/)).toBeInTheDocument()
+    expect(within(panel).getByLabelText('Otro día')).toHaveAccessibleDescription(
+      longDayLabel(tomorrow),
+    )
+  })
+
+  it('US-59 S3 switching from hour to range keeps the applied time', async () => {
+    const user = userEvent.setup()
+    renderMap(`/mapa?dia=${tomorrow}&hora=21:00`)
+    const panel = await openFilters(user)
+
+    await user.click(within(panel).getByRole('radio', { name: 'Rango' }))
+
+    expect(within(panel).getByLabelText('Desde')).toHaveValue('21:00')
+    expect(within(panel).getByLabelText('Hasta')).toHaveValue('21:00')
+    const params = new URLSearchParams(address())
+    expect([
+      params.get('dia'),
+      params.get('desde'),
+      params.get('hasta'),
+      params.get('hora'),
+    ]).toEqual([tomorrow, '21:00', '21:00', null])
+    expect(within(panel).queryByText(/Falta/)).not.toBeInTheDocument()
+  })
+
+  it('US-59 edge marks «Hasta» invalid for an inverted range', async () => {
+    const user = userEvent.setup()
+    renderMap()
+    const panel = await openFilters(user)
+
+    await user.click(within(panel).getByRole('button', { name: 'Hoy' }))
+    await user.click(within(panel).getByRole('radio', { name: 'Rango' }))
+    fireEvent.change(within(panel).getByLabelText('Desde'), { target: { value: '22:00' } })
+    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '20:00' } })
+
+    expect(within(panel).getByLabelText('Hasta')).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('US-59 edge does not offer the hours of today that already started', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-15T15:10:00-03:00'))
+    const user = userEvent.setup()
+    renderMap()
+    const panel = await openFilters(user)
+
+    await user.click(within(panel).getByRole('button', { name: 'Hoy' }))
+
+    const hour = within(panel).getByLabelText('Hora')
+    expect(within(hour).getByRole('option', { name: '15:00' })).toBeDisabled()
+    expect(within(hour).getByRole('option', { name: '15:30' })).toBeEnabled()
+    expect(within(panel).getByLabelText('Otro día')).toHaveAccessibleDescription('Domingo 15/11')
+  })
+
+  it('US-59 edge drops a day of a link beyond the 60 days, says so and cleans the URL', async () => {
+    renderMap(
+      `/mapa?dia=${addDays(today, 61)}&hora=21:00&rating=9&personas=50&restriccion=foo&precio=xyz&precio=%24`,
+    )
+
+    expect(await screen.findByText(/está a más de 60 días/)).toBeInTheDocument()
+    await waitFor(() => expect(address()).toBe('?precio=%24'))
+    expect(fetchOpenRestaurantIds).not.toHaveBeenCalled()
+  })
+
+  it('US-61 edge explains the maximum of 20 people', async () => {
+    const user = userEvent.setup()
+    renderMap('/mapa?personas=20')
+    const panel = await openFilters(user)
+
+    expect(within(panel).getByRole('button', { name: 'Una persona más' })).toBeDisabled()
+    expect(within(panel).getByText('Máximo 20 personas.')).toBeInTheDocument()
+  })
+
+  it('US-61 common S3 says in the panel that nothing matches and offers to remove the filters', async () => {
+    const user = userEvent.setup()
+    renderMap('/mapa?personas=20')
+    const panel = await openFilters(user)
+
+    expect(within(panel).getByText('Ningún restaurante cumple estos filtros.')).toBeInTheDocument()
+    expect(within(panel).getByRole('button', { name: 'Ver el mapa' })).toBeInTheDocument()
+    await user.click(within(panel).getByRole('button', { name: 'Quitar filtros' }))
+
+    expect(
+      within(panel).getByRole('button', { name: `Ver ${ALL.length} restaurantes` }),
+    ).toBeInTheDocument()
   })
 })

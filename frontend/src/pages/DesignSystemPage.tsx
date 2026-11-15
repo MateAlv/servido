@@ -33,14 +33,17 @@ import {
   PriceFilter,
   RestaurantMap,
   type OccupancyLevel,
+  timeDraftFrom,
   type PriceTier,
   type SearchFilters,
+  type TimeDraft,
 } from '../components/restaurant'
 import {
   Button,
   Card,
   Checkbox,
   Chip,
+  ChoiceChips,
   Drawer,
   IconArrowRight,
   IconFilter,
@@ -308,8 +311,8 @@ function SearchFiltersDemo() {
     partySize: 6,
   })
   const [open, setOpen] = useState(false)
-  // A new key starts the day and time controls over after clearing.
-  const [panelKey, setPanelKey] = useState(0)
+  const [timeDraft, setTimeDraft] = useState<TimeDraft>(() => timeDraftFrom(null))
+  const [rating, setRating] = useState('todas')
 
   return (
     <>
@@ -318,7 +321,22 @@ function SearchFiltersDemo() {
         note="ActiveFilters: cada filtro aplicado es una etiqueta que lo quita, más «Quitar todos». Arriba del mapa y del listado (spec 027, F7)."
         wide
       >
-        <ActiveFilters filters={filters} onChange={setFilters} />
+        <ActiveFilters filters={filters} onChange={setFilters} onEmpty={() => undefined} />
+      </Demo>
+      <Demo
+        title="Opción única en chips"
+        note="ChoiceChips: un grupo de radios con forma de chip, para opciones largas que no entran en un SegmentedControl. Una sola parada de Tab; las flechas mueven y eligen."
+      >
+        <ChoiceChips
+          label="Calificación mínima"
+          options={[
+            { value: 'todas', label: 'Todas' },
+            { value: '4', label: '4 o más ★', ariaLabel: '4 o más estrellas' },
+            { value: '4.5', label: '4,5 o más ★', ariaLabel: '4,5 o más estrellas' },
+          ]}
+          value={rating}
+          onChange={setRating}
+        />
       </Demo>
       <Demo
         title="Panel de filtros"
@@ -337,16 +355,21 @@ function SearchFiltersDemo() {
                 variant="ghost"
                 onClick={() => {
                   setFilters(NO_FILTERS)
-                  setPanelKey((key) => key + 1)
+                  setTimeDraft(timeDraftFrom(null))
                 }}
               >
-                Limpiar filtros
+                Limpiar
               </Button>
               <Button onClick={() => setOpen(false)}>Ver resultados</Button>
             </>
           }
         >
-          <FilterPanel key={panelKey} filters={filters} onChange={setFilters} />
+          <FilterPanel
+            filters={filters}
+            onChange={setFilters}
+            timeDraft={timeDraft}
+            onTimeDraftChange={setTimeDraft}
+          />
         </Drawer>
       </Demo>
     </>

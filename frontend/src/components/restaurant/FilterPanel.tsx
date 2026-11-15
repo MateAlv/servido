@@ -1,10 +1,16 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 
 import { DIETARY_RESTRICTIONS, type DietaryRestriction } from '../../lib/dietary'
-import { addDays, latestBookableDate, todayInBuenosAires } from '../../lib/date'
+import {
+  addDays,
+  currentTimeInBuenosAires,
+  latestBookableDate,
+  todayInBuenosAires,
+} from '../../lib/date'
 import {
   Button,
   Chip,
+  ChoiceChips,
   IconLeaf,
   IconSprout,
   IconStar,
@@ -15,10 +21,15 @@ import {
 } from '../ui'
 import { PriceFilter } from './PriceFilter'
 import {
+  DAY_OUT_OF_RANGE,
   HALF_HOURS,
+  INVERTED_RANGE,
+  isTimeDraftPending,
+  longDayLabel,
   MAX_PARTY_SIZE,
   MIN_RATINGS,
   minRatingLabel,
+  switchTimeMode,
   timeDraftFrom,
   timeFromDraft,
   type MinRating,
@@ -34,6 +45,8 @@ const RESTRICTION_ICONS: Record<DietaryRestriction, ReactNode> = {
   vegano: <IconSprout />,
 }
 
+const ANY_RATING = 'todas'
+
 /** A party of two is where most searches start. */
 const FIRST_PARTY_SIZE = 2
 
@@ -41,10 +54,32 @@ type FilterPanelProps = {
   filters: SearchFilters
   /** Called on every change: the filters apply as the diner chooses them. */
   onChange: (filters: SearchFilters) => void
+  /**
+   * What the day and time controls hold, kept by the caller so a day still waiting for its
+   * hour survives closing and opening the panel. Start it with `timeDraftFrom(filters.time)`.
+   */
+  timeDraft: TimeDraft
+  onTimeDraftChange: (draft: TimeDraft) => void
 }
 
 function sameTime(first: TimeFilter | null, second: TimeFilter | null): boolean {
-  return first?.day === second?.day && first?.from === second?.from && first?.to === second?.to
+  return (
+    first?.day === second?.day &&
+    first?.mode === second?.mode &&
+    first?.from === second?.from &&
+    first?.to === second?.to
+  )
+}
+
+/** What is missing for the day and time to filter, or `undefined` when nothing is. */
+function pendingMessage(draft: TimeDraft, applied: TimeFilter | null): string | undefined {
+  if (!draft.day && (draft.hour || draft.from || draft.to)) {
+    return 'Falta el día: elegí Hoy, Mañana u otro día para aplicar este filtro.'
+  }
+  if (!isTimeDraftPending(draft, applied)) return undefined
+  return draft.mode === 'hora'
+    ? 'Falta la hora: el día solo no filtra. Elegí una hora para aplicar este filtro.'
+    : 'Falta el rango: el día solo no filtra. Elegí desde y hasta qué hora.'
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -58,31 +93,42 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 /**
  * Every search filter of the map and the list (spec 027, F7): price, minimum rating, dietary
- * restrictions, day and time, and party size. Shown inside a `Drawer`; mount it again (a new
- * `key`) whenever the filters change from outside, so the day and time controls start over.
+ * restrictions, day and time, and party size. Shown inside a `Drawer`.
  */
-export function FilterPanel({ filters, onChange }: FilterPanelProps) {
+export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }: FilterPanelProps) {
   const today = todayInBuenosAires()
   const tomorrow = addDays(today, 1)
-  const [draft, setDraft] = useState<TimeDraft>(() => timeDraftFrom(filters.time))
+  const now = currentTimeInBuenosAires()
+  const draft = timeDraft
   const { error: timeError } = timeFromDraft(draft)
+  const pending = timeError ? undefined : pendingMessage(draft, filters.time)
   const hourId = useId()
+  // Buttons that disappear when used hand the focus to what takes their place.
+  const todayChip = useRef<HTMLButtonElement>(null)
+  const partyStart = useRef<HTMLButtonElement>(null)
+  const partyStepper = useRef<HTMLDivElement>(null)
+  const focusAfterParty = useRef<'start' | 'stepper' | null>(null)
 
-  function changeDraft(changes: Partial<TimeDraft>) {
-    const next = { ...draft, ...changes }
-    setDraft(next)
+  useEffect(() => {
+    if (focusAfterParty.current === 'start') partyStart.current?.focus()
+    if (focusAfterParty.current === 'stepper') {
+      partyStepper.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus()
+    }
+    focusAfterParty.current = null
+  }, [filters.partySize])
+
+  function changeDraft(next: TimeDraft) {
+    // An hour of today that already started can't be chosen (spec 027, «Hoy»).
+    const fixed = next.day === today && next.hour && next.hour <= now ? { ...next, hour: '' } : next
+    onTimeDraftChange(fixed)
     // An incomplete or invalid day and time is not applied (spec 027, «Rango invertido»).
-    const { time } = timeFromDraft(next)
+    const { time } = timeFromDraft(fixed)
     if (!sameTime(time, filters.time)) onChange({ ...filters, time })
   }
 
   function clearTime() {
-    setDraft(timeDraftFrom(null))
-    if (filters.time) onChange({ ...filters, time: null })
-  }
-
-  function toggleRating(rating: MinRating) {
-    onChange({ ...filters, minRating: filters.minRating === rating ? null : rating })
+    changeDraft(timeDraftFrom(null))
+    todayChip.current?.focus()
   }
 
   function toggleRestriction(code: DietaryRestriction) {
@@ -97,16 +143,14 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
     })
   }
 
+  function changeParty(partySize: number | null) {
+    focusAfterParty.current =
+      partySize === null ? 'start' : filters.partySize === null ? 'stepper' : null
+    onChange({ ...filters, partySize })
+  }
+
   const draftStarted = Boolean(draft.day || draft.hour || draft.from || draft.to)
-  const timeHint = timeError
-    ? undefined
-    : !draft.day && draftStarted
-      ? 'Elegí un día para aplicar este filtro.'
-      : draft.day && !filters.time
-        ? draft.mode === 'hora'
-          ? 'Elegí una hora para aplicar este filtro.'
-          : 'Elegí desde y hasta qué hora para aplicar este filtro.'
-        : undefined
+  const dayIsValid = /^\d{4}-\d{2}-\d{2}$/.test(draft.day)
 
   return (
     <div className={styles.panel}>
@@ -116,18 +160,29 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
       />
 
       <Section title="Calificación">
-        <div className={styles.options}>
-          {MIN_RATINGS.map((rating) => (
-            <Chip
-              key={rating}
-              selected={filters.minRating === rating}
-              onClick={() => toggleRating(rating)}
-            >
-              {minRatingLabel(rating)}
-              <IconStar className={styles.star} />
-            </Chip>
-          ))}
-        </div>
+        <ChoiceChips
+          label="Calificación mínima"
+          options={[
+            { value: ANY_RATING, label: 'Todas' },
+            ...MIN_RATINGS.map((rating) => ({
+              value: String(rating),
+              label: (
+                <>
+                  {minRatingLabel(rating)}
+                  <IconStar className={styles.star} />
+                </>
+              ),
+              ariaLabel: `${minRatingLabel(rating)} estrellas`,
+            })),
+          ]}
+          value={filters.minRating === null ? ANY_RATING : String(filters.minRating)}
+          onChange={(value) =>
+            onChange({
+              ...filters,
+              minRating: value === ANY_RATING ? null : (Number(value) as MinRating),
+            })
+          }
+        />
         <p className={styles.note}>Según el promedio de las reseñas de otros comensales.</p>
       </Section>
 
@@ -152,10 +207,17 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
 
       <Section title="Día y horario">
         <div className={styles.options}>
-          <Chip selected={draft.day === today} onClick={() => changeDraft({ day: today })}>
+          <Chip
+            ref={todayChip}
+            selected={draft.day === today}
+            onClick={() => changeDraft({ ...draft, day: today })}
+          >
             Hoy
           </Chip>
-          <Chip selected={draft.day === tomorrow} onClick={() => changeDraft({ day: tomorrow })}>
+          <Chip
+            selected={draft.day === tomorrow}
+            onClick={() => changeDraft({ ...draft, day: tomorrow })}
+          >
             Mañana
           </Chip>
         </div>
@@ -166,7 +228,9 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
           min={today}
           max={latestBookableDate()}
           value={draft.day}
-          onChange={(event) => changeDraft({ day: event.target.value })}
+          hint={dayIsValid ? longDayLabel(draft.day) : undefined}
+          error={timeError === DAY_OUT_OF_RANGE ? timeError : undefined}
+          onChange={(event) => changeDraft({ ...draft, day: event.target.value })}
         />
         <SegmentedControl
           label="Tipo de horario"
@@ -175,7 +239,7 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
             { value: 'rango', label: 'Rango' },
           ]}
           value={draft.mode}
-          onChange={(mode) => changeDraft({ mode })}
+          onChange={(mode) => changeDraft(switchTimeMode(draft, mode))}
         />
         {draft.mode === 'hora' ? (
           <div className={styles.field}>
@@ -186,11 +250,11 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
               id={hourId}
               className={styles.select}
               value={draft.hour}
-              onChange={(event) => changeDraft({ hour: event.target.value })}
+              onChange={(event) => changeDraft({ ...draft, hour: event.target.value })}
             >
               <option value="">Elegí una hora</option>
               {HALF_HOURS.map((hour) => (
-                <option key={hour} value={hour}>
+                <option key={hour} value={hour} disabled={draft.day === today && hour <= now}>
                   {hour}
                 </option>
               ))}
@@ -202,25 +266,31 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
               label="Desde"
               type="time"
               value={draft.from}
-              onChange={(event) => changeDraft({ from: event.target.value })}
+              onChange={(event) => changeDraft({ ...draft, from: event.target.value })}
             />
             <TextField
               label="Hasta"
               type="time"
               value={draft.to}
-              onChange={(event) => changeDraft({ to: event.target.value })}
+              error={timeError === INVERTED_RANGE ? timeError : undefined}
+              onChange={(event) => changeDraft({ ...draft, to: event.target.value })}
             />
           </div>
         )}
-        {timeError && (
-          <p key={timeError} className={styles.error} role="alert">
-            {timeError}
+        {pending ? (
+          <p className={styles.pending} role="status">
+            {pending}
           </p>
+        ) : (
+          <p className={styles.note}>Solo aparecen los restaurantes que ya toman reservas.</p>
         )}
-        <p className={styles.note}>
-          {timeHint ?? 'Solo aparecen los restaurantes que ya toman reservas por Servido!.'}
-        </p>
-        <Button variant="ghost" size="sm" disabled={!draftStarted} onClick={clearTime}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={styles.flush}
+          disabled={!draftStarted}
+          onClick={clearTime}
+        >
           Quitar día y horario
         </Button>
       </Section>
@@ -228,31 +298,40 @@ export function FilterPanel({ filters, onChange }: FilterPanelProps) {
       <Section title="Personas">
         {filters.partySize === null ? (
           <Button
+            ref={partyStart}
             variant="secondary"
             size="sm"
-            onClick={() => onChange({ ...filters, partySize: FIRST_PARTY_SIZE })}
+            onClick={() => changeParty(FIRST_PARTY_SIZE)}
           >
             Indicar cuántos van
           </Button>
         ) : (
-          <div className={styles.party}>
-            <QuantityStepper
-              label="Cantidad de personas"
-              value={filters.partySize}
-              min={1}
-              max={MAX_PARTY_SIZE}
-              decreaseLabel="Una persona menos"
-              maxHint={`Máximo ${MAX_PARTY_SIZE} personas`}
-              onChange={(partySize) => onChange({ ...filters, partySize })}
-            />
+          <>
+            <div ref={partyStepper}>
+              <QuantityStepper
+                label="Cantidad de personas"
+                size="lg"
+                value={filters.partySize}
+                min={1}
+                max={MAX_PARTY_SIZE}
+                decreaseLabel="Una persona menos"
+                increaseLabel="Una persona más"
+                maxHint={`Máximo ${MAX_PARTY_SIZE} personas`}
+                onChange={changeParty}
+              />
+            </div>
+            {filters.partySize === MAX_PARTY_SIZE && (
+              <p className={styles.note}>Máximo {MAX_PARTY_SIZE} personas.</p>
+            )}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onChange({ ...filters, partySize: null })}
+              className={styles.flush}
+              onClick={() => changeParty(null)}
             >
               Quitar cantidad de personas
             </Button>
-          </div>
+          </>
         )}
         <p className={styles.note}>
           Solo aparecen los restaurantes que ya toman reservas y tienen una mesa para todo el grupo.

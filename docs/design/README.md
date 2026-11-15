@@ -57,7 +57,8 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `TextField` | Campos de formulario con ayuda y error (el error tiembla y se anuncia). `action` agrega un botón chico al final del campo |
 | `PasswordField` | Contraseña oculta con un ojo para mostrarla u ocultarla (`aria-pressed`). Usalo en todo campo de contraseña |
 | `Checkbox` | Casilla accesible con label asociado, foco visible y estado desmarcado por defecto |
-| `Chip` | Opciones que se alternan: filtros de selección múltiple (precio, restricciones) y grupos donde se elige una sola (horarios, tipo de mesa) |
+| `Chip` | Opciones que se alternan: filtros de selección múltiple (precio, restricciones) y grupos donde se elige una sola (horarios, tipo de mesa). Con `role="radio"` dice `aria-checked` en vez de `aria-pressed` |
+| `ChoiceChips` | Una opción entre varias con forma de chips que se acomodan en filas, cuando las opciones no entran en un `SegmentedControl` (la calificación mínima). Es un grupo de radios: una sola parada de Tab y las flechas mueven y eligen; `ariaLabel` da el nombre hablado cuando la etiqueta lleva símbolos («4 o más estrellas» para «4 o más ★») |
 | `SegmentedControl` | Una opción entre pocas, con indicador que se desliza |
 | `Card` | Superficie base; `interactive` se eleva al pasar el mouse |
 | `StatusPill` | Estado corto: disponibilidad, pago, reserva |
@@ -68,7 +69,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `ToastProvider`, `useToast` | Avisos breves que se van solos. Una página con barra inferior (el pedido) los sube con la variable `--toast-bottom` |
 | `ThemeToggle` | Cambio de tema claro / oscuro |
 | `Reveal` | Animación de entrada al hacer scroll |
-| `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido»), `maxHint` explica el «+» deshabilitado en el máximo, `announce={false}` apaga su anuncio cuando la página ya anuncia el cambio y `disabled` bloquea los dos botones |
+| `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido»), `maxHint` explica el «+» deshabilitado en el máximo, `announce={false}` apaga su anuncio cuando la página ya anuncia el cambio y `disabled` bloquea los dos botones. `increaseLabel` nombra el «+» («Una persona más») y `size="lg"` lleva los botones a 44 px, para formularios fuera de una lista |
 | `TextAreaField` | `TextField` para textos largos |
 | `StarRating` | Calificación interactiva o de solo lectura |
 | `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, `IconFilter`, …) |
@@ -135,8 +136,8 @@ La revisión y la confirmación de la reserva (US-13, `pages/reservation/`) toda
 | `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal. Si un restaurante no tiene datos de concurrencia, no se muestra (no decimos «sin datos») | 5, 33 |
 | `PriceFilter` | Chips de precio (`$` … `$$$$`) y "Quitar filtro de precio"; avisa cuando no hay coincidencias | 7 |
 | `RestaurantExplorer` | Elegir restaurante: botón «Filtros» (con la cantidad de filtros activos) que abre un `Drawer` con `FilterPanel`, las etiquetas de `ActiveFilters`, mapa y la misma lista en tarjetas con su concurrencia, que se actualiza sola; si ningún restaurante tiene datos de concurrencia, no se muestra «Actualizado». Los filtros viven en la URL (`?precio=$$&rating=4&restriccion=sin_tacc&dia=…&hora=21:00&personas=6`), así que se conservan al ir al detalle y volver, al recargar y en un enlace compartido. Sin resultados avisa y ofrece «Quitar filtros». Lo usan el inicio del comensal y `/mapa`. Muestra los restaurantes reales de `GET /api/restaurants` junto con los de prueba de `frontend/src/data/restaurants.fixture.ts`; solo los reales se pueden reservar (spec 003, D4) | 5, 7, 9, 33, 35, 53, 59, 61 |
-| `FilterPanel` | El contenido del panel de filtros: precio (`PriceFilter`), calificación mínima (chips de una sola opción), restricciones (chips con su ícono), día y horario («Hoy», «Mañana» u otra fecha; `SegmentedControl` entre «Hora», cada 30 minutos, y «Rango», con aviso si el «hasta» es anterior al «desde») y personas (`QuantityStepper` de 1 a 20). Cada cambio se aplica al instante | 35, 53, 59, 61 |
-| `ActiveFilters` | Cada filtro activo como una etiqueta oscura con su cruz para quitarlo («4 o más ★», «Sin TACC», «Dom 22/11 · 21:00», «6 personas», «$$»), más «Quitar todos». Las etiquetas aparecen con un pequeño salto | 35, 53, 59, 61 |
+| `FilterPanel` | El contenido del panel de filtros: precio (`PriceFilter`), calificación mínima (`ChoiceChips`: «Todas», «3 o más ★», «4 o más ★», «4,5 o más ★»), restricciones (chips con su ícono), día y horario («Hoy», «Mañana» u otra fecha, que se lee en palabras debajo, «Domingo 22/11»; `SegmentedControl` entre «Hora», cada 30 minutos y sin las de hoy que ya empezaron, y «Rango», con «Hasta» marcado inválido si es anterior al «desde»; al cambiar de modo se conserva lo elegido) y personas (`QuantityStepper` grande de 1 a 20, que avisa «Máximo 20 personas»). Un día sin hora no filtra todavía y se marca con un aviso amarillo; el panel lo recuerda al cerrarse. Cada cambio se aplica al instante y los botones «Quitar …» se alinean con los chips | 35, 53, 59, 61 |
+| `ActiveFilters` | Cada filtro activo como una etiqueta oscura con su cruz para quitarlo («4 o más ★», «Sin TACC», «Dom 22/11 · 21:00», «6 personas», «$$»), más «Quitar todos». Las etiquetas aparecen con un pequeño salto. Al quitar una, el foco pasa a la que quedó en su lugar, o a «Filtros» si no queda ninguna | 35, 53, 59, 61 |
 
 #### Restaurantes reales con datos incompletos
 
@@ -185,8 +186,15 @@ restaurantes de prueba. El horario lo responde `GET /api/restaurants/open`; mien
 carga, la página dice «Buscando restaurantes con ese horario…» y, si falla, ofrece
 «Reintentar».
 
+Un enlace con un día que ya pasó o que está a más de 60 días lo descarta y avisa, y lo que
+no vale (por ejemplo `rating=9` o `personas=50`) se saca de la dirección. En el detalle,
+la tarjeta «Reservá tu mesa» muestra con qué empieza la reserva («Lun 16/11 · 21:00 · 3
+personas»).
+
 En el celular el panel sube desde abajo y el pie tiene «Limpiar» y «Ver N
-restaurantes», que lo cierra. En `/diseno#filtros-busqueda` están las etiquetas y el
+restaurantes», que lo cierra. Si nada cumple los filtros, el pie lo dice y ofrece «Quitar
+filtros» y «Ver el mapa». En `/diseno#filtros-busqueda` están las etiquetas, los chips de
+una sola opción y el
 panel dentro de un `Drawer`, con filtros de ejemplo.
 
 ## Reglas para animaciones nuevas

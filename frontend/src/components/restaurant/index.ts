@@ -13,7 +13,10 @@ export { RestaurantExplorer } from './RestaurantExplorer'
 export { RestaurantMap } from './RestaurantMap'
 export {
   NO_FILTERS,
+  prefillLabel,
   readSearchFilters,
   reservationSearch,
+  timeDraftFrom,
   type SearchFilters,
+  type TimeDraft,
 } from './searchFilters'

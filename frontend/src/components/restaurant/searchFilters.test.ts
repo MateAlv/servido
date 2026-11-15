@@ -12,10 +12,15 @@ import {
   NO_FILTERS,
   readSearchFilters,
   reservationSearch,
+  isTimeDraftPending,
+  longDayLabel,
+  prefillLabel,
   shortDayLabel,
+  switchTimeMode,
   timeFromDraft,
   writeSearchFilters,
   type SearchFilters,
+  type TimeFilter,
 } from './searchFilters'
 
 const TODAY = '2026-11-15'
@@ -57,34 +62,64 @@ describe('readSearchFilters and writeSearchFilters (F8)', () => {
         priceTiers: ['$$'],
         minRating: 4.5,
         restrictions: ['sin_tacc', 'vegano'],
-        time: { day: '2026-11-22', from: '21:00', to: '21:00' },
+        time: { day: '2026-11-22', mode: 'hora', from: '21:00', to: '21:00' },
         partySize: 6,
       },
-      pastDay: false,
+      droppedDay: null,
+      needsCleanup: false,
     })
   })
 
   it('US-59 S2 reads a range', () => {
     expect(read('dia=2026-11-22&desde=20:00&hasta=22:00').filters.time).toEqual({
       day: '2026-11-22',
+      mode: 'rango',
       from: '20:00',
       to: '22:00',
     })
   })
 
-  it('US-59 edge ignores what is invalid in a hand-edited link', () => {
-    const { filters } = read(
+  it('US-59 S2 keeps a range with equal ends as a range', () => {
+    const range = { day: '2026-11-22', mode: 'rango' as const, from: '12:00', to: '12:00' }
+    const written = writeSearchFilters(new URLSearchParams(), { ...NO_FILTERS, time: range })
+
+    expect(written.toString()).toBe('dia=2026-11-22&desde=12%3A00&hasta=12%3A00')
+    expect(readSearchFilters(written, TODAY, LATEST).filters.time).toEqual(range)
+    expect(reservationSearch({ ...NO_FILTERS, time: range })).toBe('?fecha=2026-11-22')
+  })
+
+  it('US-59 edge ignores what is invalid in a hand-edited link and asks to clean it', () => {
+    const { filters, needsCleanup } = read(
       'rating=5&restriccion=sin_lactosa&dia=2026-11-22&hora=21:10&personas=21&precio=caro',
     )
     expect(filters).toEqual(NO_FILTERS)
+    expect(needsCleanup).toBe(true)
+    expect(read('rating=9&personas=50&restriccion=foo&precio=xyz&otro=1')).toEqual({
+      filters: NO_FILTERS,
+      droppedDay: null,
+      needsCleanup: true,
+    })
     expect(read('dia=2026-11-22&desde=22:00&hasta=20:00').filters.time).toBeNull()
     expect(read('dia=2027-01-15&hora=21:00').filters.time).toBeNull()
     expect(read('personas=0').filters.partySize).toBeNull()
   })
 
   it('US-59 edge drops a day that already passed and says so', () => {
-    expect(read('dia=2026-11-14&hora=21:00')).toEqual({ filters: NO_FILTERS, pastDay: true })
-    expect(read(`dia=${TODAY}&hora=21:00`).pastDay).toBe(false)
+    expect(read('dia=2026-11-14&hora=21:00')).toEqual({
+      filters: NO_FILTERS,
+      droppedDay: 'past',
+      needsCleanup: true,
+    })
+    expect(read(`dia=${TODAY}&hora=21:00`)).toMatchObject({ droppedDay: null, needsCleanup: false })
+  })
+
+  it('US-59 edge drops a day beyond the 60 days and says so', () => {
+    expect(read('dia=2027-01-15&hora=21:00')).toEqual({
+      filters: NO_FILTERS,
+      droppedDay: 'far',
+      needsCleanup: true,
+    })
+    expect(read(`dia=${LATEST}&hora=21:00`).droppedDay).toBeNull()
   })
 
   it('US-35 edge writes the filters and keeps other parameters', () => {
@@ -92,7 +127,7 @@ describe('readSearchFilters and writeSearchFilters (F8)', () => {
       priceTiers: ['$', '$$$'],
       minRating: 4,
       restrictions: ['vegetariano'],
-      time: { day: '2026-11-22', from: '20:00', to: '22:00' },
+      time: { day: '2026-11-22', mode: 'rango', from: '20:00', to: '22:00' },
       partySize: 3,
     }
     const written = writeSearchFilters(new URLSearchParams('otro=1&hora=10:00'), filters)
@@ -163,7 +198,10 @@ describe('matchesSearchFilters (F6, F10)', () => {
   })
 
   it('US-59 S1 keeps the restaurants open at that time', () => {
-    const filters = { ...NO_FILTERS, time: { day: TODAY, from: '21:00', to: '21:00' } }
+    const filters: SearchFilters = {
+      ...NO_FILTERS,
+      time: { day: TODAY, mode: 'hora', from: '21:00', to: '21:00' },
+    }
     expect(matchesSearchFilters(REAL, filters, new Set(['real-1']))).toBe(true)
     expect(matchesSearchFilters(REAL, filters, new Set())).toBe(false)
     // While the API hasn't answered, nobody is known to be open.
@@ -177,7 +215,7 @@ describe('matchesSearchFilters (F6, F10)', () => {
     expect(
       matchesSearchFilters(
         test,
-        { ...NO_FILTERS, time: { day: TODAY, from: '00:00', to: '23:59' } },
+        { ...NO_FILTERS, time: { day: TODAY, mode: 'rango', from: '00:00', to: '23:59' } },
         everyone,
       ),
     ).toBe(false)
@@ -202,7 +240,7 @@ describe('filter tags (F7)', () => {
       priceTiers: ['$$'],
       minRating: 4,
       restrictions: ['sin_tacc'],
-      time: { day: '2026-11-22', from: '21:00', to: '21:00' },
+      time: { day: '2026-11-22', mode: 'hora', from: '21:00', to: '21:00' },
       partySize: 6,
     }
     expect(filterTags(filters).map((tag) => tag.label)).toEqual([
@@ -212,6 +250,7 @@ describe('filter tags (F7)', () => {
       'Dom 22/11 · 21:00',
       '6 personas',
     ])
+    expect(filterTags(filters)[1].spokenLabel).toBe('4 o más estrellas')
     expect(activeFilterCount(filters)).toBe(5)
     expect(
       filterTags({ ...NO_FILTERS, minRating: 4.5, partySize: 1 }).map((tag) => tag.label),
@@ -221,10 +260,12 @@ describe('filter tags (F7)', () => {
   it('US-59 common S2 shows a range with both ends', () => {
     const [tag] = filterTags({
       ...NO_FILTERS,
-      time: { day: '2026-11-21', from: '20:00', to: '22:00' },
+      time: { day: '2026-11-21', mode: 'rango', from: '20:00', to: '22:00' },
     })
     expect(tag.label).toBe('Sáb 21/11 · 20:00–22:00')
     expect(shortDayLabel('2026-12-01')).toBe('Mar 01/12')
+    expect(longDayLabel('2026-11-22')).toBe('Domingo 22/11')
+    expect(shortDayLabel('2026-11-18')).toBe('Mié 18/11')
   })
 
   it('US-53 S3 removes one tag and keeps the rest', () => {
@@ -239,14 +280,14 @@ describe('timeFromDraft (US-59)', () => {
 
   it('US-59 S1 applies a day and a point hour', () => {
     expect(timeFromDraft({ ...draft, hour: '21:00' }, TODAY, LATEST)).toEqual({
-      time: { day: '2026-11-22', from: '21:00', to: '21:00' },
+      time: { day: '2026-11-22', mode: 'hora', from: '21:00', to: '21:00' },
     })
   })
 
   it('US-59 S2 applies a range, both ends included', () => {
     expect(
       timeFromDraft({ ...draft, mode: 'rango', from: '12:00', to: '14:00' }, TODAY, LATEST),
-    ).toEqual({ time: { day: '2026-11-22', from: '12:00', to: '14:00' } })
+    ).toEqual({ time: { day: '2026-11-22', mode: 'rango', from: '12:00', to: '14:00' } })
   })
 
   it('US-59 edge does not apply an inverted range and says why', () => {
@@ -262,6 +303,24 @@ describe('timeFromDraft (US-59)', () => {
     })
   })
 
+  it('US-59 S3 switching between hour and range keeps what still means the same', () => {
+    const point = { ...draft, hour: '21:00' }
+    const range = switchTimeMode(point, 'rango')
+    expect(timeFromDraft(range, TODAY, LATEST).time).toEqual({
+      day: '2026-11-22',
+      mode: 'rango',
+      from: '21:00',
+      to: '21:00',
+    })
+    expect(switchTimeMode({ ...range, from: '20:00', to: '22:00' }, 'hora').hour).toBe('20:00')
+    expect(switchTimeMode({ ...range, from: '20:10', to: '22:00' }, 'hora').hour).toBe('')
+  })
+
+  it('US-59 edge flags a day still waiting for its hour', () => {
+    expect(isTimeDraftPending(draft, null)).toBe(true)
+    expect(isTimeDraftPending({ ...draft, day: '' }, null)).toBe(false)
+  })
+
   it('US-59 edge waits for the day and the time', () => {
     expect(timeFromDraft(draft, TODAY, LATEST)).toEqual({ time: null })
     expect(timeFromDraft({ ...draft, day: '', hour: '21:00' }, TODAY, LATEST)).toEqual({
@@ -271,8 +330,8 @@ describe('timeFromDraft (US-59)', () => {
 })
 
 describe('reservation prefill (F9)', () => {
-  const point = { day: '2026-11-22', from: '21:00', to: '21:00' }
-  const range = { day: '2026-11-22', from: '20:00', to: '22:00' }
+  const point: TimeFilter = { day: '2026-11-22', mode: 'hora', from: '21:00', to: '21:00' }
+  const range: TimeFilter = { day: '2026-11-22', mode: 'rango', from: '20:00', to: '22:00' }
 
   it('US-59 common S5 carries the day, the point hour and the party size', () => {
     const filters = { ...NO_FILTERS, minRating: 4 as const, time: point, partySize: 6 }
@@ -287,6 +346,14 @@ describe('reservation prefill (F9)', () => {
         readSearchFilters(new URLSearchParams(detailSearch(filters)), TODAY, LATEST).filters,
       ),
     ).toBe('?fecha=2026-11-22')
+  })
+
+  it('US-59 common S5 says what the reservation starts with', () => {
+    expect(prefillLabel({ ...NO_FILTERS, time: point, partySize: 3 })).toBe(
+      'Dom 22/11 · 21:00 · 3 personas',
+    )
+    expect(prefillLabel({ ...NO_FILTERS, time: range })).toBe('Dom 22/11')
+    expect(prefillLabel({ ...NO_FILTERS, minRating: 4 })).toBe('')
   })
 
   it('US-61 common S5 carries only the party size', () => {

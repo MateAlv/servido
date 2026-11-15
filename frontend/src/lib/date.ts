@@ -39,6 +39,11 @@ export function timeInBuenosAires(isoDateTime: string): string {
   return BA_TIME_FORMAT.format(new Date(isoDateTime))
 }
 
+/** The current `HH:MM` in Buenos Aires. */
+export function currentTimeInBuenosAires(): string {
+  return BA_TIME_FORMAT.format(new Date())
+}
+
 /** How far ahead a diner can book (decision D10 of spec 003, pending PO). */
 export const MAX_DAYS_AHEAD = 60
 

@@ -41,7 +41,7 @@
   color: var(--color-star);
 }
 
-[aria-pressed='true'] > .star {
+[aria-checked='true'] > .star {
   color: currentcolor;
 }
 
@@ -102,9 +102,19 @@
   width: 100%;
 }
 
-.party {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
+/* A ghost button lines its text up with the chips and headings above it. */
+.flush {
+  margin-inline-start: calc(-1 * var(--space-4));
+}
+
+/* A day still waiting for its hour: easy to notice, since it doesn't filter yet. */
+.pending {
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-field);
+  background: var(--color-warn-bg);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
 }

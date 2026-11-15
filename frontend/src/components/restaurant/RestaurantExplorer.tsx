@@ -25,7 +25,10 @@ import {
   matchesSearchFilters,
   NO_FILTERS,
   readSearchFilters,
+  timeDraftFrom,
+  timeFromDraft,
   writeSearchFilters,
+  type DroppedDay,
   type SearchFilters,
 } from './searchFilters'
 import styles from './RestaurantExplorer.module.css'
@@ -45,6 +48,11 @@ function byDistanceThenName(diner: GeoPoint | null) {
       : a.name.localeCompare(b.name, 'es')
 }
 
+const DROPPED_DAY_NOTICES: Record<Exclude<DroppedDay, null>, string> = {
+  past: 'El día del enlace ya pasó, así que no lo aplicamos. Elegí otro en «Filtros».',
+  far: 'El día del enlace está a más de 60 días, así que no lo aplicamos: se puede reservar hasta 60 días antes. Elegí otro en «Filtros».',
+}
+
 function restaurantCount(count: number): string {
   return count === 1 ? '1 restaurante' : `${count} restaurantes`
 }
@@ -58,15 +66,17 @@ function restaurantCount(count: number): string {
 export function RestaurantExplorer() {
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { filters, pastDay } = readSearchFilters(searchParams)
+  const { filters, droppedDay, needsCleanup } = readSearchFilters(searchParams)
   const { point: diner, status, retry } = useGeolocation()
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  // A new key mounts the panel again, so its day and time controls start from the URL.
-  const [panelKey, setPanelKey] = useState(0)
-  // A shared link with a day that already passed: the day is dropped and the diner is told.
-  const [pastDayNotice, setPastDayNotice] = useState(pastDay)
+  // The day and time controls of the panel. A day still waiting for its hour lives only here,
+  // not in the URL, so it survives closing and opening the panel.
+  const [timeDraft, setTimeDraft] = useState(() => timeDraftFrom(filters.time))
+  // A shared link with a day out of the booking window: the day is dropped and the diner is told.
+  const [dayNotice, setDayNotice] = useState(droppedDay)
   const mapRef = useRef<HTMLDivElement>(null)
+  const filtersButton = useRef<HTMLButtonElement>(null)
 
   const restaurantsQuery = useQuery({
     queryKey: ['restaurants', 'map'],
@@ -88,12 +98,13 @@ export function RestaurantExplorer() {
   const timePending = time !== null && openQuery.isPending
   const timeFailed = time !== null && openQuery.isError
 
+  // What a hand-edited or old link holds that doesn't apply is taken out of the URL (F8).
   useEffect(() => {
-    if (!pastDay) return
+    if (!needsCleanup) return
     setSearchParams((current) => writeSearchFilters(current, readSearchFilters(current).filters), {
       replace: true,
     })
-  }, [pastDay, setSearchParams])
+  }, [needsCleanup, setSearchParams])
 
   // Only restaurants with a usable location appear (spec 002-elegir-restaurante, FR-011).
   const located = useMemo(
@@ -118,18 +129,29 @@ export function RestaurantExplorer() {
   const toDetail = (restaurant: RestaurantPublic) =>
     `/restaurantes/${restaurant.id}${detailSearch(filters)}`
 
+  const noResults = resultsKnown && visible.length === 0 && filterCount > 0
+
   function changeFilters(next: SearchFilters) {
-    setPastDayNotice(false)
+    setDayNotice(null)
     setSearchParams((current) => writeSearchFilters(current, next), { replace: true })
   }
 
+  /** A change made outside the day and time controls also resets them. */
+  function replaceFilters(next: SearchFilters) {
+    changeFilters(next)
+    setTimeDraft(timeDraftFrom(next.time))
+  }
+
   function clearFilters() {
-    changeFilters(NO_FILTERS)
-    setPanelKey((key) => key + 1)
+    replaceFilters(NO_FILTERS)
   }
 
   function openDrawer() {
-    setPanelKey((key) => key + 1)
+    // The controls follow the URL unless they hold a day still waiting for its hour.
+    const draftTime = timeFromDraft(timeDraft).time
+    if (JSON.stringify(draftTime) !== JSON.stringify(filters.time)) {
+      setTimeDraft(timeDraftFrom(filters.time))
+    }
     setDrawerOpen(true)
   }
 
@@ -145,6 +167,7 @@ export function RestaurantExplorer() {
       <div className={styles.filters}>
         <div className={styles.toolbar}>
           <Button
+            ref={filtersButton}
             variant="secondary"
             icon={<IconFilter />}
             aria-haspopup="dialog"
@@ -160,16 +183,14 @@ export function RestaurantExplorer() {
           </Button>
           <ActiveFilters
             filters={filters}
-            onChange={(next) => {
-              changeFilters(next)
-              setPanelKey((key) => key + 1)
-            }}
+            onChange={replaceFilters}
+            onEmpty={() => filtersButton.current?.focus()}
           />
         </div>
 
-        {pastDayNotice && (
+        {dayNotice && (
           <p className={styles.notice} role="status">
-            El día del enlace ya pasó, así que no lo aplicamos. Elegí otro en «Filtros».
+            {DROPPED_DAY_NOTICES[dayNotice]}
           </p>
         )}
 
@@ -337,30 +358,48 @@ export function RestaurantExplorer() {
         onClose={() => setDrawerOpen(false)}
         title="Filtros"
         footer={
-          <>
+          <div className={styles.drawerFooter}>
             <p className="visually-hidden" role="status">
               {resultsKnown &&
                 (visible.length === 0
                   ? 'Ningún restaurante cumple los filtros.'
                   : `${restaurantCount(visible.length)} ${visible.length === 1 ? 'cumple' : 'cumplen'} los filtros.`)}
             </p>
-            <Button
-              variant="ghost"
-              aria-label="Limpiar filtros"
-              disabled={filterCount === 0}
-              onClick={clearFilters}
-            >
-              Limpiar
-            </Button>
-            <Button onClick={() => setDrawerOpen(false)}>
-              {resultsKnown && visible.length > 0
-                ? `Ver ${restaurantCount(visible.length)}`
-                : 'Ver resultados'}
-            </Button>
-          </>
+            {noResults && (
+              <p className={styles.drawerEmpty}>Ningún restaurante cumple estos filtros.</p>
+            )}
+            <div className={styles.drawerActions}>
+              {noResults ? (
+                <Button variant="secondary" onClick={clearFilters}>
+                  Quitar filtros
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  aria-label="Limpiar filtros"
+                  disabled={filterCount === 0}
+                  onClick={clearFilters}
+                >
+                  Limpiar
+                </Button>
+              )}
+              <Button onClick={() => setDrawerOpen(false)}>
+                {noResults
+                  ? 'Ver el mapa'
+                  : resultsKnown
+                    ? `Ver ${restaurantCount(visible.length)}`
+                    : 'Ver resultados'}
+              </Button>
+            </div>
+          </div>
         }
       >
-        <FilterPanel key={panelKey} filters={filters} onChange={changeFilters} />
+        <FilterPanel
+          filters={filters}
+          onChange={changeFilters}
+          timeDraft={timeDraft}
+          onTimeDraftChange={setTimeDraft}
+        />
       </Drawer>
     </div>
   )

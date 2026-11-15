@@ -224,3 +224,25 @@
     top: 0;
   }
 }
+
+/* The drawer footer: an optional no-results line over its two actions. */
+.drawerFooter {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.drawerEmpty {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 800;
+}
+
+.drawerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.drawerActions > :last-child {
+  flex: 1;
+}
