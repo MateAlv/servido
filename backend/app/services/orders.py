@@ -5,8 +5,10 @@ Every rule about orders lives here: what the menu is, when an order can change, 
 estimate, and the arrival and preparation times the restaurant-side stories read (US-20, US-22).
 """
 
+import hashlib
+import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
@@ -17,6 +19,7 @@ from app.models.cart import Cart, CartItem
 from app.models.diner import Diner
 from app.models.dish import Dish
 from app.models.order import Order
+from app.models.order_confirmation import OrderConfirmation
 from app.models.order_item import OrderItem
 from app.models.reservation import Reservation
 from app.services.availability import BUENOS_AIRES
@@ -29,6 +32,14 @@ ORDER_CLOSED = "Ya no se puede cambiar el pedido de esta reserva."
 EMAIL_NOT_VERIFIED = "Verificá tu email para confirmar tu pedido."
 NOTHING_TO_CONFIRM = "Agregá al menos un plato para confirmar tu pedido."
 MENU_CHANGED = "El menú cambió. Revisá tu pedido antes de confirmarlo."
+
+
+class InvalidArrivalError(Exception):
+    pass
+
+
+class OrderConflictError(Exception):
+    pass
 
 
 class ReservationNotFoundError(Exception):
@@ -132,25 +143,40 @@ def order_summary(items: list[OrderItem]) -> OrderSummary:
     )
 
 
-def arrival_time(reservation: Reservation) -> datetime:
+def arrival_time(reservation: Reservation, snapshot: Order | Cart | None = None) -> datetime:
     """When the diner arrives: the reservation start until US-43 lets them choose (P7)."""
-    return reservation.starts_at.astimezone(BUENOS_AIRES)
+    return (
+        reservation.starts_at + (snapshot.arrival_delay if snapshot else timedelta())
+    ).astimezone(BUENOS_AIRES)
 
 
 def prep_start_time(reservation: Reservation, order: Order) -> datetime:
     """When the kitchen should start so the order is ready on arrival (for US-20)."""
-    return suggested_start(reservation, order.items)
+    return suggested_start(reservation, order.items, order.arrival_delay)
 
 
-def suggested_start(reservation: Reservation, items: list[OrderItem] | list[ItemInput]) -> datetime:
+def suggested_start(
+    reservation: Reservation,
+    items: list[OrderItem] | list[ItemInput],
+    delay: timedelta = timedelta(),
+) -> datetime:
     """Arrival minus the slowest dish's time (P2); the arrival when no dish has a time."""
     times = [item.prep_time_minutes for item in items if item.prep_time_minutes is not None]
-    arrival = arrival_time(reservation)
-    return arrival - timedelta(minutes=max(times)) if times else arrival
+    arrival = arrival_time(reservation) + delay
+    try:
+        return arrival - timedelta(minutes=max(times)) if times else arrival
+    except OverflowError as error:
+        raise InvalidArrivalError(
+            "El tiempo de preparación no permite coordinar esta llegada."
+        ) from error
 
 
 def order_of(session: Session, reservation_id: UUID) -> Order | None:
-    return session.scalar(select(Order).where(Order.reservation_id == reservation_id))
+    return session.scalar(
+        select(Order)
+        .where(Order.reservation_id == reservation_id)
+        .execution_options(populate_existing=True)
+    )
 
 
 def cart_of(session: Session, reservation_id: UUID) -> Cart | None:
@@ -176,7 +202,7 @@ def diner_reservation(
         Reservation.id == reservation_id, Reservation.diner_id == diner_id
     )
     if lock:
-        query = query.with_for_update()
+        query = query.with_for_update().execution_options(populate_existing=True)
     reservation = session.scalar(query)
     if reservation is None:
         raise ReservationNotFoundError
@@ -215,7 +241,14 @@ def item_values(item: ItemInput) -> dict:
 
 
 def confirm_order(
-    session: Session, diner_id: UUID, reservation_id: UUID, items: list[ItemInput], now: datetime
+    session: Session,
+    diner_id: UUID,
+    reservation_id: UUID,
+    items: list[ItemInput],
+    now: datetime,
+    *,
+    arrival_at: datetime,
+    payment_method: str | None,
 ) -> tuple[Reservation, Order | None]:
     """Replaces the reservation's order with these items, or removes it when there are none
     (P11), and deletes the cart. Checks follow data-model.md rule 6."""
@@ -230,6 +263,18 @@ def confirm_order(
         raise OrderClosedError
     if not items and order is None:
         raise NothingToConfirmError
+    delay = validate_arrival(reservation, arrival_at, now)
+    if items and payment_method is None:
+        raise InvalidArrivalError("Seleccioná un medio de pago para confirmar tu pedido.")
+    if (
+        items
+        and order
+        and order.payment_status == "paid"
+        and order.payment_method != payment_method
+    ):
+        raise OrderConflictError(
+            "Ya se registró el pago de este pedido. No podés cambiar el medio."
+        )
     session.execute(delete(Cart).where(Cart.reservation_id == reservation.id))
     if not items:
         session.delete(order)
@@ -241,7 +286,9 @@ def confirm_order(
             reservation_id=reservation.id,
             restaurant_id=reservation.restaurant_id,
             status="confirmed",
-            prep_start_time=suggested_start(reservation, items),
+            prep_start_time=suggested_start(reservation, items, delay),
+            arrival_delay=delay,
+            payment_method=payment_method,
             confirmed_at=now,
         )
         session.add(order)
@@ -252,7 +299,9 @@ def confirm_order(
         session.execute(delete(OrderItem).where(OrderItem.order_id == order.id))
         session.expire(order, ["items"])
         order.status = "confirmed"
-        order.prep_start_time = suggested_start(reservation, items)
+        order.arrival_delay = delay
+        order.payment_method = payment_method
+        order.prep_start_time = suggested_start(reservation, items, delay)
         order.confirmed_at = now
     session.add_all(OrderItem(order_id=order.id, **item_values(item)) for item in items)
     session.flush()
@@ -261,13 +310,24 @@ def confirm_order(
 
 
 def save_cart(
-    session: Session, diner_id: UUID, reservation_id: UUID, items: list[ItemInput], now: datetime
+    session: Session,
+    diner_id: UUID,
+    reservation_id: UUID,
+    items: list[ItemInput],
+    now: datetime,
+    *,
+    arrival_at: datetime,
+    payment_method: str | None,
 ) -> Cart | None:
     """Replaces the reservation's cart (rule 7). An empty cart only makes sense for a confirmed
     order the diner emptied; otherwise the cart is deleted and None is returned."""
+    from app.services import availability
+
     reservation = diner_reservation(session, diner_id, reservation_id, lock=True)
+    now = availability.current_time()
     if not order_open(session, reservation, now):
         raise OrderClosedError
+    delay = validate_arrival(reservation, arrival_at, now)
     check_on_menu(session, reservation.restaurant_id, items)
     cart = cart_of(session, reservation.id)
     if not items and not has_order(session, reservation.id):
@@ -283,6 +343,8 @@ def save_cart(
         session.execute(delete(CartItem).where(CartItem.cart_id == cart.id))
         session.expire(cart, ["items"])
         cart.updated_at = now
+    cart.arrival_delay = delay
+    cart.payment_method = payment_method
     session.add_all(CartItem(cart_id=cart.id, **item_values(item)) for item in items)
     session.flush()
     session.expire(cart, ["items"])
@@ -308,3 +370,78 @@ def upcoming_reservations(session: Session, diner_id: UUID, now: datetime) -> li
             .limit(20)
         )
     )
+
+
+def validate_arrival(reservation: Reservation, arrival_at: datetime, now: datetime) -> timedelta:
+    delay = arrival_at.astimezone(UTC) - reservation.starts_at.astimezone(UTC)
+    if not timedelta() <= delay <= timedelta(minutes=30) or arrival_at <= now:
+        raise InvalidArrivalError("La hora de llegada no es válida.")
+    return delay
+
+
+def payment_editable(reservation: Reservation, order: Order, now: datetime) -> bool:
+    return (
+        reservation.status == "confirmed"
+        and order.status == "confirmed"
+        and now < reservation.ends_at
+        and order.payment_status != "paid"
+    )
+
+
+def change_payment_method(
+    session: Session, diner_id: UUID, reservation_id: UUID, method: str, now: datetime
+) -> Reservation:
+    from app.services import availability
+
+    reservation = diner_reservation(session, diner_id, reservation_id, lock=True)
+    order = order_of(session, reservation.id)
+    now = availability.current_time()
+    if order is None or not payment_editable(reservation, order, now):
+        raise OrderConflictError(
+            "No podés cambiar el medio: el pedido ya está pagado, "
+            "la reserva terminó o no está vigente."
+        )
+    order.payment_method = method
+    session.flush()
+    return reservation
+
+
+def confirm_operation(session: Session, diner_id: UUID, reservation_id: UUID, payload):
+    from app.services import availability
+
+    reservation = diner_reservation(session, diner_id, reservation_id, lock=True)
+    semantic = payload.model_dump(mode="json", exclude={"operation_id"})
+    semantic["arrival_at"] = payload.arrival_at.astimezone(UTC).isoformat(timespec="microseconds")
+    semantic["items"] = sorted(semantic["items"], key=lambda item: item["dish_id"])
+    digest = hashlib.sha256(
+        ("v1:" + str(reservation_id) + json.dumps(semantic, sort_keys=True)).encode()
+    ).hexdigest()
+    receipt = session.get(OrderConfirmation, (reservation_id, payload.operation_id))
+    if receipt is not None:
+        if receipt.request_digest != digest:
+            raise OrderConflictError(
+                "Esta confirmación ya se usó con otros datos. "
+                "Revisá el pedido antes de confirmar de nuevo."
+            )
+        return reservation, True
+    now = availability.current_time()
+    items = [ItemInput(**item.model_dump()) for item in payload.items]
+    confirm_order(
+        session,
+        diner_id,
+        reservation_id,
+        items,
+        now,
+        arrival_at=payload.arrival_at,
+        payment_method=payload.payment_method,
+    )
+    session.add(
+        OrderConfirmation(
+            reservation_id=reservation_id,
+            operation_id=payload.operation_id,
+            request_digest=digest,
+            accepted_at=now,
+        )
+    )
+    session.flush()
+    return reservation, False

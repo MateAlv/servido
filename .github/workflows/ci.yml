@@ -17,16 +17,16 @@ jobs:
         env:
           POSTGRES_USER: servido
           POSTGRES_PASSWORD: servido
-          POSTGRES_DB: servido
+          POSTGRES_DB: servido_test
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U servido -d servido"
+          --health-cmd "pg_isready -U servido -d servido_test"
           --health-interval 2s
           --health-timeout 5s
           --health-retries 15
     env:
-      DATABASE_URL: postgresql+psycopg://servido:servido@localhost:5432/servido
+      DATABASE_URL: postgresql+psycopg://servido:servido@localhost:5432/servido_test
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.0

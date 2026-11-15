@@ -2514,7 +2514,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OrderRequest"
+                "$ref": "#/components/schemas/ConfirmationRequest"
               }
             }
           }
@@ -2613,7 +2613,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OrderRequest"
+                "$ref": "#/components/schemas/DraftRequest"
               }
             }
           }
@@ -2741,6 +2741,104 @@
           },
           "400": {
             "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations/{reservation_id}/order/payment-method": {
+      "put": {
+        "tags": [
+          "order"
+        ],
+        "summary": "Put Payment Method",
+        "operationId": "put_payment_method_api_reservations__reservation_id__order_payment_method_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentMethodRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderPageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o es de otro comensal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Medio inv\u00e1lido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El medio ya no se puede cambiar.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3260,6 +3358,26 @@
         ],
         "title": "AffectedReservation"
       },
+      "ArrivalWindow": {
+        "properties": {
+          "starts_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Starts At"
+          },
+          "latest_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Latest At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "starts_at",
+          "latest_at"
+        ],
+        "title": "ArrivalWindow"
+      },
       "AvailabilityResponse": {
         "properties": {
           "restaurant_id": {
@@ -3526,6 +3644,26 @@
       },
       "CartResponse": {
         "properties": {
+          "arrival_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Arrival At"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "cash",
+                  "online"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method"
+          },
           "updated_at": {
             "type": "string",
             "format": "date-time",
@@ -3541,6 +3679,8 @@
         },
         "type": "object",
         "required": [
+          "arrival_at",
+          "payment_method",
           "updated_at",
           "items"
         ],
@@ -3727,6 +3867,71 @@
           "detail"
         ],
         "title": "ClosureWarningResponse"
+      },
+      "ConfirmationRequest": {
+        "properties": {
+          "arrival_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Arrival At"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "cash",
+                  "online"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemRequest"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Items"
+          },
+          "operation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Operation Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "arrival_at",
+          "payment_method",
+          "items",
+          "operation_id"
+        ],
+        "title": "ConfirmationRequest"
+      },
+      "ConfirmationResult": {
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Operation Id"
+          },
+          "replayed": {
+            "type": "boolean",
+            "title": "Replayed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "operation_id",
+          "replayed"
+        ],
+        "title": "ConfirmationResult"
       },
       "ConfirmedOrderItemResponse": {
         "properties": {
@@ -4100,6 +4305,47 @@
           "changed_since_open"
         ],
         "title": "DishWriteResponse"
+      },
+      "DraftRequest": {
+        "properties": {
+          "arrival_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Arrival At"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "cash",
+                  "online"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItemRequest"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "arrival_at",
+          "payment_method",
+          "items"
+        ],
+        "title": "DraftRequest",
+        "description": "The whole order (or cart): it replaces the previous one."
       },
       "FreeGroupResponse": {
         "properties": {
@@ -4532,6 +4778,19 @@
       },
       "OrderPageResponse": {
         "properties": {
+          "arrival_window": {
+            "$ref": "#/components/schemas/ArrivalWindow"
+          },
+          "confirmation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConfirmationResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "reservation": {
             "$ref": "#/components/schemas/ReservationResponse"
           },
@@ -4565,6 +4824,7 @@
         },
         "type": "object",
         "required": [
+          "arrival_window",
           "reservation",
           "order",
           "cart",
@@ -4604,26 +4864,45 @@
         ],
         "title": "OrderPaymentResponse"
       },
-      "OrderRequest": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/OrderItemRequest"
-            },
-            "type": "array",
-            "maxItems": 50,
-            "title": "Items"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items"
-        ],
-        "title": "OrderRequest",
-        "description": "The whole order (or cart): it replaces the previous one."
-      },
       "OrderResponse": {
         "properties": {
+          "arrival_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Arrival At"
+          },
+          "prep_start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Prep Start Time"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "cash",
+                  "online"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method"
+          },
+          "payment_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "paid"
+            ],
+            "title": "Payment Status"
+          },
+          "payment_method_editable": {
+            "type": "boolean",
+            "title": "Payment Method Editable"
+          },
           "confirmed_at": {
             "type": "string",
             "format": "date-time",
@@ -4654,6 +4933,11 @@
         },
         "type": "object",
         "required": [
+          "arrival_at",
+          "prep_start_time",
+          "payment_method",
+          "payment_status",
+          "payment_method_editable",
           "confirmed_at",
           "items",
           "total",
@@ -4681,6 +4965,24 @@
           "password"
         ],
         "title": "PasswordResetRequest"
+      },
+      "PaymentMethodRequest": {
+        "properties": {
+          "payment_method": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "online"
+            ],
+            "title": "Payment Method"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "payment_method"
+        ],
+        "title": "PaymentMethodRequest"
       },
       "PendingReview": {
         "properties": {

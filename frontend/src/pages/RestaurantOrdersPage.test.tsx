@@ -134,3 +134,23 @@ describe('RestaurantOrdersPage (US-22)', () => {
     ).not.toBeInTheDocument()
   })
 })
+
+it('US-45 edge shows the confirmed electronic preference separately from unpaid status', async () => {
+  const confirmed = {
+    ...order,
+    arrival_time: '10:30',
+    prep_start_time: '10:20',
+    payment: { ...order.payment, method: 'online' },
+  }
+  api.fetchCurrentShiftOrders.mockResolvedValue({
+    shift: { start_time: '08:00', end_time: '13:00' },
+    orders: [confirmed],
+  })
+  api.fetchRestaurantOrder.mockResolvedValue(confirmed)
+  const user = userEvent.setup()
+  renderWithProviders(<RestaurantOrdersPage />)
+  expect(await screen.findByText('10:30')).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Ver detalle' }))
+  expect(await screen.findByText(/Medio de pago: Electrónico/)).toBeVisible()
+  expect(screen.queryByText('Pagado')).not.toBeInTheDocument()
+})
