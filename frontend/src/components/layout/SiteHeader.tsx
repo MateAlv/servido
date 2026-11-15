@@ -27,7 +27,8 @@ export function SiteHeader() {
     <header className={styles.header}>
       <nav className={styles.nav} aria-label="Principal">
         <Link to="/" className={styles.brand} aria-label="Servido!, ir al inicio">
-          <Logo size="sm" animation="intro" />
+          {/* Signed in, the actions need the width of the wordmark on a phone. */}
+          <Logo size="sm" animation="intro" variant={account ? 'responsive' : 'full'} />
         </Link>
 
         {!isPending && !account && (
