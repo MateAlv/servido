@@ -170,7 +170,9 @@ def test_us42_s5_empty_or_too_long_reply_is_refused(
     assert session.query(ReviewReply).one().text == "Gracias."
 
 
-@pytest.mark.parametrize("text", ["a" * 500, "😀" * 500], ids=["letters", "emoji"])
+@pytest.mark.parametrize(
+    "text", ["a" * 500, "😀" * 500, "👍🏽" * 250], ids=["letters", "emoji", "emoji with skin tone"]
+)
 def test_us42_s5_500_characters_are_accepted(
     client: TestClient, session: Session, text: str
 ) -> None:
