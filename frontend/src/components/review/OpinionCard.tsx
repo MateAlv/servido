@@ -1,9 +1,9 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import { formatPesos } from '../../lib/rating'
 import { StarRating } from '../ui'
+import { ExpandableText } from './ExpandableText'
 import styles from './OpinionCard.module.css'
-import { shorten } from './shorten'
 
 const LONG_COMMENT = 280
 const SHORT_COMMENT = 240
@@ -32,9 +32,6 @@ export function OpinionCard({
   remark,
   children,
 }: OpinionCardProps) {
-  const [expanded, setExpanded] = useState(false)
-  const isLong = comment != null && comment.length > LONG_COMMENT
-
   return (
     <article className={styles.opinion} aria-label={`Reseña de ${author}`}>
       <div className={styles.head}>
@@ -42,14 +39,12 @@ export function OpinionCard({
         <StarRating value={rating} size={14} />
       </div>
       {comment && (
-        <p className={styles.comment}>
-          {isLong && !expanded ? shorten(comment, SHORT_COMMENT) : comment}{' '}
-          {isLong && !expanded && (
-            <button type="button" className={styles.readMore} onClick={() => setExpanded(true)}>
-              Leer más
-            </button>
-          )}
-        </p>
+        <ExpandableText
+          text={comment}
+          longerThan={LONG_COMMENT}
+          shortenTo={SHORT_COMMENT}
+          className={styles.comment}
+        />
       )}
       <p className={styles.note}>{visit}</p>
       {spendPerPerson != null && (

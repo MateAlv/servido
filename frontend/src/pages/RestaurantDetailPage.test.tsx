@@ -236,8 +236,15 @@ describe('RestaurantDetailPage (spec 014)', () => {
 
     const reply = await screen.findByRole('group', { name: 'Respuesta de La Mesa' })
     expect(reply).not.toHaveTextContent('Final.')
-    fireEvent.click(within(reply).getByRole('button', { name: 'Leer más' }))
+    const toggle = within(reply).getByRole('button', { name: 'Leer más' })
+    toggle.focus()
+    fireEvent.click(toggle)
     expect(reply).toHaveTextContent('Final.')
+    expect(within(reply).getByRole('button', { name: 'Ver menos' })).toHaveFocus()
+
+    fireEvent.click(toggle)
+    expect(reply).not.toHaveTextContent('Final.')
+    expect(within(reply).getByRole('button', { name: 'Leer más' })).toHaveFocus()
   })
 
   it('US-42 S4 marks an edited reply', async () => {

@@ -20,15 +20,6 @@
   white-space: pre-line;
 }
 
-.readMore {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font-weight: 700;
-  text-decoration: underline;
-}
-
 .meta {
   margin: 0;
   color: var(--color-text-muted);
