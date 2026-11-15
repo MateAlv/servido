@@ -52,3 +52,4 @@ description: "Tasks for spec 027: search filters"
 
 - [x] T020 Run `make format lint test`
 - [x] T021 Update the 027 row in specs/README.md and «Where things stand» in AGENTS.md
+- [x] T022 QA findings: focus after removing tags, pending day kept and flagged, range mode kept in the URL, 60-day links and URL cleanup, accessible rating group and stepper, no results in the drawer, today's past hours, day in words, prefill summary on the detail; `ChoiceChips` and the large `QuantityStepper` in the design system
