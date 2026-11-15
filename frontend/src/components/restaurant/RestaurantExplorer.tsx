@@ -31,9 +31,12 @@ import { RestaurantMap } from './RestaurantMap'
 import {
   activeFilterCount,
   detailSearch,
+  hasFilterParams,
   matchesSearchFilters,
   NO_FILTERS,
   readSearchFilters,
+  storedSearchFilters,
+  storeSearchFilters,
   timeDraftFrom,
   timeFromDraft,
   writeSearchFilters,
@@ -70,12 +73,22 @@ function restaurantCount(count: number): string {
  * Everything a diner needs to choose a restaurant: the search filters, the map and the same
  * restaurants as a list (US-5, US-7, US-9, US-33 and spec 027). The filters live in the URL
  * (`?precio=$$&rating=4&restriccion=sin_tacc&dia=…&hora=…&personas=6`), so they survive a visit
- * to a detail, a reload and a shared link. Occupancy appears only where there is data.
+ * to a detail, a reload and a shared link, and the browser keeps the last ones for a visit
+ * without filters in the URL (F8). Occupancy appears only where there is data.
  */
 export function RestaurantExplorer() {
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { filters, droppedDay, needsCleanup } = readSearchFilters(searchParams)
+  // The last filters of this browser, while the URL has none yet (F8).
+  const [restored, setRestored] = useState(() =>
+    hasFilterParams(searchParams) ? null : storedSearchFilters(),
+  )
+  const restoring = restored !== null && !hasFilterParams(searchParams)
+  // Once the URL holds filters, it is the one that says which filters apply.
+  if (restored !== null && !restoring) setRestored(null)
+  const { filters, droppedDay, needsCleanup } = readSearchFilters(
+    restoring ? writeSearchFilters(searchParams, restored) : searchParams,
+  )
   const { point: diner, status, retry } = useGeolocation()
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -106,6 +119,18 @@ export function RestaurantExplorer() {
   )
   const timePending = time !== null && openQuery.isPending
   const timeFailed = time !== null && openQuery.isError
+
+  // The filters kept by the browser go to the URL too, so a reload or a detail keeps them.
+  useEffect(() => {
+    if (restored && restoring) {
+      setSearchParams((current) => writeSearchFilters(current, restored), { replace: true })
+    }
+  }, [restored, restoring, setSearchParams])
+
+  const filterSearch = writeSearchFilters(new URLSearchParams(), filters).toString()
+  useEffect(() => {
+    storeSearchFilters(readSearchFilters(new URLSearchParams(filterSearch)).filters)
+  }, [filterSearch])
 
   // What a hand-edited or old link holds that doesn't apply is taken out of the URL (F8).
   useEffect(() => {

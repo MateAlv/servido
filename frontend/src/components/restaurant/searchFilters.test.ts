@@ -18,6 +18,12 @@ import {
   switchTimeMode,
   timeFromDraft,
   wholeDay,
+  defaultHour,
+  fitTimeDraft,
+  HALF_HOURS,
+  rangeEnd,
+  selectableHours,
+  timeDraftFrom,
   writeSearchFilters,
   type SearchFilters,
   type TimeFilter,
@@ -293,10 +299,10 @@ describe('timeFromDraft (US-59)', () => {
     ).toEqual({ time: { day: '2026-11-22', mode: 'rango', from: '12:00', to: '14:00' } })
   })
 
-  it('US-59 edge does not apply an inverted range and says why', () => {
+  it('US-59 edge does not apply an inverted range', () => {
     expect(
       timeFromDraft({ ...draft, mode: 'rango', from: '22:00', to: '20:00' }, TODAY, LATEST),
-    ).toEqual({ time: null, error: 'El «hasta» no puede ser anterior al «desde».' })
+    ).toEqual({ time: null })
   })
 
   it('US-59 edge does not apply a day out of the booking window', () => {
@@ -306,35 +312,68 @@ describe('timeFromDraft (US-59)', () => {
     })
   })
 
-  it('US-59 S3 switching between hour and range keeps what still means the same', () => {
+  it('US-59 S3 switching modes keeps the chosen hour', () => {
     const point = { ...draft, hour: '21:00' }
-    const range = switchTimeMode(point, 'rango')
+    const range = switchTimeMode(point, 'rango', '20:00')
     expect(timeFromDraft(range, TODAY, LATEST).time).toEqual({
       day: '2026-11-22',
       mode: 'rango',
       from: '21:00',
-      to: '21:00',
+      to: '22:30',
     })
-    expect(switchTimeMode({ ...range, from: '20:00', to: '22:00' }, 'hora').hour).toBe('20:00')
-    expect(switchTimeMode({ ...range, from: '20:15', to: '22:00' }, 'hora').hour).toBe('20:30')
-    expect(switchTimeMode({ ...range, from: '23:45', to: '23:50' }, 'hora').hour).toBe('')
-    expect(switchTimeMode({ ...range, from: '', to: '' }, 'hora').hour).toBe('')
+    expect(switchTimeMode({ ...range, from: '19:30', to: '23:00' }, 'hora', '20:00').hour).toBe(
+      '19:30',
+    )
+    expect(switchTimeMode({ ...draft, mode: 'dia' }, 'hora', '20:00').hour).toBe('20:00')
+    expect(switchTimeMode({ ...draft, mode: 'dia' }, 'rango', '20:00').from).toBe('20:00')
   })
 
-  it('US-59 S5 applies a day alone, with no hour or an empty range', () => {
-    expect(timeFromDraft(draft, TODAY, LATEST)).toEqual({ time: wholeDay('2026-11-22') })
-    expect(timeFromDraft({ ...draft, mode: 'rango' }, TODAY, LATEST)).toEqual({
+  it('US-59 S5 applies a day alone', () => {
+    expect(timeFromDraft({ ...draft, mode: 'dia' }, TODAY, LATEST)).toEqual({
       time: wholeDay('2026-11-22'),
     })
   })
 
-  it('US-59 edge waits for a day, and for both ends of a range', () => {
+  it('US-59 edge waits for a day', () => {
     expect(timeFromDraft({ ...draft, day: '', hour: '21:00' }, TODAY, LATEST)).toEqual({
       time: null,
     })
-    expect(timeFromDraft({ ...draft, mode: 'rango', from: '20:00' }, TODAY, LATEST)).toEqual({
-      time: null,
-    })
+  })
+
+  it('US-59 S6 ends a range 1 h 30 after «desde» until «hasta» is chosen', () => {
+    const range = { ...draft, mode: 'rango' as const, from: '20:00' }
+    expect(timeFromDraft(range, TODAY, LATEST).time?.to).toBe('21:30')
+    expect(timeFromDraft({ ...range, from: '21:00' }, TODAY, LATEST).time?.to).toBe('22:30')
+    expect(timeFromDraft({ ...range, from: '23:00' }, TODAY, LATEST).time?.to).toBe('23:30')
+    expect(timeFromDraft({ ...range, to: '23:00' }, TODAY, LATEST).time?.to).toBe('23:00')
+    expect(rangeEnd('20:30')).toBe('22:00')
+  })
+
+  it('US-59 S6 a «desde» after the chosen «hasta» goes back to following it', () => {
+    const range = { ...draft, mode: 'rango' as const, from: '22:00', to: '21:00' }
+    expect(fitTimeDraft(range, HALF_HOURS, '20:00').to).toBe('')
+  })
+
+  it('US-59 S6 a link whose «hasta» is 1 h 30 after «desde» keeps following it', () => {
+    const time = { day: '2026-11-22', mode: 'rango' as const, from: '20:00', to: '21:30' }
+    expect(timeDraftFrom(time).to).toBe('')
+    expect(timeDraftFrom({ ...time, to: '23:00' }).to).toBe('23:00')
+  })
+
+  it('US-59 edge moves the hours of today that already started to the first one left', () => {
+    const hours = selectableHours(TODAY, TODAY, '19:10')
+    expect(hours[0]).toBe('19:30')
+    expect(defaultHour(TODAY, TODAY, '19:10')).toBe('20:00')
+    expect(defaultHour(TODAY, TODAY, '20:05')).toBe('20:30')
+    expect(defaultHour('2026-11-22', TODAY, '20:05')).toBe('20:00')
+    const today = { ...draft, day: TODAY, mode: 'rango' as const, from: '18:00', to: '19:00' }
+    expect(fitTimeDraft(today, hours, '20:00')).toMatchObject({ from: '20:00', to: '' })
+  })
+
+  it('US-59 edge reads a range off the 30-minute grid as the day alone', () => {
+    expect(read('dia=2026-11-22&desde=20:15&hasta=22:00').filters.time).toEqual(
+      wholeDay('2026-11-22'),
+    )
   })
 })
 

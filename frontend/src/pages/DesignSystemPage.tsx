@@ -25,6 +25,7 @@ import { OpinionCard, OpinionList } from '../components/review'
 import {
   ActiveFilters,
   FilterPanel,
+  HALF_HOURS,
   MapPin,
   matchesPriceFilter,
   NO_FILTERS,
@@ -44,6 +45,7 @@ import {
   Checkbox,
   Chip,
   ChoiceChips,
+  ClockDialog,
   Drawer,
   IconArrowRight,
   IconFilter,
@@ -63,6 +65,7 @@ import {
   TextAreaField,
   TextField,
   ThemeToggle,
+  TimeWheel,
   useToast,
 } from '../components/ui'
 import { RESTAURANTS_FIXTURE } from '../data/restaurants.fixture'
@@ -313,6 +316,8 @@ function SearchFiltersDemo() {
   const [open, setOpen] = useState(false)
   const [timeDraft, setTimeDraft] = useState<TimeDraft>(() => timeDraftFrom(null))
   const [rating, setRating] = useState('todas')
+  const [hour, setHour] = useState('20:00')
+  const [clockOpen, setClockOpen] = useState(false)
 
   return (
     <>
@@ -339,8 +344,32 @@ function SearchFiltersDemo() {
         />
       </Demo>
       <Demo
+        title="Rueda de horas"
+        note="TimeWheel: las medias horas como la alarma del celular. Se desliza y se frena en la hora de la banda; las que no se pueden elegir aparecen tachadas. Una parada de Tab, ↑ ↓ mueven y Enter, o tocar la hora elegida, abre el reloj."
+      >
+        <TimeWheel
+          label="Llegar a las"
+          hours={HALF_HOURS}
+          value={hour}
+          selectable={HALF_HOURS.filter((half) => half >= '12:00')}
+          onChange={setHour}
+          onPick={() => setClockOpen(true)}
+        />
+        <ClockDialog
+          open={clockOpen}
+          title="Llegar a las"
+          value={hour}
+          selectable={HALF_HOURS.filter((half) => half >= '12:00')}
+          onConfirm={(next) => {
+            setHour(next)
+            setClockOpen(false)
+          }}
+          onClose={() => setClockOpen(false)}
+        />
+      </Demo>
+      <Demo
         title="Panel de filtros"
-        note="FilterPanel dentro de un Drawer: precio, calificación, restricciones, día y horario (hora o rango) y personas. Aplica cada cambio al instante."
+        note="FilterPanel dentro de un Drawer: precio, calificación, restricciones, día y horario (todo el día, una hora o entre horas) y personas. Aplica cada cambio al instante."
       >
         <Button icon={<IconFilter />} variant="secondary" onClick={() => setOpen(true)}>
           Filtros

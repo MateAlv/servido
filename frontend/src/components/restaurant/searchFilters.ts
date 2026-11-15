@@ -61,14 +61,18 @@ export const FILTER_PARAMS = {
   party: 'personas',
 } as const
 
-export const INVERTED_RANGE = 'El «hasta» no puede ser anterior al «desde».'
 export const DAY_OUT_OF_RANGE = 'Elegí un día entre hoy y los próximos 60 días.'
 
 /** Why a shared link lost its day (F8): it already passed, or it is beyond the 60 days. */
 export type DroppedDay = 'past' | 'far' | null
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
+
+/** A reservation lasts 90 minutes (spec 003, D5): the «hasta» a range starts with (F4). */
+const RESERVATION_MINUTES = 90
+
+/** The hour the time controls start with, when it hasn't passed yet: dinner time. */
+const DEFAULT_HOUR = '20:00'
 
 export function isPointHour(time: TimeFilter): boolean {
   return time.mode === 'hora'
@@ -80,7 +84,7 @@ function readTime(params: URLSearchParams, day: string): TimeFilter {
   if (HALF_HOURS.includes(hour)) return { day, mode: 'hora', from: hour, to: hour }
   const from = params.get(FILTER_PARAMS.from) ?? ''
   const to = params.get(FILTER_PARAMS.to) ?? ''
-  if (TIME_PATTERN.test(from) && TIME_PATTERN.test(to) && from <= to) {
+  if (HALF_HOURS.includes(from) && HALF_HOURS.includes(to) && from <= to) {
     return { day, mode: 'rango', from, to }
   }
   return wholeDay(day)
@@ -332,41 +336,93 @@ export function reservationSearch(filters: SearchFilters): string {
   return search ? `?${search}` : ''
 }
 
-/** What the day and time controls hold while the diner edits them. */
+/**
+ * The «hasta» that follows «desde» while the diner hasn't chosen one: the end of a reservation
+ * that starts then, or the last half hour of the day (F4).
+ */
+export function rangeEnd(from: string): string {
+  const index = HALF_HOURS.indexOf(from) + RESERVATION_MINUTES / 30
+  return HALF_HOURS[Math.min(index, HALF_HOURS.length - 1)]
+}
+
+/** The half hours of `day` that can still start: on `today`, the ones after `now` (F4, «Hoy»). */
+export function selectableHours(day: string, today: string, now: string): string[] {
+  return day === today ? HALF_HOURS.filter((hour) => hour > now) : HALF_HOURS
+}
+
+/** The hour the time controls start with: 20:00, or the first one left if it already passed. */
+export function defaultHour(day: string, today: string, now: string): string {
+  const hours = selectableHours(day, today, now)
+  return hours.includes(DEFAULT_HOUR) ? DEFAULT_HOUR : (hours[0] ?? '')
+}
+
+/**
+ * What the day and time controls hold while the diner edits them. An empty `to` follows
+ * `from`: it is `rangeEnd(from)` until the diner chooses one.
+ */
 export type TimeDraft = {
   day: string
-  mode: 'hora' | 'rango'
+  mode: TimeFilter['mode']
   hour: string
   from: string
   to: string
 }
 
 export function timeDraftFrom(time: TimeFilter | null): TimeDraft {
-  if (!time) return { day: '', mode: 'hora', hour: '', from: '', to: '' }
-  if (time.mode === 'dia') return { day: time.day, mode: 'hora', hour: '', from: '', to: '' }
-  return isPointHour(time)
-    ? { day: time.day, mode: 'hora', hour: time.from, from: '', to: '' }
-    : { day: time.day, mode: 'rango', hour: '', from: time.from, to: time.to }
+  if (!time) return { day: '', mode: 'dia', hour: '', from: '', to: '' }
+  if (time.mode === 'dia') return { day: time.day, mode: 'dia', hour: '', from: '', to: '' }
+  if (isPointHour(time)) return { day: time.day, mode: 'hora', hour: time.from, from: '', to: '' }
+  const to = time.to === rangeEnd(time.from) ? '' : time.to
+  return { day: time.day, mode: 'rango', hour: '', from: time.from, to }
+}
+
+/** The «hasta» of a draft range: the chosen one, or the one that follows «desde». */
+export function draftRangeEnd(draft: TimeDraft): string {
+  return draft.to || rangeEnd(draft.from)
 }
 
 /**
- * The draft in the other mode, keeping what was chosen when it still means the same: an hour
- * becomes a range with both ends at that hour, and a range becomes its start rounded up to the
- * next half hour (20:15 becomes 20:30), the first start it allowed.
+ * The draft in the other mode, keeping the hour that was chosen: an hour becomes the start of
+ * the range and the start of a range becomes the hour. With nothing chosen yet, both start at
+ * `firstHour`.
  */
-export function switchTimeMode(draft: TimeDraft, mode: TimeDraft['mode']): TimeDraft {
+export function switchTimeMode(
+  draft: TimeDraft,
+  mode: TimeDraft['mode'],
+  firstHour: string,
+): TimeDraft {
   if (mode === draft.mode) return draft
+  // The hour of the mode being left goes first.
+  const [current, other] =
+    draft.mode === 'rango' ? [draft.from, draft.hour] : [draft.hour, draft.from]
+  if (mode === 'hora') return { ...draft, mode, hour: current || other || firstHour }
   if (mode === 'rango') {
-    return { ...draft, mode, from: draft.hour || draft.from, to: draft.hour || draft.to }
+    const from = current || other || firstHour
+    return { ...draft, mode, from, to: draft.to && draft.to >= from ? draft.to : '' }
   }
-  const hour = TIME_PATTERN.test(draft.from) ? HALF_HOURS.find((half) => half >= draft.from) : ''
-  return { ...draft, mode, hour: hour ?? '' }
+  return { ...draft, mode }
 }
 
 /**
- * The time filter the draft applies, or `null` while it is incomplete or invalid. A day with no
- * hour (or an empty range) is the day alone; an hour or a range narrows it (F4). An inverted
- * range or a day out of the booking window is not applied, and `error` says why.
+ * The draft with every hour still selectable for its day. When the day becomes today, an hour
+ * that already started moves to `firstHour`, and a «hasta» before «desde» goes back to following
+ * it, so the controls never hold a time that can't filter.
+ */
+export function fitTimeDraft(draft: TimeDraft, hours: readonly string[], firstHour: string) {
+  const fit = (hour: string) => (hour && !hours.includes(hour) ? firstHour : hour)
+  const from = fit(draft.from)
+  return {
+    ...draft,
+    hour: fit(draft.hour),
+    from,
+    to: draft.to && (draft.to < from || !hours.includes(draft.to)) ? '' : draft.to,
+  }
+}
+
+/**
+ * The time filter the draft applies, or `null` while it lacks the day or holds no hour that
+ * can start. A day alone is the whole day; an hour or a range narrows it (F4). A day out of the
+ * booking window is not applied, and `error` says why.
  */
 export function timeFromDraft(
   draft: TimeDraft,
@@ -377,14 +433,50 @@ export function timeFromDraft(
   if (!DATE_PATTERN.test(draft.day) || draft.day < today || draft.day > latest) {
     return { time: null, error: DAY_OUT_OF_RANGE }
   }
+  if (draft.mode === 'dia') return { time: wholeDay(draft.day) }
   if (draft.mode === 'hora') {
-    if (!draft.hour) return { time: wholeDay(draft.day) }
     return HALF_HOURS.includes(draft.hour)
       ? { time: { day: draft.day, mode: 'hora', from: draft.hour, to: draft.hour } }
       : { time: null }
   }
-  if (!draft.from && !draft.to) return { time: wholeDay(draft.day) }
-  if (!TIME_PATTERN.test(draft.from) || !TIME_PATTERN.test(draft.to)) return { time: null }
-  if (draft.to < draft.from) return { time: null, error: INVERTED_RANGE }
-  return { time: { day: draft.day, mode: 'rango', from: draft.from, to: draft.to } }
+  const to = draftRangeEnd(draft)
+  if (!HALF_HOURS.includes(draft.from) || !HALF_HOURS.includes(to) || to < draft.from) {
+    return { time: null }
+  }
+  return { time: { day: draft.day, mode: 'rango', from: draft.from, to } }
+}
+
+/** Where the browser keeps the last filters used (F8). */
+export const FILTERS_STORAGE_KEY = 'servido.filtros'
+
+/** Whether the URL holds any filter parameter, valid or not. */
+export function hasFilterParams(params: URLSearchParams): boolean {
+  return Object.values(FILTER_PARAMS).some((name) => params.has(name))
+}
+
+/**
+ * The last filters used in this browser, or `null` if there are none or none still applies
+ * (a day that already passed is dropped without a notice, F8).
+ */
+export function storedSearchFilters(): SearchFilters | null {
+  let stored: string | null
+  try {
+    stored = localStorage.getItem(FILTERS_STORAGE_KEY)
+  } catch {
+    return null
+  }
+  if (!stored) return null
+  const { filters } = readSearchFilters(new URLSearchParams(stored))
+  return activeFilterCount(filters) > 0 ? filters : null
+}
+
+/** Keeps the filters for the next visit, or forgets them when none is active (F8). */
+export function storeSearchFilters(filters: SearchFilters): void {
+  const search = writeSearchFilters(new URLSearchParams(), filters).toString()
+  try {
+    if (search) localStorage.setItem(FILTERS_STORAGE_KEY, search)
+    else localStorage.removeItem(FILTERS_STORAGE_KEY)
+  } catch {
+    // Without storage (a private window that blocks it) the filters still live in the URL.
+  }
 }

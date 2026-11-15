@@ -143,6 +143,7 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 09/11 | 013 | El link de recuperación vence a los 15 minutos, sirve una sola vez y el pedido de uno nuevo invalida el anterior. El correo que no tiene cuenta recibe el mismo mensaje que uno que sí, y el límite de 5 pedidos por correo cada media hora se aplica igual a los dos, para no revelar qué correos están registrados. Las cuentas creadas con Google reciben un correo que las manda a «Ingresar con Google», sin link. Al cambiar la contraseña se cierran las sesiones abiertas. Falta que la PO lo valide |
 | 09/11 | 013, 019 | El aviso de «no pudimos enviar el correo» (502) es la única respuesta que distingue una cuenta existente, porque solo se ve cuando hubo un envío; se acepta para que el comensal sepa que el mail no salió y pueda reintentar |
 | 15/11 | 027-filtros-busqueda | F4 cambia a pedido del equipo: el día solo filtra (cualquier horario en el que ese día se pueda empezar una reserva) y la hora o el rango lo acotan. Con el día solo, la reserva empieza con el día y las personas, sin hora. Falta que la PO lo valide |
+| 15/11 | 027-filtros-busqueda | F4, F7 y F8 cambian a pedido del equipo: la hora y los extremos del rango se eligen cada 30 minutos con una rueda o un reloj, «hasta» sigue a «desde» + 1 h 30 mientras no se elige, y el navegador recuerda los últimos filtros para cuando se vuelve sin filtros en la dirección (un enlace con filtros manda). Falta que la PO lo valide |
 
 ## Notas de formato
 

@@ -126,6 +126,19 @@ async function openFilters(user: ReturnType<typeof userEvent.setup>) {
   return screen.getByRole('dialog', { name: 'Filtros' })
 }
 
+type User = ReturnType<typeof userEvent.setup>
+
+/** Taps an hour on the wheel named `wheel` («Llegar a las», «Llegar desde», «Llegar hasta»). */
+async function chooseHour(user: User, panel: HTMLElement, wheel: string, hour: string) {
+  const group = within(panel).getByRole('group', { name: wheel })
+  await user.click(within(group).getByRole('button', { name: hour }))
+}
+
+function chosenHour(panel: HTMLElement, wheel: string) {
+  const group = within(panel).getByRole('group', { name: wheel })
+  return within(group).getByRole('button', { pressed: true }).textContent
+}
+
 const RATED_4 = [
   'Bodegón Estudiantil',
   'Café San Telmo',
@@ -243,7 +256,8 @@ describe('Day and time filter (US-59)', () => {
     const panel = await openFilters(user)
 
     await user.click(within(panel).getByRole('button', { name: 'Mañana' }))
-    await user.selectOptions(within(panel).getByLabelText('Hora'), '21:00')
+    await user.click(within(panel).getByRole('radio', { name: 'Una hora' }))
+    await chooseHour(user, panel, 'Llegar a las', '21:00')
 
     expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '21:00', '21:00')
     await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
@@ -257,12 +271,13 @@ describe('Day and time filter (US-59)', () => {
     renderMap()
     const panel = await openFilters(user)
 
-    await user.click(within(panel).getByRole('button', { name: 'Hoy' }))
-    await user.click(within(panel).getByRole('radio', { name: 'Rango' }))
-    fireEvent.change(within(panel).getByLabelText('Desde'), { target: { value: '12:00' } })
-    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '14:00' } })
+    await user.click(within(panel).getByRole('button', { name: 'Mañana' }))
+    await user.click(within(panel).getByRole('radio', { name: 'Entre horas' }))
+    await chooseHour(user, panel, 'Llegar desde', '12:00')
+    await user.click(within(panel).getByRole('button', { name: /^Llegar hasta/ }))
+    await chooseHour(user, panel, 'Llegar hasta', '14:00')
 
-    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(today, '12:00', '14:00')
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '12:00', '14:00')
     await waitFor(() => expect(listed()).toEqual(['Bodegón Nuevo', 'Parrilla Real']))
   })
 
@@ -273,7 +288,7 @@ describe('Day and time filter (US-59)', () => {
 
     vi.mocked(fetchOpenRestaurantIds).mockResolvedValue([PARRILLA.id])
     const panel = await openFilters(user)
-    await user.selectOptions(within(panel).getByLabelText('Hora'), '13:00')
+    await chooseHour(user, panel, 'Llegar a las', '13:00')
 
     expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '13:00', '13:00')
     await waitFor(() => expect(listed()).toEqual(['Parrilla Real']))
@@ -291,34 +306,30 @@ describe('Day and time filter (US-59)', () => {
     expect(listed()).toHaveLength(ALL.length)
   })
 
-  it('US-59 edge does not apply an inverted range and says why', async () => {
+  it('US-59 edge does not offer a «hasta» before «desde»', async () => {
     const user = userEvent.setup()
-    renderMap()
+    renderMap(`/mapa?dia=${tomorrow}&desde=20:00&hasta=22:00`)
     const panel = await openFilters(user)
 
-    await user.click(within(panel).getByRole('button', { name: 'Hoy' }))
-    await user.click(within(panel).getByRole('radio', { name: 'Rango' }))
-    fireEvent.change(within(panel).getByLabelText('Desde'), { target: { value: '22:00' } })
-    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '20:00' } })
+    await user.click(within(panel).getByRole('button', { name: /^Llegar hasta/ }))
 
-    expect(within(panel).getByRole('alert')).toHaveTextContent(
-      'El «hasta» no puede ser anterior al «desde».',
-    )
-    // The day alone chosen before stays applied.
-    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(today, '00:00', '23:59')
-    expect(
-      within(panel).getByText(`Mientras tanto sigue aplicado ${shortDayLabel(today)}.`),
-    ).toBeInTheDocument()
+    const wheel = within(panel).getByRole('group', { name: 'Llegar hasta' })
+    expect(within(wheel).getByRole('button', { name: '19:30' })).toBeDisabled()
+    expect(within(wheel).getByRole('button', { name: '20:00' })).toBeEnabled()
   })
 
-  it('US-59 edge offers only half hours for a point hour', async () => {
+  it('US-59 edge offers only half hours', async () => {
     const user = userEvent.setup()
-    renderMap()
+    renderMap(`/mapa?dia=${tomorrow}&hora=21:00`)
     const panel = await openFilters(user)
 
-    const hours = within(within(panel).getByLabelText('Hora')).getAllByRole('option')
-    expect(hours.map((option) => option.textContent)).toContain('21:30')
-    expect(hours.map((option) => option.textContent)).not.toContain('21:10')
+    const wheel = within(panel).getByRole('group', { name: 'Llegar a las' })
+    const hours = within(wheel)
+      .getAllByRole('button')
+      .map((button) => button.textContent)
+    expect(hours).toHaveLength(48)
+    expect(hours).toContain('21:30')
+    expect(hours).not.toContain('21:10')
   })
 
   it('US-59 edge waits calmly for the hours and offers a retry when they fail', async () => {
@@ -338,7 +349,7 @@ describe('Day and time filter (US-59)', () => {
     vi.mocked(fetchOpenRestaurantIds).mockRejectedValueOnce(new Error('offline'))
     vi.mocked(fetchOpenRestaurantIds).mockResolvedValueOnce([NUEVO.id])
     const panel = await openFilters(user)
-    await user.selectOptions(within(panel).getByLabelText('Hora'), '20:00')
+    await chooseHour(user, panel, 'Llegar a las', '20:00')
     await user.click(within(panel).getByRole('button', { name: /^Ver/ }))
 
     expect(await screen.findByText(/No pudimos consultar los horarios/)).toBeInTheDocument()
@@ -582,7 +593,8 @@ describe('Filters, focus and pending choices (spec 027, QA)', () => {
     )
 
     // An hour narrows it.
-    await user.selectOptions(within(panel).getByLabelText('Hora'), '21:00')
+    await user.click(within(panel).getByRole('radio', { name: 'Una hora' }))
+    await chooseHour(user, panel, 'Llegar a las', '21:00')
     expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '21:00', '21:00')
   })
 
@@ -600,89 +612,74 @@ describe('Filters, focus and pending choices (spec 027, QA)', () => {
     expect(screen.getByText(`${shortDayLabel(tomorrow)} · 2 personas`)).toBeInTheDocument()
   })
 
-  it('US-59 S3 switching from hour to range keeps the applied time', async () => {
+  it('US-59 S3 switching from hour to range starts the range at that hour', async () => {
     const user = userEvent.setup()
     renderMap(`/mapa?dia=${tomorrow}&hora=21:00`)
     const panel = await openFilters(user)
 
-    await user.click(within(panel).getByRole('radio', { name: 'Rango' }))
+    await user.click(within(panel).getByRole('radio', { name: 'Entre horas' }))
 
-    expect(within(panel).getByLabelText('Desde')).toHaveValue('21:00')
-    expect(within(panel).getByLabelText('Hasta')).toHaveValue('21:00')
+    expect(chosenHour(panel, 'Llegar desde')).toBe('21:00')
     const params = new URLSearchParams(address())
     expect([
       params.get('dia'),
       params.get('desde'),
       params.get('hasta'),
       params.get('hora'),
-    ]).toEqual([tomorrow, '21:00', '21:00', null])
+    ]).toEqual([tomorrow, '21:00', '22:30', null])
     expect(within(panel).queryByText(/Falta/)).not.toBeInTheDocument()
   })
 
-  it('US-59 edge marks «Hasta» invalid for an inverted range', async () => {
+  it('US-59 S6 «hasta» follows «desde» + 1 h 30 until it is chosen', async () => {
     const user = userEvent.setup()
     renderMap()
     const panel = await openFilters(user)
 
-    await user.click(within(panel).getByRole('button', { name: 'Hoy' }))
-    await user.click(within(panel).getByRole('radio', { name: 'Rango' }))
-    fireEvent.change(within(panel).getByLabelText('Desde'), { target: { value: '22:00' } })
-    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '20:00' } })
+    await user.click(within(panel).getByRole('button', { name: 'Mañana' }))
+    await user.click(within(panel).getByRole('radio', { name: 'Entre horas' }))
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '20:00', '21:30')
 
-    expect(within(panel).getByLabelText('Hasta')).toHaveAttribute('aria-invalid', 'true')
-  })
+    await chooseHour(user, panel, 'Llegar desde', '19:00')
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '19:00', '20:30')
+    expect(within(panel).getByRole('button', { name: /^Llegar hasta/ })).toHaveTextContent('20:30')
 
-  it('US-59 edge keeps the last valid time applied while the range is inverted', async () => {
-    const user = userEvent.setup()
-    renderMap(`/mapa?dia=${tomorrow}&desde=20:00&hasta=22:00`)
-    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
-    const panel = await openFilters(user)
-
-    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '19:00' } })
-
-    expect(within(panel).getByRole('alert')).toHaveTextContent('El «hasta» no puede ser anterior')
+    await user.click(within(panel).getByRole('button', { name: /^Llegar hasta/ }))
+    await chooseHour(user, panel, 'Llegar hasta', '23:00')
+    await user.click(within(panel).getByRole('button', { name: /^Llegar desde/ }))
+    await chooseHour(user, panel, 'Llegar desde', '19:30')
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '19:30', '23:00')
     expect(
       within(panel).getByText(
-        `Mientras tanto sigue aplicado ${shortDayLabel(tomorrow)} · 20:00–22:00.`,
+        'Aparecen los restaurantes donde podés empezar una reserva entre las 19:30 y las 23:00. Cada reserva dura 1 h 30.',
       ),
     ).toBeInTheDocument()
-    expect(new URLSearchParams(address()).get('hasta')).toBe('22:00')
-    expect(listed()).toEqual(['Huerta Real'])
-
-    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '23:00' } })
-    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '20:00', '23:00')
   })
 
-  it('US-59 edge keeps the last valid time while a field is retyped', async () => {
+  it('US-59 S6 a «desde» after the chosen «hasta» makes «hasta» follow it again', async () => {
     const user = userEvent.setup()
-    renderMap(`/mapa?dia=${tomorrow}&desde=20:00&hasta=22:00`)
-    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
+    renderMap(`/mapa?dia=${tomorrow}&desde=20:00&hasta=21:00`)
     const panel = await openFilters(user)
 
-    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '' } })
+    await chooseHour(user, panel, 'Llegar desde', '22:00')
 
-    expect(new URLSearchParams(address()).get('hasta')).toBe('22:00')
-    expect(
-      within(panel).getByText(
-        `Mientras tanto sigue aplicado ${shortDayLabel(tomorrow)} · 20:00–22:00.`,
-      ),
-    ).toBeInTheDocument()
-    expect(listed()).toEqual(['Huerta Real'])
-
-    await user.click(within(panel).getByRole('button', { name: 'Quitar día y horario' }))
-    expect(new URLSearchParams(address()).get('dia')).toBeNull()
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '22:00', '23:30')
   })
 
-  it('US-59 S3 switching a range that starts off the half hour to an hour rounds it up', async () => {
+  it('US-59 edge chooses the hour on the clock', async () => {
     const user = userEvent.setup()
-    renderMap(`/mapa?dia=${tomorrow}&desde=20:15&hasta=22:00`)
+    renderMap(`/mapa?dia=${tomorrow}&hora=21:00`)
     const panel = await openFilters(user)
 
-    await user.click(within(panel).getByRole('radio', { name: 'Hora' }))
+    await user.click(
+      within(panel).getByRole('button', { name: 'Elegir «llegar a las» en el reloj' }),
+    )
+    const clock = screen.getByRole('dialog', { name: 'Llegar a las' })
+    await user.click(within(clock).getByRole('button', { name: 'Las 13' }))
+    await user.click(within(clock).getByRole('button', { name: 'Y media' }))
+    await user.click(within(clock).getByRole('button', { name: 'Listo' }))
 
-    expect(within(panel).getByLabelText('Hora')).toHaveValue('20:30')
-    expect(new URLSearchParams(address()).get('hora')).toBe('20:30')
-    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '20:30', '20:30')
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '13:30', '13:30')
+    expect(chosenHour(panel, 'Llegar a las')).toBe('13:30')
   })
 
   it('US-59 common S2 labels a range with equal ends as one hour', async () => {
@@ -713,10 +710,12 @@ describe('Filters, focus and pending choices (spec 027, QA)', () => {
     const panel = await openFilters(user)
 
     await user.click(within(panel).getByRole('button', { name: 'Hoy' }))
+    await user.click(within(panel).getByRole('radio', { name: 'Una hora' }))
 
-    const hour = within(panel).getByLabelText('Hora')
-    expect(within(hour).getByRole('option', { name: '15:00' })).toBeDisabled()
-    expect(within(hour).getByRole('option', { name: '15:30' })).toBeEnabled()
+    const wheel = within(panel).getByRole('group', { name: 'Llegar a las' })
+    expect(within(wheel).getByRole('button', { name: '15:00' })).toBeDisabled()
+    expect(within(wheel).getByRole('button', { name: '15:30' })).toBeEnabled()
+    expect(chosenHour(panel, 'Llegar a las')).toBe('20:00')
     expect(within(panel).getByLabelText('Otro día')).toHaveAccessibleDescription('Domingo 15/11')
   })
 
@@ -763,5 +762,60 @@ describe('Filters, focus and pending choices (spec 027, QA)', () => {
     expect(
       within(panel).getByRole('button', { name: `Ver ${ALL.length} restaurantes` }),
     ).toBeInTheDocument()
+  })
+})
+
+describe('Filters kept by the browser (spec 027, F8)', () => {
+  it('US-59 common S6 applies the last filters when the map opens without filters', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderMap(`/mapa?dia=${tomorrow}&hora=21:00&personas=2`)
+    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
+    unmount()
+
+    renderMap('/mapa')
+
+    await waitFor(() =>
+      expect(new URLSearchParams(address()).toString()).toBe(
+        `dia=${tomorrow}&hora=21%3A00&personas=2`,
+      ),
+    )
+    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
+    const panel = await openFilters(user)
+    expect(chosenHour(panel, 'Llegar a las')).toBe('21:00')
+  })
+
+  it('US-59 common S6 a link with filters wins over the stored ones', async () => {
+    const { unmount } = renderMap('/mapa?personas=6')
+    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
+    unmount()
+
+    renderMap('/mapa?precio=%24')
+
+    expect(await screen.findByRole('button', { name: 'Quitar filtro $' })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Quitar filtro 6 personas' }),
+    ).not.toBeInTheDocument()
+    expect(address()).toBe('?precio=%24')
+  })
+
+  it('US-59 common S6 removing every filter forgets them', async () => {
+    const user = userEvent.setup()
+    const { unmount } = renderMap('/mapa?personas=6')
+    await user.click(await screen.findByRole('button', { name: 'Quitar filtro 6 personas' }))
+    unmount()
+
+    renderMap('/mapa')
+
+    await waitFor(() => expect(listed()).toHaveLength(ALL.length))
+    expect(address()).toBe('')
+  })
+
+  it('US-59 edge drops a stored day that already passed without a notice', async () => {
+    localStorage.setItem('servido.filtros', `dia=${addDays(today, -1)}&personas=6`)
+
+    renderMap('/mapa')
+
+    await waitFor(() => expect(address()).toBe('?personas=6'))
+    expect(screen.queryByText(/ya pasó/)).not.toBeInTheDocument()
   })
 })

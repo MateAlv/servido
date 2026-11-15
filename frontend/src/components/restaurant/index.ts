@@ -12,6 +12,7 @@ export {
 export { RestaurantExplorer } from './RestaurantExplorer'
 export { RestaurantMap } from './RestaurantMap'
 export {
+  HALF_HOURS,
   NO_FILTERS,
   prefillLabel,
   readSearchFilters,

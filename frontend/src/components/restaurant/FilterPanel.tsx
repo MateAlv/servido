@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { DIETARY_RESTRICTIONS, type DietaryRestriction } from '../../lib/dietary'
 import {
@@ -11,6 +11,8 @@ import {
   Button,
   Chip,
   ChoiceChips,
+  ClockDialog,
+  IconClock,
   IconLeaf,
   IconSprout,
   IconStar,
@@ -18,16 +20,20 @@ import {
   QuantityStepper,
   SegmentedControl,
   TextField,
+  TimeWheel,
 } from '../ui'
 import { PriceFilter } from './PriceFilter'
 import {
   DAY_OUT_OF_RANGE,
+  defaultHour,
+  draftRangeEnd,
+  fitTimeDraft,
   HALF_HOURS,
-  INVERTED_RANGE,
   longDayLabel,
   MAX_PARTY_SIZE,
   MIN_RATINGS,
   minRatingLabel,
+  selectableHours,
   switchTimeMode,
   timeDraftFrom,
   timeFilterLabel,
@@ -73,11 +79,26 @@ function sameTime(first: TimeFilter | null, second: TimeFilter | null): boolean 
 
 /** An hour or a range needs a day to filter: says so, or `undefined` when nothing is missing. */
 function pendingMessage(draft: TimeDraft): string | undefined {
-  if (!draft.day && (draft.hour || draft.from || draft.to)) {
+  if (!draft.day && draft.mode !== 'dia') {
     return 'Falta el día: elegí Hoy, Mañana u otro día para aplicar este filtro.'
   }
   return undefined
 }
+
+/** What the day and time filter shows, in words. */
+function timeSummary(draft: TimeDraft, hoursLeft: boolean): string {
+  if (draft.mode === 'dia') {
+    return 'Aparecen los restaurantes en los que ese día se puede empezar alguna reserva. Solo aparecen los que ya toman reservas.'
+  }
+  if (!hoursLeft) return 'Hoy ya no quedan horarios para empezar una reserva: elegí otro día.'
+  const when =
+    draft.mode === 'hora'
+      ? `a las ${draft.hour}`
+      : `entre las ${draft.from} y las ${draftRangeEnd(draft)}`
+  return `Aparecen los restaurantes donde podés empezar una reserva ${when}. Cada reserva dura 1 h 30.`
+}
+
+const WHEEL_LABELS = { hora: 'Llegar a las', from: 'Llegar desde', to: 'Llegar hasta' } as const
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -99,7 +120,11 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
   const draft = timeDraft
   const { time: draftTime, error: timeError } = timeFromDraft(draft)
   const pending = timeError ? undefined : pendingMessage(draft)
-  const hourId = useId()
+  const hours = selectableHours(draft.day, today, now)
+  const firstHour = defaultHour(draft.day, today, now)
+  // Which end of the range the wheel edits.
+  const [rangeEnd, setRangeEnd] = useState<'from' | 'to'>('from')
+  const [clockOpen, setClockOpen] = useState(false)
   // Buttons that disappear when used hand the focus to what takes their place.
   const todayChip = useRef<HTMLButtonElement>(null)
   const partyStart = useRef<HTMLButtonElement>(null)
@@ -116,16 +141,31 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
 
   function changeDraft(next: TimeDraft) {
     // An hour of today that already started can't be chosen (spec 027, «Hoy»).
-    const fixed = next.day === today && next.hour && next.hour <= now ? { ...next, hour: '' } : next
+    const fixed = fitTimeDraft(
+      next,
+      selectableHours(next.day, today, now),
+      defaultHour(next.day, today, now),
+    )
     onTimeDraftChange(fixed)
-    // Only a complete, valid day and time is applied. While the controls are incomplete (a
-    // time typed digit by digit passes through empty) or invalid (an inverted range, a day out
-    // of the window), the last valid filter stays (spec 027, «Rango invertido»).
+    // Only a complete, valid day and time is applied. Without a day, or with a day out of the
+    // window, the last valid filter stays.
     const { time } = timeFromDraft(fixed)
     if (time && !sameTime(time, filters.time)) onChange({ ...filters, time })
   }
 
+  const wheelEnd = draft.mode === 'hora' ? 'hora' : rangeEnd
+  const wheelValue =
+    wheelEnd === 'hora' ? draft.hour : wheelEnd === 'from' ? draft.from : draftRangeEnd(draft)
+  const wheelHours = wheelEnd === 'to' ? hours.filter((hour) => hour >= draft.from) : hours
+
+  function changeWheel(hour: string) {
+    if (wheelEnd === 'hora') changeDraft({ ...draft, hour })
+    else if (wheelEnd === 'from') changeDraft({ ...draft, from: hour })
+    else changeDraft({ ...draft, to: hour })
+  }
+
   function clearTime() {
+    setRangeEnd('from')
     onTimeDraftChange(timeDraftFrom(null))
     if (filters.time) onChange({ ...filters, time: null })
     todayChip.current?.focus()
@@ -149,7 +189,7 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
     onChange({ ...filters, partySize })
   }
 
-  const draftStarted = Boolean(draft.day || draft.hour || draft.from || draft.to)
+  const draftStarted = Boolean(draft.day || draft.mode !== 'dia')
   const dayIsValid = /^\d{4}-\d{2}-\d{2}$/.test(draft.day)
 
   return (
@@ -233,47 +273,72 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
           onChange={(event) => changeDraft({ ...draft, day: event.target.value })}
         />
         <SegmentedControl
-          label="Tipo de horario"
+          label="Horario"
+          className={styles.wide}
           options={[
-            { value: 'hora', label: 'Hora' },
-            { value: 'rango', label: 'Rango' },
+            { value: 'dia', label: 'Todo el día' },
+            { value: 'hora', label: 'Una hora' },
+            { value: 'rango', label: 'Entre horas' },
           ]}
           value={draft.mode}
-          onChange={(mode) => changeDraft(switchTimeMode(draft, mode))}
+          onChange={(mode) => {
+            setRangeEnd('from')
+            changeDraft(switchTimeMode(draft, mode, firstHour))
+          }}
         />
-        {draft.mode === 'hora' ? (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor={hourId}>
-              Hora
-            </label>
-            <select
-              id={hourId}
-              className={styles.select}
-              value={draft.hour}
-              onChange={(event) => changeDraft({ ...draft, hour: event.target.value })}
-            >
-              <option value="">Cualquier hora</option>
-              {HALF_HOURS.map((hour) => (
-                <option key={hour} value={hour} disabled={draft.day === today && hour <= now}>
-                  {hour}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <div className={styles.range}>
-            <TextField
-              label="Desde"
-              type="time"
-              value={draft.from}
-              onChange={(event) => changeDraft({ ...draft, from: event.target.value })}
+        {draft.mode !== 'dia' && hours.length > 0 && (
+          <div className={styles.time}>
+            {draft.mode === 'rango' && (
+              <div className={styles.ends}>
+                {(['from', 'to'] as const).map((end) => (
+                  <button
+                    key={end}
+                    type="button"
+                    className={styles.end}
+                    aria-pressed={rangeEnd === end}
+                    onClick={() => setRangeEnd(end)}
+                  >
+                    <span className={styles.endLabel}>{WHEEL_LABELS[end]}</span>
+                    <span
+                      key={end === 'from' ? draft.from : draftRangeEnd(draft)}
+                      className={styles.endValue}
+                    >
+                      {end === 'from' ? draft.from : draftRangeEnd(draft)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className={styles.wheelHead}>
+              <span className={styles.label}>{WHEEL_LABELS[wheelEnd]}</span>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<IconClock />}
+                aria-label={`Elegir «${WHEEL_LABELS[wheelEnd].toLowerCase()}» en el reloj`}
+                onClick={() => setClockOpen(true)}
+              >
+                Reloj
+              </Button>
+            </div>
+            <TimeWheel
+              label={WHEEL_LABELS[wheelEnd]}
+              hours={HALF_HOURS}
+              value={wheelValue}
+              selectable={wheelHours}
+              onChange={changeWheel}
+              onPick={() => setClockOpen(true)}
             />
-            <TextField
-              label="Hasta"
-              type="time"
-              value={draft.to}
-              error={timeError === INVERTED_RANGE ? timeError : undefined}
-              onChange={(event) => changeDraft({ ...draft, to: event.target.value })}
+            <ClockDialog
+              open={clockOpen}
+              title={WHEEL_LABELS[wheelEnd]}
+              value={wheelValue}
+              selectable={wheelHours}
+              onConfirm={(hour) => {
+                changeWheel(hour)
+                setClockOpen(false)
+              }}
+              onClose={() => setClockOpen(false)}
             />
           </div>
         )}
@@ -286,10 +351,7 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
             Mientras tanto sigue aplicado {timeFilterLabel(filters.time)}.
           </p>
         ) : (
-          <p className={styles.note}>
-            Con solo el día, aparecen los restaurantes en los que ese día se puede empezar alguna
-            reserva; una hora o un rango lo acotan. Solo aparecen los que ya toman reservas.
-          </p>
+          <p className={styles.note}>{timeSummary(draft, hours.length > 0)}</p>
         )}
         <Button
           variant="ghost"
