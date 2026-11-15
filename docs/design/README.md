@@ -64,13 +64,14 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `Skeleton`, `SkeletonText` | Placeholders con brillo mientras carga una lista |
 | `Spinner` | Carga dentro de un botón o de un texto |
 | `Modal` | Diálogos (en el celular se abre como hoja desde abajo) |
+| `Drawer` | Panel sobre el diálogo nativo, como `Modal` (atrapa el foco, se cierra con Escape, con la cruz o tocando afuera): en el celular sube desde abajo y en pantallas anchas entra desde la derecha. El contenido hace scroll y el pie queda fijo; la última acción del pie ocupa el ancho que sobra. Anima al abrir y al cerrar; con movimiento reducido solo aparece con un fundido corto. Lo usan los filtros del mapa |
 | `ToastProvider`, `useToast` | Avisos breves que se van solos. Una página con barra inferior (el pedido) los sube con la variable `--toast-bottom` |
 | `ThemeToggle` | Cambio de tema claro / oscuro |
 | `Reveal` | Animación de entrada al hacer scroll |
 | `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido»), `maxHint` explica el «+» deshabilitado en el máximo, `announce={false}` apaga su anuncio cuando la página ya anuncia el cambio y `disabled` bloquea los dos botones |
 | `TextAreaField` | `TextField` para textos largos |
 | `StarRating` | Calificación interactiva o de solo lectura |
-| `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, …) |
+| `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, `IconFilter`, …) |
 
 ### Estructura (`layout/`)
 
@@ -133,7 +134,9 @@ La revisión y la confirmación de la reserva (US-13, `pages/reservation/`) toda
 | `RestaurantMap` | Mapa Leaflet + OpenStreetMap con la posición del comensal, los marcadores y el popup de cada restaurante: una tarjeta con foto, precio, calificación, concurrencia, barrio, dirección, distancia y el botón al detalle | 5 |
 | `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal. Si un restaurante no tiene datos de concurrencia, no se muestra (no decimos «sin datos») | 5, 33 |
 | `PriceFilter` | Chips de precio (`$` … `$$$$`) y "Quitar filtro de precio"; avisa cuando no hay coincidencias | 7 |
-| `RestaurantExplorer` | Elegir restaurante: filtro de precio, mapa y la misma lista en tarjetas con su concurrencia, que se actualiza sola; si ningún restaurante tiene datos de concurrencia, no se muestra «Actualizado». El filtro vive en la URL (`?precio=$$`), así que se conserva al ir al detalle y volver. Lo usan el inicio del comensal y `/mapa`. Muestra los restaurantes reales de `GET /api/restaurants` (sin concurrencia ni calificación todavía) junto con los de prueba de `frontend/src/data/restaurants.fixture.ts`; solo los reales se pueden reservar (spec 003, D4) | 5, 7, 9, 33 |
+| `RestaurantExplorer` | Elegir restaurante: botón «Filtros» (con la cantidad de filtros activos) que abre un `Drawer` con `FilterPanel`, las etiquetas de `ActiveFilters`, mapa y la misma lista en tarjetas con su concurrencia, que se actualiza sola; si ningún restaurante tiene datos de concurrencia, no se muestra «Actualizado». Los filtros viven en la URL (`?precio=$$&rating=4&restriccion=sin_tacc&dia=…&hora=21:00&personas=6`), así que se conservan al ir al detalle y volver, al recargar y en un enlace compartido. Sin resultados avisa y ofrece «Quitar filtros». Lo usan el inicio del comensal y `/mapa`. Muestra los restaurantes reales de `GET /api/restaurants` junto con los de prueba de `frontend/src/data/restaurants.fixture.ts`; solo los reales se pueden reservar (spec 003, D4) | 5, 7, 9, 33, 35, 53, 59, 61 |
+| `FilterPanel` | El contenido del panel de filtros: precio (`PriceFilter`), calificación mínima (chips de una sola opción), restricciones (chips con su ícono), día y horario («Hoy», «Mañana» u otra fecha; `SegmentedControl` entre «Hora», cada 30 minutos, y «Rango», con aviso si el «hasta» es anterior al «desde») y personas (`QuantityStepper` de 1 a 20). Cada cambio se aplica al instante | 35, 53, 59, 61 |
+| `ActiveFilters` | Cada filtro activo como una etiqueta oscura con su cruz para quitarlo («4 o más ★», «Sin TACC», «Dom 22/11 · 21:00», «6 personas», «$$»), más «Quitar todos». Las etiquetas aparecen con un pequeño salto | 35, 53, 59, 61 |
 
 #### Restaurantes reales con datos incompletos
 
@@ -169,6 +172,22 @@ reseñas con precio por persona.
 En `/diseno#filtro-precio` hay una demostración aislada, con cuatro restaurantes
 ficticios (uno sin menú): seleccioná `$$$$` para ver cero coincidencias y «Quitar
 filtro de precio» para recuperar los cuatro ejemplos.
+
+#### Filtros de búsqueda (US-35, US-53, US-59, US-61)
+
+La lógica vive en `frontend/src/components/restaurant/searchFilters.ts`, en funciones
+puras con tests: leer y escribir los filtros en la URL, decidir si un restaurante los
+cumple todos a la vez (precio incluido) y armar los textos de las etiquetas y la precarga
+de la reserva. Las decisiones F1–F10 de la spec 027 están ahí: el rating compara el
+promedio sin redondear y deja afuera a los que no tienen reseñas, las restricciones piden
+un mismo plato que las cumpla todas, y con horario o personas no aparecen los
+restaurantes de prueba. El horario lo responde `GET /api/restaurants/open`; mientras
+carga, la página dice «Buscando restaurantes con ese horario…» y, si falla, ofrece
+«Reintentar».
+
+En el celular el panel sube desde abajo y el pie tiene «Limpiar» y «Ver N
+restaurantes», que lo cierra. En `/diseno#filtros-busqueda` están las etiquetas y el
+panel dentro de un `Drawer`, con filtros de ejemplo.
 
 ## Reglas para animaciones nuevas
 

@@ -27,7 +27,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [016-bloqueo-horarios](016-bloqueo-horarios/spec.md) | Restaurante | 32 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-32 (propuestas FR-007 y de reservas parcialmente pasadas/cruzadas y reaviso pendientes de validación de la PO) |
 | [019-cuenta-comensal-google-verificacion](019-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17 en la spec 009-pedido-anticipado) |
 | [025-responder-resenas](025-responder-resenas/spec.md) | Restaurante | 42 | 1 | 5 | ✅ | — | — | — (decisiones C1–C5 del 15/11, falta que la PO las valide) |
-| [027-filtros-busqueda](027-filtros-busqueda/spec.md) | Comensal | 35, 53, 59, 61 | 4 | 5 (US-53, US-59 y US-61 adelantadas del 6) | ✅ | — | — | — (decisiones F1–F10 del 15/11, falta que la PO las valide) |
+| [027-filtros-busqueda](027-filtros-busqueda/spec.md) | Comensal | 35, 53, 59, 61 | 4 | 5 (US-53, US-59 y US-61 adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-35, US-53, US-59, US-61 (decisiones F1–F10 del 15/11, falta que la PO las valide) |
 
 Arrastre de la spec 002-cuenta-restaurante: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002-elegir-restaurante muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
 
