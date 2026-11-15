@@ -14,7 +14,16 @@ import { OCCUPANCY_REFRESH_MS } from '../../lib/occupancy'
 import { formatRating } from '../../lib/rating'
 import { useGeolocation } from '../../lib/useGeolocation'
 import { LiveIndicator } from '../order'
-import { Button, Drawer, IconFilter, IconPin, IconStar, Spinner } from '../ui'
+import {
+  Button,
+  Drawer,
+  IconButton,
+  IconClose,
+  IconFilter,
+  IconPin,
+  IconStar,
+  Spinner,
+} from '../ui'
 import { ActiveFilters } from './ActiveFilters'
 import { FilterPanel } from './FilterPanel'
 import { OccupancyMeter } from './OccupancyMeter'
@@ -50,7 +59,7 @@ function byDistanceThenName(diner: GeoPoint | null) {
 
 const DROPPED_DAY_NOTICES: Record<Exclude<DroppedDay, null>, string> = {
   past: 'El día del enlace ya pasó, así que no lo aplicamos. Elegí otro en «Filtros».',
-  far: 'El día del enlace está a más de 60 días, así que no lo aplicamos: se puede reservar hasta 60 días antes. Elegí otro en «Filtros».',
+  far: 'No aplicamos el día del enlace: solo se puede reservar con hasta 60 días de anticipación. Elegí otro en «Filtros».',
 }
 
 function restaurantCount(count: number): string {
@@ -189,9 +198,12 @@ export function RestaurantExplorer() {
         </div>
 
         {dayNotice && (
-          <p className={styles.notice} role="status">
-            {DROPPED_DAY_NOTICES[dayNotice]}
-          </p>
+          <div className={cx(styles.notice, styles.dismissible)} role="status">
+            <p>{DROPPED_DAY_NOTICES[dayNotice]}</p>
+            <IconButton label="Cerrar aviso" variant="ghost" onClick={() => setDayNotice(null)}>
+              <IconClose />
+            </IconButton>
+          </div>
         )}
 
         <div className={styles.status}>

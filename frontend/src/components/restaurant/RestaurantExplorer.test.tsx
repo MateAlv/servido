@@ -467,6 +467,8 @@ describe('Every filter together (spec 027, common scenarios)', () => {
       `/reservar/${HUERTA.id}?fecha=${tomorrow}&hora=21%3A00&personas=6`,
     )
     expect(screen.getByText(`${shortDayLabel(tomorrow)} · 21:00 · 6 personas`)).toBeInTheDocument()
+    expect(screen.getByText(/La reserva empieza con los datos de tu búsqueda/)).toBeInTheDocument()
+    expect(screen.queryByText(/Elegí la fecha, el horario/)).not.toBeInTheDocument()
   })
 
   it('US-59 common S5 keeps a range with equal ends as a range, without an hour', async () => {
@@ -604,6 +606,59 @@ describe('Filters, focus and pending choices (spec 027, QA)', () => {
     expect(within(panel).getByLabelText('Hasta')).toHaveAttribute('aria-invalid', 'true')
   })
 
+  it('US-59 edge keeps the last valid time applied while the range is inverted', async () => {
+    const user = userEvent.setup()
+    renderMap(`/mapa?dia=${tomorrow}&desde=20:00&hasta=22:00`)
+    await waitFor(() => expect(listed()).toEqual(['Huerta Real']))
+    const panel = await openFilters(user)
+
+    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '19:00' } })
+
+    expect(within(panel).getByRole('alert')).toHaveTextContent('El «hasta» no puede ser anterior')
+    expect(
+      within(panel).getByText(
+        `Mientras tanto sigue aplicado ${shortDayLabel(tomorrow)} · 20:00–22:00.`,
+      ),
+    ).toBeInTheDocument()
+    expect(new URLSearchParams(address()).get('hasta')).toBe('22:00')
+    expect(listed()).toEqual(['Huerta Real'])
+
+    fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '23:00' } })
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '20:00', '23:00')
+  })
+
+  it('US-59 S3 switching a range that starts off the half hour to an hour rounds it up', async () => {
+    const user = userEvent.setup()
+    renderMap(`/mapa?dia=${tomorrow}&desde=20:15&hasta=22:00`)
+    const panel = await openFilters(user)
+
+    await user.click(within(panel).getByRole('radio', { name: 'Hora' }))
+
+    expect(within(panel).getByLabelText('Hora')).toHaveValue('20:30')
+    expect(new URLSearchParams(address()).get('hora')).toBe('20:30')
+    expect(fetchOpenRestaurantIds).toHaveBeenLastCalledWith(tomorrow, '20:30', '20:30')
+  })
+
+  it('US-59 common S2 labels a range with equal ends as one hour', async () => {
+    renderMap(`/mapa?dia=${tomorrow}&desde=21:00&hasta=21:00`)
+
+    expect(
+      await screen.findByRole('button', {
+        name: `Quitar filtro ${shortDayLabel(tomorrow)} · 21:00`,
+      }),
+    ).toBeInTheDocument()
+  })
+
+  it('US-61 edge keeps the focus in the stepper when it reaches 20', async () => {
+    const user = userEvent.setup()
+    renderMap('/mapa?personas=19')
+    const panel = await openFilters(user)
+
+    await user.click(within(panel).getByRole('button', { name: 'Una persona más' }))
+
+    expect(within(panel).getByRole('button', { name: 'Una persona menos' })).toHaveFocus()
+  })
+
   it('US-59 edge does not offer the hours of today that already started', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-11-15T15:10:00-03:00'))
@@ -624,9 +679,20 @@ describe('Filters, focus and pending choices (spec 027, QA)', () => {
       `/mapa?dia=${addDays(today, 61)}&hora=21:00&rating=9&personas=50&restriccion=foo&precio=xyz&precio=%24`,
     )
 
-    expect(await screen.findByText(/está a más de 60 días/)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/solo se puede reservar con hasta 60 días de anticipación/),
+    ).toBeInTheDocument()
     await waitFor(() => expect(address()).toBe('?precio=%24'))
     expect(fetchOpenRestaurantIds).not.toHaveBeenCalled()
+  })
+
+  it('US-59 edge lets the diner close the notice about a dropped day', async () => {
+    const user = userEvent.setup()
+    renderMap(`/mapa?dia=${addDays(today, -1)}&hora=21:00`)
+
+    await user.click(await screen.findByRole('button', { name: 'Cerrar aviso' }))
+
+    expect(screen.queryByText(/El día del enlace ya pasó/)).not.toBeInTheDocument()
   })
 
   it('US-61 edge explains the maximum of 20 people', async () => {

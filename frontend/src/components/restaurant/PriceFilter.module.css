@@ -28,7 +28,8 @@
   color: var(--color-text-muted);
 }
 
-/* A ghost button lines its text up with the chips above it. */
+/* A ghost button lines its text up with the chips above it, with a 44 px touch target. */
 .clear {
+  min-height: 44px;
   margin-inline-start: calc(-1 * var(--space-4));
 }

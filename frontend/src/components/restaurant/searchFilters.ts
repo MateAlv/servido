@@ -209,9 +209,9 @@ export function longDayLabel(isoDate: string): string {
   return dayLabel(isoDate, Infinity)
 }
 
-/** «Sáb 22/11 · 21:00» or «Sáb 22/11 · 20:00–22:00». */
+/** «Sáb 22/11 · 21:00» or «Sáb 22/11 · 20:00–22:00»; a range with equal ends reads as one hour. */
 export function timeFilterLabel(time: TimeFilter): string {
-  const hours = isPointHour(time) ? time.from : `${time.from}–${time.to}`
+  const hours = time.from === time.to ? time.from : `${time.from}–${time.to}`
   return `${shortDayLabel(time.day)} · ${hours}`
 }
 
@@ -337,15 +337,16 @@ export function timeDraftFrom(time: TimeFilter | null): TimeDraft {
 
 /**
  * The draft in the other mode, keeping what was chosen when it still means the same: an hour
- * becomes a range with both ends at that hour, and a range becomes the hour it starts at when
- * that is a half hour.
+ * becomes a range with both ends at that hour, and a range becomes its start rounded up to the
+ * next half hour (20:15 becomes 20:30), the first start it allowed.
  */
 export function switchTimeMode(draft: TimeDraft, mode: TimeDraft['mode']): TimeDraft {
   if (mode === draft.mode) return draft
   if (mode === 'rango') {
     return { ...draft, mode, from: draft.hour || draft.from, to: draft.hour || draft.to }
   }
-  return { ...draft, mode, hour: HALF_HOURS.includes(draft.from) ? draft.from : '' }
+  const hour = TIME_PATTERN.test(draft.from) ? HALF_HOURS.find((half) => half >= draft.from) : ''
+  return { ...draft, mode, hour: hour ?? '' }
 }
 
 /** A draft with a day and no applicable time yet: the day alone doesn't filter. */

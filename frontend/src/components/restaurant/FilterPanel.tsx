@@ -31,6 +31,7 @@ import {
   minRatingLabel,
   switchTimeMode,
   timeDraftFrom,
+  timeFilterLabel,
   timeFromDraft,
   type MinRating,
   type SearchFilters,
@@ -121,9 +122,11 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
     // An hour of today that already started can't be chosen (spec 027, «Hoy»).
     const fixed = next.day === today && next.hour && next.hour <= now ? { ...next, hour: '' } : next
     onTimeDraftChange(fixed)
-    // An incomplete or invalid day and time is not applied (spec 027, «Rango invertido»).
-    const { time } = timeFromDraft(fixed)
-    if (!sameTime(time, filters.time)) onChange({ ...filters, time })
+    // An incomplete day and time removes the filter. An invalid one (an inverted range, a day
+    // out of the window) is not applied either, but the last valid filter stays until the
+    // diner fixes it (spec 027, «Rango invertido»).
+    const { time, error } = timeFromDraft(fixed)
+    if (!error && !sameTime(time, filters.time)) onChange({ ...filters, time })
   }
 
   function clearTime() {
@@ -280,6 +283,10 @@ export function FilterPanel({ filters, onChange, timeDraft, onTimeDraftChange }:
         {pending ? (
           <p className={styles.pending} role="status">
             {pending}
+          </p>
+        ) : timeError && filters.time ? (
+          <p className={styles.note}>
+            Mientras tanto sigue aplicado {timeFilterLabel(filters.time)}.
           </p>
         ) : (
           <p className={styles.note}>Solo aparecen los restaurantes que ya toman reservas.</p>

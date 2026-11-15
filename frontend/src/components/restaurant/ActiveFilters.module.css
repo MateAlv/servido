@@ -48,3 +48,7 @@
     opacity: 0;
   }
 }
+
+.clearAll {
+  min-height: 44px;
+}

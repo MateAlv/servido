@@ -240,8 +240,9 @@ export function RestaurantDetailPage() {
                 ) : (
                   <>
                     <p className={styles.muted}>
-                      Elegí la fecha, el horario y cuántos van a ser. Después revisás los datos y
-                      confirmás.
+                      {prefill
+                        ? 'La reserva empieza con los datos de tu búsqueda y los podés cambiar. Después revisás todo y confirmás.'
+                        : 'Elegí la fecha, el horario y cuántos van a ser. Después revisás los datos y confirmás.'}
                     </p>
                     <Button fullWidth to={reservePath}>
                       Reservar mesa

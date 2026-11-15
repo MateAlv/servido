@@ -313,7 +313,9 @@ describe('timeFromDraft (US-59)', () => {
       to: '21:00',
     })
     expect(switchTimeMode({ ...range, from: '20:00', to: '22:00' }, 'hora').hour).toBe('20:00')
-    expect(switchTimeMode({ ...range, from: '20:10', to: '22:00' }, 'hora').hour).toBe('')
+    expect(switchTimeMode({ ...range, from: '20:15', to: '22:00' }, 'hora').hour).toBe('20:30')
+    expect(switchTimeMode({ ...range, from: '23:45', to: '23:50' }, 'hora').hour).toBe('')
+    expect(switchTimeMode({ ...range, from: '', to: '' }, 'hora').hour).toBe('')
   })
 
   it('US-59 edge flags a day still waiting for its hour', () => {

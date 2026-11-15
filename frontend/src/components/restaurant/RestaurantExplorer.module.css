@@ -100,6 +100,12 @@
   margin: 0;
 }
 
+/* A notice the diner can close: the text, and the close button at its side. */
+.dismissible {
+  grid-template-columns: 1fr auto;
+  align-items: start;
+}
+
 .listTitle {
   margin: 4px 0 10px;
   font: 800 20px / 1.2 var(--font-display);

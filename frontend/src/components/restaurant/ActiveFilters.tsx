@@ -58,6 +58,7 @@ export function ActiveFilters({ filters, onChange, onEmpty }: ActiveFiltersProps
       <Button
         variant="ghost"
         size="sm"
+        className={styles.clearAll}
         onClick={() => {
           focusIndex.current = 0
           onChange(NO_FILTERS)
