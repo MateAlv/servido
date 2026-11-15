@@ -41,7 +41,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 
 | Componente | Para qué | Animación |
 | --- | --- | --- |
-| `Logo` | Logo en el encabezado y en pantallas de marca. Variantes `full` / `mark` / `responsive` (completo, pero solo el pin hasta 600 px de ancho: lo usa el encabezado con sesión iniciada), `inline` / `stacked`, con o sin lema | `intro`: el pin cae y rebota, la campana aparece, se dibujan los rayos y suben las letras. `outro`: la tapa se levanta ("¡servido!") y el pin se hunde. `idle`: rayos que titilan y tapa que espía. Hover: la tapa se levanta |
+| `Logo` | Logo en el encabezado y en pantallas de marca. Variantes `full` / `mark` / `responsive` (completo, pero solo el pin hasta 480 px de ancho: lo usa el encabezado con sesión iniciada), `inline` / `stacked`, con o sin lema | `intro`: el pin cae y rebota, la campana aparece, se dibujan los rayos y suben las letras. `outro`: la tapa se levanta ("¡servido!") y el pin se hunde. `idle`: rayos que titilan y tapa que espía. Hover: la tapa se levanta |
 | `LogoMark` | El pin con la campana en SVG, sin animación propia. Lo usan `Logo` y `LogoSpinner`, que animan sus partes con `classes`; `orbit` dibuja la órbita del spinner | — |
 | `LogoSpinner` | Cargas de página o de secciones | `orbit`: un cometa gira alrededor del pin mientras la tapa espía. `hop`: el pin salta, ideal mientras se buscan restaurantes cerca |
 | `BrandSplash` | Bienvenida, una vez por sesión | El logo aparece, espera hasta que la app esté lista, desaparece y la pantalla se levanta como una campana. Se saltea con un clic |
@@ -78,7 +78,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 
 | Componente | Para qué |
 | --- | --- |
-| `SiteHeader` | Barra superior de todas las páginas: logo, y "Ingresar" / "Crear cuenta" o quién está conectado y "Cerrar sesión". Queda fija al hacer scroll. Con sesión iniciada entra en 360 px: el nombre se ve desde 1080 px, el logo queda en el pin hasta 600 px y el avatar y el tema se ocultan hasta 420 px |
+| `SiteHeader` | Barra superior de todas las páginas: logo, y "Ingresar" / "Crear cuenta" o quién está conectado y "Cerrar sesión". Queda fija al hacer scroll. Con sesión iniciada entra en 360 px sin perder el cambio de tema: el nombre se ve desde 1080 px, el logo queda en el pin hasta 480 px y «Cerrar sesión» muestra solo su ícono hasta 640 px. «Mis reservas» es un objetivo táctil de 44 px |
 | `SiteFooter` | Pie de todas las páginas |
 
 El inicio cambia según quién entra: visitante (presentación y una tarjeta por rol para crear cuenta o ingresar), comensal (elegir restaurante) o restaurante (su panel).

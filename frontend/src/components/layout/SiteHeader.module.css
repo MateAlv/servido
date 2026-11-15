@@ -47,7 +47,11 @@
   margin-left: auto;
 }
 
+/* «Mis reservas» is a 44 px touch target like the buttons around it. */
 .actions > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   white-space: nowrap;
 }
 
@@ -120,10 +124,16 @@
   }
 }
 
-/* Signed in on a narrow phone: the pin, «Mis reservas» and «Cerrar sesión» are what fits. */
+/* Signed in, «Cerrar sesión» keeps only its icon until there is room for its text. */
+@media (max-width: 640px) {
+  .signOutText {
+    display: none;
+  }
+}
+
+/* A visitor's narrow phone fits «Ingresar» but not the theme toggle. */
 @media (max-width: 420px) {
-  .theme,
-  .who {
+  .visitorTheme {
     display: none;
   }
 }
