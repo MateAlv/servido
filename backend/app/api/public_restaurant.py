@@ -5,14 +5,16 @@ from sqlalchemy import select
 
 from app.db import SessionDep
 from app.models.restaurant import Restaurant
+from app.models.review_reply import ReviewReply
 from app.schemas.public_restaurant import (
     PublicDish,
     PublicOpinion,
+    PublicReply,
     PublicRestaurant,
     PublicRestaurantDetail,
     PublicRestaurantList,
 )
-from app.services import reviews
+from app.services import review_replies, reviews
 from app.services.availability import BUENOS_AIRES, bookable_condition
 from app.services.menu import menu_dishes
 
@@ -45,6 +47,16 @@ def public_fields(restaurant: Restaurant, session: SessionDep) -> dict:
     }
 
 
+def public_reply(reply: ReviewReply | None) -> PublicReply | None:
+    if reply is None:
+        return None
+    return PublicReply(
+        text=reply.text,
+        date=reply.created_at.astimezone(BUENOS_AIRES).date(),
+        edited=reply.edited_at is not None,
+    )
+
+
 @router.get("/restaurants", response_model=PublicRestaurantList)
 def list_bookable_restaurants(session: SessionDep) -> PublicRestaurantList:
     restaurants = session.scalars(
@@ -69,6 +81,12 @@ def get_bookable_restaurant(restaurant_id: UUID, session: SessionDep) -> PublicR
     if restaurant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=RESTAURANT_NOT_FOUND)
     dishes = menu_dishes(session, restaurant_id)
+    opinions = [
+        (review, reservation, diner)
+        for review, reservation, diner in reviews.latest_reviews(session, restaurant_id)
+        if review.comment
+    ]
+    replies = review_replies.replies_by_review(session, {review.id for review, _, _ in opinions})
     return PublicRestaurantDetail(
         **public_fields(restaurant, session),
         menu=[
@@ -90,8 +108,8 @@ def get_bookable_restaurant(restaurant_id: UUID, session: SessionDep) -> PublicR
                 comment=review.comment,
                 spend_per_person=review.spend_per_person,
                 visit_date=reservation.starts_at.astimezone(BUENOS_AIRES).date(),
+                reply=public_reply(replies.get(review.id)),
             )
-            for review, reservation, diner in reviews.latest_reviews(session, restaurant_id)
-            if review.comment
+            for review, reservation, diner in opinions
         ],
     )

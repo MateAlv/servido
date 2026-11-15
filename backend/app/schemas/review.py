@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator
 
 from app.models.review import MAX_COMMENT_LENGTH, MAX_SPEND_PER_PERSON
+from app.models.review_reply import MAX_REPLY_LENGTH
 
 
 class ReviewRequest(BaseModel):
@@ -51,6 +52,29 @@ class PendingReviewsResponse(BaseModel):
     reservations: list[PendingReview]
 
 
+class ReplyRequest(BaseModel):
+    text: str
+
+    @field_validator("text")
+    @classmethod
+    def clean_text(cls, value: str) -> str:
+        if "\x00" in value:
+            raise ValueError("La respuesta tiene caracteres que no se pueden guardar.")
+        value = value.strip()
+        if not value:
+            raise ValueError("Escribí tu respuesta.")
+        if len(value) > MAX_REPLY_LENGTH:
+            raise ValueError(f"La respuesta puede tener hasta {MAX_REPLY_LENGTH} caracteres.")
+        return value
+
+
+class ReviewReplyResponse(BaseModel):
+    text: str
+    created_at: datetime
+    # Set when the text changed after publishing: shown as «Editada» (C3).
+    edited_at: datetime | None
+
+
 class RestaurantReview(BaseModel):
     id: UUID
     author: str
@@ -62,6 +86,9 @@ class RestaurantReview(BaseModel):
     published_at: datetime
     # False for an older visit of the same person: not in the average, not public (R13, R14).
     counts_in_average: bool
+    reply: ReviewReplyResponse | None
+    # Shown in Opiniones and still without a reply (spec 025, C1).
+    can_reply: bool
 
 
 class RestaurantReviewsResponse(BaseModel):

@@ -8,15 +8,18 @@ from app.api.restaurant import restaurant_from_claims
 from app.db import SessionDep
 from app.models.diner import Diner
 from app.models.restaurant import Restaurant
+from app.models.review_reply import ReviewReply
 from app.schemas.review import (
     PendingReview,
     PendingReviewsResponse,
     PublishedReviewResponse,
+    ReplyRequest,
     RestaurantReview,
     RestaurantReviewsResponse,
+    ReviewReplyResponse,
     ReviewRequest,
 )
-from app.services import availability, reviews
+from app.services import availability, review_replies, reviews
 from app.services.availability import BUENOS_AIRES
 
 router = APIRouter(tags=["review"])
@@ -25,6 +28,10 @@ RESERVATION_NOT_FOUND = "No encontramos esa reserva."
 EMAIL_NOT_VERIFIED = "Verificá tu email para dejar tu reseña."
 ALREADY_REVIEWED = "Ya publicaste la reseña de esta reserva."
 NOT_REVIEWABLE = "Esta reserva ya no se puede calificar."
+REVIEW_NOT_FOUND = "No encontramos esa reseña."
+ALREADY_REPLIED = "Esta reseña ya tiene tu respuesta. Podés editarla."
+NOT_REPLIABLE = "Solo podés responder las reseñas que se ven en Opiniones."
+REPLY_NOT_FOUND = "Esta reseña todavía no tiene tu respuesta."
 
 SESSION_AND_ROLE = {
     401: {"description": "Falta la sesión o venció."},
@@ -124,7 +131,9 @@ def list_restaurant_reviews(
     total = reviews.total_reviews(session, restaurant_id)
     spend = reviews.spend_summary(session, restaurant_id)
     counted = {review.id for review, _, _ in reviews.latest_reviews(session, restaurant_id)}
+    shown = review_replies.shown_review_ids(session, restaurant_id)
     page = reviews.restaurant_reviews(session, restaurant_id, offset, reviews.RESTAURANT_PAGE_SIZE)
+    replies = review_replies.replies_by_review(session, {review.id for review, _, _ in page})
     next_offset = offset + len(page)
     return RestaurantReviewsResponse(
         rating=summary.average,
@@ -144,8 +153,70 @@ def list_restaurant_reviews(
                 spend_per_person=review.spend_per_person,
                 published_at=review.published_at.astimezone(BUENOS_AIRES),
                 counts_in_average=review.id in counted,
+                reply=reply_response(replies[review.id]) if review.id in replies else None,
+                can_reply=review.id in shown and review.id not in replies,
             )
             for review, reservation, diner in page
         ],
         next_offset=next_offset if next_offset < total else None,
     )
+
+
+def reply_response(reply: ReviewReply) -> ReviewReplyResponse:
+    return ReviewReplyResponse(
+        text=reply.text,
+        created_at=reply.created_at.astimezone(BUENOS_AIRES),
+        edited_at=reply.edited_at.astimezone(BUENOS_AIRES) if reply.edited_at else None,
+    )
+
+
+@router.post(
+    "/restaurant/reviews/{review_id}/reply",
+    response_model=ReviewReplyResponse,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        **SESSION_AND_ROLE,
+        404: {"description": "La reseña no existe o es de otro restaurante."},
+        409: {"description": "La reseña ya tiene respuesta o no se ve en Opiniones."},
+    },
+)
+def reply_to_review(
+    review_id: UUID, body: ReplyRequest, claims: TokenClaimsDep, session: SessionDep
+) -> ReviewReplyResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    try:
+        reply = review_replies.reply(
+            session, restaurant.id_restaurante, review_id, body.text, availability.current_time()
+        )
+    except review_replies.ReviewNotFoundError as error:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, REVIEW_NOT_FOUND) from error
+    except review_replies.AlreadyRepliedError as error:
+        raise HTTPException(status.HTTP_409_CONFLICT, ALREADY_REPLIED) from error
+    except review_replies.NotRepliableError as error:
+        raise HTTPException(status.HTTP_409_CONFLICT, NOT_REPLIABLE) from error
+    session.commit()
+    return reply_response(reply)
+
+
+@router.put(
+    "/restaurant/reviews/{review_id}/reply",
+    response_model=ReviewReplyResponse,
+    responses={
+        **SESSION_AND_ROLE,
+        404: {"description": "La reseña no existe, es de otro restaurante o no tiene respuesta."},
+    },
+)
+def edit_reply(
+    review_id: UUID, body: ReplyRequest, claims: TokenClaimsDep, session: SessionDep
+) -> ReviewReplyResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    try:
+        reply = review_replies.edit_reply(
+            session, restaurant.id_restaurante, review_id, body.text, availability.current_time()
+        )
+    except review_replies.ReviewNotFoundError as error:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, REVIEW_NOT_FOUND) from error
+    except review_replies.ReplyNotFoundError as error:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, REPLY_NOT_FOUND) from error
+    session.commit()
+    return reply_response(reply)
