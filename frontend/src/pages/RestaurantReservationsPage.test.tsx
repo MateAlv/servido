@@ -6,6 +6,7 @@ import { RestaurantReservationsPage } from './RestaurantReservationsPage'
 
 const reservationsApi = vi.hoisted(() => ({
   fetchRestaurantReservations: vi.fn(),
+  cancelRestaurantReservation: vi.fn(),
 }))
 const configurationApi = vi.hoisted(() => ({
   getHours: vi.fn(),
@@ -16,6 +17,13 @@ vi.mock('../api/restaurantConfiguration', () => ({ configurationApi }))
 
 describe('RestaurantReservationsPage (US-14)', () => {
   beforeEach(() => {
+    reservationsApi.cancelRestaurantReservation.mockResolvedValue({
+      reservation_id: 'reservation-id',
+      status: 'cancelled',
+      message: 'La reserva se canceló y el reembolso se completó correctamente.',
+      refund: { status: 'completed', amount: '12500.00', method: 'online' },
+      notification_created: true,
+    })
     reservationsApi.fetchRestaurantReservations.mockResolvedValue({
       restaurant_id: 'restaurant-id',
       date: '2026-10-29',
@@ -53,5 +61,18 @@ describe('RestaurantReservationsPage (US-14)', () => {
     await waitFor(() =>
       expect(reservationsApi.fetchRestaurantReservations).toHaveBeenLastCalledWith('2026-10-30'),
     )
+  })
+
+  it('US-38 S2 reports cancellation and refund success', async () => {
+    renderWithProviders(<RestaurantReservationsPage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancelar reserva' }))
+
+    await waitFor(() =>
+      expect(
+        screen.getByText('La reserva se canceló y el reembolso se completó correctamente.'),
+      ).toBeInTheDocument(),
+    )
+    expect(screen.getByText('Cancelada')).toBeInTheDocument()
   })
 })
