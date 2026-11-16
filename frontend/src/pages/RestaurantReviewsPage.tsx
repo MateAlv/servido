@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router'
 
 import {
@@ -7,20 +7,126 @@ import {
   retryUnlessSessionExpired,
   SessionExpiredError,
 } from '../api/errors'
-import { fetchRestaurantReviews } from '../api/reviews'
+import { fetchRestaurantReviews, type RestaurantReview } from '../api/reviews'
 import { signOut, useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
-import { OpinionCard } from '../components/review'
-import { Button, Card, IconArrowLeft, StarRating } from '../components/ui'
-import { longDate } from '../lib/date'
+import { OpinionCard, OpinionReply } from '../components/review'
+import { Button, Card, IconArrowLeft, Modal, StarRating } from '../components/ui'
+import { dateInBuenosAires, longDate } from '../lib/date'
 import { formatPesos, formatRating, formatReviewCount } from '../lib/rating'
 import styles from './RestaurantReviewsPage.module.css'
+import { ReplyForm } from './reviews/ReplyForm'
 
 const LOAD_FAILED = 'No pudimos cargar las reseñas.'
 const OLDER_VISIT = 'Visita anterior: no cuenta en el promedio ni se ve en público.'
 
+/** Why a reply form changed or closed by itself, with what the restaurant had typed. */
+type ReplyNotice = { reviewId: string; message: string; draft: string }
+
+type ReplySectionProps = {
+  review: RestaurantReview
+  open: boolean
+  notice?: ReplyNotice
+  /** Move the focus to this review's reply button, e.g. after closing its form. */
+  takeFocus: boolean
+  formFocus: number
+  onFocusTaken: () => void
+  onDirtyChange: (dirty: boolean) => void
+  onOpen: () => void
+  onCancel: () => void
+  onSaved: () => Promise<void>
+  onConflict: (message: string, draft: string) => Promise<void>
+}
+
+/** The reply under a review (US-42): offered only on the reviews shown in Opiniones (C1),
+ * edited but never deleted (C4). */
+function ReplySection({
+  review,
+  open,
+  notice,
+  takeFocus,
+  formFocus,
+  onFocusTaken,
+  onDirtyChange,
+  onOpen,
+  onCancel,
+  onSaved,
+  onConflict,
+}: ReplySectionProps) {
+  const { reply } = review
+  const showingForm = open && (reply !== null || review.can_reply)
+  const actionRef = useRef<HTMLButtonElement>(null)
+  const noticeRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!takeFocus || showingForm) return
+    actionRef.current?.focus()
+    onFocusTaken()
+  }, [takeFocus, showingForm, onFocusTaken])
+
+  useEffect(() => {
+    if (notice && !showingForm) noticeRef.current?.focus()
+  }, [notice, showingForm])
+
+  if (showingForm) {
+    return (
+      <ReplyForm
+        key={reply ? 'edit' : 'reply'}
+        reviewId={review.id}
+        author={review.author}
+        current={reply?.text}
+        notice={notice?.message}
+        draft={notice?.draft}
+        focusRequest={formFocus}
+        onDirtyChange={onDirtyChange}
+        onSaved={onSaved}
+        onCancel={onCancel}
+        onConflict={onConflict}
+      />
+    )
+  }
+  return (
+    <>
+      {reply && (
+        <OpinionReply
+          label="Tu respuesta"
+          text={reply.text}
+          date={dateInBuenosAires(reply.created_at)}
+          edited={reply.edited_at !== null}
+        />
+      )}
+      {notice && (
+        <div ref={noticeRef} tabIndex={-1} className={styles.replyError} role="alert">
+          <p>{notice.message}</p>
+          <p className={styles.lostDraft}>Lo que escribiste, sin publicar: {notice.draft}</p>
+        </div>
+      )}
+      {(reply || review.can_reply) && (
+        <div className={styles.replyAction}>
+          <Button ref={actionRef} variant="secondary" size="sm" onClick={onOpen}>
+            {reply ? 'Editar respuesta' : 'Responder'}
+          </Button>
+        </div>
+      )}
+    </>
+  )
+}
+
 function ReviewsList() {
   const queryClient = useQueryClient()
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [notice, setNotice] = useState<ReplyNotice | null>(null)
+  const [focusId, setFocusId] = useState<string | null>(null)
+  // Bumped to put the focus back in the open form once the discard question is dismissed.
+  const [formFocus, setFormFocus] = useState(0)
+  // What to do once the restaurant agrees to lose its draft; null while nothing is asked.
+  const [discarding, setDiscarding] = useState<{ then: () => void } | null>(null)
+  const afterDiscard = useRef<(() => void) | null>(null)
+  const draftIsDirty = useRef(false)
+  const markDirty = useCallback((dirty: boolean) => {
+    draftIsDirty.current = dirty
+  }, [])
+  const focusTaken = useCallback(() => setFocusId(null), [])
   const reviews = useInfiniteQuery({
     queryKey: ['restaurant', 'reviews'],
     queryFn: ({ pageParam }) => fetchRestaurantReviews(pageParam),
@@ -32,6 +138,30 @@ function ReviewsList() {
   useEffect(() => {
     if (reviews.error instanceof SessionExpiredError) signOut(queryClient)
   }, [reviews.error, queryClient])
+
+  async function refreshReviews() {
+    void queryClient.invalidateQueries({ queryKey: ['restaurants'] })
+    await queryClient.invalidateQueries({ queryKey: ['restaurant', 'reviews'] })
+  }
+
+  /** Runs `action` now, or after confirming when it would lose a draft. */
+  function keepingDrafts(action: () => void) {
+    if (draftIsDirty.current) setDiscarding({ then: action })
+    else action()
+  }
+
+  function openForm(reviewId: string) {
+    draftIsDirty.current = false
+    setOpenId(reviewId)
+    setNotice(null)
+  }
+
+  function closeForm(reviewId: string) {
+    draftIsDirty.current = false
+    setOpenId(null)
+    setNotice(null)
+    setFocusId(reviewId)
+  }
 
   if (reviews.isPending) return <p role="status">Cargando reseñas…</p>
   if (reviews.isError)
@@ -86,11 +216,59 @@ function ReviewsList() {
                 spendPerPerson={review.spend_per_person}
                 visit={`Visitó el ${longDate(review.visit_date)} a las ${review.visit_time}`}
                 remark={review.counts_in_average ? undefined : OLDER_VISIT}
-              />
+              >
+                <ReplySection
+                  review={review}
+                  open={openId === review.id}
+                  notice={notice?.reviewId === review.id ? notice : undefined}
+                  takeFocus={focusId === review.id}
+                  formFocus={formFocus}
+                  onFocusTaken={focusTaken}
+                  onDirtyChange={markDirty}
+                  onOpen={() => keepingDrafts(() => openForm(review.id))}
+                  onCancel={() => keepingDrafts(() => closeForm(review.id))}
+                  onSaved={async () => {
+                    await refreshReviews()
+                    closeForm(review.id)
+                  }}
+                  onConflict={async (message, draft) => {
+                    await refreshReviews()
+                    setNotice({ reviewId: review.id, message, draft })
+                  }}
+                />
+              </OpinionCard>
             </Card>
           </li>
         ))}
       </ul>
+      <Modal
+        open={discarding !== null}
+        onClose={() => setDiscarding(null)}
+        onClosed={() => {
+          const action = afterDiscard.current
+          afterDiscard.current = null
+          if (action) action()
+          else setFormFocus((request) => request + 1)
+        }}
+        title="¿Descartás tu respuesta?"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setDiscarding(null)}>
+              Seguir escribiendo
+            </Button>
+            <Button
+              onClick={() => {
+                afterDiscard.current = discarding?.then ?? null
+                setDiscarding(null)
+              }}
+            >
+              Descartar
+            </Button>
+          </>
+        }
+      >
+        <p>Lo que escribiste todavía no se publicó y se va a perder.</p>
+      </Modal>
       {reviews.isFetchNextPageError && (
         <p role="alert">No pudimos cargar más reseñas. Probá de nuevo.</p>
       )}
@@ -112,7 +290,7 @@ function ReviewsList() {
   )
 }
 
-/** The reviews the restaurant received (US-24): to read, never to change. */
+/** The reviews the restaurant received (US-24): it can't change them, only reply (US-42). */
 export function RestaurantReviewsPage() {
   const { data: account, isPending } = useAccount()
 

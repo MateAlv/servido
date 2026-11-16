@@ -25,6 +25,7 @@ from app.models.diner import Diner
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.models.review import Review
+from app.models.review_reply import ReviewReply
 from app.services import availability
 from app.services.auth import hash_password
 from app.services.availability import BUENOS_AIRES
@@ -120,6 +121,8 @@ def remove_demo(session: Session, restaurant: Restaurant) -> None:
     require_demo_restaurant(restaurant)
     ids = [request_id(restaurant, key) for key in demo_keys()]
     reservations = select(Reservation.id).where(Reservation.request_id.in_(ids))
+    reviews = select(Review.id).where(Review.reservation_id.in_(reservations))
+    session.execute(delete(ReviewReply).where(ReviewReply.review_id.in_(reviews)))
     session.execute(delete(Review).where(Review.reservation_id.in_(reservations)))
     session.execute(delete(Reservation).where(Reservation.request_id.in_(ids)))
     for key in REVIEWERS:

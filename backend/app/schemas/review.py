@@ -1,9 +1,11 @@
 from datetime import date, datetime
+from typing import ClassVar
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
 from app.models.review import MAX_COMMENT_LENGTH, MAX_SPEND_PER_PERSON
+from app.models.review_reply import MAX_REPLY_LENGTH
 
 
 class ReviewRequest(BaseModel):
@@ -51,6 +53,38 @@ class PendingReviewsResponse(BaseModel):
     reservations: list[PendingReview]
 
 
+class ReplyRequest(BaseModel):
+    EMPTY_MESSAGE: ClassVar[str] = "Escribí tu respuesta."
+
+    text: str
+
+    @field_validator("text")
+    @classmethod
+    def clean_text(cls, value: str) -> str:
+        if "\x00" in value:
+            raise ValueError("La respuesta tiene caracteres que no se pueden guardar.")
+        value = value.strip()
+        if not value:
+            raise ValueError(cls.EMPTY_MESSAGE)
+        if len(value) > MAX_REPLY_LENGTH:
+            raise ValueError(f"La respuesta puede tener hasta {MAX_REPLY_LENGTH} caracteres.")
+        return value
+
+
+class ReplyEditRequest(ReplyRequest):
+    # A reply can be edited but not deleted (spec 025, C4).
+    EMPTY_MESSAGE: ClassVar[str] = (
+        "La respuesta no puede quedar vacía. Podés editarla, pero no borrarla."
+    )
+
+
+class ReviewReplyResponse(BaseModel):
+    text: str
+    created_at: datetime
+    # Set when the text changed after publishing: shown as «Editada» (C3).
+    edited_at: datetime | None
+
+
 class RestaurantReview(BaseModel):
     id: UUID
     author: str
@@ -62,6 +96,9 @@ class RestaurantReview(BaseModel):
     published_at: datetime
     # False for an older visit of the same person: not in the average, not public (R13, R14).
     counts_in_average: bool
+    reply: ReviewReplyResponse | None
+    # Shown in Opiniones and still without a reply (spec 025, C1).
+    can_reply: bool
 
 
 class RestaurantReviewsResponse(BaseModel):

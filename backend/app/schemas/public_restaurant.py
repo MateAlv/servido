@@ -57,6 +57,14 @@ class PublicDish(BaseModel):
     dietary_restrictions: list[str]
 
 
+class PublicReply(BaseModel):
+    """The restaurant's reply to an opinion (spec 025, US-42): the current text only (C3)."""
+
+    text: str
+    date: date
+    edited: bool
+
+
 class PublicOpinion(BaseModel):
     """The latest review of a person, when it has a comment (spec 014, R14)."""
 
@@ -65,6 +73,7 @@ class PublicOpinion(BaseModel):
     comment: str
     spend_per_person: int | None
     visit_date: date
+    reply: PublicReply | None
 
 
 class PublicRestaurantDetail(PublicRestaurant):

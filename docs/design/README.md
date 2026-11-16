@@ -66,13 +66,13 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `StatusPill` | Estado corto: disponibilidad, pago, reserva |
 | `Skeleton`, `SkeletonText` | Placeholders con brillo mientras carga una lista |
 | `Spinner` | Carga dentro de un botón o de un texto |
-| `Modal` | Diálogos (en el celular se abre como hoja desde abajo) |
+| `Modal` | Diálogos (en el celular se abre como hoja desde abajo). `onClosed` avisa cuando terminó de cerrarse, para devolver el foco a la página |
 | `Drawer` | Panel sobre el diálogo nativo, como `Modal` (atrapa el foco, se cierra con Escape, con la cruz o tocando afuera): en el celular sube desde abajo y en pantallas anchas entra desde la derecha. Solo el contenido hace scroll (el panel nunca entero, ni la página de atrás mientras está abierto): el encabezado y el pie quedan fijos; la última acción del pie ocupa el ancho que sobra. Anima al abrir y al cerrar; con movimiento reducido solo aparece con un fundido corto. Lo usan los filtros del mapa |
 | `ToastProvider`, `useToast` | Avisos breves que se van solos. Una página con barra inferior (el pedido) los sube con la variable `--toast-bottom` |
 | `ThemeToggle` | Cambio de tema claro / oscuro |
 | `Reveal` | Animación de entrada al hacer scroll |
 | `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido»), `maxHint` explica el «+» deshabilitado en el máximo, `announce={false}` apaga su anuncio cuando la página ya anuncia el cambio y `disabled` bloquea los dos botones. `increaseLabel` nombra el «+» («Una persona más») y `size="lg"` lleva los botones a 44 px, para formularios fuera de una lista. El botón que llega al límite se deshabilita y pasa el foco al otro |
-| `TextAreaField` | `TextField` para textos largos |
+| `TextAreaField` | `TextField` para textos largos, en peso regular para que un párrafo se lea bien. `hintTone="error"` pinta la ayuda de rojo, por ejemplo un contador pasado del límite |
 | `StarRating` | Calificación interactiva o de solo lectura |
 | `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, `IconFilter`, …) |
 
@@ -104,7 +104,8 @@ La recuperación de la cuenta del comensal no agrega componentes: `/recuperar` p
 | Componente | Para qué | US |
 | --- | --- | --- |
 | `OpinionCard` | Una reseña como la lee la gente: autor, estrellas, comentario, fecha de la visita y gasto por persona. Es la misma en la revisión antes de publicar, en el detalle del restaurante y en el panel | 24, 50 |
-| `OpinionList` | Las opiniones de un restaurante, de a 5 con «Ver más opiniones», con la aclaración si son menos que la cantidad de reseñas | 27, 50 |
+| `OpinionList` | Las opiniones de un restaurante, de a 5 con «Ver más opiniones», con la aclaración si son menos que la cantidad de reseñas, cada una con la respuesta del restaurante si la tiene | 27, 50, 42 |
+| `OpinionReply` | La respuesta del restaurante debajo de su reseña: más chica, con sangría, borde rojo de marca y fondo hundido, con quién responde y «Respondió el …», más «· Editada» si cambió. Con `collapsible` (en Opiniones) se acorta a unas tres líneas con «Leer más» / «Ver menos», como los comentarios (`ExpandableText`, interno de `review/`). Es un grupo con nombre, no una región. Va dentro de `OpinionCard`, que acepta `children` | 42 |
 
 ### Pedido (`order/`)
 

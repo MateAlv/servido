@@ -11,15 +11,23 @@ type ModalProps = {
   title: string
   children: ReactNode
   footer?: ReactNode
+  /** Runs once the dialog is closed and its animation ended: from then on the page behind it can
+   * take the focus again. */
+  onClosed?: () => void
 }
 
 /**
  * Dialog built on the native <dialog> element (focus trap and Escape for free).
  * On phones it becomes a bottom sheet. It animates both in and out.
  */
-export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, onClosed }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
+  const onClosedRef = useRef(onClosed)
+
+  useEffect(() => {
+    onClosedRef.current = onClosed
+  }, [onClosed])
 
   useEffect(() => {
     const dialog = ref.current
@@ -37,12 +45,14 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
         dialog.removeEventListener('animationend', onAnimationEnd)
         delete dialog.dataset.closing
         dialog.close()
+        onClosedRef.current?.()
       }
       const onAnimationEnd = (event: AnimationEvent) => {
         if (event.target === dialog) finish()
       }
       if (prefersReducedMotion()) {
         dialog.close()
+        onClosedRef.current?.()
         return
       }
       dialog.dataset.closing = ''

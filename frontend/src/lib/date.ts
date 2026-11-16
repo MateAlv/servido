@@ -10,6 +10,11 @@ export function todayInBuenosAires(): string {
   return BA_DATE_FORMAT.format(new Date())
 }
 
+/** The Buenos Aires calendar date (`YYYY-MM-DD`) of an ISO datetime. */
+export function dateInBuenosAires(isoDateTime: string): string {
+  return BA_DATE_FORMAT.format(new Date(isoDateTime))
+}
+
 const LONG_DATE_FORMAT = new Intl.DateTimeFormat('es-AR', {
   timeZone: 'America/Argentina/Buenos_Aires',
   weekday: 'long',

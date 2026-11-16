@@ -86,6 +86,7 @@ function fromApi(
       comment: opinion.comment,
       date: opinion.visit_date,
       spendPerPerson: opinion.spend_per_person,
+      reply: opinion.reply,
     })),
     rating: restaurant.rating,
     reviewCount: restaurant.review_count,

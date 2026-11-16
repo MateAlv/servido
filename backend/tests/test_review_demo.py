@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.diner import Diner
 from app.models.reservation import Reservation
 from app.models.review import Review
+from app.models.review_reply import ReviewReply
 from scripts.review_demo import (
     NotADemoRestaurantError,
     load_demo,
@@ -64,6 +65,22 @@ def test_us50_edge_loading_the_demo_again_replaces_it(client: TestClient, sessio
 
     assert session.query(Review).count() == 7
     assert session.query(Reservation).count() == 9
+
+
+def test_us42_edge_demo_replies_go_with_their_reviews(client: TestClient, session: Session) -> None:
+    restaurant, diner, _ = demo_setup(client, session)
+    load_demo(session, restaurant, diner, PASSWORD)
+    session.add(ReviewReply(review_id=session.query(Review).first().id, text="¡Gracias!"))
+    session.flush()
+
+    load_demo(session, restaurant, diner, PASSWORD)
+    assert session.query(ReviewReply).count() == 0
+    session.add(ReviewReply(review_id=session.query(Review).first().id, text="¡Gracias!"))
+    session.flush()
+    remove_demo(session, restaurant)
+
+    assert session.query(ReviewReply).count() == 0
+    assert session.query(Review).count() == 0
 
 
 def test_us50_edge_removing_the_demo_keeps_real_data(client: TestClient, session: Session) -> None:

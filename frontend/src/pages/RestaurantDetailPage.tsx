@@ -204,6 +204,7 @@ export function RestaurantDetailPage() {
                 <h2 className={styles.sectionTitle}>Opiniones</h2>
                 <OpinionList
                   opinions={restaurant.reviews}
+                  restaurantName={restaurant.name}
                   reviewCount={restaurant.reviewCount ?? restaurant.reviews.length}
                 />
               </Card>

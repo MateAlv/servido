@@ -30,6 +30,15 @@ export type RestaurantReview = {
   date: string
   /** What the author reported spending per person (US-50), when they did. */
   spendPerPerson?: number | null
+  /** The restaurant's reply (US-42); the test restaurants have none. */
+  reply?: OpinionReplyData | null
+}
+
+export type OpinionReplyData = {
+  text: string
+  /** ISO date the reply was published. */
+  date: string
+  edited: boolean
 }
 
 export type RestaurantPublic = {

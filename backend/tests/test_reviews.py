@@ -526,6 +526,7 @@ def test_us50_s8_opinion_is_public_with_only_its_fields(
             "comment": "Muy rico.",
             "spend_per_person": 25000,
             "visit_date": YESTERDAY.isoformat(),
+            "reply": None,
         }
     ]
 
@@ -704,6 +705,8 @@ def test_us24_s6_no_contact_data_or_reservation_link(client: TestClient, session
         "spend_per_person",
         "published_at",
         "counts_in_average",
+        "reply",
+        "can_reply",
     }
     for private in ("martin@example.com", "Gómez", str(reservation.id), str(diner)):
         assert private not in response.text
