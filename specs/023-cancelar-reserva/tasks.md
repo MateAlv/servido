@@ -86,6 +86,10 @@ description: "Task list for restaurant reservation cancellation and simulated re
 - T019–T020 can run in parallel with T021 after T017's service contract is agreed.
 - T022–T024 can run in parallel; T025 runs after API changes are complete.
 
+## Phase 4: Clarification follow-up
+
+- [X] T031 [US38] Add the `Confirmar cancelación` modal to `frontend/src/pages/RestaurantReservationsPage.tsx`, require explicit confirmation before calling the cancellation API, and cover the behavior in `frontend/src/pages/RestaurantReservationsPage.test.tsx` per the clarified requirement in `spec.md`.
+
 ## Implementation Strategy
 
 - **MVP first**: complete the database foundation, service, endpoint and backend acceptance tests for paid and unpaid cancellation.

@@ -12,6 +12,7 @@
 
 - Q: ¿Debemos implementar ahora la cancelación del restaurante con reembolso real, aunque el pago electrónico/US-56 figure como trabajo posterior, o dejar el reembolso como integración simulada/preparada? → A: Reembolso simulado.
 - Q: ¿Qué canal debe cumplir US-38 para avisar al comensal? → A: Aviso en la app y por email.
+- Q: ¿La acción de cancelar desde el restaurante requiere confirmación previa? → A: Sí, se muestra una ventana flotante «Confirmar cancelación» y la operación solo comienza al confirmarla.
 
 ## **User Scenarios & Testing *(mandatory)***
 
@@ -43,7 +44,7 @@ Como **Responsable del restaurante**, quiero reembolsar el dinero a un cliente t
 * **Importe a reembolsar**: «reembolsar correctamente» se interpreta como el importe total pagado por el pedido, por el mismo medio con que se pagó. El adaptador simulado devuelve ese importe. Los reembolsos parciales quedan fuera de esta spec.  
 * **Reembolso como condición de la cancelación** *(pendiente para la PO)*: consistente con FR-011 de la spec 011, si el reembolso falla la reserva no se cancela y se puede reintentar. Falta confirmar si debe ser así o si la cancelación puede completarse con el reembolso pendiente.  
 * **Aviso al comensal**: se muestra dentro de la aplicación y se envía por email, indicando restaurante, fecha y hora de la reserva y, si corresponde, el importe reembolsado.  
-* **Motivo y confirmación** *(pendiente para la PO)*: el backlog no pide indicar el motivo de la cancelación ni una confirmación previa del restaurante, como sí la tiene el comensal (spec 011). Esta spec no los exige.  
+* **Motivo** *(pendiente para la PO)*: el backlog no pide indicar el motivo de la cancelación. Esta spec no lo exige; sí exige la confirmación previa definida en la clarificación de esta sesión.
 * **Doble confirmación**: si la acción llega dos veces (doble clic o reintento), la reserva se cancela y el reembolso se realiza una sola vez, y se envía un solo aviso.  
 * **Reserva ya cancelada**: si el restaurante intenta cancelar una reserva ya cancelada (por ejemplo, por el comensal desde otro dispositivo), se le informa que ya estaba cancelada y no se reembolsa de nuevo.  
 * **Reservas que ya pasaron**: no se pueden cancelar ni reembolsar.  

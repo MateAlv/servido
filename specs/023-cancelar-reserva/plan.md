@@ -114,6 +114,10 @@ frontend/
 └── src/pages/RestaurantReservationsPage.test.tsx # ~ acceptance UI tests
 ```
 
+The restaurant cancellation action opens the existing `Modal` component titled
+`Confirmar cancelación`; the cancellation request is sent only after the restaurant
+explicitly confirms.
+
 **Structure Decision**: Keep the HTTP adapter in `restaurant.py`, but put the
 transactional rule in a service because it must lock the reservation, verify ownership,
 apply the cutoff, call the simulated refund exactly once and create the notification

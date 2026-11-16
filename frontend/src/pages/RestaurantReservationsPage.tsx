@@ -6,7 +6,7 @@ import {
   type RestaurantReservation,
 } from '../api/restaurantReservations'
 import { configurationApi, type OpeningShift } from '../api/restaurantConfiguration'
-import { Button, Card, IconArrowLeft, StatusPill, useToast } from '../components/ui'
+import { Button, Card, IconArrowLeft, Modal, StatusPill, useToast } from '../components/ui'
 import { longDate, todayInBuenosAires } from '../lib/date'
 import { tableLabel } from '../lib/seating'
 import styles from './RestaurantReservationsPage.module.css'
@@ -81,6 +81,7 @@ export function RestaurantReservationsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [cancelling, setCancelling] = useState<string | null>(null)
+  const [pendingCancellation, setPendingCancellation] = useState<RestaurantReservation | null>(null)
 
   useEffect(() => {
     let active = true
@@ -135,6 +136,11 @@ export function RestaurantReservationsPage() {
       setCancelling(null)
     }
   }
+  const confirmCancellation = async () => {
+    if (!pendingCancellation) return
+    await cancel(pendingCancellation)
+    setPendingCancellation(null)
+  }
 
   return (
     <main className={styles.page}>
@@ -183,12 +189,38 @@ export function RestaurantReservationsPage() {
               <h3 id={`shift-${group.key}`}>Turno de {group.title}</h3>
               <div className={styles.reservations}>
                 {group.reservations.map((reservation) =>
-                  reservationCard(reservation, cancelling, cancel),
+                  reservationCard(reservation, cancelling, setPendingCancellation),
                 )}
               </div>
             </section>
           ))}
       </Card>
+      <Modal
+        open={pendingCancellation !== null}
+        onClose={() => {
+          if (!cancelling) setPendingCancellation(null)
+        }}
+        title="Confirmar cancelación"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setPendingCancellation(null)}
+              disabled={cancelling !== null}
+            >
+              Volver
+            </Button>
+            <Button loading={cancelling !== null} onClick={() => void confirmCancellation()}>
+              Confirmar cancelación
+            </Button>
+          </>
+        }
+      >
+        <p>
+          La cancelación es definitiva. Se avisará al comensal y, si corresponde, se procesará el
+          reembolso.
+        </p>
+      </Modal>
     </main>
   )
 }
