@@ -1,11 +1,13 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
+
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Interval,
     Numeric,
     String,
     UniqueConstraint,
@@ -23,16 +25,37 @@ class Order(Base):
 
     __tablename__ = "pedidos"
     __table_args__ = (
-        CheckConstraint("status IN ('confirmed', 'pending', 'cancelled')", name="status_known"),
+        CheckConstraint(
+            "arrival_delay >= INTERVAL '0 minutes' AND arrival_delay <= INTERVAL '30 minutes'",
+            name="arrival_delay_bounds",
+        ),
+        CheckConstraint(
+            "EXTRACT(YEAR FROM arrival_delay) = 0 "
+            "AND EXTRACT(MONTH FROM arrival_delay) = 0 "
+            "AND EXTRACT(DAY FROM arrival_delay) = 0",
+            name="arrival_delay_duration",
+        ),
+        CheckConstraint(
+            "payment_method IS NULL OR payment_method IN ('cash', 'online')",
+            name="payment_method_known",
+        ),
         CheckConstraint("payment_status IN ('pending', 'paid')", name="payment_status_known"),
         CheckConstraint(
-            "(payment_status = 'pending' AND payment_method IS NULL AND paid_amount IS NULL "
-            "AND paid_at IS NULL) OR "
+            "(payment_status = 'pending' AND paid_amount IS NULL AND paid_at IS NULL) OR "
             "(payment_status = 'paid' AND payment_method IN ('cash', 'online') "
             "AND paid_amount IS NOT NULL AND paid_amount >= 0 AND paid_at IS NOT NULL)",
             name="payment_fields_match_status",
         ),
+        CheckConstraint("status IN ('confirmed', 'pending', 'cancelled')", name="status_known"),
         UniqueConstraint("reservation_id", name="reservation_order_unique"),
+    )
+
+    arrival_delay: Mapped[timedelta] = mapped_column(
+        Interval, nullable=False, default=timedelta, server_default=text("INTERVAL '0 minutes'")
+    )
+    payment_method: Mapped[str | None] = mapped_column(String(6), nullable=True)
+    payment_status: Mapped[str] = mapped_column(
+        String(7), nullable=False, default="pending", server_default="pending"
     )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)

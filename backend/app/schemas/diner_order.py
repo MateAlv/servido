@@ -2,9 +2,19 @@
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Any, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    ValidatorFunctionWrapHandler,
+    field_validator,
+    model_validator,
+)
 
 from app.models.cart import MAX_UNITS_PER_DISH
 from app.schemas.reservation import ReservationResponse
@@ -39,10 +49,23 @@ class OrderItemRequest(BaseModel):
         return value.quantize(Decimal("0.01"))
 
 
-class OrderRequest(BaseModel):
+class DraftRequest(BaseModel):
     """The whole order (or cart): it replaces the previous one."""
 
+    model_config = ConfigDict(extra="forbid")
+    arrival_at: AwareDatetime
+    payment_method: Literal["cash", "online"] | None
     items: list[OrderItemRequest] = Field(max_length=MAX_DISHES)
+
+    @field_validator("arrival_at", mode="wrap")
+    @classmethod
+    def arrival_has_timezone(cls, value: Any, handler: ValidatorFunctionWrapHandler) -> datetime:
+        try:
+            return handler(value)
+        except ValidationError as error:
+            if any(detail["type"] == "timezone_aware" for detail in error.errors()):
+                raise ValueError("La hora de llegada debe incluir una zona horaria.") from error
+            raise
 
     @field_validator("items")
     @classmethod
@@ -50,6 +73,31 @@ class OrderRequest(BaseModel):
         if len({item.dish_id for item in items}) != len(items):
             raise ValueError("Cada plato puede aparecer una sola vez en el pedido.")
         return items
+
+
+class ConfirmationRequest(DraftRequest):
+    operation_id: UUID
+
+    @model_validator(mode="after")
+    def method_selected(self) -> Self:
+        if self.items and self.payment_method is None:
+            raise ValueError("Seleccioná un medio de pago para confirmar tu pedido.")
+        return self
+
+
+class PaymentMethodRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    payment_method: Literal["cash", "online"]
+
+
+class ConfirmationResult(BaseModel):
+    operation_id: UUID
+    replayed: bool
+
+
+class ArrivalWindow(BaseModel):
+    starts_at: datetime
+    latest_at: datetime
 
 
 class ConfirmedOrderItemResponse(BaseModel):
@@ -63,6 +111,12 @@ class ConfirmedOrderItemResponse(BaseModel):
 
 
 class OrderResponse(BaseModel):
+    arrival_at: datetime
+    prep_start_time: datetime
+    payment_method: Literal["cash", "online"] | None
+    payment_status: Literal["pending", "paid"]
+    payment_method_editable: bool
+
     confirmed_at: datetime
     items: list[ConfirmedOrderItemResponse]
     total: Decimal
@@ -80,6 +134,9 @@ class CartItemResponse(BaseModel):
 
 
 class CartResponse(BaseModel):
+    arrival_at: datetime
+    payment_method: Literal["cash", "online"] | None
+
     updated_at: datetime
     items: list[CartItemResponse]
 
@@ -101,6 +158,9 @@ class OrderMenuDish(BaseModel):
 
 
 class OrderPageResponse(BaseModel):
+    arrival_window: ArrivalWindow
+    confirmation: ConfirmationResult | None = None
+
     reservation: ReservationResponse
     order: OrderResponse | None
     cart: CartResponse | None

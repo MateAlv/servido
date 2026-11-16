@@ -737,6 +737,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reservations/{reservation_id}/order/payment-method": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Payment Method */
+        put: operations["put_payment_method_api_reservations__reservation_id__order_payment_method_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reviews/pending": {
         parameters: {
             query?: never;
@@ -966,6 +983,19 @@ export interface components {
             /** Party Size */
             party_size: number;
         };
+        /** ArrivalWindow */
+        ArrivalWindow: {
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Latest At
+             * Format: date-time
+             */
+            latest_at: string;
+        };
         /** AvailabilityResponse */
         AvailabilityResponse: {
             /**
@@ -1057,6 +1087,13 @@ export interface components {
         /** CartResponse */
         CartResponse: {
             /**
+             * Arrival At
+             * Format: date-time
+             */
+            arrival_at: string;
+            /** Payment Method */
+            payment_method: ("cash" | "online") | null;
+            /**
              * Updated At
              * Format: date-time
              */
@@ -1131,6 +1168,33 @@ export interface components {
         /** ClosureWarningResponse */
         ClosureWarningResponse: {
             detail: components["schemas"]["ClosureWarningDetail"];
+        };
+        /** ConfirmationRequest */
+        ConfirmationRequest: {
+            /**
+             * Arrival At
+             * Format: date-time
+             */
+            arrival_at: string;
+            /** Payment Method */
+            payment_method: ("cash" | "online") | null;
+            /** Items */
+            items: components["schemas"]["OrderItemRequest"][];
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+        };
+        /** ConfirmationResult */
+        ConfirmationResult: {
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Replayed */
+            replayed: boolean;
         };
         /** ConfirmedOrderItemResponse */
         ConfirmedOrderItemResponse: {
@@ -1254,6 +1318,21 @@ export interface components {
             dish: components["schemas"]["DishManagementResponse"];
             /** Changed Since Open */
             changed_since_open: boolean;
+        };
+        /**
+         * DraftRequest
+         * @description The whole order (or cart): it replaces the previous one.
+         */
+        DraftRequest: {
+            /**
+             * Arrival At
+             * Format: date-time
+             */
+            arrival_at: string;
+            /** Payment Method */
+            payment_method: ("cash" | "online") | null;
+            /** Items */
+            items: components["schemas"]["OrderItemRequest"][];
         };
         /** FreeGroupResponse */
         FreeGroupResponse: {
@@ -1472,6 +1551,8 @@ export interface components {
         };
         /** OrderPageResponse */
         OrderPageResponse: {
+            arrival_window: components["schemas"]["ArrivalWindow"];
+            confirmation?: components["schemas"]["ConfirmationResult"] | null;
             reservation: components["schemas"]["ReservationResponse"];
             order: components["schemas"]["OrderResponse"] | null;
             cart: components["schemas"]["CartResponse"] | null;
@@ -1493,16 +1574,27 @@ export interface components {
             /** Total */
             total: string;
         };
-        /**
-         * OrderRequest
-         * @description The whole order (or cart): it replaces the previous one.
-         */
-        OrderRequest: {
-            /** Items */
-            items: components["schemas"]["OrderItemRequest"][];
-        };
         /** OrderResponse */
         OrderResponse: {
+            /**
+             * Arrival At
+             * Format: date-time
+             */
+            arrival_at: string;
+            /**
+             * Prep Start Time
+             * Format: date-time
+             */
+            prep_start_time: string;
+            /** Payment Method */
+            payment_method: ("cash" | "online") | null;
+            /**
+             * Payment Status
+             * @enum {string}
+             */
+            payment_status: "pending" | "paid";
+            /** Payment Method Editable */
+            payment_method_editable: boolean;
             /**
              * Confirmed At
              * Format: date-time
@@ -1521,6 +1613,14 @@ export interface components {
             token: string;
             /** Password */
             password: string;
+        };
+        /** PaymentMethodRequest */
+        PaymentMethodRequest: {
+            /**
+             * Payment Method
+             * @enum {string}
+             */
+            payment_method: "cash" | "online";
         };
         /** PendingReview */
         PendingReview: {
@@ -4445,7 +4545,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OrderRequest"];
+                "application/json": components["schemas"]["ConfirmationRequest"];
             };
         };
         responses: {
@@ -4516,7 +4616,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OrderRequest"];
+                "application/json": components["schemas"]["DraftRequest"];
             };
         };
         responses: {
@@ -4623,6 +4723,77 @@ export interface operations {
             };
             /** @description La reserva no existe o es de otro comensal. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_payment_method_api_reservations__reservation_id__order_payment_method_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentMethodRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPageResponse"];
+                };
+            };
+            /** @description Medio inválido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o es de otro comensal. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description El medio ya no se puede cambiar. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

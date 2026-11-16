@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -10,7 +10,7 @@ from app.models.opening_shift import OpeningShift
 from app.models.order import Order
 from app.models.order_item import OrderItem
 from app.models.reservation import Reservation
-from app.services import availability
+from app.services import availability, orders
 
 
 @dataclass(frozen=True)
@@ -31,8 +31,8 @@ class RestaurantOrderData:
     prep_time_warning: bool
     items: list[OrderItemData]
     total: Decimal
-    payment_status: str
     payment_method: str | None
+    payment_status: str
 
 
 def current_shift(session: Session, restaurant_id: UUID, now: datetime) -> OpeningShift | None:
@@ -72,11 +72,12 @@ def order_items(session: Session, order_id: UUID) -> list[OrderItemData]:
 
 def order_data(session: Session, order: Order, reservation: Reservation) -> RestaurantOrderData:
     items = order_items(session, order.id)
-    prep_minutes = max((item.prep_time_minutes for item in items), default=0)
     warning = any(item.prep_time_minutes == 0 for item in items)
-    arrival_at = reservation.starts_at.astimezone(availability.BUENOS_AIRES)
-    prep_start_at = arrival_at - timedelta(minutes=prep_minutes)
+    arrival_at = orders.arrival_time(reservation, order)
+    prep_start_at = orders.prep_start_time(reservation, order)
     return RestaurantOrderData(
+        payment_method=order.payment_method,
+        payment_status=order.payment_status,
         id=order.id,
         reservation_id=reservation.id,
         arrival_at=arrival_at,

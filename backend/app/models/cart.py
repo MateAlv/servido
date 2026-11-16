@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -7,9 +7,11 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    Interval,
     Numeric,
     String,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -24,6 +26,27 @@ class Cart(Base):
     restaurant never reads it: only a confirmation writes `pedidos`."""
 
     __tablename__ = "carts"
+    __table_args__ = (
+        CheckConstraint(
+            "arrival_delay >= INTERVAL '0 minutes' AND arrival_delay <= INTERVAL '30 minutes'",
+            name="arrival_delay_bounds",
+        ),
+        CheckConstraint(
+            "EXTRACT(YEAR FROM arrival_delay) = 0 "
+            "AND EXTRACT(MONTH FROM arrival_delay) = 0 "
+            "AND EXTRACT(DAY FROM arrival_delay) = 0",
+            name="arrival_delay_duration",
+        ),
+        CheckConstraint(
+            "payment_method IS NULL OR payment_method IN ('cash', 'online')",
+            name="payment_method_known",
+        ),
+    )
+
+    arrival_delay: Mapped[timedelta] = mapped_column(
+        Interval, nullable=False, default=timedelta, server_default=text("INTERVAL '0 minutes'")
+    )
+    payment_method: Mapped[str | None] = mapped_column(String(6), nullable=True)
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     reservation_id: Mapped[UUID] = mapped_column(

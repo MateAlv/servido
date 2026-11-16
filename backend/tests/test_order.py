@@ -4,6 +4,7 @@ and bill (US-21)."""
 from dataclasses import dataclass
 from datetime import time, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -19,6 +20,7 @@ from tests.reservations import (
     NOW,
     TODAY,
     TOMORROW,
+    StableTokenClock,
     add_bookable_restaurant,
     add_cart,
     add_dish,
@@ -72,15 +74,30 @@ def cart_url(reservation_id) -> str:
     return f"/api/reservations/{reservation_id}/cart"
 
 
+def request_body(s: Setup, items: list[dict], *, cart=False):
+    body = {
+        "items": items,
+        "arrival_at": s.reservation.starts_at.isoformat(),
+        "payment_method": "cash",
+    }
+    if not cart:
+        body["operation_id"] = str(uuid4())
+    return body
+
+
 def confirm(client: TestClient, s: Setup, items: list[dict], reservation_id=None):
     return client.put(
-        order_url(reservation_id or s.reservation.id), json={"items": items}, headers=s.headers
+        order_url(reservation_id or s.reservation.id),
+        json=request_body(s, items),
+        headers=s.headers,
     )
 
 
 def save(client: TestClient, s: Setup, items: list[dict], reservation_id=None):
     return client.put(
-        cart_url(reservation_id or s.reservation.id), json={"items": items}, headers=s.headers
+        cart_url(reservation_id or s.reservation.id),
+        json=request_body(s, items, cart=True),
+        headers=s.headers,
     )
 
 
@@ -91,9 +108,10 @@ def page(client: TestClient, s: Setup, reservation_id=None) -> dict:
 
 
 def restaurant_headers(client: TestClient, restaurant: Restaurant) -> dict[str, str]:
-    token = client.post(
-        "/api/auth/restaurante", json={"email": restaurant.email, "password": "Segura123"}
-    ).json()["access_token"]
+    with patch("app.services.auth.datetime", StableTokenClock):
+        token = client.post(
+            "/api/auth/restaurante", json={"email": restaurant.email, "password": "Segura123"}
+        ).json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -129,7 +147,7 @@ def test_us17_s2_order_of_an_unknown_or_foreign_reservation_is_not_found(
     assert client.get(order_url(uuid4()), headers=s.headers).status_code == 404
     assert (
         client.put(
-            order_url(s.reservation.id), json={"items": [item_of(s.flan)]}, headers=other
+            order_url(s.reservation.id), json=request_body(s, [item_of(s.flan)]), headers=other
         ).status_code
         == 404
     )
@@ -337,22 +355,34 @@ def test_us17_edge_cancelling_keeps_the_order(client: TestClient, session: Sessi
 def test_us17_edge_restaurant_token_gets_403(client: TestClient, session: Session) -> None:
     s = setup(client, session)
     headers = restaurant_headers(client, s.restaurant)
-    body = {"items": [item_of(s.provoleta)]}
+    body = request_body(s, [item_of(s.provoleta)])
 
     assert client.get(order_url(s.reservation.id), headers=headers).status_code == 403
     assert client.put(order_url(s.reservation.id), json=body, headers=headers).status_code == 403
-    assert client.put(cart_url(s.reservation.id), json=body, headers=headers).status_code == 403
+    assert (
+        client.put(
+            cart_url(s.reservation.id),
+            json={k: v for k, v in body.items() if k != "operation_id"},
+            headers=headers,
+        ).status_code
+        == 403
+    )
     assert client.delete(cart_url(s.reservation.id), headers=headers).status_code == 403
     assert client.get("/api/reservations/upcoming", headers=headers).status_code == 403
 
 
 def test_us17_edge_requires_a_token(client: TestClient, session: Session) -> None:
     s = setup(client, session)
-    body = {"items": [item_of(s.provoleta)]}
+    body = request_body(s, [item_of(s.provoleta)])
 
     assert client.get(order_url(s.reservation.id)).status_code == 401
     assert client.put(order_url(s.reservation.id), json=body).status_code == 401
-    assert client.put(cart_url(s.reservation.id), json=body).status_code == 401
+    assert (
+        client.put(
+            cart_url(s.reservation.id), json={k: v for k, v in body.items() if k != "operation_id"}
+        ).status_code
+        == 401
+    )
     assert client.delete(cart_url(s.reservation.id)).status_code == 401
     assert client.get("/api/reservations/upcoming").status_code == 401
 
@@ -397,7 +427,7 @@ def test_us17_edge_checks_answer_in_order(client: TestClient, session: Session) 
         session, s.restaurant, diner_id(client, other), TODAY, time(9, 30), 2, "indoor"
     )
     session.commit()
-    body = {"items": [item_of(s.provoleta)]}
+    body = request_body(s, [item_of(s.provoleta)])
     assert client.put(order_url(closed.id), json=body, headers=s.headers).status_code == 404
 
 
@@ -519,9 +549,16 @@ def test_us17_edge_cart_of_another_diner_is_not_found(client: TestClient, sessio
     add_cart(session, s.reservation, [(s.provoleta, 1)])
     session.commit()
     other = diner_headers(client, "otra@example.com")
-    body = {"items": [item_of(s.flan)]}
+    body = request_body(s, [item_of(s.flan)], cart=True)
 
-    assert client.put(cart_url(s.reservation.id), json=body, headers=other).status_code == 404
+    assert (
+        client.put(
+            cart_url(s.reservation.id),
+            json={k: v for k, v in body.items() if k != "operation_id"},
+            headers=other,
+        ).status_code
+        == 404
+    )
     assert client.delete(cart_url(s.reservation.id), headers=other).status_code == 404
     assert page(client, s)["cart"]["items"][0]["name"] == "Provoleta"
 
@@ -541,6 +578,8 @@ def test_us17_edge_empty_cart_kept_only_with_an_order(client: TestClient, sessio
     assert save(client, s, []).json()["cart"] == {
         "updated_at": "2026-11-02T09:00:00-03:00",
         "items": [],
+        "arrival_at": "2026-11-03T21:00:00-03:00",
+        "payment_method": "cash",
     }
     assert page(client, s)["reservation"]["has_cart"] is True
 

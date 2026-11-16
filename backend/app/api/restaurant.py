@@ -184,6 +184,8 @@ def restaurant_order_response(order) -> RestaurantOrderResponse:
         arrival_time=format_local_time(order.arrival_at),
         prep_start_time=format_local_time(order.prep_start_at),
         prep_time_warning=order.prep_time_warning,
+
+        # A selected method is a preference; only the stored payment state means paid.
         payment=OrderPaymentResponse(
             status=order.payment_status,
             method=order.payment_method or "No seleccionado",

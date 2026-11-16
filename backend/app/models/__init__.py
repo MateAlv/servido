@@ -7,6 +7,7 @@ from app.models.email_verification import EmailVerification
 from app.models.notification import Notification
 from app.models.opening_shift import OpeningShift
 from app.models.order import Order
+from app.models.order_confirmation import OrderConfirmation
 from app.models.order_item import OrderItem
 from app.models.password_reset import PasswordReset, PasswordResetRequest
 from app.models.refund import Refund
@@ -27,6 +28,7 @@ __all__ = [
     "EmailVerification",
     "OpeningShift",
     "Order",
+    "OrderConfirmation",
     "OrderItem",
     "Notification",
     "PasswordReset",

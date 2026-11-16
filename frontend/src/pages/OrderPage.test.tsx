@@ -1,11 +1,13 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { useQuery } from '@tanstack/react-query'
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Link, Route, Routes, useLocation } from 'react-router'
 
 import {
   confirmOrder,
   discardCart,
+  changePaymentMethod,
   fetchOrder,
   ReservationNotFoundError,
   saveCart,
@@ -25,6 +27,7 @@ vi.mock('../api/orders', async (importOriginal) => {
     confirmOrder: vi.fn(),
     saveCart: vi.fn(),
     discardCart: vi.fn(),
+    changePaymentMethod: vi.fn(),
   }
 })
 
@@ -89,6 +92,11 @@ function orderOf(items: [MenuDish, number][]): NonNullable<OrderPageData['order'
     dish.prep_time_minutes === null ? [] : [dish.prep_time_minutes],
   )
   return {
+    arrival_at: '2026-11-03T21:00:00-03:00',
+    prep_start_time: '2026-11-03T20:35:00-03:00',
+    payment_method: 'cash',
+    payment_status: 'pending',
+    payment_method_editable: true,
     confirmed_at: '2026-11-03T12:00:00-03:00',
     items: items.map(([dish, quantity]) => ({
       dish_id: dish.id,
@@ -106,6 +114,10 @@ function orderOf(items: [MenuDish, number][]): NonNullable<OrderPageData['order'
 function pageData(overrides: Partial<OrderPageData> = {}, open = true): OrderPageData {
   const order = overrides.order ?? null
   return {
+    arrival_window: {
+      starts_at: '2026-11-03T21:00:00-03:00',
+      latest_at: '2026-11-03T21:30:00-03:00',
+    },
     reservation: {
       id: 'res-1',
       restaurant: { id: 'r-1', nombre: 'La Esquina de Palermo' },
@@ -147,12 +159,27 @@ function renderPage() {
   )
 }
 
-async function openPage(data = pageData()) {
+async function openPage(data = pageData(), selectPayment = true) {
   fetchMock.mockResolvedValue(data)
   const user = userEvent.setup()
   renderPage()
   await screen.findByRole('heading', { level: 1, name: 'La Esquina de Palermo' })
+  if (selectPayment && data.reservation.order_open) {
+    if (data.order)
+      await user.click(
+        screen.getByRole('button', { name: /Modificar platos|Continuar editando platos/ }),
+      )
+    await review(user)
+    const cash = screen.getByRole('button', { name: 'Efectivo' })
+    if (cash.getAttribute('aria-pressed') !== 'true') await user.click(cash)
+    await user.click(screen.getByRole('button', { name: 'Volver a editar platos' }))
+  }
   return user
+}
+
+async function review(user: ReturnType<typeof userEvent.setup>) {
+  const next = screen.queryByRole('button', { name: 'Continuar' })
+  if (next) await user.click(next)
 }
 
 function menuDish(name: string) {
@@ -175,10 +202,15 @@ function orderRow(name: string) {
 }
 
 beforeEach(() => {
+  sessionStorage.clear()
   vi.clearAllMocks()
   useAccountMock.mockReturnValue({ data: DINER, isPending: false } as never)
   saveMock.mockResolvedValue({ ok: true })
   discardMock.mockResolvedValue({ ok: true })
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('OrderPage', () => {
@@ -266,6 +298,7 @@ describe('OrderPage', () => {
     await add(user, 'Provoleta')
 
     expect(screen.getByText('Sin confirmar: el restaurante todavía no lo ve')).toBeVisible()
+    await review(user)
     expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeEnabled()
     expect(confirmMock).not.toHaveBeenCalled()
   })
@@ -277,18 +310,25 @@ describe('OrderPage', () => {
     await add(user, 'Provoleta')
     await add(user, 'Provoleta')
 
+    await review(user)
+
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
     expect(await screen.findByRole('heading', { name: '¡Pedido confirmado!' })).toHaveFocus()
-    expect(confirmMock).toHaveBeenCalledWith('res-1', [
-      {
-        dishId: 'd-1',
-        quantity: 2,
-        name: 'Provoleta',
-        unitPrice: '7500.00',
-        prepTimeMinutes: 10,
-      },
-    ])
+    expect(confirmMock).toHaveBeenCalledWith(
+      'res-1',
+      [
+        {
+          dishId: 'd-1',
+          quantity: 2,
+          name: 'Provoleta',
+          unitPrice: '7500.00',
+          prepTimeMinutes: 10,
+        },
+      ],
+      expect.any(Object),
+      expect.any(String),
+    )
     expect(
       screen.queryByText('Sin confirmar: el restaurante todavía no lo ve'),
     ).not.toBeInTheDocument()
@@ -311,6 +351,7 @@ describe('OrderPage', () => {
     expect(screen.queryByRole('button', { name: /Confirmar/ })).not.toBeInTheDocument()
 
     await add(user, 'Flan')
+    await review(user)
     await user.click(screen.getByRole('button', { name: 'Confirmar cambios' }))
 
     expect(await screen.findByRole('heading', { name: '¡Pedido confirmado!' })).toBeVisible()
@@ -347,6 +388,8 @@ describe('OrderPage', () => {
     await add(user, 'Provoleta')
     fetchMock.mockResolvedValue(pageData({}, false))
 
+    await review(user)
+
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
     expect(
@@ -362,6 +405,8 @@ describe('OrderPage', () => {
     await add(user, 'Provoleta')
     await add(user, 'Bife de chorizo')
     fetchMock.mockResolvedValue(pageData({ menu: [{ ...PROVOLETA, price: '8000.00' }, FLAN] }))
+
+    await review(user)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
@@ -390,7 +435,7 @@ describe('OrderPage', () => {
     expect(confirmMock).not.toHaveBeenCalled()
     await user.click(within(dialog).getByRole('button', { name: 'Quitar pedido' }))
 
-    expect(confirmMock).toHaveBeenCalledWith('res-1', [])
+    expect(confirmMock).toHaveBeenCalledWith('res-1', [], expect.any(Object), expect.any(String))
     expect(await screen.findByText('Quitaste tu pedido. Tu reserva sigue en pie.')).toHaveFocus()
   })
 
@@ -403,12 +448,15 @@ describe('OrderPage', () => {
     const user = await openPage()
     await add(user, 'Provoleta')
 
+    await review(user)
+
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
     expect(
       await screen.findByText('Para confirmar, verificá tu email. Tus platos quedan guardados.'),
     ).toBeVisible()
     expect(screen.getByRole('button', { name: 'Reenviar mail de verificación' })).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Volver a editar platos' }))
     expect(orderRow('Provoleta')).toBeInTheDocument()
     // The pending change was saved before the confirmation was refused.
     expect(saveMock).toHaveBeenCalled()
@@ -430,6 +478,8 @@ describe('OrderPage', () => {
     await openPage(
       pageData({
         cart: {
+          arrival_at: '2026-11-03T21:00:00-03:00',
+          payment_method: 'cash',
           updated_at: '2026-11-03T12:00:00-03:00',
           items: [
             {
@@ -459,6 +509,10 @@ describe('OrderPage', () => {
         'res-1',
         [expect.objectContaining({ dishId: 'd-1', quantity: 1 })],
         { keepalive: false },
+        expect.objectContaining({
+          arrival_at: expect.any(String),
+          payment_method: expect.any(String),
+        }),
       ),
     )
   })
@@ -469,6 +523,8 @@ describe('OrderPage', () => {
       pageData({
         order,
         cart: {
+          arrival_at: '2026-11-03T21:00:00-03:00',
+          payment_method: 'cash',
           updated_at: '2026-11-03T12:00:00-03:00',
           items: [
             {
@@ -487,6 +543,9 @@ describe('OrderPage', () => {
 
     expect(discardMock).toHaveBeenCalledWith('res-1')
     expect(await screen.findByText('Volviste al pedido confirmado.')).toHaveFocus()
+    expect(screen.queryByRole('region', { name: 'Menú' })).not.toBeInTheDocument()
+    expect(screen.getAllByText('Provoleta')[0].closest('li')).toHaveTextContent('1 ×')
+    await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
     expect(within(orderRow('Provoleta')).getByRole('status')).toHaveTextContent('1')
   })
 
@@ -528,6 +587,10 @@ describe('OrderPage', () => {
         'res-1',
         [expect.objectContaining({ dishId: 'd-1' })],
         { keepalive: false },
+        expect.objectContaining({
+          arrival_at: expect.any(String),
+          payment_method: expect.any(String),
+        }),
       ),
     )
   })
@@ -551,6 +614,8 @@ describe('OrderPage', () => {
     const user = await openPage()
     await add(user, 'Provoleta')
 
+    await review(user)
+
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
     // Signing out sends the diner to sign in and back here, where the cart was saved.
@@ -566,6 +631,8 @@ describe('OrderPage', () => {
     fetchMock.mockResolvedValue(
       pageData({
         cart: {
+          arrival_at: '2026-11-03T21:00:00-03:00',
+          payment_method: 'cash',
           updated_at: '2026-11-03T12:00:00-03:00',
           items: [
             {
@@ -593,9 +660,12 @@ describe('OrderPage', () => {
     await add(user, 'Provoleta')
     fetchMock.mockImplementation(() => new Promise((resolve) => (answer = resolve)))
 
+    await review(user)
+
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
-    // The diner adds a dish while the menu is reloading.
+    // The diner returns to editing while the menu is reloading.
+    await user.click(screen.getByRole('button', { name: 'Volver a editar platos' }))
     await add(user, 'Flan')
     answer(pageData({ menu: [{ ...PROVOLETA, price: '8000.00' }, BIFE, FLAN] }))
 
@@ -611,14 +681,14 @@ describe('OrderPage', () => {
     const user = await openPage()
     await add(user, 'Provoleta')
 
+    await review(user)
+
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
-    await waitFor(() =>
-      expect(
-        within(orderRow('Provoleta')).getByRole('button', { name: 'Agregar uno' }),
-      ).toBeDisabled(),
-    )
-    expect(within(menuDish('Flan')).getByRole('button', { name: /Agrega/ })).toBeDisabled()
+    expect(screen.queryByRole('group', { name: 'Cantidad de Provoleta' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Menú' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Volver a editar platos' })).toBeDisabled()
+    expect(screen.getByLabelText('Hora de llegada')).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Descartar cambios' })).toBeDisabled()
   })
 
@@ -627,6 +697,8 @@ describe('OrderPage', () => {
     const user = await openPage()
     await add(user, 'Provoleta')
 
+    await review(user)
+
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
 
     expect(
@@ -634,6 +706,7 @@ describe('OrderPage', () => {
         'No pudimos confirmar tu pedido. Tus platos siguen acá, probá de nuevo.',
       ),
     ).toBeVisible()
+    await review(user)
     expect(screen.getByRole('button', { name: 'Confirmar pedido' })).toBeEnabled()
   })
 
@@ -660,9 +733,14 @@ describe('OrderPage', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Flan ya no está en el menú, lo sacamos.')
     expect(screen.getByText('Sin confirmar: el restaurante todavía no lo ve')).toBeVisible()
     await waitFor(() =>
-      expect(saveMock).toHaveBeenCalledWith('res-1', [expect.objectContaining({ dishId: 'd-1' })], {
-        keepalive: false,
-      }),
+      expect(saveMock).toHaveBeenCalledWith(
+        'res-1',
+        [expect.objectContaining({ dishId: 'd-1' })],
+        {
+          keepalive: false,
+        },
+        expect.objectContaining({ payment_method: 'cash' }),
+      ),
     )
   })
 
@@ -670,6 +748,8 @@ describe('OrderPage', () => {
     await openPage(
       pageData({
         cart: {
+          arrival_at: '2026-11-03T21:00:00-03:00',
+          payment_method: 'cash',
           updated_at: '2026-11-03T12:00:00-03:00',
           items: [
             {
@@ -692,6 +772,10 @@ describe('OrderPage', () => {
         'res-1',
         [expect.objectContaining({ unitPrice: '7500.00', quantity: 2 })],
         { keepalive: false },
+        expect.objectContaining({
+          arrival_at: expect.any(String),
+          payment_method: expect.any(String),
+        }),
       ),
     )
   })
@@ -774,9 +858,11 @@ describe('OrderPage', () => {
       within(menuDish('Bife de chorizo')).getByText('Se prepara en 25 min'),
     ).toBeInTheDocument()
 
+    await review(user)
+
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
     await screen.findByRole('heading', { name: '¡Pedido confirmado!' })
-    expect(within(yourOrder()).getByText('Preparación: unos 25 min')).toBeVisible()
+    expect(screen.getByText('Preparación: unos 25 min')).toBeVisible()
   })
 
   it('US-19 S3 updates the estimate when dishes change', async () => {
@@ -869,6 +955,8 @@ it('US-34 edge explains removal from a persisted cart when the menu becomes empt
       {
         menu: [],
         cart: {
+          arrival_at: '2026-11-03T21:00:00-03:00',
+          payment_method: 'cash',
           updated_at: '2026-11-03T12:00:00-03:00',
           items: [
             {
@@ -904,6 +992,7 @@ it('US-34 edge explains the last dish disappearing during confirmation and keeps
   const user = await openPage(pageData({ order: original }))
   await add(user, 'Flan')
   fetchMock.mockResolvedValue(pageData({ order: original, menu: [] }, false))
+  await review(user)
   await user.click(screen.getByRole('button', { name: 'Confirmar cambios' }))
   expect(await screen.findByText(/Flan ya no está en el menú/)).toBeInTheDocument()
   expect(
@@ -912,4 +1001,625 @@ it('US-34 edge explains the last dish disappearing during confirmation and keeps
   expect(screen.getAllByText('Provoleta')[0]).toBeInTheDocument()
   expect(screen.getByText('Tu pedido confirmado conserva sus datos.')).toBeInTheDocument()
   expect(confirmMock).toHaveBeenCalledTimes(1)
+})
+
+describe('spec 020 arrival and payment', () => {
+  it('US-43 S1 previews arrival and dishes before confirmation', async () => {
+    const user = await openPage()
+    await add(user, 'Provoleta')
+    await review(user)
+    expect(screen.getByLabelText('Hora de llegada')).toHaveValue('21:00')
+    expect(
+      within(screen.getByRole('combobox', { name: 'Hora de llegada' })).getAllByRole('option'),
+    ).toHaveLength(31)
+    expect(within(yourOrder()).getByText('Provoleta')).toBeVisible()
+  })
+  it('US-43 S4 keeps draft arrival private until reconfirmed', async () => {
+    const user = await openPage(pageData({ order: orderOf([[BIFE, 1]]) }))
+    await review(user)
+    fireEvent.change(screen.getByLabelText('Hora de llegada'), { target: { value: '21:30' } })
+    expect(screen.getByText('Sin confirmar: el restaurante todavía no lo ve')).toBeVisible()
+    expect(confirmMock).not.toHaveBeenCalled()
+    await waitFor(() =>
+      expect(saveMock).toHaveBeenCalledWith(
+        'res-1',
+        expect.any(Array),
+        expect.any(Object),
+        expect.objectContaining({ arrival_at: '2026-11-04T00:30:00.000Z' }),
+      ),
+    )
+  })
+  it('US-43 S5 asks before removing the confirmed order', async () => {
+    const user = await openPage(pageData({ order: orderOf([[FLAN, 1]]) }))
+    await user.click(screen.getByRole('button', { name: 'Sacar Flan del pedido' }))
+    await user.click(screen.getByRole('button', { name: 'Quitar pedido' }))
+    expect(screen.getByRole('dialog', { name: '¿Quitás tu pedido?' })).toBeVisible()
+    expect(confirmMock).not.toHaveBeenCalled()
+  })
+  it('US-43 S6 explains invalid arrival', async () => {
+    const user = await openPage()
+    await add(user, 'Provoleta')
+    confirmMock.mockResolvedValue({
+      ok: false,
+      kind: 'failed',
+      message: 'La hora de llegada no es válida.',
+    })
+    await review(user)
+    fireEvent.change(screen.getByLabelText('Hora de llegada'), { target: { value: '20:59' } })
+    await review(user)
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+    expect(screen.getByLabelText('Hora de llegada')).toHaveAttribute('aria-invalid', 'true')
+    expect(confirmMock).not.toHaveBeenCalled()
+  })
+  it('US-43 S7 shows confirmed state on a return visit', async () => {
+    await openPage(pageData({ order: orderOf([[BIFE, 1]]) }), false)
+    expect(screen.getByText('Pedido confirmado')).toBeVisible()
+    expect(confirmMock).not.toHaveBeenCalled()
+  })
+  it('US-45 S1 offers cash and online without preselection', async () => {
+    const user = await openPage(pageData(), false)
+    await review(user)
+    expect(screen.getByRole('button', { name: 'Efectivo' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(screen.getByRole('button', { name: 'Pago electrónico' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+    expect(screen.getByText('Medio de pago no seleccionado')).toBeVisible()
+  })
+  it('US-45 S2 blocks confirmation until a method is selected', async () => {
+    const user = await openPage(pageData(), false)
+    await add(user, 'Provoleta')
+    await review(user)
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Seleccioná un medio de pago para confirmar tu pedido.',
+    )
+    expect(confirmMock).not.toHaveBeenCalled()
+  })
+  it('US-45 S2 selects a preference without marking paid', async () => {
+    const user = await openPage(pageData(), false)
+    await review(user)
+    await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+    expect(screen.getByRole('button', { name: 'Pago electrónico' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.queryByText('Pagado')).not.toBeInTheDocument()
+  })
+  it('US-45 S3 restores the selected method', async () => {
+    const order = orderOf([[BIFE, 1]])
+    order.payment_method = 'online'
+    await openPage(pageData({ order }), false)
+    expect(screen.getByText('Pago electrónico', { selector: 'p' })).toBeVisible()
+    expect(screen.queryByRole('button', { name: 'Pago electrónico' })).not.toBeInTheDocument()
+    expect(screen.getByText('Pendiente de pago')).toBeVisible()
+  })
+  it('US-45 S4 edits payment after dish editing closes', async () => {
+    const order = orderOf([[BIFE, 1]])
+    const updated = { ...order, payment_method: 'online' as const }
+    vi.mocked(changePaymentMethod).mockResolvedValue({
+      ok: true,
+      page: pageData({ order: updated }, false),
+    })
+    const user = await openPage(pageData({ order }, false), false)
+    await user.click(screen.getByRole('button', { name: 'Modificar medio de pago' }))
+    await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+    expect(changePaymentMethod).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Guardar cambio' }))
+    await waitFor(() => expect(changePaymentMethod).toHaveBeenCalledWith('res-1', 'online'))
+    expect(confirmMock).not.toHaveBeenCalled()
+  })
+  it('US-45 S5 explains why paid preference is locked', async () => {
+    const order = {
+      ...orderOf([[BIFE, 1]]),
+      payment_status: 'paid' as const,
+      payment_method_editable: false,
+    }
+    await openPage(pageData({ order }, false), false)
+    expect(screen.getByText('Pagado')).toBeVisible()
+    expect(
+      screen.queryByRole('button', { name: 'Modificar medio de pago' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByText('El pedido ya está pagado. No se puede cambiar el medio de pago.'),
+    ).toBeVisible()
+  })
+})
+
+describe('spec 020 UX stages', () => {
+  it('US-43 edge keeps dishes and metadata when navigating between stages', async () => {
+    const user = await openPage(pageData(), false)
+    expect(screen.queryByLabelText('Hora de llegada')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Efectivo' })).not.toBeInTheDocument()
+    await add(user, 'Provoleta')
+    await review(user)
+    expect(screen.queryByRole('region', { name: 'Menú' })).not.toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Hora de llegada'), { target: { value: '21:30' } })
+    await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+    await user.click(screen.getByRole('button', { name: 'Volver a editar platos' }))
+    expect(orderRow('Provoleta')).toBeVisible()
+    await add(user, 'Flan')
+    await review(user)
+    expect(screen.getByLabelText('Hora de llegada')).toHaveValue('21:30')
+    expect(screen.getByRole('button', { name: 'Pago electrónico' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(within(yourOrder()).getByText('Flan')).toBeVisible()
+    expect(confirmMock).not.toHaveBeenCalled()
+  })
+
+  it('US-43 S6 keeps invalid arrival local and accepts the inclusive upper bound', async () => {
+    const user = await openPage(pageData(), false)
+    await add(user, 'Provoleta')
+    await review(user)
+    await waitFor(() => expect(saveMock).toHaveBeenCalled())
+    saveMock.mockClear()
+    fireEvent.change(screen.getByLabelText('Hora de llegada'), { target: { value: '22:00' } })
+    expect(screen.getByRole('alert')).toHaveTextContent('entre las 21:00 y las 21:30, inclusive')
+    await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(saveMock).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByLabelText('Hora de llegada'), { target: { value: '21:30' } })
+    expect(screen.getByLabelText('Hora de llegada')).not.toHaveAttribute('aria-invalid')
+    await waitFor(() =>
+      expect(saveMock).toHaveBeenCalledWith(
+        'res-1',
+        expect.any(Array),
+        expect.any(Object),
+        expect.objectContaining({ arrival_at: '2026-11-04T00:30:00.000Z' }),
+      ),
+    )
+  })
+
+  it('US-45 edge edits confirmed payment without entering the private draft', async () => {
+    const order = orderOf([[PROVOLETA, 1]])
+    const data = pageData({
+      order,
+      cart: {
+        arrival_at: '2026-11-03T21:30-03:00',
+        payment_method: 'online',
+        updated_at: '2026-11-03T12:00:00-03:00',
+        items: [
+          {
+            dish_id: BIFE.id,
+            name: BIFE.name,
+            quantity: 2,
+            unit_price: BIFE.price,
+            prep_time_minutes: BIFE.prep_time_minutes,
+          },
+        ],
+      },
+    })
+    vi.mocked(changePaymentMethod).mockResolvedValue({
+      ok: true,
+      page: { ...data, order: { ...order, payment_method: 'online' } },
+    })
+    const user = await openPage(data, false)
+    expect(screen.queryByRole('region', { name: 'Menú' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Hora de llegada')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Provoleta')[0]).toBeVisible()
+    expect(screen.queryByText('Bife de chorizo')).not.toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Medio de pago' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Modificar medio de pago' }))
+    await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+    expect(changePaymentMethod).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Guardar cambio' }))
+    await waitFor(() => expect(changePaymentMethod).toHaveBeenCalledWith('res-1', 'online'))
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(saveMock).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+    expect(orderRow('Bife de chorizo')).toBeVisible()
+    expect(screen.queryByRole('group', { name: 'Medio de pago' })).not.toBeInTheDocument()
+    await review(user)
+    expect(screen.getByLabelText('Hora de llegada')).toHaveValue('21:30')
+    expect(screen.getByRole('button', { name: 'Pago electrónico' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    expect(screen.queryByText('Medio de pago del pedido confirmado')).not.toBeInTheDocument()
+  })
+})
+
+it('US-43 edge opens the confirmed summary and keeps a private draft when returning from editing', async () => {
+  const order = orderOf([[PROVOLETA, 1]])
+  const user = await openPage(pageData({ order }), false)
+  expect(screen.queryByRole('region', { name: 'Menú' })).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('Hora de llegada')).not.toBeInTheDocument()
+  expect(screen.getByText('Llegada confirmada: 21:00')).toBeVisible()
+  expect(screen.getByText('Pedido confirmado')).toBeVisible()
+  expect(screen.queryByRole('group', { name: 'Medio de pago' })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+  await add(user, 'Bife de chorizo')
+  await review(user)
+  fireEvent.change(screen.getByLabelText('Hora de llegada'), { target: { value: '21:30' } })
+  await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+  expect(screen.getByRole('button', { name: 'Confirmar cambios' })).toBeVisible()
+  expect(screen.queryByText(/Seleccioná un medio para confirmar/)).not.toBeInTheDocument()
+  expect(screen.queryByText('Medio de pago del pedido confirmado')).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Volver al pedido confirmado' }))
+  expect(screen.getByRole('heading', { name: 'Tu pedido' })).toHaveFocus()
+  expect(screen.getByText('Llegada confirmada: 21:00')).toBeVisible()
+  expect(screen.queryByLabelText('Hora de llegada')).not.toBeInTheDocument()
+  expect(screen.queryByText('Bife de chorizo')).not.toBeInTheDocument()
+  expect(screen.getByText('Efectivo', { selector: 'p' })).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+  expect(orderRow('Bife de chorizo')).toBeVisible()
+  await review(user)
+  expect(screen.getByLabelText('Hora de llegada')).toHaveValue('21:30')
+  expect(screen.getByRole('button', { name: 'Pago electrónico' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  expect(confirmMock).not.toHaveBeenCalled()
+})
+
+it('US-45 edge discards draft metadata and returns to the unchanged confirmed payment and arrival', async () => {
+  const order = orderOf([[PROVOLETA, 1]])
+  const user = await openPage(pageData({ order }), false)
+  await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+  await add(user, 'Bife de chorizo')
+  await review(user)
+  fireEvent.change(screen.getByLabelText('Hora de llegada'), { target: { value: '21:30' } })
+  await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+  await user.click(screen.getByRole('button', { name: 'Descartar cambios' }))
+  expect(await screen.findByText('Volviste al pedido confirmado.')).toHaveFocus()
+  expect(screen.getByText('Llegada confirmada: 21:00')).toBeVisible()
+  expect(screen.getByText('Efectivo', { selector: 'p' })).toBeVisible()
+  expect(screen.getAllByText('Provoleta')[0].closest('li')).toHaveTextContent('1 ×')
+  expect(screen.queryByText('Bife de chorizo')).not.toBeInTheDocument()
+  expect(screen.queryByLabelText('Hora de llegada')).not.toBeInTheDocument()
+  expect(screen.queryByRole('group', { name: 'Medio de pago' })).not.toBeInTheDocument()
+  expect(discardMock).toHaveBeenCalledWith('res-1')
+  expect(confirmMock).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+  expect(orderRow('Provoleta')).toBeVisible()
+  await review(user)
+  expect(screen.getByLabelText('Hora de llegada')).toHaveValue('21:00')
+  expect(screen.getByRole('button', { name: 'Efectivo' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+it('US-45 edge cancels a local payment selection without changing the confirmed method', async () => {
+  const user = await openPage(pageData({ order: orderOf([[PROVOLETA, 1]]) }), false)
+  expect(screen.queryByRole('group', { name: 'Medio de pago' })).not.toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Modificar medio de pago' }))
+  expect(screen.getByRole('button', { name: 'Efectivo' })).toHaveAttribute('aria-pressed', 'true')
+  await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+  await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('dialog', { name: 'Modificar medio de pago' }),
+    ).not.toBeInTheDocument(),
+  )
+  expect(screen.getByText('Efectivo', { selector: 'p' })).toBeVisible()
+  expect(changePaymentMethod).not.toHaveBeenCalled()
+  expect(confirmMock).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: 'Modificar medio de pago' }))
+  expect(screen.getByRole('button', { name: 'Efectivo' })).toHaveAttribute('aria-pressed', 'true')
+})
+
+it.each([false, true])(
+  'US-45 edge keeps the confirmed method on save failure (network=%s)',
+  async (network) => {
+    const order = orderOf([[PROVOLETA, 1]])
+    const mutation = vi.mocked(changePaymentMethod)
+    if (network) mutation.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    else
+      mutation.mockResolvedValueOnce({
+        ok: false,
+        kind: 'failed',
+        message: 'No pudimos guardar el medio de pago.',
+      })
+    const user = await openPage(pageData({ order }), false)
+    await user.click(screen.getByRole('button', { name: 'Modificar medio de pago' }))
+    await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambio' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No pudimos guardar el medio de pago.',
+    )
+    expect(screen.getByText('Efectivo', { selector: 'p' })).toBeVisible()
+    expect(confirmMock).not.toHaveBeenCalled()
+    mutation.mockResolvedValueOnce({
+      ok: true,
+      page: pageData({ order: { ...order, payment_method: 'online' } }),
+    })
+    await user.click(screen.getByRole('button', { name: 'Guardar cambio' }))
+    expect(await screen.findByText('Guardaste el cambio del medio de pago.')).toBeVisible()
+    expect(screen.getByText('Pago electrónico', { selector: 'p' })).toBeVisible()
+  },
+)
+
+it.each(['cancelled', 'ended'] as const)(
+  'US-45 edge hides payment editing for a %s reservation',
+  async (state) => {
+    const data = pageData(
+      { order: { ...orderOf([[PROVOLETA, 1]]), payment_method_editable: false } },
+      false,
+    )
+    if (state === 'cancelled') data.reservation.status = 'cancelled'
+    await openPage(data, false)
+    expect(
+      screen.queryByRole('button', { name: 'Modificar medio de pago' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        state === 'cancelled'
+          ? 'La reserva está cancelada. No se puede cambiar el medio de pago.'
+          : 'El medio de pago solo se puede cambiar antes de que finalice la reserva y mientras el pedido siga vigente e impago.',
+      ),
+    ).toBeVisible()
+  },
+)
+
+it('US-45 edge refreshes a backend payment conflict without discarding a private draft', async () => {
+  const order = orderOf([[PROVOLETA, 1]])
+  const data = pageData({
+    order,
+    cart: {
+      arrival_at: order.arrival_at,
+      payment_method: 'online',
+      updated_at: order.confirmed_at,
+      items: [
+        {
+          dish_id: BIFE.id,
+          name: BIFE.name,
+          quantity: 1,
+          unit_price: BIFE.price,
+          prep_time_minutes: BIFE.prep_time_minutes,
+        },
+      ],
+    },
+  })
+  const user = await openPage(data, false)
+  await user.click(screen.getByRole('button', { name: 'Modificar medio de pago' }))
+  await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+  vi.mocked(changePaymentMethod).mockResolvedValueOnce({ ok: false, kind: 'conflict' })
+  fetchMock.mockResolvedValue({
+    ...data,
+    order: { ...order, payment_status: 'paid', payment_method_editable: false },
+  })
+  await user.click(screen.getByRole('button', { name: 'Guardar cambio' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('El pedido o la reserva cambió')
+  expect(screen.getByRole('button', { name: 'Guardar cambio' })).toBeDisabled()
+  await user.click(screen.getByRole('button', { name: 'Cancelar' }))
+  await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+  expect(orderRow('Bife de chorizo')).toBeVisible()
+  expect(saveMock).not.toHaveBeenCalled()
+  expect(discardMock).not.toHaveBeenCalled()
+})
+
+it('US-45 edge retains online preference when reconfirming only changed dishes', async () => {
+  const order = { ...orderOf([[PROVOLETA, 1]]), payment_method: 'online' as const }
+  const user = await openPage(pageData({ order }), false)
+  await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+  await add(user, 'Flan')
+  await review(user)
+  expect(screen.getByRole('button', { name: 'Pago electrónico' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  confirmMock.mockResolvedValueOnce({
+    ok: true,
+    page: pageData({
+      order: {
+        ...orderOf([
+          [PROVOLETA, 1],
+          [FLAN, 1],
+        ]),
+        payment_method: 'online',
+      },
+    }),
+  })
+  await user.click(screen.getByRole('button', { name: 'Confirmar cambios' }))
+  expect(await screen.findByRole('heading', { name: '¡Pedido confirmado!' })).toBeVisible()
+  expect(saveMock).toHaveBeenCalledWith(
+    'res-1',
+    expect.any(Array),
+    expect.any(Object),
+    expect.objectContaining({ payment_method: 'online' }),
+  )
+  expect(changePaymentMethod).not.toHaveBeenCalled()
+})
+
+it.each(['20:00', '09:07'])(
+  'US-43 S6 offers exactly the inclusive minute window for a reservation at %s',
+  async (start) => {
+    const [hours, minutes] = start.split(':').map(Number)
+    const end = `${String(hours + Math.floor((minutes + 30) / 60)).padStart(2, '0')}:${String((minutes + 30) % 60).padStart(2, '0')}`
+    const data = pageData()
+    data.reservation.start_time = start
+    data.arrival_window = {
+      starts_at: `2026-11-03T${start}:00-03:00`,
+      latest_at: `2026-11-03T${end}:00-03:00`,
+    }
+    const user = await openPage(data, false)
+    await add(user, 'Provoleta')
+    await review(user)
+    const selector = screen.getByRole('combobox', { name: 'Hora de llegada' })
+    const values = within(selector)
+      .getAllByRole('option')
+      .map((option) => (option as HTMLOptionElement).value)
+    expect(values).toEqual(
+      Array.from({ length: 31 }, (_, index) => {
+        const minute = hours * 60 + minutes + index
+        return `${String(Math.floor(minute / 60)).padStart(2, '0')}:${String(minute % 60).padStart(2, '0')}`
+      }),
+    )
+    expect(selector).toHaveValue(start)
+    await user.selectOptions(selector, end)
+    await waitFor(() =>
+      expect(saveMock).toHaveBeenCalledWith(
+        'res-1',
+        expect.any(Array),
+        expect.any(Object),
+        expect.objectContaining({
+          arrival_at: new Date(data.arrival_window.latest_at).toISOString(),
+        }),
+      ),
+    )
+    await user.selectOptions(selector, start)
+    await waitFor(() =>
+      expect(saveMock).toHaveBeenCalledWith(
+        'res-1',
+        expect.any(Array),
+        expect.any(Object),
+        expect.objectContaining({
+          arrival_at: new Date(data.arrival_window.starts_at).toISOString(),
+        }),
+      ),
+    )
+    expect(data.reservation.end_time).toBe('22:30')
+  },
+)
+
+it('US-43 edge retains a previously confirmed minute when entering and returning to review', async () => {
+  const order = { ...orderOf([[PROVOLETA, 1]]), arrival_at: '2026-11-03T21:17:00-03:00' }
+  const user = await openPage(pageData({ order }), false)
+  await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+  await review(user)
+  expect(screen.getByRole('combobox', { name: 'Hora de llegada' })).toHaveValue('21:17')
+  await user.click(screen.getByRole('button', { name: 'Volver a editar platos' }))
+  await review(user)
+  expect(screen.getByRole('combobox', { name: 'Hora de llegada' })).toHaveValue('21:17')
+  expect(saveMock).not.toHaveBeenCalled()
+})
+
+it('US-45 edge includes confirmed payment inside the main order summary in reading order', async () => {
+  await openPage(pageData({ order: orderOf([[PROVOLETA, 1]]) }), false)
+  const title = screen.getByRole('heading', { name: 'Tu pedido' })
+  const payment = screen.getByRole('region', { name: 'Medio de pago' })
+  expect(payment.parentElement).toBe(title.parentElement)
+  const summary = within(title.parentElement!)
+  expect(summary.getByText('Efectivo', { selector: 'p' })).toBeVisible()
+  expect(summary.getByText('Pendiente de pago')).toBeVisible()
+  expect(summary.getByRole('button', { name: 'Ver detalle de la cuenta' })).toBeVisible()
+  const total = summary.getByText('Total del pedido')
+  expect(total.compareDocumentPosition(payment) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Modificar medio de pago' })).toBeVisible()
+})
+
+it('US-45 edge refreshes dish cutoff and disables an open payment editor at reservation end', async () => {
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date('2026-11-03T20:14:59-03:00'))
+  try {
+    const data = pageData({ order: orderOf([[PROVOLETA, 1]]) })
+    fetchMock.mockResolvedValue(data)
+    renderPage()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(screen.getByRole('button', { name: 'Modificar platos' })).toBeVisible()
+    const closed = { ...data, reservation: { ...data.reservation, order_open: false } }
+    fetchMock.mockResolvedValue(closed)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1010)
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(screen.queryByRole('button', { name: 'Modificar platos' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Modificar medio de pago' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+    expect(screen.getByRole('button', { name: 'Guardar cambio' })).toBeEnabled()
+    fetchMock.mockResolvedValue({
+      ...closed,
+      order: { ...data.order!, payment_method_editable: false },
+    })
+    const untilEnd = new Date('2026-11-03T22:30:00-03:00').getTime() - Date.now()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(untilEnd + 10)
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(screen.getByRole('button', { name: 'Guardar cambio' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Pago electrónico' })).toBeDisabled()
+    expect(
+      screen.queryByRole('button', { name: 'Modificar medio de pago' }),
+    ).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambio' }))
+    expect(changePaymentMethod).not.toHaveBeenCalled()
+    expect(confirmMock).not.toHaveBeenCalled()
+    expect(saveMock).not.toHaveBeenCalled()
+    expect(discardMock).not.toHaveBeenCalled()
+  } finally {
+    cleanup()
+    vi.useRealTimers()
+  }
+})
+
+it('US-45 edge signs back in after a payment-save 401 and reloads without mutating the private draft', async () => {
+  const actualSession = await vi.importActual<typeof import('../api/session')>('../api/session')
+  useAccountMock.mockImplementation(function useTestAccount() {
+    return useQuery({
+      queryKey: ['account'],
+      queryFn: async () => DINER,
+      staleTime: Infinity,
+    }) as ReturnType<typeof useAccount>
+  })
+  vi.mocked(signOut).mockImplementationOnce(actualSession.signOut)
+  const order = orderOf([[PROVOLETA, 1]])
+  const data = pageData({
+    order,
+    cart: {
+      arrival_at: '2026-11-03T21:15:00-03:00',
+      payment_method: 'online',
+      updated_at: order.confirmed_at,
+      items: [
+        {
+          dish_id: BIFE.id,
+          name: BIFE.name,
+          quantity: 2,
+          unit_price: BIFE.price,
+          prep_time_minutes: BIFE.prep_time_minutes,
+        },
+      ],
+    },
+  })
+  const user = await openPage(data, false)
+  await user.click(screen.getByRole('button', { name: 'Modificar medio de pago' }))
+  await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+  vi.mocked(changePaymentMethod).mockResolvedValueOnce({ ok: false, kind: 'session' })
+  await user.click(screen.getByRole('button', { name: 'Guardar cambio' }))
+  expect(
+    await screen.findByText(`En /ingresar?volver=${encodeURIComponent('/reservas/res-1/pedido')}`),
+  ).toBeVisible()
+  expect(signOut).toHaveBeenCalled()
+  useAccountMock.mockReturnValue({ data: DINER, isPending: false } as never)
+  fetchMock.mockResolvedValue(data)
+  await user.click(screen.getByRole('link', { name: 'Volver al pedido' }))
+  await screen.findByRole('button', { name: 'Modificar platos' })
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+  expect(screen.getByText('Efectivo', { selector: 'p' })).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+  expect(orderRow('Bife de chorizo')).toBeVisible()
+  await review(user)
+  expect(screen.getByRole('combobox', { name: 'Hora de llegada' })).toHaveValue('21:15')
+  expect(screen.getByRole('button', { name: 'Pago electrónico' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  expect(confirmMock).not.toHaveBeenCalled()
+  expect(saveMock).not.toHaveBeenCalled()
+  expect(discardMock).not.toHaveBeenCalled()
+})
+
+it('US-43 edge keeps the original reservation interval visible when arrival changes', async () => {
+  const user = await openPage(pageData({ order: orderOf([[PROVOLETA, 1]]) }), false)
+  expect(
+    within(screen.getByRole('heading', { level: 1 }).closest('header')!).getByText(/21:00–22:30/),
+  ).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Modificar platos' }))
+  expect(
+    within(screen.getByRole('heading', { level: 1 }).closest('header')!).getByText(/21:00–22:30/),
+  ).toBeVisible()
+  await review(user)
+  await user.selectOptions(screen.getByRole('combobox', { name: 'Hora de llegada' }), '21:30')
+  expect(
+    within(screen.getByRole('heading', { level: 1 }).closest('header')!).getByText(/21:00–22:30/),
+  ).toBeVisible()
+  await user.click(screen.getByRole('button', { name: 'Ver detalle de la cuenta' }))
+  const bill = within(screen.getByRole('dialog', { name: 'Detalle de la cuenta' }))
+  expect(bill.getByText(/21:00–22:30/)).toBeVisible()
+  expect(bill.getByText(/21:30/)).toBeVisible()
+  expect(confirmMock).not.toHaveBeenCalled()
 })

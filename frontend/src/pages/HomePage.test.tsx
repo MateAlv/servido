@@ -1,3 +1,4 @@
+import upcomingStyles from './home/UpcomingReservations.module.css'
 import { screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -143,7 +144,18 @@ describe('HomePage', () => {
     expect(
       within(card('cambiando')).getByText('Pedido confirmado · con cambios sin confirmar'),
     ).toBeInTheDocument()
-    expect(within(card('cambiando')).getByRole('link', { name: 'Seguir armando' })).toBeVisible()
+    expect(within(card('cambiando')).getByRole('link', { name: 'Ver pedido' })).toHaveAttribute(
+      'href',
+      '/reservas/cambiando/pedido',
+    )
+    const pendingStatus = within(card('cambiando')).getByText(
+      'Pedido confirmado · con cambios sin confirmar',
+    )
+    expect(pendingStatus).toHaveClass(upcomingStyles.statusText)
+    expect(pendingStatus.parentElement).toHaveClass(upcomingStyles.orderStatus)
+    expect(
+      within(card('cambiando')).queryByRole('link', { name: 'Seguir armando' }),
+    ).not.toBeInTheDocument()
     expect(within(card('confirmado')).getByText('Pedido confirmado')).toBeInTheDocument()
     expect(within(card('confirmado')).getByRole('link', { name: 'Ver pedido' })).toBeVisible()
     expect(within(card('cerrado')).queryByRole('link')).not.toBeInTheDocument()
