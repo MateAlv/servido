@@ -13,7 +13,7 @@ export function restaurantAccount(
     id: restaurante.id,
     nombre: restaurante.nombre,
     email: restaurante.email,
-    email_verificado: true,
+    email_verificado: restaurante.email_verificado,
   }
 }
 

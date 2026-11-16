@@ -1,0 +1,30 @@
+.reply {
+  display: grid;
+  gap: 4px;
+  margin: var(--space-2) 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 var(--radius-small) var(--radius-small) 0;
+  background: var(--color-surface-sunken);
+  font-size: var(--text-sm);
+}
+
+.label {
+  margin: 0;
+  font-weight: 800;
+}
+
+.text {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.meta {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.edited {
+  font-weight: 800;
+}

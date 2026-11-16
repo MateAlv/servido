@@ -33,6 +33,7 @@ export const PriceFilter = ({ selectedTiers, onChange, resultCount }: PriceFilte
       <Button
         variant="ghost"
         size="sm"
+        className={styles.clear}
         disabled={selectedTiers.length === 0}
         onClick={() => onChange([])}
       >

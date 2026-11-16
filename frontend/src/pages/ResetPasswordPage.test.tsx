@@ -59,6 +59,65 @@ describe('ResetPasswordPage', () => {
     )
   })
 
+  it('US-46 S4 sets a new password for the restaurant account', async () => {
+    put.mockResolvedValue(answered(CHANGED))
+    const user = userEvent.setup()
+    renderWithProviders(<ResetPasswordPage role="restaurant" />, {
+      route: '/restaurante/restablecer?token=abc123',
+    })
+
+    expect(await screen.findByLabelText('Nueva contraseña')).toBeInTheDocument()
+    expect(post).toHaveBeenCalledWith('/api/restaurantes/recuperacion/validacion', {
+      body: { token: 'abc123' },
+    })
+    await user.type(screen.getByLabelText('Nueva contraseña'), 'NuevaClave456')
+    await user.type(screen.getByLabelText('Confirmar contraseña'), 'NuevaClave456')
+    await user.click(screen.getByRole('button', { name: 'Cambiar contraseña' }))
+
+    expect(put).toHaveBeenCalledWith('/api/restaurantes/recuperacion', {
+      body: { token: 'abc123', password: 'NuevaClave456' },
+    })
+    expect(await screen.findByText(CHANGED)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ingresar con mi nueva contraseña' })).toHaveAttribute(
+      'href',
+      '/ingresar?rol=restaurante',
+    )
+  })
+
+  it('US-46 S7 invites the restaurant to sign in with the new password', async () => {
+    put.mockResolvedValue(answered(CHANGED))
+    const user = userEvent.setup()
+    renderWithProviders(<ResetPasswordPage role="restaurant" />, {
+      route: '/restaurante/restablecer?token=abc123',
+    })
+
+    await user.type(await screen.findByLabelText('Nueva contraseña'), 'NuevaClave456')
+    await user.type(screen.getByLabelText('Confirmar contraseña'), 'NuevaClave456')
+    await user.click(screen.getByRole('button', { name: 'Cambiar contraseña' }))
+
+    expect(await screen.findByText(CHANGED)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ingresar con mi nueva contraseña' })).toHaveAttribute(
+      'href',
+      '/ingresar?rol=restaurante',
+    )
+  })
+
+  it('US-46 S5 reports the restaurant password rules the API rejected', async () => {
+    const message = 'La contraseña debe contener al menos un número.'
+    put.mockResolvedValue(refused(message))
+    const user = userEvent.setup()
+    renderWithProviders(<ResetPasswordPage role="restaurant" />, {
+      route: '/restaurante/restablecer?token=abc123',
+    })
+
+    await user.type(await screen.findByLabelText('Nueva contraseña'), 'sololetras')
+    await user.type(screen.getByLabelText('Confirmar contraseña'), 'sololetras')
+    await user.click(screen.getByRole('button', { name: 'Cambiar contraseña' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(screen.getByLabelText('Nueva contraseña')).toBeInTheDocument()
+  })
+
   it('US-31 S4 reports every password rule the API rejected', async () => {
     const message = 'La contraseña debe contener al menos un número.'
     put.mockResolvedValue(refused(message))

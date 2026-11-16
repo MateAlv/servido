@@ -35,6 +35,25 @@ describe('RecoverAccountPage', () => {
     expect(screen.queryByLabelText('Email')).not.toBeInTheDocument()
   })
 
+  it('US-46 S1 asks for the recovery of a restaurant account', async () => {
+    post.mockResolvedValue(answered(SENT))
+    const user = userEvent.setup()
+    renderWithProviders(<RecoverAccountPage role="restaurant" />)
+
+    expect(screen.getByText('Cuenta de restaurante')).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Email'), 'local@example.com')
+    await user.click(screen.getByRole('button', { name: 'Enviar instrucciones' }))
+
+    expect(post).toHaveBeenCalledWith('/api/restaurantes/recuperacion', {
+      body: { email: 'local@example.com' },
+    })
+    expect(await screen.findByText(new RegExp(SENT))).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Volver a ingresar' })).toHaveAttribute(
+      'href',
+      '/ingresar?rol=restaurante',
+    )
+  })
+
   it('US-31 edge a double click asks for one mail', async () => {
     let answer: (value: unknown) => void = () => {}
     post.mockReturnValue(

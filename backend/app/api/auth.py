@@ -54,7 +54,10 @@ def restaurant_session(restaurant: Restaurant) -> RestaurantLoginResponse:
     return RestaurantLoginResponse(
         restaurante=RestaurantResponse.model_validate(restaurant),
         access_token=create_access_token(
-            str(restaurant.id_restaurante), restaurant.email, RESTAURANT
+            str(restaurant.id_restaurante),
+            restaurant.email,
+            RESTAURANT,
+            restaurant.password_changed_at,
         ),
     )
 

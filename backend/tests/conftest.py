@@ -14,11 +14,13 @@ from app.config import settings
 from app.db import engine, get_session
 from app.main import app
 from app.services import availability, google, mail
+from tests.isolated_database import recreate_test_database
 from tests.reservations import NOW
 
 
 @pytest.fixture(scope="session", autouse=True)
 def migrated_database() -> None:
+    recreate_test_database()
     command.upgrade(Config("alembic.ini"), "head")
 
 

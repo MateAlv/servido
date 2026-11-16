@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { fetchRestaurant } from '../api/restaurants'
@@ -198,6 +198,66 @@ describe('RestaurantDetailPage (spec 014)', () => {
     expect(screen.queryByText(/final/)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Leer más' }))
     expect(screen.getByText(/final/)).toBeInTheDocument()
+  })
+
+  function withReply(edited: boolean, text = 'Ya ajustamos la cocina.') {
+    return {
+      ...real,
+      rating: 2,
+      reviewCount: 1,
+      reviews: [
+        {
+          author: 'Juan P.',
+          rating: 2,
+          comment: 'Tardaron mucho.',
+          date: '2026-11-02',
+          reply: { text, date: '2026-11-04', edited },
+        },
+      ],
+    }
+  }
+
+  it("US-42 S2 shows the reply under its opinion as the restaurant's", async () => {
+    vi.mocked(fetchRestaurant).mockResolvedValue(withReply(false))
+    renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
+
+    const opinion = await screen.findByRole('article', { name: 'Reseña de Juan P.' })
+    const reply = within(opinion).getByRole('group', { name: 'Respuesta de La Mesa' })
+    expect(reply).toHaveTextContent('Ya ajustamos la cocina.')
+    expect(reply).toHaveTextContent('Respondió el miércoles, 4 de noviembre')
+    expect(within(reply).queryByText('Editada')).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Respuesta de La Mesa' })).toBeNull()
+  })
+
+  it('US-42 S2 shortens a long reply until asked, so it stays below the review', async () => {
+    const long = `${'Gracias por venir y por contarnos cómo fue la noche. '.repeat(4)}Final.`
+    vi.mocked(fetchRestaurant).mockResolvedValue(withReply(false, long))
+    renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
+
+    const reply = await screen.findByRole('group', { name: 'Respuesta de La Mesa' })
+    expect(reply).not.toHaveTextContent('Final.')
+    const toggle = within(reply).getByRole('button', { name: 'Leer más' })
+    const controlled = document.getElementById(toggle.getAttribute('aria-controls') ?? '')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(controlled).not.toHaveTextContent('Final.')
+    toggle.focus()
+    fireEvent.click(toggle)
+    expect(controlled).toHaveTextContent('Final.')
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(within(reply).getByRole('button', { name: 'Ver menos' })).toHaveFocus()
+
+    fireEvent.click(toggle)
+    expect(reply).not.toHaveTextContent('Final.')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(within(reply).getByRole('button', { name: 'Leer más' })).toHaveFocus()
+  })
+
+  it('US-42 S4 marks an edited reply', async () => {
+    vi.mocked(fetchRestaurant).mockResolvedValue(withReply(true))
+    renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
+
+    const reply = await screen.findByRole('group', { name: 'Respuesta de La Mesa' })
+    expect(reply).toHaveTextContent('Respondió el miércoles, 4 de noviembre · Editada')
   })
 
   it('US-50 S11 counts a review without comment, with no section for it', async () => {

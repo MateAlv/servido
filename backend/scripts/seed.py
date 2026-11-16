@@ -45,6 +45,8 @@ def seed() -> None:
         restaurant.rango_precio = "$$"
         restaurant.latitud = Decimal("-34.603722")
         restaurant.longitud = Decimal("-58.411561")
+        # Spec 026: the demo restaurant is verified, so it stays on the map without opening a mail.
+        restaurant.email_verified_at = restaurant.email_verified_at or datetime.now(UTC)
 
         diner = session.scalar(select(Diner).where(Diner.email == DINER_EMAIL))
         if diner is None:
