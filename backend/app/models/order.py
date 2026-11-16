@@ -1,7 +1,16 @@
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, String, UniqueConstraint, text
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Numeric,
+    String,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,7 +23,15 @@ class Order(Base):
 
     __tablename__ = "pedidos"
     __table_args__ = (
-        CheckConstraint("status IN ('confirmed', 'pending')", name="status_known"),
+        CheckConstraint("status IN ('confirmed', 'pending', 'cancelled')", name="status_known"),
+        CheckConstraint("payment_status IN ('pending', 'paid')", name="payment_status_known"),
+        CheckConstraint(
+            "(payment_status = 'pending' AND payment_method IS NULL AND paid_amount IS NULL "
+            "AND paid_at IS NULL) OR "
+            "(payment_status = 'paid' AND payment_method IN ('cash', 'online') "
+            "AND paid_amount IS NOT NULL AND paid_amount >= 0 AND paid_at IS NOT NULL)",
+            name="payment_fields_match_status",
+        ),
         UniqueConstraint("reservation_id", name="reservation_order_unique"),
     )
 
@@ -38,6 +55,12 @@ class Order(Base):
     confirmed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP")
     )
+    payment_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending", server_default="pending"
+    )
+    payment_method: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    paid_amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     items: Mapped[list["OrderItem"]] = relationship(  # noqa: F821
         cascade="all, delete-orphan",
         passive_deletes=True,

@@ -1,3 +1,4 @@
+import logging
 import secrets
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
@@ -28,8 +29,11 @@ from app.schemas.order import (
 from app.schemas.reservation import (
     DinerContact,
     PreorderedOrderSummary,
+    RefundResponse,
     ReservationDinerResponse,
+    RestaurantCancellationRequest,
     RestaurantCancellationResponse,
+    RestaurantCancellationResult,
     RestaurantCancellationsResponse,
     RestaurantReservationResponse,
     RestaurantReservationsResponse,
@@ -50,10 +54,17 @@ from app.schemas.table_inventory import (
     TableInventoryGroupPayload,
     TableInventoryGroupResponse,
 )
-from app.services import availability, orders
+from app.services import availability, mail, orders
 from app.services.auth import hash_password, normalize_email
 from app.services.geocoding import GeocodingError, geocode_address
 from app.services.opening_hours import validate_shifts
+from app.services.refunds import RefundFailedError
+from app.services.reservations import ReservationCancellationWindowError
+from app.services.restaurant_cancellations import (
+    CancellationAlreadyDoneError,
+    CancellationNotFoundError,
+    cancel_restaurant_reservation,
+)
 from app.services.restaurant_orders import (
     format_local_time,
     restaurant_order,
@@ -65,6 +76,7 @@ from app.services.table_inventory import ReservationConflictError, replace_inven
 from app.services.terms import acceptance_for
 
 router = APIRouter(tags=["restaurant"])
+logger = logging.getLogger(__name__)
 RESTAURANT_UPLOADS_DIR = Path("uploads/restaurants")
 
 DUPLICATE_DETAIL = "Ya existe una cuenta de restaurante asociada a ese email o CUIT."
@@ -172,8 +184,11 @@ def restaurant_order_response(order) -> RestaurantOrderResponse:
         arrival_time=format_local_time(order.arrival_at),
         prep_start_time=format_local_time(order.prep_start_at),
         prep_time_warning=order.prep_time_warning,
-        # No payment records exist yet (US-45/56/60); confirmation is not payment.
-        payment=OrderPaymentResponse(status="pending", method="No seleccionado", total=order.total),
+        payment=OrderPaymentResponse(
+            status=order.payment_status,
+            method=order.payment_method or "No seleccionado",
+            total=order.total,
+        ),
         items=[
             OrderItemResponse(
                 dish_name=item.dish_name,
@@ -228,6 +243,61 @@ def list_restaurant_reservations(
             )
             for reservation in reservations
         ],
+    )
+
+
+@router.post(
+    "/restaurante/reservas/{reservation_id}/cancelar",
+    response_model=RestaurantCancellationResult,
+    responses={400: {}, 401: {}, 403: {}, 404: {}, 409: {}, 502: {}},
+)
+def cancel_restaurant_reservation_endpoint(
+    reservation_id: UUID,
+    payload: RestaurantCancellationRequest,
+    claims: TokenClaimsDep,
+    session: SessionDep,
+) -> RestaurantCancellationResult:
+    restaurant = restaurant_from_claims(claims, session)
+    try:
+        result = cancel_restaurant_reservation(
+            session, restaurant, reservation_id, payload.request_id, availability.current_time()
+        )
+    except CancellationNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Reserva no encontrada.") from error
+    except CancellationAlreadyDoneError as error:
+        raise HTTPException(status_code=409, detail="La reserva ya estaba cancelada.") from error
+    except ReservationCancellationWindowError as error:
+        session.rollback()
+        code = 400 if str(error) == "No podés cancelar una reserva que ya pasó." else 409
+        raise HTTPException(status_code=code, detail=str(error)) from error
+    except RefundFailedError as error:
+        session.commit()
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "No pudimos completar el reembolso. La reserva sigue activa. Volvé a intentarlo."
+            ),
+        ) from error
+    session.commit()
+    if not result.already_done:
+        try:
+            mail.send_mail(result.mail)
+        except mail.MailError:
+            logger.exception("Could not notify diner about restaurant cancellation")
+    if result.refund is not None:
+        message = "La reserva se canceló y el reembolso se completó correctamente."
+        refund = RefundResponse(
+            status=result.refund.status, amount=result.refund.amount, method=result.refund.method
+        )
+    else:
+        message = "La reserva se canceló correctamente, sin reembolso."
+        refund = None
+    return RestaurantCancellationResult(
+        reservation_id=reservation_id,
+        status="cancelled",
+        message=message,
+        refund=refund,
+        notification_created=not result.already_done,
     )
 
 

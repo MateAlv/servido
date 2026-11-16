@@ -8,6 +8,7 @@ from app.api import (
     dish,
     email_verification,
     health,
+    notification,
     order,
     public_restaurant,
     reservation,
@@ -32,3 +33,4 @@ api_router.include_router(order.router)
 api_router.include_router(review.router)
 api_router.include_router(closure.router)
 api_router.include_router(public_restaurant.router)
+api_router.include_router(notification.router)
