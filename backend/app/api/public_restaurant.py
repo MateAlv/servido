@@ -16,7 +16,6 @@ from app.schemas.public_restaurant import (
     PublicRestaurantDetail,
     PublicRestaurantList,
 )
-
 from app.services import availability, review_replies, reviews
 from app.services.availability import BUENOS_AIRES, bookable_condition
 from app.services.menu import menu_dishes
