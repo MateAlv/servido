@@ -1,4 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { QuantityStepper } from './QuantityStepper'
@@ -22,5 +24,21 @@ describe('QuantityStepper', () => {
 
     rerender(<QuantityStepper label="Cantidad" value={3} min={1} max={3} onChange={vi.fn()} />)
     expect(screen.getByRole('button', { name: 'Agregar uno' })).toBeDisabled()
+  })
+
+  it('keeps the focus inside when a button reaches the limit', async () => {
+    const user = userEvent.setup()
+    function Harness() {
+      const [value, setValue] = useState(2)
+      return <QuantityStepper label="Cantidad" value={value} min={1} max={3} onChange={setValue} />
+    }
+    render(<Harness />)
+
+    await user.click(screen.getByRole('button', { name: 'Agregar uno' }))
+    expect(screen.getByRole('button', { name: 'Quitar uno' })).toHaveFocus()
+
+    await user.click(screen.getByRole('button', { name: 'Quitar uno' }))
+    await user.click(screen.getByRole('button', { name: 'Quitar uno' }))
+    expect(screen.getByRole('button', { name: 'Agregar uno' })).toHaveFocus()
   })
 })

@@ -10,8 +10,9 @@ const LETTERS = [...'Servido']
 export type LogoAnimation = 'none' | 'intro' | 'outro' | 'idle'
 
 type LogoProps = {
-  /** `full` shows the pin and the "Servido!" wordmark; `mark` only the pin. */
-  variant?: 'full' | 'mark'
+  /** `full` shows the pin and the "Servido!" wordmark; `mark` only the pin; `responsive` is
+   * `full` that keeps only the pin up to 440 px wide, where the header is tight. */
+  variant?: 'full' | 'mark' | 'responsive'
   layout?: 'inline' | 'stacked'
   size?: 'sm' | 'md' | 'lg' | 'xl'
   /** Shows "Reservá. Pedí. Disfrutá." under the wordmark. */
@@ -47,6 +48,7 @@ export function Logo({
         styles.logo,
         styles[size],
         layout === 'stacked' && styles.stacked,
+        variant === 'responsive' && styles.responsive,
         animation !== 'none' && styles[animation],
         className,
       )}
@@ -64,7 +66,7 @@ export function Logo({
           ray: styles.ray,
         }}
       />
-      {variant === 'full' && (
+      {variant !== 'mark' && (
         <span className={styles.text}>
           <span className={styles.wordmark}>
             {LETTERS.map((letter, i) => (

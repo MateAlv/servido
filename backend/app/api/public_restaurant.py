@@ -1,3 +1,4 @@
+from datetime import date, time
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
@@ -7,6 +8,7 @@ from app.db import SessionDep
 from app.models.restaurant import Restaurant
 from app.models.review_reply import ReviewReply
 from app.schemas.public_restaurant import (
+    OpenRestaurants,
     PublicDish,
     PublicOpinion,
     PublicReply,
@@ -14,19 +16,22 @@ from app.schemas.public_restaurant import (
     PublicRestaurantDetail,
     PublicRestaurantList,
 )
-from app.services import review_replies, reviews
+
+from app.services import review_replies, availability, reviews
 from app.services.availability import BUENOS_AIRES, bookable_condition
 from app.services.menu import menu_dishes
 
 router = APIRouter(tags=["restaurant"])
 
 RESTAURANT_NOT_FOUND = "No encontramos ese restaurante."
+INVERTED_RANGE = "El «hasta» no puede ser anterior al «desde»."
 
 
 def public_fields(restaurant: Restaurant, session: SessionDep) -> dict:
     assert restaurant.latitud is not None and restaurant.longitud is not None
     summary = reviews.rating_summary(session, restaurant.id_restaurante)
     spend = reviews.spend_summary(session, restaurant.id_restaurante)
+    dishes = menu_dishes(session, restaurant.id_restaurante)
     return {
         "id": restaurant.id_restaurante,
         "name": restaurant.nombre,
@@ -43,7 +48,17 @@ def public_fields(restaurant: Restaurant, session: SessionDep) -> dict:
         "lat": float(restaurant.latitud),
         "lng": float(restaurant.longitud),
         "photo_url": restaurant.foto_url,
-        "has_menu": bool(menu_dishes(session, restaurant.id_restaurante)),
+        "has_menu": bool(dishes),
+        "max_party_size": availability.max_party_size(
+            availability.available_groups(session, restaurant.id_restaurante)
+        ),
+        "dish_restriction_sets": sorted(
+            {
+                tuple(sorted(dish.restricciones_alimenticias))
+                for dish in dishes
+                if dish.restricciones_alimenticias
+            }
+        ),
     }
 
 
@@ -65,6 +80,38 @@ def list_bookable_restaurants(session: SessionDep) -> PublicRestaurantList:
     return PublicRestaurantList(
         restaurants=[
             PublicRestaurant(**public_fields(restaurant, session)) for restaurant in restaurants
+        ]
+    )
+
+
+# Declared before /restaurants/{restaurant_id}, which would otherwise take "open" as an id.
+@router.get(
+    "/restaurants/open",
+    response_model=OpenRestaurants,
+    responses={400: {"description": "Día fuera del plazo o rango invertido."}},
+)
+def list_open_restaurants(
+    date: date, start_from: time, start_to: time, session: SessionDep
+) -> OpenRestaurants:
+    """Bookable restaurants where a reservation can start that day between both times,
+    inclusive (spec 027, F4). A point hour sends the same time twice."""
+    now = availability.current_time()
+    try:
+        availability.check_date(date, now)
+    except availability.UnavailableStartError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error)) from error
+    if start_to < start_from:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=INVERTED_RANGE)
+    restaurant_ids = session.scalars(
+        select(Restaurant.id_restaurante).where(bookable_condition()).order_by(Restaurant.nombre)
+    ).all()
+    return OpenRestaurants(
+        restaurant_ids=[
+            restaurant_id
+            for restaurant_id in restaurant_ids
+            if availability.can_start_between(
+                session, restaurant_id, date, start_from, start_to, now
+            )
         ]
     )
 

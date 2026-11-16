@@ -201,3 +201,23 @@ export function IconWheatOff(props: IconProps) {
     </Icon>
   )
 }
+
+export function IconFilter(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" />
+      <circle cx="16" cy="6" r="2" />
+      <circle cx="10" cy="12" r="2" />
+      <circle cx="18" cy="18" r="2" />
+    </Icon>
+  )
+}
+
+export function IconLogout(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+      <path d="M14 8l4 4-4 4M18 12H9" />
+    </Icon>
+  )
+}

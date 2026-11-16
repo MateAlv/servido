@@ -1,5 +1,6 @@
 import type { OccupancyLevel } from '../components/restaurant'
 import { priceTierFromAverageSpend } from '../components/restaurant/priceFilterUtils'
+import { restrictionCode } from '../lib/dietary'
 import type { GeoPoint } from '../lib/geo'
 import { formatReviewCount } from '../lib/rating'
 
@@ -70,6 +71,12 @@ export type RestaurantPublic = {
   photo: { cover: string; thumb: string } | null
   /** Whether it has a menu; the price filter leaves out restaurants without one (US-7). */
   hasMenu?: boolean
+  /** The largest available table, the most one reservation seats (spec 027, F5). Only real
+   * restaurants have tables. */
+  maxPartySize?: number
+  /** Restriction codes (`sin_tacc`, `vegetariano`, `vegano`) of each available dish that has
+   * any, for the restrictions filter (spec 027, F2 and F3). */
+  dishRestrictionSets?: string[][]
   foto_url?: string | null
   /** True for restaurants stored in the database with shifts and tables (decision D4 of 28/10):
    * only those can be booked. The test restaurants below are not. */
@@ -103,15 +110,20 @@ const TEST_RESTAURANTS: TestRestaurant[] = [
       {
         category: 'Entradas',
         dishes: [
-          { name: 'Provoleta a la parrilla', price: 9800 },
+          { name: 'Provoleta a la parrilla', price: 9800, dietaryRestrictions: ['Sin TACC'] },
           { name: 'Empanada de carne cortada a cuchillo', price: 3200 },
         ],
       },
       {
         category: 'Principales',
         dishes: [
-          { name: 'Bife de chorizo con papas', price: 24500, description: '400 g, a punto' },
-          { name: 'Entraña con ensalada mixta', price: 21900 },
+          {
+            name: 'Bife de chorizo con papas',
+            price: 24500,
+            description: '400 g, a punto',
+            dietaryRestrictions: ['Sin TACC'],
+          },
+          { name: 'Entraña con ensalada mixta', price: 21900, dietaryRestrictions: ['Sin TACC'] },
         ],
       },
       { category: 'Postres', dishes: [{ name: 'Flan con dulce de leche', price: 6200 }] },
@@ -156,7 +168,12 @@ const TEST_RESTAURANTS: TestRestaurant[] = [
         category: 'Principales',
         dishes: [
           { name: 'Milanesa napolitana con puré', price: 12900 },
-          { name: 'Guiso de lentejas', price: 9500, description: 'Opción vegetariana' },
+          {
+            name: 'Guiso de lentejas',
+            price: 9500,
+            description: 'Opción vegetariana',
+            dietaryRestrictions: ['Vegetariano'],
+          },
         ],
       },
       { category: 'Postres', dishes: [{ name: 'Budín de pan', price: 4800 }] },
@@ -194,11 +211,25 @@ const TEST_RESTAURANTS: TestRestaurant[] = [
       {
         category: 'Principales',
         dishes: [
-          { name: 'Bowl de quinoa y palta', price: 16800, description: 'Vegano' },
-          { name: 'Wrap de falafel', price: 14500 },
+          {
+            name: 'Bowl de quinoa y palta',
+            price: 16800,
+            description: 'Vegano',
+            dietaryRestrictions: ['Vegetariano', 'Vegano'],
+          },
+          { name: 'Wrap de falafel', price: 14500, dietaryRestrictions: ['Vegetariano', 'Vegano'] },
         ],
       },
-      { category: 'Bebidas', dishes: [{ name: 'Limonada con jengibre', price: 5200 }] },
+      {
+        category: 'Bebidas',
+        dishes: [
+          {
+            name: 'Limonada con jengibre',
+            price: 5200,
+            dietaryRestrictions: ['Vegetariano', 'Vegano'],
+          },
+        ],
+      },
     ],
     reviews: [
       {
@@ -237,8 +268,12 @@ const TEST_RESTAURANTS: TestRestaurant[] = [
       {
         category: 'Principales',
         dishes: [
-          { name: 'Salmón grillado con vegetales', price: 46800 },
-          { name: 'Paella para dos', price: 79000 },
+          {
+            name: 'Salmón grillado con vegetales',
+            price: 46800,
+            dietaryRestrictions: ['Sin TACC'],
+          },
+          { name: 'Paella para dos', price: 79000, dietaryRestrictions: ['Sin TACC'] },
         ],
       },
     ],
@@ -276,10 +311,19 @@ const TEST_RESTAURANTS: TestRestaurant[] = [
         category: 'Brunch',
         dishes: [
           { name: 'Tostado de jamón y queso', price: 7900 },
-          { name: 'Huevos revueltos con palta', price: 11200 },
+          {
+            name: 'Huevos revueltos con palta',
+            price: 11200,
+            dietaryRestrictions: ['Vegetariano', 'Sin TACC'],
+          },
         ],
       },
-      { category: 'Bebidas', dishes: [{ name: 'Flat white', price: 4300 }] },
+      {
+        category: 'Bebidas',
+        dishes: [
+          { name: 'Flat white', price: 4300, dietaryRestrictions: ['Vegetariano', 'Sin TACC'] },
+        ],
+      },
     ],
     reviews: [
       {
@@ -314,8 +358,8 @@ const TEST_RESTAURANTS: TestRestaurant[] = [
       {
         category: 'Principales',
         dishes: [
-          { name: 'Combinado de 15 piezas', price: 32500 },
-          { name: 'Ceviche nikkei', price: 27800 },
+          { name: 'Combinado de 15 piezas', price: 32500, dietaryRestrictions: ['Sin TACC'] },
+          { name: 'Ceviche nikkei', price: 27800, dietaryRestrictions: ['Sin TACC'] },
         ],
       },
       { category: 'Postres', dishes: [{ name: 'Mochi de matcha', price: 8900 }] },
@@ -382,8 +426,23 @@ const TEST_RESTAURANTS: TestRestaurant[] = [
   },
 ]
 
+/** The distinct restriction codes of the test dishes, as the API gives them for real ones. */
+function dishRestrictionSets(menu: MenuSection[]): string[][] {
+  const sets = new Map<string, string[]>()
+  for (const dish of menu.flatMap((section) => section.dishes)) {
+    const codes = (dish.dietaryRestrictions ?? [])
+      .map(restrictionCode)
+      .filter((code) => code !== undefined)
+      .sort()
+    if (codes.length > 0) sets.set(codes.join(','), codes)
+  }
+  return [...sets.values()]
+}
+
 export const RESTAURANTS_FIXTURE: RestaurantPublic[] = TEST_RESTAURANTS.map((restaurant) => ({
   ...restaurant,
+  // Test dishes carry restrictions consistent with the tags of their restaurant (spec 027, F10).
+  dishRestrictionSets: dishRestrictionSets(restaurant.menu),
   priceTier: priceTierFromAverageSpend(restaurant.averageSpendPerPerson),
   bookable: false,
   photo: {

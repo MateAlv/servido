@@ -41,7 +41,7 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 
 | Componente | Para qué | Animación |
 | --- | --- | --- |
-| `Logo` | Logo en el encabezado y en pantallas de marca. Variantes `full` / `mark`, `inline` / `stacked`, con o sin lema | `intro`: el pin cae y rebota, la campana aparece, se dibujan los rayos y suben las letras. `outro`: la tapa se levanta ("¡servido!") y el pin se hunde. `idle`: rayos que titilan y tapa que espía. Hover: la tapa se levanta |
+| `Logo` | Logo en el encabezado y en pantallas de marca. Variantes `full` / `mark` / `responsive` (completo, pero solo el pin hasta 440 px de ancho: lo usa el encabezado con sesión iniciada), `inline` / `stacked`, con o sin lema | `intro`: el pin cae y rebota, la campana aparece, se dibujan los rayos y suben las letras. `outro`: la tapa se levanta ("¡servido!") y el pin se hunde. `idle`: rayos que titilan y tapa que espía. Hover: la tapa se levanta |
 | `LogoMark` | El pin con la campana en SVG, sin animación propia. Lo usan `Logo` y `LogoSpinner`, que animan sus partes con `classes`; `orbit` dibuja la órbita del spinner | — |
 | `LogoSpinner` | Cargas de página o de secciones | `orbit`: un cometa gira alrededor del pin mientras la tapa espía. `hop`: el pin salta, ideal mientras se buscan restaurantes cerca |
 | `BrandSplash` | Bienvenida, una vez por sesión | El logo aparece, espera hasta que la app esté lista, desaparece y la pantalla se levanta como una campana. Se saltea con un clic |
@@ -57,26 +57,30 @@ Viven en `frontend/src/components/`, agrupados por tema, y se importan desde el 
 | `TextField` | Campos de formulario con ayuda y error (el error tiembla y se anuncia). `action` agrega un botón chico al final del campo |
 | `PasswordField` | Contraseña oculta con un ojo para mostrarla u ocultarla (`aria-pressed`). Usalo en todo campo de contraseña |
 | `Checkbox` | Casilla accesible con label asociado, foco visible y estado desmarcado por defecto |
-| `Chip` | Opciones que se alternan: filtros de selección múltiple (precio, restricciones) y grupos donde se elige una sola (horarios, tipo de mesa) |
+| `Chip` | Opciones que se alternan: filtros de selección múltiple (precio, restricciones) y grupos donde se elige una sola (horarios, tipo de mesa). Con `role="radio"` dice `aria-checked` en vez de `aria-pressed` |
+| `ChoiceChips` | Una opción entre varias con forma de chips que se acomodan en filas, cuando las opciones no entran en un `SegmentedControl` (la calificación mínima). Es un grupo de radios: una sola parada de Tab y las flechas mueven y eligen; `ariaLabel` da el nombre hablado cuando la etiqueta lleva símbolos («4 o más estrellas» para «4 o más ★») |
 | `SegmentedControl` | Una opción entre pocas, con indicador que se desliza |
+| `TimeWheel` | Una media hora entre las 48 del día, como la alarma del celular: se desliza, se frena en la hora de la banda y la elige cuando deja de moverse (no en cada hora que pasa). Las que no se pueden elegir aparecen tachadas y la rueda se acomoda en la siguiente. Una sola parada de Tab: ↑ ↓ mueven, Inicio y Fin van a los extremos, y Enter o tocar la hora elegida llama a `onPick` (los filtros abren el reloj) |
+| `ClockDialog` | Un reloj en un `Modal` para elegir una media hora: primero la hora (de 12 a 23 en el anillo de afuera, de 00 a 11 en el de adentro) y después los minutos, solo en punto o y media. La aguja gira hasta la elegida; las horas que no se pueden elegir se deshabilitan y «Listo» confirma |
 | `Card` | Superficie base; `interactive` se eleva al pasar el mouse |
 | `StatusPill` | Estado corto: disponibilidad, pago, reserva |
 | `Skeleton`, `SkeletonText` | Placeholders con brillo mientras carga una lista |
 | `Spinner` | Carga dentro de un botón o de un texto |
 | `Modal` | Diálogos (en el celular se abre como hoja desde abajo). `onClosed` avisa cuando terminó de cerrarse, para devolver el foco a la página |
+| `Drawer` | Panel sobre el diálogo nativo, como `Modal` (atrapa el foco, se cierra con Escape, con la cruz o tocando afuera): en el celular sube desde abajo y en pantallas anchas entra desde la derecha. Solo el contenido hace scroll (el panel nunca entero, ni la página de atrás mientras está abierto): el encabezado y el pie quedan fijos; la última acción del pie ocupa el ancho que sobra. Anima al abrir y al cerrar; con movimiento reducido solo aparece con un fundido corto. Lo usan los filtros del mapa |
 | `ToastProvider`, `useToast` | Avisos breves que se van solos. Una página con barra inferior (el pedido) los sube con la variable `--toast-bottom` |
 | `ThemeToggle` | Cambio de tema claro / oscuro |
 | `Reveal` | Animación de entrada al hacer scroll |
-| `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido»), `maxHint` explica el «+» deshabilitado en el máximo, `announce={false}` apaga su anuncio cuando la página ya anuncia el cambio y `disabled` bloquea los dos botones |
+| `QuantityStepper`, `RollingNumber` | Cantidades y totales que ruedan al cambiar. `decreaseLabel` nombra el «−» cuando saca el ítem («Sacar Provoleta del pedido»), `maxHint` explica el «+» deshabilitado en el máximo, `announce={false}` apaga su anuncio cuando la página ya anuncia el cambio y `disabled` bloquea los dos botones. `increaseLabel` nombra el «+» («Una persona más») y `size="lg"` lleva los botones a 44 px, para formularios fuera de una lista. El botón que llega al límite se deshabilita y pasa el foco al otro |
 | `TextAreaField` | `TextField` para textos largos, en peso regular para que un párrafo se lea bien. `hintTone="error"` pinta la ayuda de rojo, por ejemplo un contador pasado del límite |
 | `StarRating` | Calificación interactiva o de solo lectura |
-| `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, …) |
+| `icons` | Íconos de trazo redondeado (`IconCloche`, `IconCutlery`, `IconPin`, `IconFilter`, …) |
 
 ### Estructura (`layout/`)
 
 | Componente | Para qué |
 | --- | --- |
-| `SiteHeader` | Barra superior de todas las páginas: logo, y "Ingresar" / "Crear cuenta" o quién está conectado y "Cerrar sesión". Queda fija al hacer scroll |
+| `SiteHeader` | Barra superior de todas las páginas: logo, y "Ingresar" / "Crear cuenta" o quién está conectado y "Cerrar sesión". Queda fija al hacer scroll. Con sesión iniciada entra en 360 px sin perder el cambio de tema: el nombre se ve desde 1080 px, el avatar se oculta hasta 520 px, el logo queda en el pin hasta 440 px y «Cerrar sesión» muestra solo su ícono hasta 640 px. Sin sesión, «Crear cuenta» se oculta hasta 520 px y el tema hasta 420 px. «Mis reservas» es un objetivo táctil de 44 px |
 | `SiteFooter` | Pie de todas las páginas |
 
 El inicio cambia según quién entra: visitante (presentación y una tarjeta por rol para crear cuenta o ingresar), comensal (elegir restaurante) o restaurante (su panel).
@@ -134,7 +138,9 @@ La revisión y la confirmación de la reserva (US-13, `pages/reservation/`) toda
 | `RestaurantMap` | Mapa Leaflet + OpenStreetMap con la posición del comensal, los marcadores y el popup de cada restaurante: una tarjeta con foto, precio, calificación, concurrencia, barrio, dirección, distancia y el botón al detalle | 5 |
 | `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal. Si un restaurante no tiene datos de concurrencia, no se muestra (no decimos «sin datos») | 5, 33 |
 | `PriceFilter` | Chips de precio (`$` … `$$$$`) y "Quitar filtro de precio"; avisa cuando no hay coincidencias | 7 |
-| `RestaurantExplorer` | Elegir restaurante: filtro de precio, mapa y la misma lista en tarjetas con su concurrencia, que se actualiza sola; si ningún restaurante tiene datos de concurrencia, no se muestra «Actualizado». El filtro vive en la URL (`?precio=$$`), así que se conserva al ir al detalle y volver. Lo usan el inicio del comensal y `/mapa`. Muestra los restaurantes reales de `GET /api/restaurants` (sin concurrencia ni calificación todavía) junto con los de prueba de `frontend/src/data/restaurants.fixture.ts`; solo los reales se pueden reservar (spec 003, D4) | 5, 7, 9, 33 |
+| `RestaurantExplorer` | Elegir restaurante: botón «Filtros» (con la cantidad de filtros activos) que abre un `Drawer` con `FilterPanel`, las etiquetas de `ActiveFilters`, mapa y la misma lista en tarjetas con su concurrencia, que se actualiza sola; si ningún restaurante tiene datos de concurrencia, no se muestra «Actualizado». Los filtros viven en la URL (`?precio=$$&rating=4&restriccion=sin_tacc&dia=…&hora=21:00&personas=6`), así que se conservan al ir al detalle y volver, al recargar y en un enlace compartido; además el navegador guarda los últimos y los aplica al volver sin filtros en la URL. Sin resultados avisa y ofrece «Quitar filtros». Lo usan el inicio del comensal y `/mapa`. Muestra los restaurantes reales de `GET /api/restaurants` junto con los de prueba de `frontend/src/data/restaurants.fixture.ts`; solo los reales se pueden reservar (spec 003, D4) | 5, 7, 9, 33, 35, 53, 59, 61 |
+| `FilterPanel` | El contenido del panel de filtros: precio (`PriceFilter`), calificación mínima (`ChoiceChips`: «Todas», «3 o más ★», «4 o más ★», «4,5 o más ★»), restricciones (chips con su ícono), día y horario («Hoy», «Mañana» u otra fecha, que se lee en palabras debajo, «Domingo 22/11»; `SegmentedControl` entre «Todo el día», «Una hora» y «Entre horas»; la hora se elige en un `TimeWheel` o en el `ClockDialog` del botón «Reloj», sin las de hoy que ya empezaron; entre horas, dos recuadros «Llegar desde» y «Llegar hasta» eligen qué extremo edita la rueda, y «hasta» sigue a «desde» + 1 h 30 hasta que se elige; al cambiar de modo se conserva la hora elegida, y sin elegir ninguna empieza a las 20:00 o en la primera media hora que queda hoy) y personas (`QuantityStepper` grande de 1 a 20, que avisa «Máximo 20 personas»). El día solo ya filtra (cualquier horario de ese día); una hora o un rango sin día se marcan con un aviso amarillo. Abajo dice en palabras qué se busca («… donde podés empezar una reserva entre las 20:00 y las 21:30. Cada reserva dura 1 h 30.»). El panel recuerda lo elegido al cerrarse. Cada cambio se aplica al instante y los botones «Quitar …» se alinean con los chips | 35, 53, 59, 61 |
+| `ActiveFilters` | Cada filtro activo como una etiqueta oscura con su cruz para quitarlo («4 o más ★», «Sin TACC», «Dom 22/11 · 21:00», «6 personas», «$$»), más «Quitar todos». Las etiquetas aparecen con un pequeño salto. Al quitar una, el foco pasa a la que quedó en su lugar, o a «Filtros» si no queda ninguna. Se ven de 36 px pero reciben toques en 44 px | 35, 53, 59, 61 |
 
 #### Restaurantes reales con datos incompletos
 
@@ -170,6 +176,29 @@ reseñas con precio por persona.
 En `/diseno#filtro-precio` hay una demostración aislada, con cuatro restaurantes
 ficticios (uno sin menú): seleccioná `$$$$` para ver cero coincidencias y «Quitar
 filtro de precio» para recuperar los cuatro ejemplos.
+
+#### Filtros de búsqueda (US-35, US-53, US-59, US-61)
+
+La lógica vive en `frontend/src/components/restaurant/searchFilters.ts`, en funciones
+puras con tests: leer y escribir los filtros en la URL, decidir si un restaurante los
+cumple todos a la vez (precio incluido) y armar los textos de las etiquetas y la precarga
+de la reserva. Las decisiones F1–F10 de la spec 027 están ahí: el rating compara el
+promedio sin redondear y deja afuera a los que no tienen reseñas, las restricciones piden
+un mismo plato que las cumpla todas, y con horario o personas no aparecen los
+restaurantes de prueba. El horario lo responde `GET /api/restaurants/open`; mientras
+carga, la página dice «Buscando restaurantes con ese horario…» y, si falla, ofrece
+«Reintentar».
+
+Un enlace con un día que ya pasó o que está a más de 60 días lo descarta y avisa (el aviso se puede cerrar), y lo que
+no vale (por ejemplo `rating=9` o `personas=50`) se saca de la dirección. En el detalle,
+la tarjeta «Reservá tu mesa» muestra con qué empieza la reserva («Lun 16/11 · 21:00 · 3
+personas»).
+
+En el celular el panel sube desde abajo y el pie tiene «Limpiar» y «Ver N
+restaurantes», que lo cierra. Si nada cumple los filtros, el pie lo dice y ofrece «Quitar
+filtros» y «Ver el mapa». En `/diseno#filtros-busqueda` están las etiquetas, los chips de
+una sola opción y el
+panel dentro de un `Drawer`, con filtros de ejemplo.
 
 ## Reglas para animaciones nuevas
 

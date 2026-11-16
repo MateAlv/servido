@@ -20,7 +20,8 @@
   border-color: var(--color-text);
 }
 
-.chip[aria-pressed='true'] {
+.chip[aria-pressed='true'],
+.chip[aria-checked='true'] {
   border-color: var(--color-text);
   background: var(--color-text);
   color: var(--color-bg);
