@@ -172,8 +172,12 @@ def restaurant_order_response(order) -> RestaurantOrderResponse:
         arrival_time=format_local_time(order.arrival_at),
         prep_start_time=format_local_time(order.prep_start_at),
         prep_time_warning=order.prep_time_warning,
-        # No payment records exist yet (US-45/56/60); confirmation is not payment.
-        payment=OrderPaymentResponse(status="pending", method="No seleccionado", total=order.total),
+        # A selected method is a preference; only the stored payment state means paid.
+        payment=OrderPaymentResponse(
+            status=order.payment_status,
+            method=order.payment_method or "No seleccionado",
+            total=order.total,
+        ),
         items=[
             OrderItemResponse(
                 dish_name=item.dish_name,

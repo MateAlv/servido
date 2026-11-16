@@ -3,6 +3,7 @@ restaurant, a diner, a reservation, dishes, an order and a cart."""
 
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
@@ -77,6 +78,14 @@ def add_bookable_restaurant(
     return restaurant
 
 
+class StableTokenClock(datetime):
+    """Order fixtures test business rules, not WSL's occasionally adjusted JWT issue clock."""
+
+    @classmethod
+    def now(cls, tz=None):
+        return datetime.now(tz) - timedelta(minutes=1)
+
+
 def diner_headers(client: TestClient, email: str = "martin@example.com") -> dict[str, str]:
     client.post(
         "/api/comensales",
@@ -87,14 +96,17 @@ def diner_headers(client: TestClient, email: str = "martin@example.com") -> dict
             "terms_accepted": True,
         },
     )
-    token = client.post(
-        "/api/auth/comensal", json={"email": email, "password": "Segura123"}
-    ).json()["access_token"]
+    with patch("app.services.auth.datetime", StableTokenClock):
+        token = client.post(
+            "/api/auth/comensal", json={"email": email, "password": "Segura123"}
+        ).json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
 
 def diner_id(client: TestClient, headers: dict[str, str]) -> UUID:
-    return UUID(client.get("/api/me", headers=headers).json()["id"])
+    response = client.get("/api/me", headers=headers)
+    assert response.status_code == 200, response.text
+    return UUID(response.json()["id"])
 
 
 def add_reservation(
@@ -164,11 +176,22 @@ def item_of(dish: Dish, quantity: int = 1) -> dict:
     }
 
 
-def add_order(session: Session, reservation: Reservation, dishes: list[tuple[Dish, int]]) -> Order:
+def add_order(
+    session: Session,
+    reservation: Reservation,
+    dishes: list[tuple[Dish, int]],
+    *,
+    arrival_delay: timedelta = timedelta(),
+    payment_method: str | None = "cash",
+    payment_status: str = "pending",
+) -> Order:
     order = Order(
         reservation_id=reservation.id,
         restaurant_id=reservation.restaurant_id,
         status="confirmed",
+        payment_method=payment_method,
+        arrival_delay=arrival_delay,
+        payment_status=payment_status,
         prep_start_time=reservation.starts_at,
         confirmed_at=NOW,
     )
@@ -189,8 +212,20 @@ def add_order(session: Session, reservation: Reservation, dishes: list[tuple[Dis
     return order
 
 
-def add_cart(session: Session, reservation: Reservation, dishes: list[tuple[Dish, int]]) -> Cart:
-    cart = Cart(reservation_id=reservation.id, updated_at=NOW)
+def add_cart(
+    session: Session,
+    reservation: Reservation,
+    dishes: list[tuple[Dish, int]],
+    *,
+    arrival_delay: timedelta = timedelta(),
+    payment_method: str | None = None,
+) -> Cart:
+    cart = Cart(
+        reservation_id=reservation.id,
+        updated_at=NOW,
+        arrival_delay=arrival_delay,
+        payment_method=payment_method,
+    )
     session.add(cart)
     session.flush()
     for dish, quantity in dishes:

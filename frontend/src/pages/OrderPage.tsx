@@ -5,6 +5,8 @@ import { Link, Navigate, useLocation, useParams } from 'react-router'
 import { retryUnlessSessionExpired, SessionExpiredError } from '../api/errors'
 import {
   fetchOrder,
+  changePaymentMethod,
+  type PaymentMethod,
   ReservationNotFoundError,
   SAVE_FAILED_MESSAGE,
   type CartLine,
@@ -22,7 +24,15 @@ import {
   Receipt,
   type ReceiptLine,
 } from '../components/order'
-import { Button, Card, Modal, QuantityStepper, RollingNumber, StatusPill } from '../components/ui'
+import {
+  Button,
+  Card,
+  Modal,
+  QuantityStepper,
+  RollingNumber,
+  StatusPill,
+  Chip,
+} from '../components/ui'
 import { IconCloche, IconClock, IconEye } from '../components/ui/icons'
 import { cx } from '../lib/cx'
 import { longDate, timeInBuenosAires } from '../lib/date'
@@ -35,6 +45,7 @@ import {
   withoutDeletedDishes,
 } from '../lib/orderLines'
 import { hasUnconfirmedChanges, useOrderCart } from '../lib/useOrderCart'
+import fieldStyles from '../components/ui/TextField.module.css'
 import styles from './OrderPage.module.css'
 
 const MAX_UNITS = 20
@@ -130,6 +141,10 @@ function OrderEditor({
 }) {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(initialPage)
+  const [stage, setStage] = useState<'build' | 'review' | 'confirmed'>(
+    initialPage.order ? 'confirmed' : 'build',
+  )
+  const [arrivalInput, setArrivalInput] = useState<string | null>(null)
   const confirmedLines = useMemo(() => linesOfOrder(page.order), [page.order])
   const [initial] = useState(() => {
     if (initialPage.cart) return reconcile(linesOfCart(initialPage.cart), initialPage.menu)
@@ -144,10 +159,18 @@ function OrderEditor({
   const [removed, setRemoved] = useState('')
   const [confirming, setConfirming] = useState(false)
   const [removing, setRemoving] = useState(false)
+  const [paymentOpen, setPaymentOpen] = useState(false)
+  const [paymentSelection, setPaymentSelection] = useState<PaymentMethod | null>(null)
+  const [paymentError, setPaymentError] = useState('')
   const [billOpen, setBillOpen] = useState(false)
   const [billPrints, setBillPrints] = useState(0)
   // The dish shown up close, by id.
   const [viewing, setViewing] = useState<string | null>(null)
+  const arrivalFieldRef = useRef<HTMLSelectElement>(null)
+  const stageTitleRef = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    stageTitleRef.current?.focus()
+  }, [stage])
   const changesRef = useRef<HTMLDivElement>(null)
   const bannerRef = useRef<HTMLHeadingElement>(null)
   const closedRef = useRef<HTMLParagraphElement>(null)
@@ -161,22 +184,63 @@ function OrderEditor({
   const afterRender = useRef<(() => void) | null>(null)
 
   function unconfirmedNow() {
-    return hasUnconfirmedChanges(lines, confirmedLines)
+    return (
+      hasUnconfirmedChanges(lines, confirmedLines) ||
+      cart.metadataChanged ||
+      cart.hasPendingOperation
+    )
   }
 
   const refreshLists = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['reservations'] })
   }, [queryClient])
 
+  const initialMetadata = useMemo(
+    () => ({
+      arrival_at:
+        initialPage.cart?.arrival_at ??
+        initialPage.order?.arrival_at ??
+        initialPage.arrival_window.starts_at,
+      payment_method: initialPage.cart
+        ? initialPage.cart.payment_method
+        : (initialPage.order?.payment_method ?? null),
+    }),
+    [initialPage],
+  )
+  const confirmedMetadata = useMemo(
+    () => ({
+      arrival_at: page.order?.arrival_at ?? page.arrival_window.starts_at,
+      payment_method: page.order?.payment_method ?? null,
+    }),
+    [page.order, page.arrival_window],
+  )
   const reload = useRef<(failure: WriteFailure) => void>(() => undefined)
   const cart = useOrderCart({
     reservationId,
+    accountId: account.id,
+    initialMetadata,
+    confirmedMetadata,
     initialLines: initial.lines,
     confirmedLines,
     onSaveFailure: (failure) => reload.current(failure),
     onSettled: refreshLists,
   })
   const { lines, setLines, resetLines } = cart
+  useEffect(() => {
+    const end = new Date(`${page.reservation.date}T${page.reservation.end_time}:00-03:00`).getTime()
+    const deadline = new Date(page.reservation.order_deadline).getTime()
+    const next = Math.min(...[deadline, end].filter((time) => time > Date.now()))
+    if (!Number.isFinite(next)) return
+    const timer = window.setTimeout(
+      () => {
+        void fetchOrder(reservationId)
+          .then(setPage)
+          .catch(() => undefined)
+      },
+      Math.min(next - Date.now() + 10, 2_147_483_647),
+    )
+    return () => window.clearTimeout(timer)
+  }, [page.reservation, reservationId])
 
   /** A write failed: sign in again, or reload and say why (data-model.md rules 6 and 7). */
   async function handleFailure(failure: WriteFailure) {
@@ -261,7 +325,7 @@ function OrderEditor({
 
   // The page keeps room for the bottom bar, and toasts rise above it, whatever its height (its
   // actions wrap at 360 px).
-  const barShown = page.reservation.order_open && (lines.length > 0 || unconfirmedNow())
+  const barShown = stage !== 'confirmed' && page.reservation.order_open
   useEffect(() => {
     const bar = barRef.current
     const root = document.documentElement
@@ -319,6 +383,14 @@ function OrderEditor({
   }
 
   async function confirm() {
+    if (!cart.hasPendingOperation && lines.length > 0 && arrivalError) {
+      arrivalFieldRef.current?.focus()
+      return
+    }
+    if (!cart.hasPendingOperation && lines.length > 0 && cart.metadata.payment_method === null) {
+      setError('Seleccioná un medio de pago para confirmar tu pedido.')
+      return
+    }
     clearMessages()
     setUnverified(false)
     setConfirming(true)
@@ -331,13 +403,18 @@ function OrderEditor({
       return
     }
     setPage(result.page)
+    setArrivalInput(null)
     refreshLists()
-    if (result.page.order) setConfirmedBanner(true)
-    else setInfo('Quitaste tu pedido. Tu reserva sigue en pie.')
+    if (result.page.order) {
+      setConfirmedBanner(true)
+      setStage('confirmed')
+    } else setStage('build')
+    if (!result.page.order) setInfo('Quitaste tu pedido. Tu reserva sigue en pie.')
   }
 
   async function discard() {
     clearMessages()
+    setArrivalInput(null)
     const result = await cart.discard()
     if (!result.ok) {
       if (result.kind === 'failed') setError(result.message)
@@ -345,12 +422,20 @@ function OrderEditor({
       return
     }
     resetLines(withoutDeletedDishes(confirmedLines ?? []).lines)
+    if (page.order) {
+      setPage((current) => ({
+        ...current,
+        cart: null,
+        reservation: { ...current.reservation, has_cart: false },
+      }))
+      setStage('confirmed')
+    }
     setInfo(
       confirmedLines ? 'Volviste al pedido confirmado.' : 'Descartaste el pedido sin confirmar.',
     )
   }
 
-  const reservationLine = `${longDate(reservation.date)} · ${reservation.start_time} · ${
+  const reservationLine = `${longDate(reservation.date)} · ${reservation.start_time}–${reservation.end_time} · ${
     reservation.party_size === 1 ? '1 persona' : `${reservation.party_size} personas`
   }`
   // The bill of what the page shows: the order being built, or the closed order.
@@ -359,31 +444,32 @@ function OrderEditor({
     total: number
     estimate: number | null
     confirmed: boolean
-  } | null = reservation.order_open
-    ? {
-        lines: lines.map((line) => ({
-          name: line.name,
-          quantity: line.quantity,
-          unitPriceCents: toCents(line.unitPrice),
-          subtotalCents: subtotalCents(line),
-        })),
-        total: totalCents,
-        estimate: prepTimeMinutes,
-        confirmed: !unconfirmed,
-      }
-    : page.order
+  } | null =
+    reservation.order_open && stage !== 'confirmed'
       ? {
-          lines: page.order.items.map((item) => ({
-            name: item.name,
-            quantity: item.quantity,
-            unitPriceCents: toCents(item.unit_price),
-            subtotalCents: toCents(item.subtotal),
+          lines: lines.map((line) => ({
+            name: line.name,
+            quantity: line.quantity,
+            unitPriceCents: toCents(line.unitPrice),
+            subtotalCents: subtotalCents(line),
           })),
-          total: toCents(page.order.total),
-          estimate: page.order.prep_time_minutes,
-          confirmed: true,
+          total: totalCents,
+          estimate: prepTimeMinutes,
+          confirmed: !unconfirmed,
         }
-      : null
+      : page.order
+        ? {
+            lines: page.order.items.map((item) => ({
+              name: item.name,
+              quantity: item.quantity,
+              unitPriceCents: toCents(item.unit_price),
+              subtotalCents: toCents(item.subtotal),
+            })),
+            total: toCents(page.order.total),
+            estimate: page.order.prep_time_minutes,
+            confirmed: true,
+          }
+        : null
   const billButton = (
     <Button
       variant="secondary"
@@ -409,15 +495,219 @@ function OrderEditor({
         lines={receipt.lines}
         totalCents={receipt.total}
         prepTimeMinutes={receipt.estimate}
-        arrival={reservation.start_time}
+        arrival={timeInBuenosAires(
+          reservation.order_open && stage !== 'confirmed'
+            ? cart.metadata.arrival_at
+            : page.order!.arrival_at,
+        )}
         confirmed={receipt.confirmed}
       />
     </Modal>
   )
 
+  const selectedArrival = arrivalInput ?? timeInBuenosAires(cart.metadata.arrival_at)
+  const earliestArrival = timeInBuenosAires(page.arrival_window.starts_at)
+  const latestArrival = timeInBuenosAires(page.arrival_window.latest_at)
+  const arrivalOptions: { time: string; instant: string }[] = []
+  for (
+    let instant = new Date(page.arrival_window.starts_at).getTime();
+    instant <= new Date(page.arrival_window.latest_at).getTime();
+    instant += 60_000
+  ) {
+    const iso = new Date(instant).toISOString()
+    arrivalOptions.push({ time: timeInBuenosAires(iso), instant: iso })
+  }
+  function arrivalWithinWindow(value: string) {
+    return arrivalOptions.some((option) => option.time === value)
+  }
+  const arrivalError = !arrivalWithinWindow(selectedArrival)
+    ? `Elegí una hora entre las ${earliestArrival} y las ${latestArrival}, inclusive. El horario de fin de la reserva no cambia.`
+    : ''
+  const paymentChoices = (
+    selected: PaymentMethod | null,
+    choose: (method: PaymentMethod) => void,
+    disabled: boolean,
+  ) => (
+    <div className={styles.paymentChoices} role="group" aria-label="Medio de pago">
+      {(['cash', 'online'] as const).map((method) => (
+        <Chip
+          key={method}
+          selected={selected === method}
+          disabled={disabled}
+          onClick={() => choose(method)}
+        >
+          {method === 'cash' ? 'Efectivo' : 'Pago electrónico'}
+        </Chip>
+      ))}
+    </div>
+  )
+  const draftControls = reservation.order_open && (
+    <Card className={styles.section}>
+      <div className={cx(fieldStyles.field, arrivalError && fieldStyles.invalid)}>
+        <label className={fieldStyles.label} htmlFor="order-arrival">
+          Hora de llegada
+        </label>
+        <select
+          ref={arrivalFieldRef}
+          id="order-arrival"
+          className={fieldStyles.input}
+          value={selectedArrival}
+          aria-invalid={arrivalError ? true : undefined}
+          aria-describedby={
+            arrivalError ? 'order-arrival-hint order-arrival-error' : 'order-arrival-hint'
+          }
+          disabled={confirming || cart.hasPendingOperation}
+          onChange={(event) => {
+            const value = event.target.value
+            setArrivalInput(value)
+            setError('')
+            const option = arrivalOptions.find((candidate) => candidate.time === value)
+            if (option) cart.setMetadata({ ...cart.metadata, arrival_at: option.instant })
+          }}
+        >
+          {arrivalError && (
+            <option value="" disabled>
+              Elegí una hora válida
+            </option>
+          )}
+          {arrivalOptions.map((option) => (
+            <option key={option.instant} value={option.time}>
+              {option.time}
+            </option>
+          ))}
+        </select>
+        <p id="order-arrival-hint" className={fieldStyles.hint}>
+          Elegí desde el inicio de la reserva hasta 30 minutos después. El horario de fin no cambia.
+        </p>
+        {arrivalError && (
+          <p id="order-arrival-error" role="alert" className={fieldStyles.error}>
+            {arrivalError}
+          </p>
+        )}
+      </div>
+      <h2 className={styles.sectionTitle}>Medio de pago</h2>
+      {paymentChoices(
+        cart.metadata.payment_method,
+        (method) => cart.setMetadata({ ...cart.metadata, payment_method: method }),
+        confirming || cart.hasPendingOperation,
+      )}
+      {cart.metadata.payment_method === null && <p>Medio de pago no seleccionado</p>}
+      <p className={styles.hint}>
+        {cart.metadata.payment_method === null ? 'Seleccioná un medio para confirmar. ' : ''}
+        Elegir pago electrónico no inicia un cobro.
+      </p>
+    </Card>
+  )
+  const paymentRestriction =
+    page.order?.payment_status === 'paid'
+      ? 'El pedido ya está pagado. No se puede cambiar el medio de pago.'
+      : page.reservation.status === 'cancelled'
+        ? 'La reserva está cancelada. No se puede cambiar el medio de pago.'
+        : 'El medio de pago solo se puede cambiar antes de que finalice la reserva y mientras el pedido siga vigente e impago.'
+
+  async function savePayment() {
+    if (!page.order?.payment_method_editable || paymentSelection === null || confirming) return
+    setPaymentError('')
+    setConfirming(true)
+    try {
+      const result = await changePaymentMethod(reservationId, paymentSelection)
+      if (result.ok) {
+        if (!unconfirmedNow())
+          cart.resetMetadata({
+            arrival_at: result.page.order!.arrival_at,
+            payment_method: result.page.order!.payment_method,
+          })
+        setPage(result.page)
+        refreshLists()
+        setPaymentOpen(false)
+        setInfo('Guardaste el cambio del medio de pago.')
+      } else if (result.kind === 'session') {
+        signOut(queryClient)
+      } else if (result.kind === 'conflict') {
+        // Refresh confirmed eligibility without reconciling or discarding the private cart.
+        const fresh = await fetchOrder(reservationId)
+        setPage(fresh)
+        setPaymentError(
+          'No se pudo guardar el cambio. El pedido o la reserva cambió; revisá si todavía se permite modificar el medio de pago.',
+        )
+      } else setPaymentError(result.message)
+    } catch (failure) {
+      if (failure instanceof SessionExpiredError) signOut(queryClient)
+      else setPaymentError('No pudimos guardar el medio de pago. Probá de nuevo.')
+    } finally {
+      setConfirming(false)
+    }
+  }
+
+  const confirmedPayment = page.order && (
+    <section className={styles.paymentSummary} aria-labelledby="confirmed-payment-title">
+      <h3 id="confirmed-payment-title" className={styles.paymentTitle}>
+        Medio de pago
+      </h3>
+      <p>
+        {page.order.payment_method === 'cash'
+          ? 'Efectivo'
+          : page.order.payment_method === 'online'
+            ? 'Pago electrónico'
+            : 'Medio de pago no seleccionado'}
+      </p>
+      <p>{page.order.payment_status === 'paid' ? 'Pagado' : 'Pendiente de pago'}</p>
+      {!page.order.payment_method_editable && <p className={styles.hint}>{paymentRestriction}</p>}
+      <p className={styles.hint}>La selección no implica que el pedido esté pagado.</p>
+    </section>
+  )
+  const paymentModal = (
+    <Modal
+      open={paymentOpen}
+      onClose={() => {
+        if (!confirming) setPaymentOpen(false)
+      }}
+      title="Modificar medio de pago"
+      footer={
+        <div className={styles.barActions}>
+          <Button variant="secondary" disabled={confirming} onClick={() => setPaymentOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            loading={confirming}
+            disabled={
+              !page.order?.payment_method_editable ||
+              paymentSelection === null ||
+              paymentSelection === page.order.payment_method
+            }
+            onClick={() => void savePayment()}
+          >
+            Guardar cambio
+          </Button>
+        </div>
+      }
+    >
+      {paymentChoices(
+        paymentSelection,
+        setPaymentSelection,
+        confirming || !page.order?.payment_method_editable,
+      )}
+      <p className={styles.hint}>
+        Solo cambia el medio de pago. Elegir pago electrónico no inicia un cobro.
+      </p>
+      {paymentOpen && !page.order?.payment_method_editable && (
+        <p role="status">{paymentRestriction}</p>
+      )}
+      {paymentError && (
+        <p className={styles.error} role="alert">
+          {paymentError}
+        </p>
+      )}
+    </Modal>
+  )
+  const retryControl = cart.hasPendingOperation && (
+    <Button loading={confirming} onClick={() => void confirm()}>
+      Reintentar confirmación
+    </Button>
+  )
   const summary = (
     <p className={styles.muted}>
-      {longDate(reservation.date)} · {reservation.start_time} ·{' '}
+      {longDate(reservation.date)} · {reservation.start_time}–{reservation.end_time} ·{' '}
       {reservation.party_size === 1 ? '1 persona' : `${reservation.party_size} personas`}
     </p>
   )
@@ -434,10 +724,26 @@ function OrderEditor({
     </>
   )
 
-  if (!reservation.order_open) {
+  if (!reservation.order_open || stage === 'confirmed') {
     return (
       <main className={styles.container}>
         {header}
+        {confirmedBanner && (
+          <h2 ref={bannerRef} tabIndex={-1} className={styles.bannerTitle}>
+            ¡Pedido confirmado!
+          </h2>
+        )}
+        {retryControl}
+        {error && (
+          <p role="alert" className={styles.error}>
+            {error}
+          </p>
+        )}
+        {info && (
+          <p ref={infoRef} tabIndex={-1} className={styles.notice} role="status">
+            {info}
+          </p>
+        )}
         {changes.length > 0 && (
           <div ref={changesRef} tabIndex={-1} role="alert" className={styles.warn}>
             {changes.map((change) => (
@@ -451,17 +757,25 @@ function OrderEditor({
         {page.order ? (
           <>
             <p ref={closedRef} tabIndex={-1} className={styles.notice} role="status">
-              {page.menu.length === 0 ? (
+              {reservation.order_open ? (
+                <>Pedido confirmado. Podés cambiar los platos hasta las {deadline}.</>
+              ) : page.menu.length === 0 ? (
                 'Tu pedido confirmado conserva sus datos.'
               ) : (
                 <>Tu pedido ya está cerrado. Se podía cambiar hasta las {deadline}.</>
               )}
             </p>
             <Card className={styles.section}>
-              <h2 className={styles.sectionTitle}>Tu pedido</h2>
+              <h2 ref={stageTitleRef} tabIndex={-1} className={styles.sectionTitle}>
+                Tu pedido
+              </h2>
+              <StatusPill tone="ok">Pedido confirmado</StatusPill>
               <ul className={styles.orderList}>
                 {page.order.items.map((item) => (
-                  <li key={`${item.dish_id}-${item.name}`} className={styles.orderRow}>
+                  <li
+                    key={`${item.dish_id}-${item.name}`}
+                    className={cx(styles.orderRow, styles.confirmedRow)}
+                  >
                     <span className={styles.orderName}>{item.name}</span>
                     <span className={styles.muted}>
                       {item.quantity} × {formatPrice(item.unit_price)}
@@ -470,6 +784,7 @@ function OrderEditor({
                   </li>
                 ))}
               </ul>
+              <p>Llegada confirmada: {timeInBuenosAires(page.order.arrival_at)}</p>
               {page.order.prep_time_minutes !== null && (
                 <p className={styles.estimate}>
                   Preparación: unos {page.order.prep_time_minutes} min
@@ -480,6 +795,7 @@ function OrderEditor({
                 <strong>{formatPrice(page.order.total)}</strong>
               </p>
               <p className={styles.hint}>Impuestos incluidos</p>
+              {confirmedPayment}
               {billButton}
             </Card>
           </>
@@ -490,9 +806,37 @@ function OrderEditor({
           </p>
         )}
         <div className={styles.actions}>
-          <Button to="/">Ir al inicio</Button>
+          {reservation.order_open && (
+            <Button
+              onClick={() => {
+                setConfirmedBanner(false)
+                setStage('build')
+              }}
+              disabled={confirming || cart.hasPendingOperation}
+            >
+              Modificar platos
+            </Button>
+          )}
+          {page.order?.payment_method_editable && (
+            <Button
+              variant="secondary"
+              disabled={confirming || cart.hasPendingOperation}
+              onClick={() => {
+                setPaymentSelection(page.order!.payment_method)
+                setPaymentError('')
+                setInfo('')
+                setPaymentOpen(true)
+              }}
+            >
+              Modificar medio de pago
+            </Button>
+          )}
+          <Button to="/" variant="secondary">
+            Ir al inicio
+          </Button>
         </div>
         {billModal}
+        {paymentModal}
       </main>
     )
   }
@@ -502,11 +846,15 @@ function OrderEditor({
 
   const primaryLabel =
     lines.length === 0 ? 'Quitar pedido' : confirmedLines ? 'Confirmar cambios' : 'Confirmar pedido'
-  const showPrimary = unconfirmed
+  const showPrimary = unconfirmed && (lines.length > 0 || confirmedLines !== null)
 
   return (
     <main ref={mainRef} className={cx(styles.container, styles.withBar)}>
       {header}
+      <h2 className={styles.sectionTitle} tabIndex={-1} ref={stageTitleRef}>
+        {stage === 'build' ? '1. Armar pedido' : '2. Revisar y confirmar'}
+      </h2>
+      {retryControl}
       <p className={styles.deadline}>Podés cambiarlo hasta las {deadline}.</p>
 
       {confirmedBanner && (
@@ -552,79 +900,87 @@ function OrderEditor({
         </p>
       )}
 
-      <div className={styles.layout}>
-        <section ref={menuRef} aria-labelledby="menu-title" className={styles.menu}>
-          <h2 id="menu-title" className={styles.sectionTitle}>
-            Menú
-          </h2>
-          {CATEGORIES.map(([category, label]) => {
-            const dishes = page.menu.filter((dish) => dish.category === category)
-            if (!dishes.length) return null
-            return (
-              <section key={category} className={styles.category}>
-                <h3 className={styles.categoryTitle}>{label}</h3>
-                <ul className={styles.dishes}>
-                  {dishes.map((dish) => {
-                    const inOrder = lines.find((line) => line.dishId === dish.id)
-                    return (
-                      <li key={dish.id} data-dish={dish.id} className={styles.dish}>
-                        <button
-                          type="button"
-                          className={styles.dishOpen}
-                          aria-haspopup="dialog"
-                          onClick={() => setViewing(dish.id)}
-                        >
-                          <span className={styles.thumb}>
-                            {dish.photo_url ? (
-                              <img src={dish.photo_url} alt="" className={styles.photo} />
-                            ) : (
-                              <IconCloche className={styles.thumbIcon} />
-                            )}
-                            <span className={styles.peek} aria-hidden="true">
-                              <IconEye />
-                              Ver
-                            </span>
-                          </span>
-                          <span className={styles.dishInfo}>
-                            <span className={styles.dishName}>{dish.name}</span>
-                            {dish.description && (
-                              <span className={styles.dishDescription}>{dish.description}</span>
-                            )}
-                            <span className={styles.dishMeta}>
-                              <span className={styles.price}>{formatPrice(dish.price)}</span>
-                              {dish.prep_time_minutes !== null && (
-                                <span className={styles.dishTime}>
-                                  <IconClock aria-hidden="true" />
-                                  <span aria-hidden="true">{dish.prep_time_minutes} min</span>
-                                  <span className="visually-hidden">
-                                    Se prepara en {dish.prep_time_minutes} min
-                                  </span>
-                                </span>
+      <div className={stage === 'build' ? styles.layout : styles.reviewLayout}>
+        {stage === 'build' && (
+          <section ref={menuRef} aria-labelledby="menu-title" className={styles.menu}>
+            <h2 id="menu-title" className={styles.sectionTitle}>
+              Menú
+            </h2>
+            {CATEGORIES.map(([category, label]) => {
+              const dishes = page.menu.filter((dish) => dish.category === category)
+              if (!dishes.length) return null
+              return (
+                <section key={category} className={styles.category}>
+                  <h3 className={styles.categoryTitle}>{label}</h3>
+                  <ul className={styles.dishes}>
+                    {dishes.map((dish) => {
+                      const inOrder = lines.find((line) => line.dishId === dish.id)
+                      return (
+                        <li key={dish.id} data-dish={dish.id} className={styles.dish}>
+                          <button
+                            type="button"
+                            className={styles.dishOpen}
+                            aria-haspopup="dialog"
+                            onClick={() => setViewing(dish.id)}
+                          >
+                            <span className={styles.thumb}>
+                              {dish.photo_url ? (
+                                <img src={dish.photo_url} alt="" className={styles.photo} />
+                              ) : (
+                                <IconCloche className={styles.thumbIcon} />
                               )}
+                              <span className={styles.peek} aria-hidden="true">
+                                <IconEye />
+                                Ver
+                              </span>
                             </span>
-                            <DietaryBadges restrictions={dish.dietary_restrictions} inline />
-                          </span>
-                        </button>
-                        <div className={styles.dishAction} data-add="">
-                          <AddToOrderButton
-                            size="sm"
-                            label={inOrder ? 'Agregar otro' : 'Agregar al pedido'}
-                            itemName={dish.name}
-                            disabled={confirming || (inOrder?.quantity ?? 0) >= MAX_UNITS}
-                            onAdd={() => setQuantity(dish, (inOrder?.quantity ?? 0) + 1)}
-                          />
-                          {inOrder && (
-                            <span className={styles.inOrder}>{inOrder.quantity} en tu pedido</span>
-                          )}
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </section>
-            )
-          })}
-        </section>
+                            <span className={styles.dishInfo}>
+                              <span className={styles.dishName}>{dish.name}</span>
+                              {dish.description && (
+                                <span className={styles.dishDescription}>{dish.description}</span>
+                              )}
+                              <span className={styles.dishMeta}>
+                                <span className={styles.price}>{formatPrice(dish.price)}</span>
+                                {dish.prep_time_minutes !== null && (
+                                  <span className={styles.dishTime}>
+                                    <IconClock aria-hidden="true" />
+                                    <span aria-hidden="true">{dish.prep_time_minutes} min</span>
+                                    <span className="visually-hidden">
+                                      Se prepara en {dish.prep_time_minutes} min
+                                    </span>
+                                  </span>
+                                )}
+                              </span>
+                              <DietaryBadges restrictions={dish.dietary_restrictions} inline />
+                            </span>
+                          </button>
+                          <div className={styles.dishAction} data-add="">
+                            <AddToOrderButton
+                              size="sm"
+                              label={inOrder ? 'Agregar otro' : 'Agregar al pedido'}
+                              itemName={dish.name}
+                              disabled={
+                                confirming ||
+                                cart.hasPendingOperation ||
+                                (inOrder?.quantity ?? 0) >= MAX_UNITS
+                              }
+                              onAdd={() => setQuantity(dish, (inOrder?.quantity ?? 0) + 1)}
+                            />
+                            {inOrder && (
+                              <span className={styles.inOrder}>
+                                {inOrder.quantity} en tu pedido
+                              </span>
+                            )}
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              )
+            })}
+          </section>
+        )}
 
         <aside aria-labelledby="order-title" className={styles.side}>
           <Card className={styles.section}>
@@ -640,21 +996,31 @@ function OrderEditor({
             ) : (
               <ul ref={orderListRef} className={styles.orderList}>
                 {lines.map((line) => (
-                  <li key={line.dishId} data-dish={line.dishId} className={styles.orderRow}>
+                  <li
+                    key={line.dishId}
+                    data-dish={line.dishId}
+                    className={cx(styles.orderRow, stage === 'review' && styles.confirmedRow)}
+                  >
                     <span className={styles.orderName}>{line.name}</span>
-                    <QuantityStepper
-                      label={`Cantidad de ${line.name}`}
-                      value={line.quantity}
-                      min={0}
-                      max={MAX_UNITS}
-                      decreaseLabel={
-                        line.quantity === 1 ? `Sacar ${line.name} del pedido` : 'Quitar uno'
-                      }
-                      maxHint={`Máximo ${MAX_UNITS} por plato`}
-                      announce={false}
-                      disabled={confirming}
-                      onChange={(quantity) => setQuantity(line, quantity)}
-                    />
+                    {stage === 'review' ? (
+                      <span className={styles.muted}>
+                        {line.quantity} × {formatPrice(line.unitPrice)}
+                      </span>
+                    ) : (
+                      <QuantityStepper
+                        label={`Cantidad de ${line.name}`}
+                        value={line.quantity}
+                        min={0}
+                        max={MAX_UNITS}
+                        decreaseLabel={
+                          line.quantity === 1 ? `Sacar ${line.name} del pedido` : 'Quitar uno'
+                        }
+                        maxHint={`Máximo ${MAX_UNITS} por plato`}
+                        announce={false}
+                        disabled={confirming || cart.hasPendingOperation}
+                        onChange={(quantity) => setQuantity(line, quantity)}
+                      />
+                    )}
                     <span className={styles.price}>{formatCents(subtotalCents(line))}</span>
                   </li>
                 ))}
@@ -667,7 +1033,8 @@ function OrderEditor({
                 <div>
                   <p className={styles.estimateValue}>Preparación: unos {prepTimeMinutes} min</p>
                   <p className={styles.hint}>
-                    La cocina lo prepara para tu llegada a las {reservation.start_time}
+                    La cocina lo prepara para tu llegada a las{' '}
+                    {timeInBuenosAires(cart.metadata.arrival_at)}
                   </p>
                 </div>
               </div>
@@ -688,6 +1055,8 @@ function OrderEditor({
           </Card>
         </aside>
       </div>
+
+      {stage === 'review' && draftControls}
 
       <span className="visually-hidden" aria-live="polite">
         {removed} {announced}
@@ -715,17 +1084,43 @@ function OrderEditor({
             {!unconfirmed && confirmedLines && <StatusPill tone="ok">Pedido confirmado</StatusPill>}
           </div>
           <div className={styles.barActions}>
+            {page.order && (
+              <Button
+                variant="secondary"
+                disabled={confirming || cart.hasPendingOperation}
+                onClick={() => setStage('confirmed')}
+              >
+                Volver al pedido confirmado
+              </Button>
+            )}
             {unconfirmed && (
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={confirming}
+                disabled={confirming || cart.hasPendingOperation}
                 onClick={() => void discard()}
               >
                 Descartar cambios
               </Button>
             )}
-            {showPrimary && (
+            {stage === 'review' && (
+              <Button
+                variant="secondary"
+                disabled={confirming || cart.hasPendingOperation}
+                onClick={() => setStage('build')}
+              >
+                Volver a editar platos
+              </Button>
+            )}
+            {stage === 'build' && (
+              <Button
+                disabled={confirming || cart.hasPendingOperation}
+                onClick={() => setStage('review')}
+              >
+                Continuar
+              </Button>
+            )}
+            {showPrimary && (stage === 'review' || lines.length === 0) && (
               <Button
                 loading={confirming}
                 onClick={() => (lines.length === 0 ? setRemoving(true) : void confirm())}
@@ -757,14 +1152,16 @@ function OrderEditor({
                   }
                   maxHint={`Máximo ${MAX_UNITS} por plato`}
                   announce={false}
-                  disabled={confirming}
+                  disabled={confirming || cart.hasPendingOperation}
                   onChange={(quantity) => setQuantity(viewedLine, quantity)}
                 />
               )}
               <AddToOrderButton
                 label={viewedLine ? 'Agregar otro' : 'Agregar al pedido'}
                 itemName={viewedDish.name}
-                disabled={confirming || (viewedLine?.quantity ?? 0) >= MAX_UNITS}
+                disabled={
+                  confirming || cart.hasPendingOperation || (viewedLine?.quantity ?? 0) >= MAX_UNITS
+                }
                 onAdd={() => setQuantity(viewedDish, (viewedLine?.quantity ?? 0) + 1)}
               />
             </div>
