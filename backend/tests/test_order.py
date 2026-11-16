@@ -642,6 +642,29 @@ def test_us19_s2_estimate_is_the_slowest_dish(client: TestClient, session: Sessi
     assert response.json()["order"]["prep_time_minutes"] == 25
 
 
+def test_us40_s4_uses_slowest_dish_time(client: TestClient, session: Session) -> None:
+    s = setup(client, session)
+
+    response = confirm(client, s, [item_of(s.provoleta, 4), item_of(s.bife)])
+
+    assert response.json()["order"]["prep_time_minutes"] == 25
+
+
+def test_us40_s5_preserves_confirmed_preparation_snapshot(
+    client: TestClient, session: Session
+) -> None:
+    s = setup(client, session)
+    confirmed = confirm(client, s, [item_of(s.bife)]).json()["order"]
+    s.bife.tiempo_preparacion_minutos = 40
+    session.commit()
+
+    current = client.get(order_url(s.reservation.id), headers=s.headers).json()["order"]
+
+    assert confirmed["prep_time_minutes"] == 25
+    assert current["prep_time_minutes"] == 25
+    assert current["items"][0]["prep_time_minutes"] == 25
+
+
 def test_us19_s4_no_estimate_without_preparation_times(
     client: TestClient, session: Session
 ) -> None:
