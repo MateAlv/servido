@@ -6,12 +6,21 @@ import styles from './TextField.module.css'
 type TextAreaFieldProps = Omit<ComponentProps<'textarea'>, 'id'> & {
   label: string
   hint?: string
+  /** `error` paints the hint red, e.g. a character counter that went over the limit. */
+  hintTone?: 'muted' | 'error'
   /** Error message in Spanish. The message shakes in each time it changes. */
   error?: string
 }
 
-/** `TextField` for longer text. */
-export function TextAreaField({ label, hint, error, className, ...props }: TextAreaFieldProps) {
+/** `TextField` for longer text, in regular weight so a paragraph stays easy to read. */
+export function TextAreaField({
+  label,
+  hint,
+  hintTone = 'muted',
+  error,
+  className,
+  ...props
+}: TextAreaFieldProps) {
   const inputId = useId()
   const hintId = `${inputId}-hint`
   const errorId = `${inputId}-error`
@@ -32,7 +41,7 @@ export function TextAreaField({ label, hint, error, className, ...props }: TextA
         />
       </div>
       {hint && (
-        <p id={hintId} className={styles.hint}>
+        <p id={hintId} className={cx(styles.hint, hintTone === 'error' && styles.hintError)}>
           {hint}
         </p>
       )}

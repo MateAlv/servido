@@ -28,7 +28,8 @@ package = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+pythonpath = ["."]
+addopts = "-ra -p tests.isolated_database"
 
 [tool.ruff]
 line-length = 100

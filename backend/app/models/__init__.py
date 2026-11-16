@@ -12,6 +12,7 @@ from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.models.restaurant_access import RestaurantEmailVerification, RestaurantPasswordReset
 from app.models.review import Review
+from app.models.review_reply import ReviewReply
 from app.models.table_inventory import TableInventoryGroup
 
 __all__ = [
@@ -32,5 +33,6 @@ __all__ = [
     "RestaurantEmailVerification",
     "RestaurantPasswordReset",
     "Review",
+    "ReviewReply",
     "TableInventoryGroup",
 ]

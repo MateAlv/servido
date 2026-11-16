@@ -3,7 +3,8 @@ import { Link, NavLink, useNavigate } from 'react-router'
 
 import { signOut, useAccount } from '../../api/session'
 import { Logo } from '../brand'
-import { Button, ThemeToggle, useToast } from '../ui'
+import { cx } from '../../lib/cx'
+import { Button, IconLogout, ThemeToggle, useToast } from '../ui'
 import styles from './SiteHeader.module.css'
 
 const ROLE_LABELS = { diner: 'Comensal', restaurant: 'Restaurante' } as const
@@ -27,7 +28,8 @@ export function SiteHeader() {
     <header className={styles.header}>
       <nav className={styles.nav} aria-label="Principal">
         <Link to="/" className={styles.brand} aria-label="Servido!, ir al inicio">
-          <Logo size="sm" animation="intro" />
+          {/* Signed in, the actions need the width of the wordmark on a phone. */}
+          <Logo size="sm" animation="intro" variant={account ? 'responsive' : 'full'} />
         </Link>
 
         {!isPending && !account && (
@@ -38,7 +40,7 @@ export function SiteHeader() {
         )}
 
         <div className={styles.actions}>
-          <span className={styles.theme}>
+          <span className={cx(styles.theme, !account && styles.visitorTheme)}>
             <ThemeToggle />
           </span>
           {isPending ? null : account ? (
@@ -53,8 +55,14 @@ export function SiteHeader() {
                   <small>{ROLE_LABELS[account.rol]}</small>
                 </span>
               </span>
-              <Button variant="secondary" size="sm" onClick={handleSignOut}>
-                Cerrar sesión
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<IconLogout />}
+                aria-label="Cerrar sesión"
+                onClick={handleSignOut}
+              >
+                <span className={styles.signOutText}>Cerrar sesión</span>
               </Button>
             </>
           ) : (

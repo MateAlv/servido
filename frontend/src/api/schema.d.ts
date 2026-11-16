@@ -771,6 +771,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurant/reviews/{review_id}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edit Reply */
+        put: operations["edit_reply_api_restaurant_reviews__review_id__reply_put"];
+        /** Reply To Review */
+        post: operations["reply_to_review_api_restaurant_reviews__review_id__reply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurante/bloqueos": {
         parameters: {
             query?: never;
@@ -815,6 +833,27 @@ export interface paths {
         };
         /** List Bookable Restaurants */
         get: operations["list_bookable_restaurants_api_restaurants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurants/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Open Restaurants
+         * @description Bookable restaurants where a reservation can start that day between both times,
+         *     inclusive (spec 027, F4). A point hour sends the same time twice.
+         */
+        get: operations["list_open_restaurants_api_restaurants_open_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1259,6 +1298,14 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /**
+         * OpenRestaurants
+         * @description Bookable restaurants where a reservation can start in the requested time (spec 027, F4).
+         */
+        OpenRestaurants: {
+            /** Restaurant Ids */
+            restaurant_ids: string[];
+        };
         /** OpeningHoursResponse */
         OpeningHoursResponse: {
             /** Day Of Week */
@@ -1495,6 +1542,22 @@ export interface components {
              * Format: date
              */
             visit_date: string;
+            reply: components["schemas"]["PublicReply"] | null;
+        };
+        /**
+         * PublicReply
+         * @description The restaurant's reply to an opinion (spec 025, US-42): the current text only (C3).
+         */
+        PublicReply: {
+            /** Text */
+            text: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Edited */
+            edited: boolean;
         };
         /**
          * PublicRestaurant
@@ -1536,6 +1599,10 @@ export interface components {
             photo_url: string | null;
             /** Has Menu */
             has_menu: boolean;
+            /** Max Party Size */
+            max_party_size: number;
+            /** Dish Restriction Sets */
+            dish_restriction_sets: string[][];
         };
         /** PublicRestaurantDetail */
         PublicRestaurantDetail: {
@@ -1574,6 +1641,10 @@ export interface components {
             photo_url: string | null;
             /** Has Menu */
             has_menu: boolean;
+            /** Max Party Size */
+            max_party_size: number;
+            /** Dish Restriction Sets */
+            dish_restriction_sets: string[][];
             /** Menu */
             menu: components["schemas"]["PublicDish"][];
             /** Opinions */
@@ -1632,6 +1703,16 @@ export interface components {
              * @constant
              */
             terms_accepted: true;
+        };
+        /** ReplyEditRequest */
+        ReplyEditRequest: {
+            /** Text */
+            text: string;
+        };
+        /** ReplyRequest */
+        ReplyRequest: {
+            /** Text */
+            text: string;
         };
         /** ReservationCancellationResponse */
         ReservationCancellationResponse: {
@@ -1957,6 +2038,9 @@ export interface components {
             published_at: string;
             /** Counts In Average */
             counts_in_average: boolean;
+            reply: components["schemas"]["ReviewReplyResponse"] | null;
+            /** Can Reply */
+            can_reply: boolean;
         };
         /** RestaurantReviewsResponse */
         RestaurantReviewsResponse: {
@@ -1976,6 +2060,18 @@ export interface components {
             reviews: components["schemas"]["RestaurantReview"][];
             /** Next Offset */
             next_offset: number | null;
+        };
+        /** ReviewReplyResponse */
+        ReviewReplyResponse: {
+            /** Text */
+            text: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Edited At */
+            edited_at: string | null;
         };
         /** ReviewRequest */
         ReviewRequest: {
@@ -4524,6 +4620,139 @@ export interface operations {
             };
         };
     };
+    edit_reply_api_restaurant_reviews__review_id__reply_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyEditRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewReplyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tenés permiso. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reseña no existe, es de otro restaurante o no tiene respuesta. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reply_to_review_api_restaurant_reviews__review_id__reply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewReplyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tenés permiso. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reseña no existe o es de otro restaurante. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reseña ya tiene respuesta o no se ve en Opiniones. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_closures_api_restaurante_bloqueos_get: {
         parameters: {
             query?: never;
@@ -4631,6 +4860,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicRestaurantList"];
+                };
+            };
+        };
+    };
+    list_open_restaurants_api_restaurants_open_get: {
+        parameters: {
+            query: {
+                date: string;
+                start_from: string;
+                start_to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenRestaurants"];
+                };
+            };
+            /** @description Día fuera del plazo o rango invertido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

@@ -105,7 +105,7 @@ describe('HomePage', () => {
 
     expect(await screen.findByText('Hola, Ana')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: '¿Dónde comés hoy?' })).toBeInTheDocument()
-    expect(screen.getByRole('group', { name: 'Precio' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Filtros/ })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Soy comensal' })).not.toBeInTheDocument()
   })
 

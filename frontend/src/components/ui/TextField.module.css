@@ -95,5 +95,12 @@
 
 .textarea {
   min-height: 112px;
+  font-weight: 400;
+  line-height: 1.45;
   resize: vertical;
+}
+
+.hintError {
+  color: var(--color-error);
+  font-weight: 800;
 }

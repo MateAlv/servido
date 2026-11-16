@@ -26,7 +26,9 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [015-terminos-condiciones-restaurante](015-terminos-condiciones-restaurante/spec.md) | Restaurante | 26 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-26 |
 | [016-bloqueo-horarios](016-bloqueo-horarios/spec.md) | Restaurante | 32 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-32 (propuestas FR-007 y de reservas parcialmente pasadas/cruzadas y reaviso pendientes de validación de la PO) |
 | [019-cuenta-comensal-google-verificacion](019-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17 en la spec 009-pedido-anticipado) |
+| [025-responder-resenas](025-responder-resenas/spec.md) | Restaurante | 42 | 1 | 5 | ✅ | ✅ | ✅ | ✅ US-42: el restaurante responde y edita desde sus reseñas, y la respuesta se ve en Opiniones con «Editada» (decisiones C1–C5 del 15/11, falta que la PO las valide) |
 | [026-validacion-recuperacion-restaurante](026-validacion-recuperacion-restaurante/spec.md) | Restaurante | 44, 46 | 3 | 5 | ✅ | ✅ | ✅ | ✅ US-44, US-46 (falta que la PO valide las propuestas de links, límites, mensaje neutro, cierre de sesiones y aviso en el panel) |
+| [027-filtros-busqueda](027-filtros-busqueda/spec.md) | Comensal | 35, 53, 59, 61 | 4 | 5 (US-53, US-59 y US-61 adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-35, US-53, US-59, US-61 (decisiones F1–F10 del 15/11, falta que la PO las valide) |
 
 Arrastre de la spec 002-cuenta-restaurante: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002-elegir-restaurante muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
 
@@ -60,6 +62,7 @@ Por eso hay números repetidos, como en el Drive: `002` (elegir restaurante y cu
 
 - `014-resenas` reúne la 014 (US-27) y la 018 (US-24) del Drive, más US-50. La 018 del Drive remite a esta.
 - `019-cuenta-comensal-google-verificacion` (US-51, US-52, US-58) no tenía spec en el Drive; tomó el primer número libre.
+- Las specs del Sprint 5 están en `Specs/Sprint 5` del Drive, numeradas de 020 a 026. Los filtros (US-35, US-53, US-59, US-61) se subieron como 019 y pasaron a `027-filtros-busqueda` el 15/11, porque 019 ya era la de Google y verificación.
 
 Conciliado con el Drive el 08/11/2026. Antes, el repo numeraba por orden de creación:
 
@@ -85,6 +88,8 @@ Las specs marcan estas dudas como `[NEEDS CLARIFICATION]`. Las de la spec 002-el
 | 003 | Cantidad de comensales, elección de una mesa concreta, criterio de horario ocupado, duración y granularidad de la reserva, catálogo de tipos de mesa, aprobación del restaurante | Decididos por el equipo el 23/10 y el 28/10 (ver las decisiones D1–D11 abajo y `specs/003-reservar-mesa/research.md`). Falta que la PO los valide |
 | 012, 015 | Aplicación al registro con Google, constancia de versión y fecha, tratamiento de cuentas existentes y atomicidad ante fallos de registro | Propuesta del equipo: exigir aceptación también con Google, guardar `terms_version` y `terms_accepted_at`, no pedir reaceptación a cuentas existentes y guardar la aceptación en la misma transacción; falta que la PO lo valide |
 | 016 | Aviso al comensal por mail (FR-007), franja de hoy ya comenzada, reservas que cruzan el borde de la franja y reserva nueva entre la advertencia y la confirmación | Propuesta del equipo: mail con restaurante, fecha y horario; se rechaza la franja de hoy cuyo inicio ya pasó y se permite el día completo; se considera afectada toda reserva que se superpone; si la lista cambió, se vuelve a advertir antes de aplicar. Falta que la PO lo valide |
+| 025-responder-resenas | Qué reseñas se pueden responder, largo, marca de edición, borrar y aviso al comensal | Propuesta del equipo (C1–C5): solo las que se ven en Opiniones, hasta 500 caracteres sin vista previa, marca «Editada», sin borrar y sin aviso. Implementado así; falta que la PO lo valide |
+| 027-filtros-busqueda | Cómo funciona cada filtro, cómo se combinan, restaurantes de prueba, conservación y precarga de la reserva | Propuesta del equipo (F1–F10): rating mínimo sin los que no tienen reseñas, restricciones por un mismo plato, día con hora o rango según turnos y bloqueos, mesa más grande para las personas, todos con «y», en la dirección de la página y precargados al reservar. Falta que la PO lo valide |
 
 ## Decisiones del equipo
 
@@ -141,6 +146,8 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 09/11 | 013, 019 | El aviso de «no pudimos enviar el correo» (502) es la única respuesta que distingue una cuenta existente, porque solo se ve cuando hubo un envío; se acepta para que el comensal sepa que el mail no salió y pueda reintentar |
 | 12/11 | 026 | La verificación del restaurante sigue a la del comensal (spec 019): link de 24 horas, token hasheado y uno activo por cuenta, y el nuevo invalida el anterior. Google deja la cuenta verificada. Mientras no esté verificada, el restaurante no aparece en el mapa, el listado, el detalle ni la disponibilidad (404), pero el Responsable puede ingresar y configurar. El panel muestra el aviso con «Reenviar mail de verificación». Falta que la PO lo valide |
 | 12/11 | 026 | La recuperación del restaurante sigue a la del comensal (spec 013): link de 15 minutos, un solo uso, mismo mensaje exista o no la cuenta, 5 pedidos por correo cada 30 minutos y al menos 60 segundos entre uno y otro; el límite cuenta por correo, no por rol. Una cuenta sin verificar recibe el link de verificación en lugar del de recuperación; una cuenta de Google recibe un mail que la manda a «Ingresar con Google»; al cambiar la contraseña se cierran las sesiones abiertas. Si falla el envío, se mantiene el mensaje neutro 202 (no el 502 del comensal). Falta que la PO lo valide |
+| 15/11 | 027-filtros-busqueda | F4 cambia a pedido del equipo: el día solo filtra (cualquier horario en el que ese día se pueda empezar una reserva) y la hora o el rango lo acotan. Con el día solo, la reserva empieza con el día y las personas, sin hora. Falta que la PO lo valide |
+| 15/11 | 027-filtros-busqueda | F4, F7 y F8 cambian a pedido del equipo: la hora y los extremos del rango se eligen cada 30 minutos con una rueda o un reloj, «hasta» sigue a «desde» + 1 h 30 mientras no se elige, y el navegador recuerda los últimos filtros para cuando se vuelve sin filtros en la dirección (un enlace con filtros manda). Falta que la PO lo valide |
 
 ## Notas de formato
 
