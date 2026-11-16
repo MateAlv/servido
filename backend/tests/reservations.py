@@ -38,7 +38,8 @@ def add_bookable_restaurant(
     cuit: str = "30712345671",
 ) -> Restaurant:
     """A restaurant with coordinates, shifts on every day but `closed_days` (ISO weekdays) and
-    table groups given as (capacity, quantity, seating area)."""
+    table groups given as (capacity, quantity, seating area). Its account is verified (spec 026),
+    so diners can see and book it."""
     restaurant = Restaurant(
         nombre="La Esquina de Palermo",
         cuit=cuit,
@@ -47,6 +48,7 @@ def add_bookable_restaurant(
         password_hash=hash_password("Segura123"),
         latitud=Decimal("-34.588500"),
         longitud=Decimal("-58.426500"),
+        email_verified_at=NOW,
     )
     session.add(restaurant)
     session.flush()

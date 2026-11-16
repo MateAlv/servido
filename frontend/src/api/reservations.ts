@@ -7,6 +7,7 @@ import { sessionHeaders } from './session'
 
 export type Reservation = components['schemas']['ReservationResponse']
 export type ReservationRequest = components['schemas']['ReservationRequest']
+export type ReservationCancellation = components['schemas']['ReservationCancellationResponse']
 
 const CONFIRM_FAILED = 'No pudimos confirmar la reserva. Probá de nuevo.'
 
@@ -37,4 +38,39 @@ export async function fetchDayReservations(date: string): Promise<Reservation[]>
   if (response.status === 401) throw new SessionExpiredError()
   if (error || !data) throw new Error(getApiErrorMessage(error, 'No pudimos ver tus reservas.'))
   return data.reservations
+}
+
+const ACTIVE_LOAD_FAILED = 'No pudimos ver tus reservas.'
+
+/** `GET /api/reservations/active`: the diner's confirmed future reservations. */
+export async function fetchActiveReservations(): Promise<Reservation[]> {
+  const { data, error, response } = await api.GET('/api/reservations/active', {
+    headers: sessionHeaders(),
+  })
+  if (response.status === 401) throw new SessionExpiredError()
+  if (error || !data) throw new Error(getApiErrorMessage(error, ACTIVE_LOAD_FAILED))
+  return data.reservations
+}
+
+export type CancellationResult =
+  | { ok: true; cancellation: ReservationCancellation }
+  | { ok: false; status: number; message: string }
+
+const CANCELLATION_FAILED = 'No pudimos cancelar la reserva. Probá de nuevo.'
+
+/** `DELETE /api/reservations/{id}`: cancels an owned reservation once. */
+export async function cancelReservation(reservationId: string): Promise<CancellationResult> {
+  const { data, error, response } = await api.DELETE('/api/reservations/{reservation_id}', {
+    params: { path: { reservation_id: reservationId } },
+    headers: sessionHeaders(),
+  })
+  if (response.status === 401) throw new SessionExpiredError()
+  if (error || !data) {
+    return {
+      ok: false,
+      status: response.status,
+      message: getApiErrorMessage(error, CANCELLATION_FAILED),
+    }
+  }
+  return { ok: true, cancellation: data }
 }

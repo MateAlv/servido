@@ -9,9 +9,11 @@ from app.db import SessionDep
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.reservation import (
+    ActiveReservationsResponse,
     AvailabilityResponse,
     DayReservationsResponse,
     FreeGroupResponse,
+    ReservationCancellationResponse,
     ReservationRequest,
     ReservationResponse,
     ReservationRestaurant,
@@ -21,7 +23,7 @@ from app.schemas.reservation import (
     UpcomingReservationsResponse,
 )
 from app.schemas.table_inventory import MAX_TABLE_CAPACITY
-from app.services import availability, orders
+from app.services import availability, orders, reservations
 
 router = APIRouter(tags=["reservation"])
 
@@ -32,7 +34,8 @@ PartySize = Annotated[int, Query(ge=1, le=MAX_TABLE_CAPACITY)]
 
 def existing_restaurant(session: SessionDep, restaurant_id: UUID) -> Restaurant:
     restaurant = session.get(Restaurant, restaurant_id)
-    if restaurant is None:
+    # An unverified account is not shown to diners (spec 026, FR-005), not even by its id.
+    if restaurant is None or restaurant.email_verified_at is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=RESTAURANT_NOT_FOUND)
     return restaurant
 
@@ -247,4 +250,66 @@ def list_upcoming_reservations(
             )
             for reservation in orders.upcoming_reservations(session, diner_id, now)
         ]
+    )
+
+
+@router.get(
+    "/reservations/active",
+    response_model=ActiveReservationsResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Solo para comensales."},
+    },
+)
+def list_active_reservations(
+    claims: TokenClaimsDep, session: SessionDep
+) -> ActiveReservationsResponse:
+    diner_id = require_diner(claims, session)
+    now = availability.current_time()
+    return ActiveReservationsResponse(
+        reservations=[
+            reservation_response(
+                session, reservation, session.get(Restaurant, reservation.restaurant_id), now
+            )
+            for reservation in reservations.active_reservations(session, diner_id, now)
+        ]
+    )
+
+
+@router.delete(
+    "/reservations/{reservation_id}",
+    response_model=ReservationCancellationResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Solo para comensales."},
+        404: {"description": "La reserva no existe o es de otro comensal."},
+        409: {"description": "La reserva ya está cancelada o no se puede cancelar."},
+    },
+)
+def cancel_diner_reservation(
+    reservation_id: UUID, claims: TokenClaimsDep, session: SessionDep
+) -> ReservationCancellationResponse:
+    diner_id = require_diner(claims, session)
+    now = availability.current_time()
+    try:
+        reservation = reservations.cancel_reservation(session, diner_id, reservation_id, now)
+    except reservations.ReservationNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No encontramos esa reserva.",
+        ) from error
+    except reservations.ReservationAlreadyCancelledError as error:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=reservations.ALREADY_CANCELLED
+        ) from error
+    except reservations.ReservationCancellationWindowError as error:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+    session.commit()
+    return ReservationCancellationResponse(
+        reservation=reservation_response(
+            session, reservation, session.get(Restaurant, reservation.restaurant_id), now
+        ),
+        message="La reserva se canceló correctamente.",
     )

@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, DateTime, String, text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, String, text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -34,5 +34,13 @@ class Diner(Base):
     )
     terms_version: Mapped[str | None] = mapped_column(String(20), nullable=True)
     terms_accepted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # Spec 013: false for an account created with Google, which has no usable password.
+    has_password: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=text("true")
+    )
+    # Spec 013: tokens issued before this moment are refused (FR-011).
+    password_changed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

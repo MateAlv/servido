@@ -54,7 +54,10 @@ def restaurant_session(restaurant: Restaurant) -> RestaurantLoginResponse:
     return RestaurantLoginResponse(
         restaurante=RestaurantResponse.model_validate(restaurant),
         access_token=create_access_token(
-            str(restaurant.id_restaurante), restaurant.email, RESTAURANT
+            str(restaurant.id_restaurante),
+            restaurant.email,
+            RESTAURANT,
+            restaurant.password_changed_at,
         ),
     )
 
@@ -62,7 +65,9 @@ def restaurant_session(restaurant: Restaurant) -> RestaurantLoginResponse:
 def diner_session(diner: Diner) -> LoginResponse:
     return LoginResponse(
         comensal=DinerResponse.model_validate(diner),
-        access_token=create_access_token(str(diner.id_comensal), diner.email, DINER),
+        access_token=create_access_token(
+            str(diner.id_comensal), diner.email, DINER, diner.password_changed_at
+        ),
     )
 
 
@@ -119,6 +124,8 @@ def register_diner_with_google(payload: GoogleSignUp, session: SessionDep) -> Lo
         # Nobody knows this secret, so the account has no usable password (research R10).
         password_hash=hash_password(secrets.token_urlsafe(32)),
     )
+    # Spec 013: a recovery mail for this account tells the diner to sign in with Google.
+    diner.has_password = False
     diner.terms_version, diner.terms_accepted_at = acceptance_for("diner")
     # Google already proved that the email is theirs: no verification mail (FR-015).
     mark_verified(diner)

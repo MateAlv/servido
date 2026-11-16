@@ -12,8 +12,8 @@ export function MapPage() {
         </Reveal>
         <Reveal delay={60}>
           <p className={styles.subtitle}>
-            Filtrá por precio, mirá qué tan lleno está cada lugar y entrá al detalle para ver su
-            menú.
+            Filtrá por precio, calificación, restricciones, día y horario o cuántos van, mirá qué
+            tan lleno está cada lugar y entrá al detalle para ver su menú.
           </p>
         </Reveal>
       </header>

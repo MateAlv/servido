@@ -1,0 +1,84 @@
+.wheel {
+  --row: 44px;
+
+  position: relative;
+  width: 100%;
+  height: calc(5 * var(--row));
+}
+
+/* The band behind the hour in the middle: the one that is chosen. */
+.band {
+  position: absolute;
+  inset: calc(2 * var(--row)) 0 auto;
+  height: var(--row);
+  border-radius: var(--radius-field);
+  background: var(--color-primary-soft);
+}
+
+.list {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-block: calc(2 * var(--row));
+  box-sizing: border-box;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 70%, transparent);
+}
+
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+.hour {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--row);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-field);
+  background: transparent;
+  color: var(--color-text);
+  font: 600 22px / 1 var(--font-display);
+  scroll-snap-align: center;
+  cursor: pointer;
+  opacity: 0.25;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    font-size var(--duration-fast) var(--ease-out);
+}
+
+.hour[data-distance='0'] {
+  color: var(--color-primary-text);
+  font-size: 30px;
+  font-weight: 800;
+  opacity: 1;
+}
+
+.hour[data-distance='1'] {
+  opacity: 0.62;
+}
+
+.hour[data-distance='2'] {
+  opacity: 0.4;
+}
+
+.hour:disabled {
+  cursor: default;
+  opacity: 0.3;
+  text-decoration: line-through;
+}
+
+.hour:focus-visible {
+  outline: 3px solid var(--color-location);
+  outline-offset: -3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hour {
+    transition: none;
+  }
+}

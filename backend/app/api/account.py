@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.api.deps import SESSION_EXPIRED_DETAIL, TokenClaimsDep
+from app.api.deps import SESSION_EXPIRED_DETAIL, TokenClaimsDep, session_is_current
 from app.db import SessionDep
 from app.models.diner import Diner
 from app.models.restaurant import Restaurant
@@ -30,7 +30,7 @@ def get_account(claims: TokenClaimsDep, session: SessionDep) -> AccountResponse:
 
     if role == DINER:
         diner = session.get(Diner, account_id)
-        if diner is None:
+        if diner is None or not session_is_current(claims, diner):
             raise unauthorized
         return AccountResponse(
             rol=DINER,
@@ -41,12 +41,13 @@ def get_account(claims: TokenClaimsDep, session: SessionDep) -> AccountResponse:
         )
     if role == RESTAURANT:
         restaurant = session.get(Restaurant, account_id)
-        if restaurant is None:
+        if restaurant is None or not session_is_current(claims, restaurant):
             raise unauthorized
         return AccountResponse(
             rol=RESTAURANT,
             id=restaurant.id_restaurante,
             nombre=restaurant.nombre,
             email=restaurant.email,
+            email_verificado=restaurant.email_verified_at is not None,
         )
     raise unauthorized

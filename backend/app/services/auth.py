@@ -42,13 +42,27 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
-def create_access_token(account_id: str, email: str, role: str) -> str:
+def create_access_token(
+    account_id: str, email: str, role: str, password_changed_at: datetime | None = None
+) -> str:
     now = datetime.now(UTC)
-    payload = {
+    payload: dict[str, object] = {
         "sub": account_id,
         "email": email,
         "rol": role,
         "iat": now,
         "exp": now + timedelta(hours=1),
     }
+    # Spec 013: the password's generation. A password change makes it differ, which closes the
+    # sessions opened before (FR-011).
+    version = password_session_version(password_changed_at)
+    if version is not None:
+        payload["pwd"] = version
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+
+
+def password_session_version(password_changed_at: datetime | None) -> int | None:
+    """Identifies the password generation of an account. `None` while it never changed."""
+    if password_changed_at is None:
+        return None
+    return int(password_changed_at.timestamp() * 1_000_000)

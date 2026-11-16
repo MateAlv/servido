@@ -17,6 +17,8 @@ How the team works on Servido!. The rules agents follow are in [AGENTS.md](AGENT
    cd frontend && npm install && npm run dev            # web on :5173, proxies /api to :8000
    ```
 
+   If the backend stops at start with "Can't locate revision", your local database still has a migration from another branch: run `make reset-db` (it deletes the local data) and `make up` again. The backend tests don't have this problem: they use their own database, `servido_test`, created again on every run.
+
    The backend reads its settings from environment variables with development defaults (`backend/app/config.py`), so no `.env` is needed locally. In production `JWT_SECRET` and the database password come from AWS ([infra/README.md](infra/README.md)).
 
 4. Open the repo with your AI agent. Spec Kit commands are already installed for Claude Code, Codex, Copilot, Antigravity and Gemini CLI. To add another agent, install the CLI (`uv tool install specify-cli==1.2.1`) and run `specify integration install <key>`.

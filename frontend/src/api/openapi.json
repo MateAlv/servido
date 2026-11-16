@@ -1721,6 +1721,383 @@
         ]
       }
     },
+    "/api/comensales/recuperacion": {
+      "put": {
+        "tags": [
+          "account recovery"
+        ],
+        "summary": "Reset Password",
+        "description": "Sets the new password with the token of the link. It never signs in (S5).",
+        "operationId": "reset_password_api_comensales_recuperacion_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El link no se puede usar, o la contrase\u00f1a no cumple los requisitos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "account recovery"
+        ],
+        "summary": "Request Recovery",
+        "description": "Mails a recovery link if the email has an account. The answer is the same either way.",
+        "operationId": "request_recovery_api_comensales_recuperacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El email no tiene un formato v\u00e1lido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Demasiadas solicitudes para ese email.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "No se pudo enviar el correo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/comensales/recuperacion/validacion": {
+      "post": {
+        "tags": [
+          "account recovery"
+        ],
+        "summary": "Check Recovery Link",
+        "description": "Checks the link before showing the form. It does not use the link up.",
+        "operationId": "check_recovery_link_api_comensales_recuperacion_validacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El link ya se us\u00f3, venci\u00f3 o no existe.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurantes/verificacion": {
+      "post": {
+        "tags": [
+          "restaurant verification"
+        ],
+        "summary": "Verify Restaurant Email",
+        "description": "Verifies a restaurant's email with the token of the mailed link (FR-002).",
+        "operationId": "verify_restaurant_email_api_restaurantes_verificacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El enlace no es v\u00e1lido o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurantes/verificacion/reenvio": {
+      "post": {
+        "tags": [
+          "restaurant verification"
+        ],
+        "summary": "Resend Restaurant Verification",
+        "description": "Mails the signed-in restaurant a new link; the previous one stops working (FR-004).",
+        "operationId": "resend_restaurant_verification_api_restaurantes_verificacion_reenvio_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesi\u00f3n inv\u00e1lida o vencida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "La sesi\u00f3n no es de un restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El email ya est\u00e1 verificado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/restaurantes/recuperacion": {
+      "put": {
+        "tags": [
+          "restaurant recovery"
+        ],
+        "summary": "Reset Restaurant Password",
+        "description": "Sets the new password with the token of the link. It never signs in (S3).",
+        "operationId": "reset_restaurant_password_api_restaurantes_recuperacion_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El link no se puede usar, o la contrase\u00f1a no cumple los requisitos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "restaurant recovery"
+        ],
+        "summary": "Request Restaurant Recovery",
+        "description": "Mails a recovery link if the email has an account. The answer is the same either way.",
+        "operationId": "request_restaurant_recovery_api_restaurantes_recuperacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El email no tiene un formato v\u00e1lido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Un minuto entre pedidos, o demasiadas solicitudes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurantes/recuperacion/validacion": {
+      "post": {
+        "tags": [
+          "restaurant recovery"
+        ],
+        "summary": "Check Restaurant Recovery Link",
+        "description": "Checks the link before showing the form. It does not use the link up.",
+        "operationId": "check_restaurant_recovery_link_api_restaurantes_recuperacion_validacion_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoveryLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "El link ya se us\u00f3, venci\u00f3 o no existe.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurants/{restaurant_id}/availability": {
       "get": {
         "tags": [
@@ -2128,6 +2505,140 @@
             "HTTPBearer": []
           }
         ]
+      }
+    },
+    "/api/reservations/active": {
+      "get": {
+        "tags": [
+          "reservation"
+        ],
+        "summary": "List Active Reservations",
+        "operationId": "list_active_reservations_api_reservations_active_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActiveReservationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/reservations/{reservation_id}": {
+      "delete": {
+        "tags": [
+          "reservation"
+        ],
+        "summary": "Cancel Diner Reservation",
+        "operationId": "cancel_diner_reservation_api_reservations__reservation_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationCancellationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o es de otro comensal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La reserva ya est\u00e1 cancelada o no se puede cancelar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/reservations/{reservation_id}/order": {
@@ -2687,6 +3198,190 @@
         }
       }
     },
+    "/api/restaurant/reviews/{review_id}/reply": {
+      "post": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Reply To Review",
+        "operationId": "reply_to_review_api_restaurant_reviews__review_id__reply_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Review Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewReplyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La rese\u00f1a no existe o es de otro restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La rese\u00f1a ya tiene respuesta o no se ve en Opiniones.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Edit Reply",
+        "operationId": "edit_reply_api_restaurant_reviews__review_id__reply_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Review Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyEditRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewReplyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La rese\u00f1a no existe, es de otro restaurante o no tiene respuesta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurante/bloqueos": {
       "get": {
         "tags": [
@@ -2822,6 +3517,70 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PublicRestaurantList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/restaurants/open": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "List Open Restaurants",
+        "description": "Bookable restaurants where a reservation can start that day between both times,\ninclusive (spec 027, F4). A point hour sends the same time twice.",
+        "operationId": "list_open_restaurants_api_restaurants_open_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Date"
+            }
+          },
+          {
+            "name": "start_from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "time",
+              "title": "Start From"
+            }
+          },
+          {
+            "name": "start_to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "time",
+              "title": "Start To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenRestaurants"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "D\u00eda fuera del plazo o rango invertido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2998,6 +3757,22 @@
         ],
         "title": "AccountResponse",
         "description": "The account behind the token, whatever its role. Used to show who is signed in."
+      },
+      "ActiveReservationsResponse": {
+        "properties": {
+          "reservations": {
+            "items": {
+              "$ref": "#/components/schemas/ReservationResponse"
+            },
+            "type": "array",
+            "title": "Reservations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservations"
+        ],
+        "title": "ActiveReservationsResponse"
       },
       "AffectedReservation": {
         "properties": {
@@ -4055,6 +4830,24 @@
         ],
         "title": "MessageResponse"
       },
+      "OpenRestaurants": {
+        "properties": {
+          "restaurant_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Restaurant Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "restaurant_ids"
+        ],
+        "title": "OpenRestaurants",
+        "description": "Bookable restaurants where a reservation can start in the requested time (spec 027, F4)."
+      },
       "OpeningHoursResponse": {
         "properties": {
           "day_of_week": {
@@ -4435,6 +5228,27 @@
         ],
         "title": "OrderResponse"
       },
+      "PasswordResetRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Token"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "PasswordResetRequest"
+      },
       "PendingReview": {
         "properties": {
           "reservation_id": {
@@ -4610,6 +5424,16 @@
             "type": "string",
             "format": "date",
             "title": "Visit Date"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicReply"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -4618,10 +5442,36 @@
           "rating",
           "comment",
           "spend_per_person",
-          "visit_date"
+          "visit_date",
+          "reply"
         ],
         "title": "PublicOpinion",
         "description": "The latest review of a person, when it has a comment (spec 014, R14)."
+      },
+      "PublicReply": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "edited": {
+            "type": "boolean",
+            "title": "Edited"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "date",
+          "edited"
+        ],
+        "title": "PublicReply",
+        "description": "The restaurant's reply to an opinion (spec 025, US-42): the current text only (C3)."
       },
       "PublicRestaurant": {
         "properties": {
@@ -4748,6 +5598,20 @@
           "has_menu": {
             "type": "boolean",
             "title": "Has Menu"
+          },
+          "max_party_size": {
+            "type": "integer",
+            "title": "Max Party Size"
+          },
+          "dish_restriction_sets": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Dish Restriction Sets"
           }
         },
         "type": "object",
@@ -4767,7 +5631,9 @@
           "lat",
           "lng",
           "photo_url",
-          "has_menu"
+          "has_menu",
+          "max_party_size",
+          "dish_restriction_sets"
         ],
         "title": "PublicRestaurant",
         "description": "A bookable restaurant as the diner's map, list and detail show it (decision D4)."
@@ -4898,6 +5764,20 @@
             "type": "boolean",
             "title": "Has Menu"
           },
+          "max_party_size": {
+            "type": "integer",
+            "title": "Max Party Size"
+          },
+          "dish_restriction_sets": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Dish Restriction Sets"
+          },
           "menu": {
             "items": {
               "$ref": "#/components/schemas/PublicDish"
@@ -4931,6 +5811,8 @@
           "lng",
           "photo_url",
           "has_menu",
+          "max_party_size",
+          "dish_restriction_sets",
           "menu",
           "opinions"
         ],
@@ -5001,6 +5883,37 @@
         ],
         "title": "PublishedReviewResponse"
       },
+      "RecoveryLinkRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "RecoveryLinkRequest",
+        "description": "The token of the mailed recovery link. Checked on its own, then with the new password."
+      },
+      "RecoveryRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "RecoveryRequest",
+        "description": "The email of the account whose access is lost (US-31)."
+      },
       "RegistrationRequest": {
         "properties": {
           "email": {
@@ -5035,6 +5948,49 @@
           "terms_accepted"
         ],
         "title": "RegistrationRequest"
+      },
+      "ReplyEditRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ReplyEditRequest"
+      },
+      "ReplyRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "ReplyRequest"
+      },
+      "ReservationCancellationResponse": {
+        "properties": {
+          "reservation": {
+            "$ref": "#/components/schemas/ReservationResponse"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation",
+          "message"
+        ],
+        "title": "ReservationCancellationResponse"
       },
       "ReservationDinerResponse": {
         "properties": {
@@ -5796,6 +6752,11 @@
               }
             ],
             "title": "Foto Url"
+          },
+          "email_verificado": {
+            "type": "boolean",
+            "title": "Email Verificado",
+            "readOnly": true
           }
         },
         "type": "object",
@@ -5804,7 +6765,8 @@
           "nombre",
           "email",
           "cuit",
-          "telefono"
+          "telefono",
+          "email_verificado"
         ],
         "title": "RestaurantResponse"
       },
@@ -5862,6 +6824,20 @@
           "counts_in_average": {
             "type": "boolean",
             "title": "Counts In Average"
+          },
+          "reply": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReplyResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "can_reply": {
+            "type": "boolean",
+            "title": "Can Reply"
           }
         },
         "type": "object",
@@ -5874,7 +6850,9 @@
           "comment",
           "spend_per_person",
           "published_at",
-          "counts_in_average"
+          "counts_in_average",
+          "reply",
+          "can_reply"
         ],
         "title": "RestaurantReview"
       },
@@ -5956,6 +6934,38 @@
           "next_offset"
         ],
         "title": "RestaurantReviewsResponse"
+      },
+      "ReviewReplyResponse": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "edited_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "created_at",
+          "edited_at"
+        ],
+        "title": "ReviewReplyResponse"
       },
       "ReviewRequest": {
         "properties": {

@@ -12,6 +12,7 @@ import { RestaurantOrdersPage } from './pages/RestaurantOrdersPage'
 import { RestaurantReservationsPage } from './pages/RestaurantReservationsPage'
 import { RestaurantCancellationsPage } from './pages/RestaurantCancellationsPage'
 import { RestaurantReservationDinerPage } from './pages/RestaurantReservationDinerPage'
+import { DinerReservationsPage } from './pages/DinerReservationsPage'
 import { RestaurantReviewsPage } from './pages/RestaurantReviewsPage'
 import { RestaurantClosuresPage } from './pages/RestaurantClosuresPage'
 
@@ -20,9 +21,31 @@ export const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       { path: '/', element: <HomePage /> },
+      { path: '/reservas', element: <DinerReservationsPage /> },
       { path: '/ingresar', element: <LoginPage /> },
       { path: '/registrarme', element: <RegisterPage /> },
       { path: '/suma-tu-local', element: <RestaurantRegisterPage /> },
+      {
+        path: '/restaurante/verificar-email',
+        lazy: async () => {
+          const { VerifyEmailPage } = await import('./pages/VerifyEmailPage')
+          return { Component: () => <VerifyEmailPage role="restaurant" /> }
+        },
+      },
+      {
+        path: '/restaurante/recuperar',
+        lazy: async () => {
+          const { RecoverAccountPage } = await import('./pages/RecoverAccountPage')
+          return { Component: () => <RecoverAccountPage role="restaurant" /> }
+        },
+      },
+      {
+        path: '/restaurante/restablecer',
+        lazy: async () => {
+          const { ResetPasswordPage } = await import('./pages/ResetPasswordPage')
+          return { Component: () => <ResetPasswordPage role="restaurant" /> }
+        },
+      },
       { path: '/restaurante/perfil', element: <RestaurantProfilePage /> },
       { path: '/restaurante/horarios', element: <OpeningHoursPage /> },
       { path: '/restaurante/mesas', element: <TableInventoryPage /> },
@@ -77,6 +100,18 @@ export const router = createBrowserRouter([
         path: '/verificar-email',
         lazy: async () => ({
           Component: (await import('./pages/VerifyEmailPage')).VerifyEmailPage,
+        }),
+      },
+      {
+        path: '/recuperar',
+        lazy: async () => ({
+          Component: (await import('./pages/RecoverAccountPage')).RecoverAccountPage,
+        }),
+      },
+      {
+        path: '/restablecer',
+        lazy: async () => ({
+          Component: (await import('./pages/ResetPasswordPage')).ResetPasswordPage,
         }),
       },
       {

@@ -71,3 +71,27 @@
 .empty {
   margin: 0;
 }
+
+.replyAction {
+  margin-top: var(--space-2);
+}
+
+.replyError {
+  display: grid;
+  gap: 4px;
+  margin-top: var(--space-2);
+  color: var(--color-error);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.replyError p {
+  margin: 0;
+}
+
+.lostDraft {
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  color: var(--color-text);
+  font-weight: 400;
+}

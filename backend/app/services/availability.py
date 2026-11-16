@@ -220,6 +220,27 @@ def check_start(
     return starts_at
 
 
+def can_start_between(
+    session: Session,
+    restaurant_id: UUID,
+    day: date,
+    start_from: time,
+    start_to: time,
+    now: datetime,
+) -> bool:
+    """Whether a reservation can start that day between both times, inclusive (spec 027, F4).
+
+    Only shifts, the 90-minute block and closures count; booked tables don't.
+    """
+    for start in starts_in(active_shifts(session, restaurant_id, day), day):
+        if not start_from <= start <= start_to:
+            continue
+        starts_at = local_datetime(day, start)
+        if starts_at > now and not blocked(session, restaurant_id, starts_at, starts_at + DURATION):
+            return True
+    return False
+
+
 def day_availability(
     session: Session, restaurant_id: UUID, day: date, party_size: int, now: datetime
 ) -> DayAvailability:
@@ -275,9 +296,10 @@ def groups_at(
 
 
 def bookable_condition():
-    """Where clause for restaurants a diner can book: coordinates, an active shift and an
-    available table group (decision D4)."""
+    """Where clause for restaurants a diner can book: a verified account (spec 026, FR-005),
+    coordinates, an active shift and an available table group (decision D4)."""
     return and_(
+        Restaurant.email_verified_at.is_not(None),
         Restaurant.latitud.is_not(None),
         exists().where(
             OpeningShift.restaurant_id == Restaurant.id_restaurante,

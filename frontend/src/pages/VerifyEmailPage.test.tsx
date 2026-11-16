@@ -48,4 +48,37 @@ describe('VerifyEmailPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('el enlace no es válido')
     expect(post).not.toHaveBeenCalled()
   })
+
+  it('US-44 S2 verifies the restaurant with the link of its mail', async () => {
+    post.mockResolvedValue({
+      data: { detail: '¡Listo! Tu email quedó verificado.' },
+      error: undefined,
+      response: new Response(null, { status: 200 }),
+    })
+    renderWithProviders(<VerifyEmailPage role="restaurant" />, {
+      route: '/restaurante/verificar-email?token=resto123',
+    })
+
+    expect(await screen.findByText('¡Listo! Tu email quedó verificado.')).toBeInTheDocument()
+    expect(screen.getByText(/Ya podés recibir reservas/)).toBeInTheDocument()
+    expect(post).toHaveBeenCalledWith('/api/restaurantes/verificacion', {
+      body: { token: 'resto123' },
+    })
+  })
+
+  it('US-44 S3 says the restaurant link is not valid', async () => {
+    post.mockResolvedValue({
+      data: undefined,
+      error: { detail: 'No pudimos verificar tu email: el enlace no es válido o venció.' },
+      response: new Response(null, { status: 400 }),
+    })
+    renderWithProviders(<VerifyEmailPage role="restaurant" />, {
+      route: '/restaurante/verificar-email?token=vencido',
+    })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No pudimos verificar tu email: el enlace no es válido o venció.',
+    )
+    expect(screen.getByText(/desde el panel de tu restaurante/)).toBeInTheDocument()
+  })
 })
