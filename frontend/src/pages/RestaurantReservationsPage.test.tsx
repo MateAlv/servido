@@ -67,7 +67,9 @@ describe('RestaurantReservationsPage (US-14)', () => {
     renderWithProviders(<RestaurantReservationsPage />)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Cancelar reserva' }))
-    expect(await screen.findByRole('heading', { name: 'Confirmar cancelación' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Confirmar cancelación' }),
+    ).toBeInTheDocument()
     expect(reservationsApi.cancelRestaurantReservation).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar cancelación' }))
