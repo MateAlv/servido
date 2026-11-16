@@ -25,6 +25,8 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [015-terminos-condiciones-restaurante](015-terminos-condiciones-restaurante/spec.md) | Restaurante | 26 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-26 |
 | [016-bloqueo-horarios](016-bloqueo-horarios/spec.md) | Restaurante | 32 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-32 (propuestas FR-007 y de reservas parcialmente pasadas/cruzadas y reaviso pendientes de validación de la PO) |
 | [019-cuenta-comensal-google-verificacion](019-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17 en la spec 009-pedido-anticipado) |
+| [021-ver-pedido-cancelacion](021-ver-pedido-cancelacion/spec.md) | Comensal | 47, 49 | — | 5 | ✅ | ✅ | ✅ | Pendiente |
+| [022-ver-pedido-restaurante](022-ver-pedido-restaurante/spec.md) | Restaurante | 36 | — | 5 | ✅ | ✅ | ✅ | En implementación |
 
 Arrastre de la spec 002-cuenta-restaurante: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002-elegir-restaurante muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
 
@@ -42,6 +44,8 @@ Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 están U
   - US-15 quedó sin responsable. La página del pedido ya muestra el menú por categoría con nombre, descripción y precio; quien la tome debería extender ese menú en vez de armar otro.
   - US-23 (Sprint 4): «Tus próximas reservas» del inicio se parece a su «sección de reservas»; quien la tome debería extender esa lista.
   - El carrito guardado en el servidor (P1) le suma trabajo a US-17 (dos tablas y dos endpoints); el equipo estima que entra en sus 3 SP.
+  - US-47 y US-49: la vista de reserva del comensal reutiliza el pedido existente y muestra las cancelaciones sin datos de reembolso ni de quién canceló.
+  - US-36: la vista del restaurante muestra el pedido confirmado según el estado de la reserva, sin medio de pago ni horarios de cocina.
 
   Detalle en `specs/009-pedido-anticipado/research.md`. En la planilla, US-17 figura para el Integrante 4 y US-19 y US-21 para el 5; en la votación las tomó Mateo.
 - Spec 003 (US-13): falta sumar el escenario 6 a la US-13 en la planilla y exportar `backlog.md` (T033a), cargar los datos de demo en producción (T055) y hacer el pase en navegador a 360 px y con teclado (T024/T032). Las decisiones D1–D11 esperan la validación de la PO.

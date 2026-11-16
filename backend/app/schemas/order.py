@@ -37,3 +37,8 @@ class OpeningShiftResponse(BaseModel):
 class RestaurantOrdersResponse(BaseModel):
     shift: OpeningShiftResponse | None
     orders: list[RestaurantOrderResponse]
+
+
+class RestaurantReservationOrderResponse(BaseModel):
+    reservation_status: str
+    order: RestaurantOrderResponse | None

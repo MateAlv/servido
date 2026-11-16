@@ -55,7 +55,7 @@
             }
           },
           "400": {
-            "description": "Datos de registro inv\u00e1lidos.",
+            "description": "Datos de registro inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -65,7 +65,7 @@
             }
           },
           "409": {
-            "description": "El email ya est\u00e1 registrado.",
+            "description": "El email ya está registrado.",
             "content": {
               "application/json": {
                 "schema": {
@@ -106,7 +106,7 @@
             }
           },
           "400": {
-            "description": "Falta la credencial, o Google no dio el nombre y no se envi\u00f3.",
+            "description": "Falta la credencial, o Google no dio el nombre y no se envió.",
             "content": {
               "application/json": {
                 "schema": {
@@ -116,7 +116,7 @@
             }
           },
           "401": {
-            "description": "La credencial de Google no es v\u00e1lida.",
+            "description": "La credencial de Google no es válida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -167,7 +167,7 @@
             }
           },
           "400": {
-            "description": "Credenciales con formato inv\u00e1lido.",
+            "description": "Credenciales con formato inválido.",
             "content": {
               "application/json": {
                 "schema": {
@@ -177,7 +177,7 @@
             }
           },
           "401": {
-            "description": "Credenciales inv\u00e1lidas.",
+            "description": "Credenciales inválidas.",
             "content": {
               "application/json": {
                 "schema": {
@@ -228,7 +228,7 @@
             }
           },
           "401": {
-            "description": "La credencial de Google no es v\u00e1lida.",
+            "description": "La credencial de Google no es válida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -279,7 +279,7 @@
             }
           },
           "400": {
-            "description": "Credenciales con formato inv\u00e1lido.",
+            "description": "Credenciales con formato inválido.",
             "content": {
               "application/json": {
                 "schema": {
@@ -289,7 +289,7 @@
             }
           },
           "401": {
-            "description": "Credenciales inv\u00e1lidas.",
+            "description": "Credenciales inválidas.",
             "content": {
               "application/json": {
                 "schema": {
@@ -340,7 +340,7 @@
             }
           },
           "401": {
-            "description": "La credencial de Google no es v\u00e1lida.",
+            "description": "La credencial de Google no es válida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -391,7 +391,7 @@
             }
           },
           "400": {
-            "description": "Datos de registro inv\u00e1lidos.",
+            "description": "Datos de registro inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -401,7 +401,7 @@
             }
           },
           "409": {
-            "description": "El email o el CUIT ya est\u00e1n registrados.",
+            "description": "El email o el CUIT ya están registrados.",
             "content": {
               "application/json": {
                 "schema": {
@@ -442,7 +442,7 @@
             }
           },
           "400": {
-            "description": "Datos de registro inv\u00e1lidos.",
+            "description": "Datos de registro inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -452,7 +452,7 @@
             }
           },
           "401": {
-            "description": "La credencial de Google no es v\u00e1lida.",
+            "description": "La credencial de Google no es válida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -462,7 +462,7 @@
             }
           },
           "409": {
-            "description": "El email de Google o el CUIT ya est\u00e1n registrados.",
+            "description": "El email de Google o el CUIT ya están registrados.",
             "content": {
               "application/json": {
                 "schema": {
@@ -509,8 +509,18 @@
               }
             }
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -520,17 +530,7 @@
             }
           },
           "403": {
-            "description": "Esta acci\u00f3n es solo para restaurantes.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation Error",
+            "description": "Esta acción es solo para restaurantes.",
             "content": {
               "application/json": {
                 "schema": {
@@ -561,7 +561,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -571,7 +571,7 @@
             }
           },
           "403": {
-            "description": "No ten\u00e9s permiso.",
+            "description": "No tenés permiso.",
             "content": {
               "application/json": {
                 "schema": {
@@ -623,8 +623,18 @@
               }
             }
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -634,7 +644,7 @@
             }
           },
           "403": {
-            "description": "Esta acci\u00f3n es solo para restaurantes.",
+            "description": "Esta acción es solo para restaurantes.",
             "content": {
               "application/json": {
                 "schema": {
@@ -645,16 +655,6 @@
           },
           "404": {
             "description": "La reserva no existe o no pertenece al restaurante.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
@@ -701,8 +701,18 @@
               }
             }
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -712,7 +722,7 @@
             }
           },
           "403": {
-            "description": "No ten\u00e9s permiso.",
+            "description": "No tenés permiso.",
             "content": {
               "application/json": {
                 "schema": {
@@ -723,16 +733,6 @@
           },
           "404": {
             "description": "Pedido no encontrado.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
@@ -786,8 +786,18 @@
               }
             }
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -797,17 +807,7 @@
             }
           },
           "403": {
-            "description": "Esta acci\u00f3n es solo para restaurantes.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation Error",
+            "description": "Esta acción es solo para restaurantes.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1260,7 +1260,7 @@
             }
           },
           "400": {
-            "description": "Datos inv\u00e1lidos.",
+            "description": "Datos inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1270,7 +1270,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1280,7 +1280,7 @@
             }
           },
           "403": {
-            "description": "Solo el restaurante due\u00f1o puede administrar este plato.",
+            "description": "Solo el restaurante dueño puede administrar este plato.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1356,7 +1356,7 @@
             }
           },
           "400": {
-            "description": "Datos inv\u00e1lidos.",
+            "description": "Datos inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1366,7 +1366,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1376,7 +1376,7 @@
             }
           },
           "403": {
-            "description": "Solo el restaurante due\u00f1o puede administrar este plato.",
+            "description": "Solo el restaurante dueño puede administrar este plato.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1435,7 +1435,7 @@
             "description": "Successful Response"
           },
           "400": {
-            "description": "Datos inv\u00e1lidos.",
+            "description": "Datos inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1445,7 +1445,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1455,7 +1455,7 @@
             }
           },
           "403": {
-            "description": "Solo el restaurante due\u00f1o puede administrar este plato.",
+            "description": "Solo el restaurante dueño puede administrar este plato.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1533,7 +1533,7 @@
             }
           },
           "400": {
-            "description": "Datos inv\u00e1lidos.",
+            "description": "Datos inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1543,7 +1543,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1553,7 +1553,7 @@
             }
           },
           "403": {
-            "description": "Solo el restaurante due\u00f1o puede administrar este plato.",
+            "description": "Solo el restaurante dueño puede administrar este plato.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1605,7 +1605,7 @@
             }
           },
           "401": {
-            "description": "Sesi\u00f3n inv\u00e1lida o vencida.",
+            "description": "Sesión inválida o vencida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1652,7 +1652,7 @@
             }
           },
           "400": {
-            "description": "El enlace no es v\u00e1lido o venci\u00f3.",
+            "description": "El enlace no es válido o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1684,7 +1684,7 @@
             }
           },
           "401": {
-            "description": "Sesi\u00f3n inv\u00e1lida o vencida.",
+            "description": "Sesión inválida o vencida.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1694,7 +1694,7 @@
             }
           },
           "403": {
-            "description": "La sesi\u00f3n no es de un comensal.",
+            "description": "La sesión no es de un comensal.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1704,7 +1704,7 @@
             }
           },
           "409": {
-            "description": "El email ya est\u00e1 verificado.",
+            "description": "El email ya está verificado.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1778,7 +1778,7 @@
             }
           },
           "400": {
-            "description": "Fecha pasada o datos inv\u00e1lidos.",
+            "description": "Fecha pasada o datos inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1788,7 +1788,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1887,7 +1887,7 @@
             }
           },
           "400": {
-            "description": "Fecha u horario no v\u00e1lidos.",
+            "description": "Fecha u horario no válidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1897,7 +1897,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1952,6 +1952,9 @@
           }
         },
         "responses": {
+          "200": {
+            "description": "La misma confirmación ya había creado esta reserva."
+          },
           "201": {
             "description": "Successful Response",
             "content": {
@@ -1962,11 +1965,8 @@
               }
             }
           },
-          "200": {
-            "description": "La misma confirmaci\u00f3n ya hab\u00eda creado esta reserva."
-          },
           "400": {
-            "description": "Datos inv\u00e1lidos.",
+            "description": "Datos inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1976,7 +1976,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2006,7 +2006,7 @@
             }
           },
           "409": {
-            "description": "Algo cambi\u00f3 durante la revisi\u00f3n: la reserva no se cre\u00f3.",
+            "description": "Algo cambió durante la revisión: la reserva no se creó.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2051,8 +2051,18 @@
               }
             }
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2063,16 +2073,6 @@
           },
           "403": {
             "description": "Solo para comensales.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
@@ -2103,7 +2103,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2165,8 +2165,18 @@
               }
             }
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2187,16 +2197,6 @@
           },
           "404": {
             "description": "La reserva no existe o es de otro comensal.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
@@ -2253,7 +2253,7 @@
             }
           },
           "400": {
-            "description": "Datos inv\u00e1lidos, o no hay platos ni pedido que quitar.",
+            "description": "Datos inválidos, o no hay platos ni pedido que quitar.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2263,7 +2263,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2293,7 +2293,7 @@
             }
           },
           "409": {
-            "description": "El pedido ya no se puede cambiar, o el men\u00fa cambi\u00f3.",
+            "description": "El pedido ya no se puede cambiar, o el menú cambió.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2352,7 +2352,7 @@
             }
           },
           "400": {
-            "description": "Datos inv\u00e1lidos.",
+            "description": "Datos inválidos.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2362,7 +2362,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2392,7 +2392,7 @@
             }
           },
           "409": {
-            "description": "El pedido ya no se puede cambiar, o un plato ya no est\u00e1.",
+            "description": "El pedido ya no se puede cambiar, o un plato ya no está.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2408,7 +2408,7 @@
           "order"
         ],
         "summary": "Delete Cart",
-        "description": "\u00abDescartar cambios\u00bb: back to the confirmed order, if any.",
+        "description": "«Descartar cambios»: back to the confirmed order, if any.",
         "operationId": "delete_cart_api_reservations__reservation_id__cart_delete",
         "security": [
           {
@@ -2431,8 +2431,18 @@
           "204": {
             "description": "Successful Response"
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2453,16 +2463,6 @@
           },
           "404": {
             "description": "La reserva no existe o es de otro comensal.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
@@ -2493,7 +2493,7 @@
             }
           },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2503,7 +2503,7 @@
             }
           },
           "403": {
-            "description": "No ten\u00e9s permiso.",
+            "description": "No tenés permiso.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2565,8 +2565,18 @@
               }
             }
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2576,7 +2586,7 @@
             }
           },
           "403": {
-            "description": "No ten\u00e9s permiso.",
+            "description": "No tenés permiso.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2596,17 +2606,7 @@
             }
           },
           "409": {
-            "description": "La reserva ya tiene rese\u00f1a o no se puede calificar.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation Error",
+            "description": "La reserva ya tiene reseña o no se puede calificar.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2654,8 +2654,18 @@
               }
             }
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "description": "Falta la sesión o venció.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2665,17 +2675,7 @@
             }
           },
           "403": {
-            "description": "No ten\u00e9s permiso.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation Error",
+            "description": "No tenés permiso.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2739,8 +2739,8 @@
               }
             }
           },
-          "409": {
-            "description": "Conflict",
+          "400": {
+            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
@@ -2749,8 +2749,8 @@
               }
             }
           },
-          "400": {
-            "description": "Validation Error",
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
@@ -2859,6 +2859,16 @@
               }
             }
           },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404": {
             "description": "El restaurante no existe o no toma reservas.",
             "content": {
@@ -2868,9 +2878,67 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/restaurante/reservas/{reservation_id}/pedido": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Get Reservation Order",
+        "operationId": "get_reservation_order_api_restaurante_reservas__reservation_id__pedido_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantReservationOrderResponse"
+                }
+              }
+            }
           },
-          "400": {
-            "description": "Validation Error",
+          "401": {
+            "description": "Falta la sesi?n o venci?.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Esta acci?n es solo para restaurantes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o no pertenece al restaurante.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3112,7 +3180,7 @@
           },
           "expected_revision": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Expected Revision"
           },
           "description": {
@@ -3618,7 +3686,7 @@
           },
           "expected_revision": {
             "type": "integer",
-            "exclusiveMinimum": 0.0,
+            "exclusiveMinimum": 0,
             "title": "Expected Revision"
           }
         },
@@ -3991,8 +4059,8 @@
         "properties": {
           "day_of_week": {
             "type": "integer",
-            "maximum": 7.0,
-            "minimum": 1.0,
+            "maximum": 7,
+            "minimum": 1,
             "title": "Day Of Week"
           },
           "start_time": {
@@ -4029,8 +4097,8 @@
         "properties": {
           "day_of_week": {
             "type": "integer",
-            "maximum": 7.0,
-            "minimum": 1.0,
+            "maximum": 7,
+            "minimum": 1,
             "title": "Day Of Week"
           },
           "start_time": {
@@ -4084,8 +4152,8 @@
           },
           "quantity": {
             "type": "integer",
-            "maximum": 20.0,
-            "minimum": 1.0,
+            "maximum": 20,
+            "minimum": 1,
             "title": "Quantity"
           },
           "name": {
@@ -4098,7 +4166,7 @@
             "anyOf": [
               {
                 "type": "number",
-                "exclusiveMinimum": 0.0
+                "exclusiveMinimum": 0
               },
               {
                 "type": "string"
@@ -4110,8 +4178,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 2147483647.0,
-                "exclusiveMinimum": 0.0
+                "maximum": 2147483647,
+                "exclusiveMinimum": 0
               },
               {
                 "type": "null"
@@ -5005,8 +5073,8 @@
           },
           "party_size": {
             "type": "integer",
-            "maximum": 100.0,
-            "minimum": 1.0,
+            "maximum": 100,
+            "minimum": 1,
             "title": "Party Size"
           },
           "table": {
@@ -5545,8 +5613,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 90.0,
-                "minimum": -90.0
+                "maximum": 90,
+                "minimum": -90
               },
               {
                 "type": "string"
@@ -5561,8 +5629,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 180.0,
-                "minimum": -180.0
+                "maximum": 180,
+                "minimum": -180
               },
               {
                 "type": "string"
@@ -5893,8 +5961,8 @@
         "properties": {
           "rating": {
             "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
+            "maximum": 5,
+            "minimum": 1,
             "title": "Rating"
           },
           "comment": {
@@ -5912,8 +5980,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 1000000.0,
-                "minimum": 1.0
+                "maximum": 1000000,
+                "minimum": 1
               },
               {
                 "type": "null"
@@ -5950,8 +6018,8 @@
         "properties": {
           "capacity": {
             "type": "integer",
-            "maximum": 100.0,
-            "exclusiveMinimum": 0.0,
+            "maximum": 100,
+            "exclusiveMinimum": 0,
             "title": "Capacity"
           },
           "seating_area": {
@@ -5970,20 +6038,20 @@
           "seating_area"
         ],
         "title": "TableChoice",
-        "description": "The table group the review showed: \u00abMesa para 4 \u00b7 Terraza\u00bb (decision D2)."
+        "description": "The table group the review showed: «Mesa para 4 · Terraza» (decision D2)."
       },
       "TableInventoryGroupPayload": {
         "properties": {
           "capacity": {
             "type": "integer",
-            "maximum": 100.0,
-            "exclusiveMinimum": 0.0,
+            "maximum": 100,
+            "exclusiveMinimum": 0,
             "title": "Capacity"
           },
           "quantity": {
             "type": "integer",
-            "maximum": 200.0,
-            "exclusiveMinimum": 0.0,
+            "maximum": 200,
+            "exclusiveMinimum": 0,
             "title": "Quantity"
           },
           "seating_area": {
@@ -6013,14 +6081,14 @@
         "properties": {
           "capacity": {
             "type": "integer",
-            "maximum": 100.0,
-            "exclusiveMinimum": 0.0,
+            "maximum": 100,
+            "exclusiveMinimum": 0,
             "title": "Capacity"
           },
           "quantity": {
             "type": "integer",
-            "maximum": 200.0,
-            "exclusiveMinimum": 0.0,
+            "maximum": 200,
+            "exclusiveMinimum": 0,
             "title": "Quantity"
           },
           "seating_area": {
@@ -6187,6 +6255,31 @@
             ]
           }
         }
+      },
+      "RestaurantReservationOrderResponse": {
+        "properties": {
+          "reservation_status": {
+            "type": "string",
+            "title": "Reservation Status"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RestaurantOrderResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation_status",
+          "order"
+        ],
+        "title": "RestaurantReservationOrderResponse"
       }
     },
     "securitySchemes": {

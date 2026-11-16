@@ -678,6 +678,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurante/reservas/{reservation_id}/pedido": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Reservation Order */
+        get: operations["get_reservation_order_api_restaurante_reservas__reservation_id__pedido_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1899,6 +1916,13 @@ export interface components {
         /** ErrorResponse */
         ErrorResponse: {
             detail?: string | components["schemas"]["ValidationError"][] | Record<string, never>;
+        };
+        /** RestaurantReservationOrderResponse */
+        RestaurantReservationOrderResponse: {
+            /** Reservation Status */
+            reservation_status: string;
+            /** Order */
+            order: components["schemas"]["RestaurantOrderResponse"] | null;
         };
     };
     responses: never;
@@ -4057,6 +4081,55 @@ export interface operations {
                 };
             };
             /** @description El restaurante no existe o no toma reservas. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_reservation_order_api_restaurante_reservas__reservation_id__pedido_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantReservationOrderResponse"];
+                };
+            };
+            /** @description Falta la sesi?n o venci?. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Esta acci?n es solo para restaurantes. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o no pertenece al restaurante. */
             404: {
                 headers: {
                     [name: string]: unknown;
