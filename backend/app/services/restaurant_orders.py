@@ -85,8 +85,6 @@ def order_data(session: Session, order: Order, reservation: Reservation) -> Rest
         prep_time_warning=warning,
         items=items,
         total=sum((item.subtotal for item in items), Decimal("0.00")),
-        payment_status=order.payment_status,
-        payment_method=order.payment_method,
     )
 
 
