@@ -83,29 +83,43 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_refunds")),
         sa.UniqueConstraint("order_id", name=op.f("uq_refunds_order_id")),
     )
-    op.add_column(
-        "pedidos",
-        sa.Column("payment_status", sa.String(length=20), server_default="pending", nullable=False),
-    )
-    op.add_column("pedidos", sa.Column("payment_method", sa.String(length=20), nullable=True))
-    op.add_column(
-        "pedidos", sa.Column("paid_amount", sa.Numeric(precision=10, scale=2), nullable=True)
-    )
-    op.add_column("pedidos", sa.Column("paid_at", sa.DateTime(timezone=True), nullable=True))
-    op.execute("ALTER TABLE pedidos DROP CONSTRAINT ck_pedidos_status_known")
+    bind = op.get_bind()
+    existing_cols = {col["name"] for col in sa.inspect(bind).get_columns("pedidos")}
+
+    if "payment_status" not in existing_cols:
+        op.add_column(
+            "pedidos",
+            sa.Column(
+                "payment_status", sa.String(length=20), server_default="pending", nullable=False
+            ),
+        )
+    if "payment_method" not in existing_cols:
+        op.add_column("pedidos", sa.Column("payment_method", sa.String(length=20), nullable=True))
+    if "paid_amount" not in existing_cols:
+        op.add_column(
+            "pedidos", sa.Column("paid_amount", sa.Numeric(precision=10, scale=2), nullable=True)
+        )
+    if "paid_at" not in existing_cols:
+        op.add_column("pedidos", sa.Column("paid_at", sa.DateTime(timezone=True), nullable=True))
+
+    op.execute("ALTER TABLE pedidos DROP CONSTRAINT IF EXISTS ck_pedidos_status_known")
     op.execute(
         "ALTER TABLE pedidos ADD CONSTRAINT ck_pedidos_status_known "
         "CHECK (status IN ('confirmed', 'pending', 'cancelled'))"
     )
+    op.execute("ALTER TABLE pedidos DROP CONSTRAINT IF EXISTS ck_pedidos_payment_status_known")
     op.create_check_constraint(
         "ck_pedidos_payment_status_known",
         "pedidos",
         "payment_status IN ('pending', 'paid')",
     )
+    op.execute(
+        "ALTER TABLE pedidos DROP CONSTRAINT IF EXISTS ck_pedidos_payment_fields_match_status"
+    )
     op.create_check_constraint(
         "ck_pedidos_payment_fields_match_status",
         "pedidos",
-        "(payment_status = 'pending' AND payment_method IS NULL AND paid_amount IS NULL AND paid_at IS NULL) "
+        "(payment_status = 'pending' AND paid_amount IS NULL AND paid_at IS NULL) "
         "OR (payment_status = 'paid' AND payment_method IN ('cash', 'online') "
         "AND paid_amount IS NOT NULL AND paid_amount >= 0 AND paid_at IS NOT NULL)",
     )
