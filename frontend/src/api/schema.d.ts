@@ -174,6 +174,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurante/reservas/{reservation_id}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Restaurant Reservation Endpoint */
+        post: operations["cancel_restaurant_reservation_endpoint_api_restaurante_reservas__reservation_id__cancelar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurante/pedidos/turno-actual": {
         parameters: {
             query?: never;
@@ -896,6 +913,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notificaciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Notifications */
+        get: operations["list_notifications_api_notificaciones_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1377,6 +1411,30 @@ export interface components {
             /** Detail */
             detail: string;
         };
+        /** NotificationResponse */
+        NotificationResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Message */
+            message: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Read At */
+            read_at: string | null;
+        };
+        /** NotificationsResponse */
+        NotificationsResponse: {
+            /** Notifications */
+            notifications: components["schemas"]["NotificationResponse"][];
+        };
         /**
          * OpenRestaurants
          * @description Bookable restaurants where a reservation can start in the requested time (spec 027, F4).
@@ -1790,6 +1848,15 @@ export interface components {
             /** Email */
             email: string;
         };
+        /** RefundResponse */
+        RefundResponse: {
+            /** Status */
+            status: string;
+            /** Amount */
+            amount: string;
+            /** Method */
+            method: string;
+        };
         /** RegistrationRequest */
         RegistrationRequest: {
             /** Email */
@@ -1899,6 +1966,14 @@ export interface components {
             /** Nombre */
             nombre: string;
         };
+        /** RestaurantCancellationRequest */
+        RestaurantCancellationRequest: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+        };
         /** RestaurantCancellationResponse */
         RestaurantCancellationResponse: {
             /**
@@ -1926,6 +2001,21 @@ export interface components {
              */
             cancelled_at: string;
             preordered_order?: components["schemas"]["PreorderedOrderSummary"] | null;
+        };
+        /** RestaurantCancellationResult */
+        RestaurantCancellationResult: {
+            /**
+             * Reservation Id
+             * Format: uuid
+             */
+            reservation_id: string;
+            /** Status */
+            status: string;
+            /** Message */
+            message: string;
+            refund: components["schemas"]["RefundResponse"] | null;
+            /** Notification Created */
+            notification_created: boolean;
         };
         /** RestaurantCancellationsResponse */
         RestaurantCancellationsResponse: {
@@ -2735,6 +2825,86 @@ export interface operations {
             };
             /** @description Esta acción es solo para restaurantes. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_restaurant_reservation_endpoint_api_restaurante_reservas__reservation_id__cancelar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestaurantCancellationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantCancellationResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Bad Gateway */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5104,6 +5274,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_notifications_api_notificaciones_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationsResponse"];
                 };
             };
         };

@@ -542,6 +542,114 @@
         }
       }
     },
+    "/api/restaurante/reservas/{reservation_id}/cancelar": {
+      "post": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Cancel Restaurant Reservation Endpoint",
+        "operationId": "cancel_restaurant_reservation_endpoint_api_restaurante_reservas__reservation_id__cancelar_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestaurantCancellationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantCancellationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurante/pedidos/turno-actual": {
       "get": {
         "tags": [
@@ -3738,6 +3846,32 @@
           }
         }
       }
+    },
+    "/api/notificaciones": {
+      "get": {
+        "tags": [
+          "notification"
+        ],
+        "summary": "List Notifications",
+        "operationId": "list_notifications_api_notificaciones_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -5008,6 +5142,65 @@
         ],
         "title": "MessageResponse"
       },
+      "NotificationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Read At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "message",
+          "created_at",
+          "read_at"
+        ],
+        "title": "NotificationResponse"
+      },
+      "NotificationsResponse": {
+        "properties": {
+          "notifications": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationResponse"
+            },
+            "type": "array",
+            "title": "Notifications"
+          }
+        },
+        "type": "object",
+        "required": [
+          "notifications"
+        ],
+        "title": "NotificationsResponse"
+      },
       "OpenRestaurants": {
         "properties": {
           "restaurant_ids": {
@@ -6148,6 +6341,29 @@
         "title": "RecoveryRequest",
         "description": "The email of the account whose access is lost (US-31)."
       },
+      "RefundResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "amount",
+          "method"
+        ],
+        "title": "RefundResponse"
+      },
       "RegistrationRequest": {
         "properties": {
           "email": {
@@ -6375,6 +6591,20 @@
         ],
         "title": "ReservationRestaurant"
       },
+      "RestaurantCancellationRequest": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id"
+        ],
+        "title": "RestaurantCancellationRequest"
+      },
       "RestaurantCancellationResponse": {
         "properties": {
           "reservation_id": {
@@ -6434,6 +6664,46 @@
           "cancelled_at"
         ],
         "title": "RestaurantCancellationResponse"
+      },
+      "RestaurantCancellationResult": {
+        "properties": {
+          "reservation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reservation Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "refund": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RefundResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notification_created": {
+            "type": "boolean",
+            "title": "Notification Created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation_id",
+          "status",
+          "message",
+          "refund",
+          "notification_created"
+        ],
+        "title": "RestaurantCancellationResult"
       },
       "RestaurantCancellationsResponse": {
         "properties": {
