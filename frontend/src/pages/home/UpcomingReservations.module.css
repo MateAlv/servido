@@ -9,7 +9,7 @@
 
 .list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 14px;
   margin: 0;
   padding: 0;
@@ -43,4 +43,21 @@
   align-items: center;
   gap: 10px;
   margin-top: 6px;
+}
+
+.list > li,
+.card,
+.order {
+  min-width: 0;
+}
+
+.order .orderStatus {
+  max-width: 100%;
+  white-space: normal;
+  align-items: flex-start;
+}
+
+.statusText {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }

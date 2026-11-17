@@ -10,7 +10,9 @@ import {
   type RestaurantPriceTier,
   type RestaurantPublic,
 } from '../data/restaurants.fixture'
+import { restrictionLabel } from '../lib/dietary'
 import { api } from './client'
+import { getApiErrorMessage } from './errors'
 import type { components } from './schema'
 
 type BookableRestaurant = components['schemas']['PublicRestaurant']
@@ -23,11 +25,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   bebida: 'Bebidas',
 }
 const CATEGORY_ORDER = ['entrada', 'plato_principal', 'postre', 'bebida']
-const RESTRICTION_LABELS: Record<string, string> = {
-  sin_tacc: 'Sin TACC',
-  vegetariano: 'Vegetariano',
-  vegano: 'Vegano',
-}
 
 function menuSections(dishes: BookableRestaurantDetail['menu']): MenuSection[] {
   const sections = new Map<string, MenuSection>()
@@ -40,9 +37,7 @@ function menuSections(dishes: BookableRestaurantDetail['menu']): MenuSection[] {
       price: Number(dish.price),
       description: dish.description ?? undefined,
       photo: dish.photo_url ?? undefined,
-      dietaryRestrictions: dish.dietary_restrictions.map(
-        (restriction) => RESTRICTION_LABELS[restriction] ?? restriction,
-      ),
+      dietaryRestrictions: dish.dietary_restrictions.map(restrictionLabel),
     })
     sections.set(dish.category, section)
   }
@@ -91,11 +86,14 @@ function fromApi(
       comment: opinion.comment,
       date: opinion.visit_date,
       spendPerPerson: opinion.spend_per_person,
+      reply: opinion.reply,
     })),
     rating: restaurant.rating,
     reviewCount: restaurant.review_count,
     photo: photo ? { cover: photo, thumb: photo } : null,
     hasMenu: restaurant.has_menu,
+    maxPartySize: restaurant.max_party_size,
+    dishRestrictionSets: restaurant.dish_restriction_sets,
     bookable: true,
   }
 }
@@ -127,4 +125,23 @@ export async function fetchRestaurant(id: string): Promise<RestaurantPublic | un
     params: { path: { restaurant_id: id } },
   })
   return data ? fromApi(data, menuSections(data.menu), data.opinions) : undefined
+}
+
+const OPEN_FAILED = 'No pudimos consultar los horarios de los restaurantes.'
+
+/**
+ * Ids of the bookable restaurants where a reservation can start on `date` between `startFrom`
+ * and `startTo`, inclusive (`GET /api/restaurants/open`, spec 027, F4). A point hour sends the
+ * same time twice.
+ */
+export async function fetchOpenRestaurantIds(
+  date: string,
+  startFrom: string,
+  startTo: string,
+): Promise<string[]> {
+  const { data, error } = await api.GET('/api/restaurants/open', {
+    params: { query: { date, start_from: startFrom, start_to: startTo } },
+  })
+  if (error || !data) throw new Error(getApiErrorMessage(error, OPEN_FAILED))
+  return data.restaurant_ids
 }

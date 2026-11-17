@@ -13,7 +13,7 @@ export function restaurantAccount(
     id: restaurante.id,
     nombre: restaurante.nombre,
     email: restaurante.email,
-    email_verificado: true,
+    email_verificado: restaurante.email_verificado,
   }
 }
 
@@ -66,7 +66,17 @@ export function sessionHeaders(): Record<string, string> {
 }
 
 export function signIn(queryClient: QueryClient, token: string, account: Account) {
-  getSessionStorage()?.setItem(TOKEN_KEY, token)
+  const storage = getSessionStorage()
+  if (storage) {
+    for (const key of Object.keys(storage)) {
+      if (
+        key.startsWith('servido-order-operation:') &&
+        !key.startsWith(`servido-order-operation:${account.id}:`)
+      )
+        storage.removeItem(key)
+    }
+    storage.setItem(TOKEN_KEY, token)
+  }
   queryClient.setQueryData<Account | null>(ACCOUNT_QUERY_KEY, account)
 }
 

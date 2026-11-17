@@ -238,12 +238,18 @@ function renderMapWithDetail(route = '/mapa') {
   )
 }
 
+/** The price filter lives in the filter panel with the others (spec 027, F7). */
+async function openFilters(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /^Filtros/ }))
+}
+
 describe('MapPage price filter (US-7)', () => {
   it('US-7 S1 shows only the restaurants of the chosen price, on the map and in the list', async () => {
     const user = userEvent.setup()
     renderWithProviders(<MapPage />)
     await screen.findByTitle('Terraza del Río')
 
+    await openFilters(user)
     await user.click(screen.getByRole('button', { name: '$$' }))
 
     expect(screen.getByRole('heading', { name: '2 restaurantes' })).toBeInTheDocument()
@@ -257,6 +263,7 @@ describe('MapPage price filter (US-7)', () => {
     renderWithProviders(<MapPage />)
     await screen.findByTitle('Terraza del Río')
 
+    await openFilters(user)
     await user.click(screen.getByRole('button', { name: '$$' }))
     await user.click(screen.getByRole('button', { name: '$' }))
     expect(screen.getByRole('heading', { name: '5 restaurantes' })).toBeInTheDocument()
@@ -272,6 +279,7 @@ describe('MapPage price filter (US-7)', () => {
     renderWithProviders(<MapPage />, { route: '/mapa?precio=%24%24%24%24' })
     expect(await screen.findByRole('heading', { name: '1 restaurante' })).toBeInTheDocument()
 
+    await openFilters(user)
     await user.click(screen.getByRole('button', { name: 'Quitar filtro de precio' }))
 
     expect(screen.getByRole('heading', { name: '7 restaurantes' })).toBeInTheDocument()
@@ -340,10 +348,7 @@ describe('RestaurantDetailPage (US-9)', () => {
     await user.click(within(list).getAllByRole('link', { name: 'Ver detalle' })[0])
     await user.click(await screen.findByRole('link', { name: /volver a los restaurantes/i }))
 
-    expect(await screen.findByRole('button', { name: '$$' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    expect(await screen.findByRole('button', { name: 'Quitar filtro $$' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '2 restaurantes' })).toBeInTheDocument()
   })
 })

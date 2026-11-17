@@ -444,6 +444,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/comensales/recuperacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reset Password
+         * @description Sets the new password with the token of the link. It never signs in (S5).
+         */
+        put: operations["reset_password_api_comensales_recuperacion_put"];
+        /**
+         * Request Recovery
+         * @description Mails a recovery link if the email has an account. The answer is the same either way.
+         */
+        post: operations["request_recovery_api_comensales_recuperacion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/comensales/recuperacion/validacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Recovery Link
+         * @description Checks the link before showing the form. It does not use the link up.
+         */
+        post: operations["check_recovery_link_api_comensales_recuperacion_validacion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurantes/verificacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Verify Restaurant Email
+         * @description Verifies a restaurant's email with the token of the mailed link (FR-002).
+         */
+        post: operations["verify_restaurant_email_api_restaurantes_verificacion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurantes/verificacion/reenvio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend Restaurant Verification
+         * @description Mails the signed-in restaurant a new link; the previous one stops working (FR-004).
+         */
+        post: operations["resend_restaurant_verification_api_restaurantes_verificacion_reenvio_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurantes/recuperacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Reset Restaurant Password
+         * @description Sets the new password with the token of the link. It never signs in (S3).
+         */
+        put: operations["reset_restaurant_password_api_restaurantes_recuperacion_put"];
+        /**
+         * Request Restaurant Recovery
+         * @description Mails a recovery link if the email has an account. The answer is the same either way.
+         */
+        post: operations["request_restaurant_recovery_api_restaurantes_recuperacion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurantes/recuperacion/validacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check Restaurant Recovery Link
+         * @description Checks the link before showing the form. It does not use the link up.
+         */
+        post: operations["check_restaurant_recovery_link_api_restaurantes_recuperacion_validacion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurants/{restaurant_id}/availability": {
         parameters: {
             query?: never;
@@ -513,6 +641,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reservations/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Active Reservations */
+        get: operations["list_active_reservations_api_reservations_active_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/{reservation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancel Diner Reservation */
+        delete: operations["cancel_diner_reservation_api_reservations__reservation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reservations/{reservation_id}/order": {
         parameters: {
             query?: never;
@@ -553,6 +715,23 @@ export interface paths {
          * @description «Descartar cambios»: back to the confirmed order, if any.
          */
         delete: operations["delete_cart_api_reservations__reservation_id__cart_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/{reservation_id}/order/payment-method": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Payment Method */
+        put: operations["put_payment_method_api_reservations__reservation_id__order_payment_method_put"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -609,6 +788,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurant/reviews/{review_id}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edit Reply */
+        put: operations["edit_reply_api_restaurant_reviews__review_id__reply_put"];
+        /** Reply To Review */
+        post: operations["reply_to_review_api_restaurant_reviews__review_id__reply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurante/bloqueos": {
         parameters: {
             query?: never;
@@ -653,6 +850,27 @@ export interface paths {
         };
         /** List Bookable Restaurants */
         get: operations["list_bookable_restaurants_api_restaurants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurants/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Open Restaurants
+         * @description Bookable restaurants where a reservation can start that day between both times,
+         *     inclusive (spec 027, F4). A point hour sends the same time twice.
+         */
+        get: operations["list_open_restaurants_api_restaurants_open_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -724,6 +942,11 @@ export interface components {
              */
             email_verificado: boolean;
         };
+        /** ActiveReservationsResponse */
+        ActiveReservationsResponse: {
+            /** Reservations */
+            reservations: components["schemas"]["ReservationResponse"][];
+        };
         /** AffectedReservation */
         AffectedReservation: {
             /**
@@ -742,6 +965,19 @@ export interface components {
             end_time: string;
             /** Party Size */
             party_size: number;
+        };
+        /** ArrivalWindow */
+        ArrivalWindow: {
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Latest At
+             * Format: date-time
+             */
+            latest_at: string;
         };
         /** AvailabilityResponse */
         AvailabilityResponse: {
@@ -834,6 +1070,13 @@ export interface components {
         /** CartResponse */
         CartResponse: {
             /**
+             * Arrival At
+             * Format: date-time
+             */
+            arrival_at: string;
+            /** Payment Method */
+            payment_method: ("cash" | "online") | null;
+            /**
              * Updated At
              * Format: date-time
              */
@@ -908,6 +1151,33 @@ export interface components {
         /** ClosureWarningResponse */
         ClosureWarningResponse: {
             detail: components["schemas"]["ClosureWarningDetail"];
+        };
+        /** ConfirmationRequest */
+        ConfirmationRequest: {
+            /**
+             * Arrival At
+             * Format: date-time
+             */
+            arrival_at: string;
+            /** Payment Method */
+            payment_method: ("cash" | "online") | null;
+            /** Items */
+            items: components["schemas"]["OrderItemRequest"][];
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+        };
+        /** ConfirmationResult */
+        ConfirmationResult: {
+            /**
+             * Operation Id
+             * Format: uuid
+             */
+            operation_id: string;
+            /** Replayed */
+            replayed: boolean;
         };
         /** ConfirmedOrderItemResponse */
         ConfirmedOrderItemResponse: {
@@ -1032,6 +1302,21 @@ export interface components {
             /** Changed Since Open */
             changed_since_open: boolean;
         };
+        /**
+         * DraftRequest
+         * @description The whole order (or cart): it replaces the previous one.
+         */
+        DraftRequest: {
+            /**
+             * Arrival At
+             * Format: date-time
+             */
+            arrival_at: string;
+            /** Payment Method */
+            payment_method: ("cash" | "online") | null;
+            /** Items */
+            items: components["schemas"]["OrderItemRequest"][];
+        };
         /** FreeGroupResponse */
         FreeGroupResponse: {
             /** Capacity */
@@ -1108,6 +1393,14 @@ export interface components {
         MessageResponse: {
             /** Detail */
             detail: string;
+        };
+        /**
+         * OpenRestaurants
+         * @description Bookable restaurants where a reservation can start in the requested time (spec 027, F4).
+         */
+        OpenRestaurants: {
+            /** Restaurant Ids */
+            restaurant_ids: string[];
         };
         /** OpeningHoursResponse */
         OpeningHoursResponse: {
@@ -1217,6 +1510,8 @@ export interface components {
         };
         /** OrderPageResponse */
         OrderPageResponse: {
+            arrival_window: components["schemas"]["ArrivalWindow"];
+            confirmation?: components["schemas"]["ConfirmationResult"] | null;
             reservation: components["schemas"]["ReservationResponse"];
             order: components["schemas"]["OrderResponse"] | null;
             cart: components["schemas"]["CartResponse"] | null;
@@ -1238,16 +1533,27 @@ export interface components {
             /** Total */
             total: string;
         };
-        /**
-         * OrderRequest
-         * @description The whole order (or cart): it replaces the previous one.
-         */
-        OrderRequest: {
-            /** Items */
-            items: components["schemas"]["OrderItemRequest"][];
-        };
         /** OrderResponse */
         OrderResponse: {
+            /**
+             * Arrival At
+             * Format: date-time
+             */
+            arrival_at: string;
+            /**
+             * Prep Start Time
+             * Format: date-time
+             */
+            prep_start_time: string;
+            /** Payment Method */
+            payment_method: ("cash" | "online") | null;
+            /**
+             * Payment Status
+             * @enum {string}
+             */
+            payment_status: "pending" | "paid";
+            /** Payment Method Editable */
+            payment_method_editable: boolean;
             /**
              * Confirmed At
              * Format: date-time
@@ -1259,6 +1565,21 @@ export interface components {
             total: string;
             /** Prep Time Minutes */
             prep_time_minutes: number | null;
+        };
+        /** PasswordResetRequest */
+        PasswordResetRequest: {
+            /** Token */
+            token: string;
+            /** Password */
+            password: string;
+        };
+        /** PaymentMethodRequest */
+        PaymentMethodRequest: {
+            /**
+             * Payment Method
+             * @enum {string}
+             */
+            payment_method: "cash" | "online";
         };
         /** PendingReview */
         PendingReview: {
@@ -1338,6 +1659,22 @@ export interface components {
              * Format: date
              */
             visit_date: string;
+            reply: components["schemas"]["PublicReply"] | null;
+        };
+        /**
+         * PublicReply
+         * @description The restaurant's reply to an opinion (spec 025, US-42): the current text only (C3).
+         */
+        PublicReply: {
+            /** Text */
+            text: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Edited */
+            edited: boolean;
         };
         /**
          * PublicRestaurant
@@ -1379,6 +1716,10 @@ export interface components {
             photo_url: string | null;
             /** Has Menu */
             has_menu: boolean;
+            /** Max Party Size */
+            max_party_size: number;
+            /** Dish Restriction Sets */
+            dish_restriction_sets: string[][];
         };
         /** PublicRestaurantDetail */
         PublicRestaurantDetail: {
@@ -1417,6 +1758,10 @@ export interface components {
             photo_url: string | null;
             /** Has Menu */
             has_menu: boolean;
+            /** Max Party Size */
+            max_party_size: number;
+            /** Dish Restriction Sets */
+            dish_restriction_sets: string[][];
             /** Menu */
             menu: components["schemas"]["PublicDish"][];
             /** Opinions */
@@ -1446,6 +1791,22 @@ export interface components {
              */
             published_at: string;
         };
+        /**
+         * RecoveryLinkRequest
+         * @description The token of the mailed recovery link. Checked on its own, then with the new password.
+         */
+        RecoveryLinkRequest: {
+            /** Token */
+            token: string;
+        };
+        /**
+         * RecoveryRequest
+         * @description The email of the account whose access is lost (US-31).
+         */
+        RecoveryRequest: {
+            /** Email */
+            email: string;
+        };
         /** RegistrationRequest */
         RegistrationRequest: {
             /** Email */
@@ -1459,6 +1820,22 @@ export interface components {
              * @constant
              */
             terms_accepted: true;
+        };
+        /** ReplyEditRequest */
+        ReplyEditRequest: {
+            /** Text */
+            text: string;
+        };
+        /** ReplyRequest */
+        ReplyRequest: {
+            /** Text */
+            text: string;
+        };
+        /** ReservationCancellationResponse */
+        ReservationCancellationResponse: {
+            reservation: components["schemas"]["ReservationResponse"];
+            /** Message */
+            message: string;
         };
         /** ReservationDinerResponse */
         ReservationDinerResponse: {
@@ -1746,6 +2123,8 @@ export interface components {
             telefono: string;
             /** Foto Url */
             foto_url?: string | null;
+            /** Email Verificado */
+            readonly email_verificado: boolean;
         };
         /** RestaurantReview */
         RestaurantReview: {
@@ -1776,6 +2155,9 @@ export interface components {
             published_at: string;
             /** Counts In Average */
             counts_in_average: boolean;
+            reply: components["schemas"]["ReviewReplyResponse"] | null;
+            /** Can Reply */
+            can_reply: boolean;
         };
         /** RestaurantReviewsResponse */
         RestaurantReviewsResponse: {
@@ -1795,6 +2177,18 @@ export interface components {
             reviews: components["schemas"]["RestaurantReview"][];
             /** Next Offset */
             next_offset: number | null;
+        };
+        /** ReviewReplyResponse */
+        ReviewReplyResponse: {
+            /** Text */
+            text: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Edited At */
+            edited_at: string | null;
         };
         /** ReviewRequest */
         ReviewRequest: {
@@ -3240,6 +3634,311 @@ export interface operations {
             };
         };
     };
+    reset_password_api_comensales_recuperacion_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El link no se puede usar, o la contraseña no cumple los requisitos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    request_recovery_api_comensales_recuperacion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El email no tiene un formato válido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Demasiadas solicitudes para ese email. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No se pudo enviar el correo. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    check_recovery_link_api_comensales_recuperacion_validacion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El link ya se usó, venció o no existe. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    verify_restaurant_email_api_restaurantes_verificacion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerificationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El enlace no es válido o venció. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    resend_restaurant_verification_api_restaurantes_verificacion_reenvio_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Sesión inválida o vencida. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La sesión no es de un restaurante. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description El email ya está verificado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reset_restaurant_password_api_restaurantes_recuperacion_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El link no se puede usar, o la contraseña no cumple los requisitos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    request_restaurant_recovery_api_restaurantes_recuperacion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El email no tiene un formato válido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Un minuto entre pedidos, o demasiadas solicitudes. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    check_restaurant_recovery_link_api_restaurantes_recuperacion_validacion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoveryLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description El link ya se usó, venció o no existe. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_availability_api_restaurants__restaurant_id__availability_get: {
         parameters: {
             query: {
@@ -3526,6 +4225,111 @@ export interface operations {
             };
         };
     };
+    list_active_reservations_api_reservations_active_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveReservationsResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_diner_reservation_api_reservations__reservation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReservationCancellationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o es de otro comensal. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva ya está cancelada o no se puede cancelar. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_order_api_reservations__reservation_id__order_get: {
         parameters: {
             query?: never;
@@ -3595,7 +4399,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OrderRequest"];
+                "application/json": components["schemas"]["ConfirmationRequest"];
             };
         };
         responses: {
@@ -3666,7 +4470,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OrderRequest"];
+                "application/json": components["schemas"]["DraftRequest"];
             };
         };
         responses: {
@@ -3773,6 +4577,77 @@ export interface operations {
             };
             /** @description La reserva no existe o es de otro comensal. */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    put_payment_method_api_reservations__reservation_id__order_payment_method_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentMethodRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPageResponse"];
+                };
+            };
+            /** @description Medio inválido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o es de otro comensal. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description El medio ya no se puede cambiar. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3940,6 +4815,139 @@ export interface operations {
             };
         };
     };
+    edit_reply_api_restaurant_reviews__review_id__reply_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyEditRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewReplyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tenés permiso. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reseña no existe, es de otro restaurante o no tiene respuesta. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reply_to_review_api_restaurant_reviews__review_id__reply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewReplyResponse"];
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No tenés permiso. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reseña no existe o es de otro restaurante. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reseña ya tiene respuesta o no se ve en Opiniones. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_closures_api_restaurante_bloqueos_get: {
         parameters: {
             query?: never;
@@ -4047,6 +5055,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicRestaurantList"];
+                };
+            };
+        };
+    };
+    list_open_restaurants_api_restaurants_open_get: {
+        parameters: {
+            query: {
+                date: string;
+                start_from: string;
+                start_to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpenRestaurants"];
+                };
+            };
+            /** @description Día fuera del plazo o rango invertido. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

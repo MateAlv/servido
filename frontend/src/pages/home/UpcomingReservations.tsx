@@ -22,13 +22,15 @@ function OrderState({ reservation }: { reservation: UpcomingReservation }) {
   if (reservation.has_cart) {
     return (
       <>
-        <StatusPill tone="warn">
-          {reservation.has_order
-            ? 'Pedido confirmado · con cambios sin confirmar'
-            : 'Pedido sin confirmar'}
+        <StatusPill tone="warn" className={styles.orderStatus}>
+          <span className={styles.statusText}>
+            {reservation.has_order
+              ? 'Pedido confirmado · con cambios sin confirmar'
+              : 'Pedido sin confirmar'}
+          </span>
         </StatusPill>
         <Button to={orderPath} size="sm">
-          Seguir armando
+          {reservation.has_order ? 'Ver pedido' : 'Seguir armando'}
         </Button>
       </>
     )

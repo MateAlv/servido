@@ -34,7 +34,7 @@
 }
 
 .header {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-5);
 }
 
 .eyebrow {
@@ -62,7 +62,7 @@
 }
 
 .deadline {
-  margin: 0 0 18px;
+  margin: var(--space-4) 0;
   font-weight: 800;
 }
 
@@ -378,6 +378,8 @@
 
 .total {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   justify-content: space-between;
   margin: 0;
   font: 800 var(--text-lg) var(--font-display);
@@ -443,4 +445,75 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 22px;
+}
+
+.paymentChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block: var(--space-2);
+}
+
+/* Shared section rhythm keeps notices aligned with the cards at phone widths. */
+.container > .section {
+  margin-block: var(--space-4);
+}
+
+.section > p {
+  margin: 0;
+}
+
+.reviewLayout {
+  display: grid;
+  gap: var(--space-4);
+  margin-block: var(--space-4);
+}
+
+.orderName {
+  overflow-wrap: anywhere;
+}
+
+/* Keep the subtotal in the right column rather than auto-placing it below the name. */
+.confirmedRow .orderName {
+  grid-column: 1;
+}
+
+.confirmedRow .muted {
+  grid-column: 1;
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.confirmedRow .price {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.confirmedRow {
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+}
+
+.total strong {
+  margin-inline-start: auto;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.paymentSummary {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-line);
+}
+
+.paymentSummary p,
+.paymentTitle {
+  margin: 0;
+}
+
+.paymentTitle {
+  font-size: var(--text-sm);
+  font-weight: 800;
 }

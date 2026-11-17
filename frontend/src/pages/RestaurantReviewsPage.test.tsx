@@ -4,7 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderWithProviders } from '../test/renderWithProviders'
 import { RestaurantReviewsPage } from './RestaurantReviewsPage'
 
-const api = vi.hoisted(() => ({ fetchRestaurantReviews: vi.fn() }))
+const api = vi.hoisted(() => ({
+  fetchRestaurantReviews: vi.fn(),
+  publishReply: vi.fn(),
+  editReply: vi.fn(),
+}))
 const session = vi.hoisted(() => ({
   account: { data: { rol: 'restaurant' } as unknown, isPending: false },
 }))
@@ -25,6 +29,8 @@ const REVIEW = {
   spend_per_person: 25000,
   published_at: '2026-11-03T10:00:00-03:00',
   counts_in_average: true,
+  reply: null as null | { text: string; created_at: string; edited_at: string | null },
+  can_reply: true,
 }
 
 function page(overrides = {}) {
@@ -135,5 +141,200 @@ describe('RestaurantReviewsPage (US-24)', () => {
     expect(screen.getByText('Ana P.')).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Ver más' })).toBeNull())
     expect(api.fetchRestaurantReviews).toHaveBeenCalledWith(20)
+  })
+})
+
+describe('RestaurantReviewsPage (US-42)', () => {
+  const REPLY = { text: '¡Gracias, Ana!', created_at: '2026-11-04T10:00:00-03:00', edited_at: null }
+  const REPLIED = { ...REVIEW, reply: REPLY, can_reply: false }
+  const DISCARD = '¿Descartás tu respuesta?'
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    session.account = { data: { rol: 'restaurant' }, isPending: false }
+    api.fetchRestaurantReviews.mockResolvedValue(page())
+    api.publishReply.mockResolvedValue(null)
+    api.editReply.mockResolvedValue(null)
+  })
+
+  async function openReply(name: string) {
+    renderWithProviders(<RestaurantReviewsPage />)
+    fireEvent.click(await screen.findByRole('button', { name }))
+  }
+
+  function type(label: string, value: string) {
+    fireEvent.change(screen.getByLabelText(label), { target: { value } })
+  }
+
+  function discardDialog() {
+    return screen.queryByRole('dialog', { name: DISCARD })
+  }
+
+  it('US-42 S1 publishes a reply and shows it under the review', async () => {
+    await openReply('Responder')
+    type('Tu respuesta a Ana P.', '  ¡Gracias, Ana!  ')
+    api.fetchRestaurantReviews.mockResolvedValue(page({ reviews: [REPLIED] }))
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar respuesta' }))
+
+    const reply = await screen.findByRole('group', { name: 'Tu respuesta' })
+    expect(api.publishReply).toHaveBeenCalledWith('review-1', '¡Gracias, Ana!')
+    expect(reply).toHaveTextContent('¡Gracias, Ana!')
+    expect(reply).toHaveTextContent(/Respondió el miércoles, 4 de noviembre/)
+    expect(screen.queryByRole('button', { name: 'Responder' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Editar respuesta' })).toHaveFocus()
+  })
+
+  it('US-42 S3 offers editing instead of a second reply', async () => {
+    api.fetchRestaurantReviews.mockResolvedValue(page({ reviews: [REPLIED] }))
+    renderWithProviders(<RestaurantReviewsPage />)
+
+    expect(await screen.findByRole('button', { name: 'Editar respuesta' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Responder' })).toBeNull()
+  })
+
+  it('US-42 S3 switches to editing the existing reply and keeps what was typed', async () => {
+    await openReply('Responder')
+    type('Tu respuesta a Ana P.', 'Otra respuesta.')
+    const message = 'Esta reseña ya tiene tu respuesta. Podés editarla.'
+    api.publishReply.mockResolvedValue({ kind: 'conflict', message })
+    api.fetchRestaurantReviews.mockResolvedValue(page({ reviews: [REPLIED] }))
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar respuesta' }))
+
+    const field = await screen.findByLabelText('Editá tu respuesta a Ana P.')
+    expect(field).toHaveValue('¡Gracias, Ana!')
+    expect(screen.getByText(message)).toHaveAttribute('role', 'status')
+    expect(screen.getByText('Otra respuesta.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Usar lo que escribiste' }))
+    expect(field).toHaveValue('Otra respuesta.')
+  })
+
+  it('US-42 S4 edits the reply and marks it', async () => {
+    api.fetchRestaurantReviews.mockResolvedValue(page({ reviews: [REPLIED] }))
+    await openReply('Editar respuesta')
+    const field = screen.getByLabelText<HTMLTextAreaElement>('Editá tu respuesta a Ana P.')
+    expect(field).toHaveValue('¡Gracias, Ana!')
+    expect(field).toHaveFocus()
+    expect(field.selectionStart).toBe('¡Gracias, Ana!'.length)
+
+    fireEvent.change(field, { target: { value: 'Gracias por volver.' } })
+    const edited = { ...REPLY, text: 'Gracias por volver.', edited_at: '2026-11-05T10:00:00-03:00' }
+    api.fetchRestaurantReviews.mockResolvedValue(page({ reviews: [{ ...REPLIED, reply: edited }] }))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    const reply = await screen.findByRole('group', { name: 'Tu respuesta' })
+    expect(api.editReply).toHaveBeenCalledWith('review-1', 'Gracias por volver.')
+    expect(reply).toHaveTextContent('Gracias por volver.')
+    expect(reply).not.toHaveTextContent('¡Gracias, Ana!')
+    expect(reply).toHaveTextContent('Respondió el miércoles, 4 de noviembre · Editada')
+    expect(screen.getByRole('button', { name: 'Editar respuesta' })).toHaveFocus()
+  })
+
+  it('US-42 S5 counts the remaining characters and refuses an empty or long reply', async () => {
+    await openReply('Responder')
+    const field = screen.getByLabelText('Tu respuesta a Ana P.')
+    expect(field).toHaveAccessibleDescription(/Te quedan 500 caracteres\./)
+
+    fireEvent.change(field, { target: { value: 'Hola' } })
+    expect(field).toHaveAccessibleDescription(/Te quedan 496 caracteres\./)
+
+    fireEvent.change(field, { target: { value: '   ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar respuesta' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Escribí tu respuesta.')
+
+    fireEvent.change(field, { target: { value: 'a'.repeat(501) } })
+    expect(field).toHaveAccessibleDescription('Te pasaste por 1 carácter del máximo de 500.')
+    expect(screen.queryByRole('alert')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar respuesta' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'La respuesta puede tener hasta 500 caracteres.',
+    )
+    expect(field).toHaveAccessibleDescription('La respuesta puede tener hasta 500 caracteres.')
+    expect(api.publishReply).not.toHaveBeenCalled()
+  })
+
+  it('US-42 S5 counts characters as the server does, an emoji as one', async () => {
+    await openReply('Responder')
+    const field = screen.getByLabelText('Tu respuesta a Ana P.')
+
+    fireEvent.change(field, { target: { value: '😀'.repeat(500) } })
+    expect(field).toHaveAccessibleDescription(/Te quedan 0 caracteres\./)
+
+    // A skin tone is a second code point, for the server too.
+    fireEvent.change(field, { target: { value: '👍🏽'.repeat(250) } })
+    expect(field).toHaveAccessibleDescription(/Te quedan 0 caracteres\./)
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('US-42 S5 says a reply can be edited but not emptied', async () => {
+    api.fetchRestaurantReviews.mockResolvedValue(page({ reviews: [REPLIED] }))
+    await openReply('Editar respuesta')
+    type('Editá tu respuesta a Ana P.', '  ')
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'La respuesta no puede quedar vacía. Podés editarla, pero no borrarla.',
+    )
+    expect(api.editReply).not.toHaveBeenCalled()
+  })
+
+  it('US-42 S6 cancelling an empty reply closes it and returns the focus', async () => {
+    await openReply('Responder')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.queryByLabelText('Tu respuesta a Ana P.')).toBeNull()
+    expect(discardDialog()).toBeNull()
+    expect(screen.getByRole('button', { name: 'Responder' })).toHaveFocus()
+    expect(api.publishReply).not.toHaveBeenCalled()
+  })
+
+  it('US-42 S6 asks before discarding what was typed', async () => {
+    await openReply('Responder')
+    type('Tu respuesta a Ana P.', 'Gracias.')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(discardDialog()).toBeInTheDocument()
+    screen.getByRole('button', { name: 'Cancelar' }).focus()
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir escribiendo' }))
+    await waitFor(() => expect(discardDialog()).toBeNull())
+    expect(screen.getByLabelText('Tu respuesta a Ana P.')).toHaveValue('Gracias.')
+    await waitFor(() => expect(screen.getByLabelText('Tu respuesta a Ana P.')).toHaveFocus())
+
+    fireEvent.keyDown(screen.getByLabelText('Tu respuesta a Ana P.'), { key: 'Escape' })
+    expect(discardDialog()).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
+
+    await waitFor(() => expect(screen.queryByLabelText('Tu respuesta a Ana P.')).toBeNull())
+    expect(screen.getByRole('button', { name: 'Responder' })).toHaveFocus()
+    expect(screen.queryByRole('group', { name: 'Tu respuesta' })).toBeNull()
+    expect(api.publishReply).not.toHaveBeenCalled()
+  })
+
+  it('US-42 S6 asks before leaving a draft to answer another review', async () => {
+    api.fetchRestaurantReviews.mockResolvedValue(
+      page({ reviews: [REVIEW, { ...REVIEW, id: 'review-2', author: 'Beto' }] }),
+    )
+    renderWithProviders(<RestaurantReviewsPage />)
+    const [first] = await screen.findAllByRole('button', { name: 'Responder' })
+    fireEvent.click(first)
+    type('Tu respuesta a Ana P.', 'Gracias.')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Responder' }))
+    expect(discardDialog()).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Descartar' }))
+
+    expect(await screen.findByLabelText('Tu respuesta a Beto')).toHaveFocus()
+    expect(screen.queryByLabelText('Tu respuesta a Ana P.')).toBeNull()
+  })
+
+  it('US-42 S7 offers no reply on a review that is not public', async () => {
+    api.fetchRestaurantReviews.mockResolvedValue(
+      page({ reviews: [{ ...REVIEW, comment: null, can_reply: false }] }),
+    )
+    renderWithProviders(<RestaurantReviewsPage />)
+
+    await screen.findByText('Ana P.')
+    expect(screen.queryByRole('button', { name: /Responder|Editar respuesta/ })).toBeNull()
   })
 })

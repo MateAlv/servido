@@ -6,10 +6,14 @@ from app.models.dish import Dish
 from app.models.email_verification import EmailVerification
 from app.models.opening_shift import OpeningShift
 from app.models.order import Order
+from app.models.order_confirmation import OrderConfirmation
 from app.models.order_item import OrderItem
+from app.models.password_reset import PasswordReset, PasswordResetRequest
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
+from app.models.restaurant_access import RestaurantEmailVerification, RestaurantPasswordReset
 from app.models.review import Review
+from app.models.review_reply import ReviewReply
 from app.models.table_inventory import TableInventoryGroup
 
 __all__ = [
@@ -22,9 +26,15 @@ __all__ = [
     "EmailVerification",
     "OpeningShift",
     "Order",
+    "OrderConfirmation",
     "OrderItem",
+    "PasswordReset",
+    "PasswordResetRequest",
     "Reservation",
     "Restaurant",
+    "RestaurantEmailVerification",
+    "RestaurantPasswordReset",
     "Review",
+    "ReviewReply",
     "TableInventoryGroup",
 ]

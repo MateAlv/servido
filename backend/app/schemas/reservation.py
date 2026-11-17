@@ -87,6 +87,15 @@ class UpcomingReservationsResponse(BaseModel):
     reservations: list[ReservationResponse]
 
 
+class ActiveReservationsResponse(BaseModel):
+    reservations: list[ReservationResponse]
+
+
+class ReservationCancellationResponse(BaseModel):
+    reservation: ReservationResponse
+    message: str
+
+
 class RestaurantReservationResponse(BaseModel):
     id: UUID
     start_time: str

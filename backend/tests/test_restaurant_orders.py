@@ -67,6 +67,7 @@ def restaurant_with_orders(session: Session) -> tuple[Restaurant, list[Order]]:
             reservation_id=reservation.id,
             restaurant_id=restaurant.id_restaurante,
             status="confirmed" if index != 2 else "pending",
+            payment_method="cash",
             prep_start_time=reservation.starts_at - timedelta(minutes=10 + index),
         )
         session.add(order)
@@ -199,7 +200,7 @@ def test_us22_s1_confirmed_order_is_unpaid(client: TestClient, session: Session)
     assert orders[0].status == "confirmed"
     assert response.json()["payment"] == {
         "status": "pending",
-        "method": "No seleccionado",
+        "method": "cash",
         "total": "24000.00",
     }
 
@@ -302,3 +303,23 @@ def test_us22_edge_cancelled_reservations_and_unconfirmed_orders_are_hidden(
         assert (
             client.get(f"/api/restaurante/pedidos/{order.id}", headers=headers).status_code == 404
         )
+
+
+def test_us45_edge_restaurant_reads_real_preference_and_status(client, session):
+    from tests.test_order import restaurant_headers, setup
+    from tests.test_order_timing_payment import payload, put
+
+    s = setup(client, session)
+    assert put(client, s, payload(s, method="online", delay=30)).status_code == 200
+    order = session.query(Order).filter_by(reservation_id=s.reservation.id).one()
+    headers = restaurant_headers(client, s.restaurant)
+    url = f"/api/restaurante/pedidos/{order.id}"
+    before = client.get(url, headers=headers).json()
+    assert before["arrival_time"] == "21:30"
+    assert before["payment"]["method"] == "online"
+    assert before["payment"]["status"] == "pending"
+    order.payment_status = "paid"
+    session.commit()
+    after = client.get(url, headers=headers).json()
+    assert after["payment"]["status"] == "paid"
+    assert after["payment"]["method"] == "online"

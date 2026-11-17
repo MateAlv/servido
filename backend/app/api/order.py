@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Response, status
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import TokenClaimsDep, require_diner
 from app.api.reservation import reservation_response
@@ -11,14 +12,18 @@ from app.models.order import Order
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.diner_order import (
+    ArrivalWindow,
     CartItemResponse,
     CartResponse,
     CartSaveResponse,
+    ConfirmationRequest,
+    ConfirmationResult,
     ConfirmedOrderItemResponse,
+    DraftRequest,
     OrderMenuDish,
     OrderPageResponse,
-    OrderRequest,
     OrderResponse,
+    PaymentMethodRequest,
 )
 from app.services import availability, orders
 from app.services.availability import BUENOS_AIRES
@@ -34,9 +39,14 @@ SESSION_AND_ROLE = {
 }
 
 
-def order_response(order: Order) -> OrderResponse:
+def order_response(order: Order, reservation: Reservation, now: datetime) -> OrderResponse:
     summary = orders.order_summary(order.items)
     return OrderResponse(
+        arrival_at=orders.arrival_time(reservation, order),
+        prep_start_time=orders.prep_start_time(reservation, order),
+        payment_method=order.payment_method,
+        payment_status=order.payment_status,
+        payment_method_editable=orders.payment_editable(reservation, order, now),
         confirmed_at=order.confirmed_at.astimezone(BUENOS_AIRES),
         items=[
             ConfirmedOrderItemResponse(
@@ -54,8 +64,10 @@ def order_response(order: Order) -> OrderResponse:
     )
 
 
-def cart_response(cart: Cart) -> CartResponse:
+def cart_response(cart: Cart, reservation: Reservation) -> CartResponse:
     return CartResponse(
+        arrival_at=orders.arrival_time(reservation, cart),
+        payment_method=cart.payment_method,
         updated_at=cart.updated_at.astimezone(BUENOS_AIRES),
         items=[
             CartItemResponse(
@@ -74,11 +86,14 @@ def order_page(session: SessionDep, reservation: Reservation, now: datetime) -> 
     order = orders.order_of(session, reservation.id)
     cart = orders.open_cart(session, reservation, now)
     return OrderPageResponse(
+        arrival_window=ArrivalWindow(
+            starts_at=reservation.starts_at, latest_at=reservation.starts_at + timedelta(minutes=30)
+        ),
         reservation=reservation_response(
             session, reservation, session.get(Restaurant, reservation.restaurant_id), now
         ),
-        order=order_response(order) if order else None,
-        cart=cart_response(cart) if cart else None,
+        order=order_response(order, reservation, now) if order else None,
+        cart=cart_response(cart, reservation) if cart else None,
         menu=[
             OrderMenuDish(
                 id=dish.id_plato,
@@ -95,7 +110,7 @@ def order_page(session: SessionDep, reservation: Reservation, now: datetime) -> 
     )
 
 
-def item_inputs(payload: OrderRequest) -> list[orders.ItemInput]:
+def item_inputs(payload: DraftRequest) -> list[orders.ItemInput]:
     return [
         orders.ItemInput(
             dish_id=item.dish_id,
@@ -143,15 +158,30 @@ def get_order(
     },
 )
 def put_order(
-    reservation_id: UUID, payload: OrderRequest, claims: TokenClaimsDep, session: SessionDep
+    reservation_id: UUID, payload: ConfirmationRequest, claims: TokenClaimsDep, session: SessionDep
 ) -> OrderPageResponse:
     """Confirms the order: it replaces the previous one and the cart (P1, P11)."""
     diner_id = require_diner(claims, session)
-    now = availability.current_time()
     try:
-        reservation, _ = orders.confirm_order(
-            session, diner_id, reservation_id, item_inputs(payload), now
-        )
+        reservation, replayed = orders.confirm_operation(session, diner_id, reservation_id, payload)
+    except orders.InvalidArrivalError as error:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    except IntegrityError as error:
+        session.rollback()
+        name = getattr(getattr(error.orig, "diag", None), "constraint_name", None)
+        if name == "order_payment_paid":
+            raise conflict(
+                "Ya se registró el pago de este pedido. No podés cambiar el medio."
+            ) from error
+        if name == "order_payment_required":
+            raise HTTPException(
+                status_code=400, detail="Seleccioná un medio de pago para confirmar tu pedido."
+            ) from error
+        raise
+    except orders.OrderConflictError as error:
+        session.rollback()
+        raise conflict(str(error)) from error
     except orders.ReservationNotFoundError as error:
         raise not_found() from error
     except orders.OrderClosedError as error:
@@ -171,7 +201,9 @@ def put_order(
         session.rollback()
         raise conflict(orders.MENU_CHANGED) from error
     session.commit()
-    return order_page(session, reservation, now)
+    result = order_page(session, reservation, availability.current_time())
+    result.confirmation = ConfirmationResult(operation_id=payload.operation_id, replayed=replayed)
+    return result
 
 
 @router.put(
@@ -185,14 +217,38 @@ def put_order(
     },
 )
 def put_cart(
-    reservation_id: UUID, payload: OrderRequest, claims: TokenClaimsDep, session: SessionDep
+    reservation_id: UUID, payload: DraftRequest, claims: TokenClaimsDep, session: SessionDep
 ) -> CartSaveResponse:
     """Saves the order being built; the restaurant never sees it (P1)."""
     diner_id = require_diner(claims, session)
     try:
         cart = orders.save_cart(
-            session, diner_id, reservation_id, item_inputs(payload), availability.current_time()
+            session,
+            diner_id,
+            reservation_id,
+            item_inputs(payload),
+            availability.current_time(),
+            arrival_at=payload.arrival_at,
+            payment_method=payload.payment_method,
         )
+    except orders.InvalidArrivalError as error:
+        session.rollback()
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    except IntegrityError as error:
+        session.rollback()
+        name = getattr(getattr(error.orig, "diag", None), "constraint_name", None)
+        if name == "order_payment_paid":
+            raise conflict(
+                "Ya se registró el pago de este pedido. No podés cambiar el medio."
+            ) from error
+        if name == "order_payment_required":
+            raise HTTPException(
+                status_code=400, detail="Seleccioná un medio de pago para confirmar tu pedido."
+            ) from error
+        raise
+    except orders.OrderConflictError as error:
+        session.rollback()
+        raise conflict(str(error)) from error
     except orders.ReservationNotFoundError as error:
         raise not_found() from error
     except orders.OrderClosedError as error:
@@ -202,7 +258,8 @@ def put_cart(
         session.rollback()
         raise conflict(orders.MENU_CHANGED) from error
     session.commit()
-    return CartSaveResponse(cart=cart_response(cart) if cart else None)
+    reservation = orders.diner_reservation(session, diner_id, reservation_id)
+    return CartSaveResponse(cart=cart_response(cart, reservation) if cart else None)
 
 
 @router.delete(
@@ -219,3 +276,42 @@ def delete_cart(reservation_id: UUID, claims: TokenClaimsDep, session: SessionDe
         raise not_found() from error
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put(
+    "/reservations/{reservation_id}/order/payment-method",
+    response_model=OrderPageResponse,
+    responses={
+        **SESSION_AND_ROLE,
+        **NOT_FOUND,
+        400: {"description": "Medio inválido."},
+        409: {"description": "El medio ya no se puede cambiar."},
+    },
+)
+def put_payment_method(
+    reservation_id: UUID, payload: PaymentMethodRequest, claims: TokenClaimsDep, session: SessionDep
+) -> OrderPageResponse:
+    diner_id = require_diner(claims, session)
+    try:
+        reservation = orders.change_payment_method(
+            session, diner_id, reservation_id, payload.payment_method, availability.current_time()
+        )
+    except orders.ReservationNotFoundError as error:
+        raise not_found() from error
+    except IntegrityError as error:
+        session.rollback()
+        name = getattr(getattr(error.orig, "diag", None), "constraint_name", None)
+        if name == "order_payment_paid":
+            raise conflict(
+                "Ya se registró el pago de este pedido. No podés cambiar el medio."
+            ) from error
+        if name == "order_payment_required":
+            raise HTTPException(
+                status_code=400, detail="Seleccioná un medio de pago para confirmar tu pedido."
+            ) from error
+        raise
+    except orders.OrderConflictError as error:
+        session.rollback()
+        raise conflict(str(error)) from error
+    session.commit()
+    return order_page(session, reservation, availability.current_time())

@@ -54,6 +54,7 @@ async function wait(ms = SAVE_DELAY_MS) {
 }
 
 beforeEach(() => {
+  sessionStorage.clear()
   vi.useFakeTimers()
   saveMock.mockReset().mockResolvedValue({ ok: true })
   discardMock.mockReset().mockResolvedValue({ ok: true })
@@ -75,13 +76,21 @@ describe('useOrderCart', () => {
     await wait(1)
 
     expect(saveMock).toHaveBeenCalledTimes(1)
-    expect(saveMock).toHaveBeenCalledWith('res-1', [PROVOLETA, FLAN], { keepalive: false })
+    expect(saveMock).toHaveBeenCalledWith(
+      'res-1',
+      [PROVOLETA, FLAN],
+      { keepalive: false },
+      expect.objectContaining({ arrival_at: expect.any(String), payment_method: null }),
+    )
   })
 
   it('US-17 edge does not recreate the cart when a save is in flight at confirmation', async () => {
     let finishSave: (value: { ok: true }) => void = () => undefined
     saveMock.mockImplementationOnce(() => new Promise((resolve) => (finishSave = resolve)))
-    confirmMock.mockResolvedValue({ ok: true, page: {} as never })
+    confirmMock.mockResolvedValue({
+      ok: true,
+      page: { arrival_window: { starts_at: '' }, cart: null, order: null } as never,
+    })
     const { result } = setup()
 
     act(() => result.current.setLines(() => [PROVOLETA]))
@@ -99,7 +108,12 @@ describe('useOrderCart', () => {
       finishSave({ ok: true })
       await confirmation
     })
-    expect(confirmMock).toHaveBeenCalledWith('res-1', [PROVOLETA])
+    expect(confirmMock).toHaveBeenCalledWith(
+      'res-1',
+      [PROVOLETA],
+      expect.any(Object),
+      expect.any(String),
+    )
     await wait(SAVE_DELAY_MS * 2)
     expect(saveMock).toHaveBeenCalledTimes(1)
   })
@@ -113,7 +127,12 @@ describe('useOrderCart', () => {
       await result.current.confirm()
     })
 
-    expect(saveMock).toHaveBeenCalledWith('res-1', [PROVOLETA], { keepalive: false })
+    expect(saveMock).toHaveBeenCalledWith(
+      'res-1',
+      [PROVOLETA],
+      { keepalive: false },
+      expect.objectContaining({ arrival_at: expect.any(String), payment_method: null }),
+    )
     expect(saveMock.mock.invocationCallOrder[0]).toBeLessThan(
       confirmMock.mock.invocationCallOrder[0],
     )
@@ -159,7 +178,12 @@ describe('useOrderCart', () => {
     act(() => result.current.setLines(() => []))
     await wait()
 
-    expect(saveMock).toHaveBeenCalledWith('res-1', [], { keepalive: false })
+    expect(saveMock).toHaveBeenCalledWith(
+      'res-1',
+      [],
+      { keepalive: false },
+      expect.objectContaining({ arrival_at: expect.any(String), payment_method: null }),
+    )
   })
 
   it('says when a save failed and retries with the next change', async () => {
@@ -173,7 +197,12 @@ describe('useOrderCart', () => {
     act(() => result.current.setLines((lines) => [...lines, FLAN]))
     await wait()
     expect(result.current.saveFailed).toBe(false)
-    expect(saveMock).toHaveBeenLastCalledWith('res-1', [PROVOLETA, FLAN], { keepalive: false })
+    expect(saveMock).toHaveBeenLastCalledWith(
+      'res-1',
+      [PROVOLETA, FLAN],
+      { keepalive: false },
+      expect.objectContaining({ arrival_at: expect.any(String), payment_method: null }),
+    )
   })
 
   it('hands a conflict or an expired session to the page', async () => {
@@ -199,12 +228,20 @@ describe('useOrderCart', () => {
     await wait(0)
     act(() => result.current.setLines((lines) => [...lines, FLAN]))
     await act(async () => {
-      finish({ ok: true, page: {} as never })
+      finish({
+        ok: true,
+        page: { arrival_window: { starts_at: '' }, cart: null, order: null } as never,
+      })
       await confirmation
     })
     await wait()
 
-    expect(saveMock).toHaveBeenLastCalledWith('res-1', [PROVOLETA, FLAN], { keepalive: false })
+    expect(saveMock).toHaveBeenLastCalledWith(
+      'res-1',
+      [PROVOLETA, FLAN],
+      { keepalive: false },
+      expect.objectContaining({ arrival_at: expect.any(String), payment_method: null }),
+    )
   })
 
   it('does not confirm when the save before it was refused', async () => {
@@ -248,7 +285,12 @@ describe('useOrderCart', () => {
     })
     await wait(0)
 
-    expect(saveMock).toHaveBeenCalledWith('res-1', [PROVOLETA], { keepalive: true })
+    expect(saveMock).toHaveBeenCalledWith(
+      'res-1',
+      [PROVOLETA],
+      { keepalive: true },
+      expect.objectContaining({ arrival_at: expect.any(String), payment_method: null }),
+    )
   })
 
   it('sends the pending save when the page closes', async () => {
@@ -258,6 +300,115 @@ describe('useOrderCart', () => {
     unmount()
     await wait(0)
 
-    expect(saveMock).toHaveBeenCalledWith('res-1', [PROVOLETA], { keepalive: true })
+    expect(saveMock).toHaveBeenCalledWith(
+      'res-1',
+      [PROVOLETA],
+      { keepalive: true },
+      expect.objectContaining({ arrival_at: expect.any(String), payment_method: null }),
+    )
   })
+})
+
+it('US-43 edge retries the immutable operation through a lost response and expired session', async () => {
+  const first = setup()
+  act(() => first.result.current.setLines(() => [PROVOLETA]))
+  confirmMock.mockRejectedValueOnce(new Error('lost response'))
+  await act(async () => {
+    await first.result.current.confirm()
+  })
+  const submitted = confirmMock.mock.calls[0]
+  confirmMock.mockResolvedValueOnce({ ok: false, kind: 'session' })
+  await act(async () => {
+    await first.result.current.confirm()
+  })
+  expect(confirmMock.mock.calls[1]).toEqual(submitted)
+  first.unmount()
+  const second = setup()
+  confirmMock.mockResolvedValueOnce({
+    ok: true,
+    page: {
+      arrival_window: { starts_at: '' },
+      cart: null,
+      order: null,
+      confirmation: { operation_id: submitted[3], replayed: true },
+    } as never,
+  })
+  await act(async () => {
+    await second.result.current.confirm()
+  })
+  expect(confirmMock.mock.calls[2]).toEqual(submitted)
+  expect(saveMock).toHaveBeenCalledTimes(1)
+  expect(discardMock).not.toHaveBeenCalled()
+  expect(sessionStorage.getItem('servido-order-operation:test:res-1')).toBeNull()
+})
+
+it('US-43 edge assigns another operation to a deliberate reconfirmation', async () => {
+  const { result } = setup()
+  confirmMock.mockResolvedValue({
+    ok: true,
+    page: { arrival_window: { starts_at: '' }, cart: null, order: null } as never,
+  })
+  act(() => result.current.setLines(() => [PROVOLETA]))
+  await act(async () => {
+    await result.current.confirm()
+  })
+  act(() => result.current.setLines(() => [FLAN]))
+  await act(async () => {
+    await result.current.confirm()
+  })
+  expect(confirmMock.mock.calls[0][3]).not.toEqual(confirmMock.mock.calls[1][3])
+})
+
+it('US-45 edge saves metadata-only changes and restores metadata on discard', async () => {
+  const initial = { arrival_at: '2026-11-03T21:00:00-03:00', payment_method: 'cash' as const }
+  const { result } = renderHook(() =>
+    useOrderCart({
+      reservationId: 'res-meta',
+      initialLines: [PROVOLETA],
+      confirmedLines: [PROVOLETA],
+      initialMetadata: initial,
+      confirmedMetadata: initial,
+      onSaveFailure: vi.fn(),
+    }),
+  )
+  act(() => result.current.setMetadata({ ...initial, payment_method: 'online' }))
+  expect(result.current.metadataChanged).toBe(true)
+  await wait()
+  expect(saveMock).toHaveBeenCalledWith(
+    'res-meta',
+    [PROVOLETA],
+    { keepalive: false },
+    { ...initial, payment_method: 'online' },
+  )
+  await act(async () => {
+    await result.current.discard()
+  })
+  expect(result.current.metadata).toEqual(initial)
+})
+
+it('US-43 edge coalesces a double confirmation while the first operation is in flight', async () => {
+  const { result } = setup()
+  let settle: (value: { ok: true; page: never }) => void = () => undefined
+  confirmMock.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        settle = resolve
+      }),
+  )
+  act(() => result.current.setLines(() => [PROVOLETA]))
+  let first: Promise<unknown>, second: Promise<unknown>
+  act(() => {
+    first = result.current.confirm()
+    second = result.current.confirm()
+  })
+  await wait(0)
+  expect(confirmMock).toHaveBeenCalledTimes(1)
+  await act(async () => {
+    settle({
+      ok: true,
+      page: { arrival_window: { starts_at: '' }, cart: null, order: null } as never,
+    })
+    await Promise.all([first, second])
+  })
+  expect(confirmMock).toHaveBeenCalledTimes(1)
 })

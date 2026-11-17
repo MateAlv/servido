@@ -97,6 +97,11 @@
   gap: 10px;
 }
 
+/* Without a cover photo the close button sits over the head: keep the price clear of it. */
+.cardBody:first-child .cardHead {
+  padding-right: 34px;
+}
+
 .popupTitle {
   margin: 0;
   font: 800 19px / 1.15 var(--font-display);
@@ -168,6 +173,32 @@
   .map {
     height: 52vh;
     min-height: 340px;
+  }
+}
+
+/* On a phone the card has to fit in a short map with «Ver detalle» in view: no cover photo,
+   tighter spacing, and the price kept clear of the close button. */
+@media (max-width: 480px) {
+  .map {
+    min-height: 380px;
+  }
+
+  .cover {
+    display: none;
+  }
+
+  .cardBody {
+    gap: 8px;
+    padding: 12px 14px 14px;
+  }
+
+  .cardHead {
+    padding-right: 34px;
+  }
+
+  .facts {
+    gap: 4px 12px;
+    padding-top: 8px;
   }
 }
 

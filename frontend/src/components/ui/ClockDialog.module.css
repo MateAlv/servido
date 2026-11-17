@@ -1,0 +1,142 @@
+.face {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.readout {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.segment {
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-field);
+  background: transparent;
+  color: var(--color-text);
+  font: 800 48px / 1.15 var(--font-display);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.segment[aria-pressed='true'] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-text);
+}
+
+.colon {
+  color: var(--color-text-muted);
+  font: 800 48px / 1.15 var(--font-display);
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+/* 288 px: the outer ring (116 px) plus half an outer button fits inside with room to spare. */
+.dial {
+  position: relative;
+  width: 288px;
+  height: 288px;
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  animation: dial-in var(--duration-base) var(--ease-spring);
+}
+
+.hand {
+  position: absolute;
+  bottom: 50%;
+  left: calc(50% - 1px);
+  width: 2px;
+  height: var(--length);
+  background: var(--color-primary);
+  transform: rotate(var(--angle));
+  transform-origin: 50% 100%;
+  transition:
+    transform var(--duration-base) var(--ease-spring),
+    height var(--duration-base) var(--ease-out);
+}
+
+.center {
+  position: absolute;
+  top: calc(50% - 5px);
+  left: calc(50% - 5px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.number {
+  position: absolute;
+  top: calc(50% + var(--y) - var(--size) / 2);
+  left: calc(50% + var(--x) - var(--size) / 2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size);
+  height: var(--size);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text);
+  font: 800 17px / 1 var(--font-body);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.number[data-ring='inner'] {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.number[data-ring='minute'] {
+  font-size: 20px;
+}
+
+.number[aria-pressed='true'] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.number:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+
+.number:focus-visible,
+.segment:focus-visible {
+  outline: 3px solid var(--color-location);
+  outline-offset: 2px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+@keyframes dial-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dial {
+    animation: none;
+  }
+
+  .hand,
+  .number,
+  .segment {
+    transition: none;
+  }
+}

@@ -1,3 +1,4 @@
+import upcomingStyles from './home/UpcomingReservations.module.css'
 import { screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -45,9 +46,17 @@ function upcomingReservation(id: string, order: Record<string, unknown>) {
   }
 }
 
-function signedInAs(rol: 'diner' | 'restaurant', nombre: string) {
+function signedInAs(rol: 'diner' | 'restaurant', nombre: string, emailVerificado = true) {
   sessionStorage.setItem('servido-access-token', `token-${rol}`)
-  answerMe({ data: { rol, id: '1c9d2e4f-3a5b-4c6d-8e7f-9a0b1c2d3e4f', nombre, email: 'a@b.com' } })
+  answerMe({
+    data: {
+      rol,
+      id: '1c9d2e4f-3a5b-4c6d-8e7f-9a0b1c2d3e4f',
+      nombre,
+      email: 'a@b.com',
+      email_verificado: emailVerificado,
+    },
+  })
 }
 
 afterEach(() => {
@@ -97,7 +106,7 @@ describe('HomePage', () => {
 
     expect(await screen.findByText('Hola, Ana')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: '¿Dónde comés hoy?' })).toBeInTheDocument()
-    expect(screen.getByRole('group', { name: 'Precio' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Filtros/ })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Soy comensal' })).not.toBeInTheDocument()
   })
 
@@ -135,7 +144,18 @@ describe('HomePage', () => {
     expect(
       within(card('cambiando')).getByText('Pedido confirmado · con cambios sin confirmar'),
     ).toBeInTheDocument()
-    expect(within(card('cambiando')).getByRole('link', { name: 'Seguir armando' })).toBeVisible()
+    expect(within(card('cambiando')).getByRole('link', { name: 'Ver pedido' })).toHaveAttribute(
+      'href',
+      '/reservas/cambiando/pedido',
+    )
+    const pendingStatus = within(card('cambiando')).getByText(
+      'Pedido confirmado · con cambios sin confirmar',
+    )
+    expect(pendingStatus).toHaveClass(upcomingStyles.statusText)
+    expect(pendingStatus.parentElement).toHaveClass(upcomingStyles.orderStatus)
+    expect(
+      within(card('cambiando')).queryByRole('link', { name: 'Seguir armando' }),
+    ).not.toBeInTheDocument()
     expect(within(card('confirmado')).getByText('Pedido confirmado')).toBeInTheDocument()
     expect(within(card('confirmado')).getByRole('link', { name: 'Ver pedido' })).toBeVisible()
     expect(within(card('cerrado')).queryByRole('link')).not.toBeInTheDocument()
@@ -163,6 +183,19 @@ describe('HomePage', () => {
     expect(screen.getByRole('heading', { name: 'Platos y menú' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Reservas' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Soy restaurante' })).not.toBeInTheDocument()
+  })
+
+  it('US-44 S3 tells an unverified restaurant that it is still hidden', async () => {
+    signedInAs('restaurant', 'La Esquina', false)
+    renderWithProviders(<HomePage />)
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Hola, La Esquina' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Verificación de email' })).toBeInTheDocument()
+    expect(screen.getByText(/para publicar tu restaurante/)).toBeInTheDocument()
+    expect(screen.getByText('Pendiente de verificación')).toBeInTheDocument()
+    expect(screen.getByText(/Verificá tu email para que los comensales/)).toBeInTheDocument()
   })
 
   it('US-18 edge the restaurant panel links to its cancellations', async () => {

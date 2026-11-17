@@ -94,7 +94,9 @@ export function RestaurantRegisterPage() {
         body: { ...fields, terms_accepted: true },
       })
       if (error) throw new Error(getApiErrorMessage(error, FALLBACK_ERROR))
-      toast('¡Listo! La cuenta del restaurante está creada. Ingresá para seguir.', { tone: 'ok' })
+      toast('¡Listo! Te mandamos un mail para verificar la cuenta. Ingresá para seguir.', {
+        tone: 'ok',
+      })
       navigate('/ingresar?rol=restaurante', { state: { email: fields.email } })
     } catch (requestError) {
       setError(getRequestErrorMessage(requestError, FALLBACK_ERROR))
