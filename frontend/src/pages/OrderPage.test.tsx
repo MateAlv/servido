@@ -865,6 +865,13 @@ describe('OrderPage', () => {
     expect(screen.getByText('Preparación: unos 25 min')).toBeVisible()
   })
 
+  it('US-40 S6 shows preparation estimate to the diner', async () => {
+    const user = await openPage()
+    await add(user, 'Bife de chorizo')
+
+    expect(within(yourOrder()).getByText('Preparación: unos 25 min')).toBeVisible()
+  })
+
   it('US-19 S3 updates the estimate when dishes change', async () => {
     const user = await openPage()
     await add(user, 'Provoleta')
