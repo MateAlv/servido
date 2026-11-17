@@ -319,6 +319,8 @@ def test_us45_edge_restaurant_reads_real_preference_and_status(client, session):
     assert before["payment"]["method"] == "online"
     assert before["payment"]["status"] == "pending"
     order.payment_status = "paid"
+    order.paid_amount = 0
+    order.paid_at = order.created_at
     session.commit()
     after = client.get(url, headers=headers).json()
     assert after["payment"]["status"] == "paid"

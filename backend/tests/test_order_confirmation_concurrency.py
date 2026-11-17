@@ -146,7 +146,10 @@ def test_us45_edge_payment_write_serialization(committed_order):
     def credit():
         with Session(engine) as session:
             orders.diner_reservation(session, diner_id, reservation_id, lock=True)
-            orders.order_of(session, reservation_id).payment_status = "paid"
+            order = orders.order_of(session, reservation_id)
+            order.payment_status = "paid"
+            order.paid_amount = 0
+            order.paid_at = order.created_at
             session.flush()
             locked.set()
             assert attempting.wait(10)

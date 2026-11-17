@@ -188,6 +188,8 @@ def test_us45_s5_paid_order_rejects_method_change(client, session):
     assert put(client, s, payload(s)).status_code == 200
     order = session.query(Order).filter_by(reservation_id=s.reservation.id).one()
     order.payment_status = "paid"
+    order.paid_amount = 0
+    order.paid_at = order.created_at
     session.commit()
     assert (
         client.put(
@@ -258,6 +260,8 @@ def test_us45_edge_payment_database_constraints(client, session):
             )
     order = session.query(Order).filter_by(reservation_id=s.reservation.id).one()
     order.payment_status = "paid"
+    order.paid_amount = 0
+    order.paid_at = order.created_at
     session.commit()
     with pytest.raises(IntegrityError), session.begin_nested():
         session.execute(
