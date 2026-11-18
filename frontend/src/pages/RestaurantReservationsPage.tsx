@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import {
+  cancelRestaurantReservation,
   fetchRestaurantReservations,
   type RestaurantReservation,
 } from '../api/restaurantReservations'
 import { configurationApi, type OpeningShift } from '../api/restaurantConfiguration'
-import { Button, Card, IconArrowLeft, StatusPill } from '../components/ui'
+import { Button, Card, IconArrowLeft, Modal, StatusPill, useToast } from '../components/ui'
 import { longDate, todayInBuenosAires } from '../lib/date'
 import { tableLabel } from '../lib/seating'
 import styles from './RestaurantReservationsPage.module.css'
@@ -29,7 +30,11 @@ function reservationShift(reservation: RestaurantReservation, shifts: OpeningShi
   )
 }
 
-function reservationCard(reservation: RestaurantReservation) {
+function reservationCard(
+  reservation: RestaurantReservation,
+  cancelling: string | null,
+  onCancel: (reservation: RestaurantReservation) => void,
+) {
   const cancelled = reservation.status === 'cancelled'
   return (
     <Card key={reservation.id} className={styles.reservation}>
@@ -51,6 +56,16 @@ function reservationCard(reservation: RestaurantReservation) {
           <dd>{reservation.party_size}</dd>
         </div>
       </dl>
+      {!cancelled && (
+        <Button
+          variant="secondary"
+          size="sm"
+          loading={cancelling === reservation.id}
+          onClick={() => onCancel(reservation)}
+        >
+          Cancelar reserva
+        </Button>
+      )}
       <Button variant="ghost" size="sm" to={`/restaurante/reservas/${reservation.id}/comensal`}>
         Ver comensal
       </Button>
@@ -59,11 +74,14 @@ function reservationCard(reservation: RestaurantReservation) {
 }
 
 export function RestaurantReservationsPage() {
+  const toast = useToast()
   const [date, setDate] = useState(todayInBuenosAires)
   const [reservations, setReservations] = useState<RestaurantReservation[]>([])
   const [shifts, setShifts] = useState<OpeningShift[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [cancelling, setCancelling] = useState<string | null>(null)
+  const [pendingCancellation, setPendingCancellation] = useState<RestaurantReservation | null>(null)
 
   useEffect(() => {
     let active = true
@@ -104,6 +122,25 @@ export function RestaurantReservationsPage() {
 
   const dayIndex = new Date(`${date}T12:00:00-03:00`).getDay()
   const dayName = DAY_NAMES[(dayIndex + 6) % 7]
+  const cancel = async (reservation: RestaurantReservation) => {
+    setCancelling(reservation.id)
+    try {
+      const result = await cancelRestaurantReservation(reservation.id)
+      setReservations((items) =>
+        items.map((item) => (item.id === reservation.id ? { ...item, status: 'cancelled' } : item)),
+      )
+      toast(result.message, { tone: 'ok' })
+    } catch (requestError) {
+      toast((requestError as Error).message, { tone: 'error' })
+    } finally {
+      setCancelling(null)
+    }
+  }
+  const confirmCancellation = async () => {
+    if (!pendingCancellation) return
+    await cancel(pendingCancellation)
+    setPendingCancellation(null)
+  }
 
   return (
     <main className={styles.page}>
@@ -150,10 +187,40 @@ export function RestaurantReservationsPage() {
               aria-labelledby={`shift-${group.key}`}
             >
               <h3 id={`shift-${group.key}`}>Turno de {group.title}</h3>
-              <div className={styles.reservations}>{group.reservations.map(reservationCard)}</div>
+              <div className={styles.reservations}>
+                {group.reservations.map((reservation) =>
+                  reservationCard(reservation, cancelling, setPendingCancellation),
+                )}
+              </div>
             </section>
           ))}
       </Card>
+      <Modal
+        open={pendingCancellation !== null}
+        onClose={() => {
+          if (!cancelling) setPendingCancellation(null)
+        }}
+        title="Confirmar cancelación"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setPendingCancellation(null)}
+              disabled={cancelling !== null}
+            >
+              Volver
+            </Button>
+            <Button loading={cancelling !== null} onClick={() => void confirmCancellation()}>
+              Confirmar cancelación
+            </Button>
+          </>
+        }
+      >
+        <p>
+          La cancelación es definitiva. Se avisará al comensal y, si corresponde, se procesará el
+          reembolso.
+        </p>
+      </Modal>
     </main>
   )
 }

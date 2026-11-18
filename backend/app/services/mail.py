@@ -28,6 +28,20 @@ class MailError(Exception):
 outbox: list[Mail] = []
 
 
+def restaurant_cancellation_mail(
+    to: str, restaurant_name: str, reservation_text: str, refund_text: str = ""
+) -> Mail:
+    text = (
+        f"El restaurante {restaurant_name} canceló tu reserva de {reservation_text}.{refund_text}"
+    )
+    return Mail(
+        to=to,
+        subject=f"Se canceló tu reserva en {restaurant_name}",
+        text=text,
+        html=f"<p>{text}</p>",
+    )
+
+
 def send_mail(mail: Mail) -> None:
     """Sends with the backend chosen by MAIL_BACKEND: ses, smtp, memory or console (research R6)."""
     if settings.mail_backend == "ses":

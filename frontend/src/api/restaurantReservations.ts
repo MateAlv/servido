@@ -9,6 +9,7 @@ export type ReservationDiner = components['schemas']['ReservationDinerResponse']
 export type RestaurantCancellation = components['schemas']['RestaurantCancellationResponse']
 export type RestaurantCancellations = components['schemas']['RestaurantCancellationsResponse']
 export type RestaurantReservationOrder = components['schemas']['RestaurantReservationOrderResponse']
+export type RestaurantCancellationResult = components['schemas']['RestaurantCancellationResult']
 
 export async function fetchRestaurantReservations(date: string): Promise<RestaurantReservations> {
   const { data, error, response } = await api.GET('/api/restaurante/reservas', {
@@ -64,6 +65,29 @@ export async function fetchRestaurantCancellations(
   if (response.status === 401) throw new SessionExpiredError()
   if (error || !data) {
     throw new Error(getApiErrorMessage(error, 'No pudimos cargar las cancelaciones.'))
+  }
+  return data
+}
+
+export async function cancelRestaurantReservation(
+  reservationId: string,
+): Promise<RestaurantCancellationResult> {
+  const { data, error, response } = await api.POST(
+    '/api/restaurante/reservas/{reservation_id}/cancelar',
+    {
+      params: { path: { reservation_id: reservationId } },
+      headers: sessionHeaders(),
+      body: { request_id: crypto.randomUUID() },
+    },
+  )
+  if (response.status === 401) throw new SessionExpiredError()
+  if (response.status === 502) {
+    throw new Error(
+      'No pudimos completar el reembolso. La reserva sigue activa. Volvé a intentarlo.',
+    )
+  }
+  if (error || !data) {
+    throw new Error(getApiErrorMessage(error, 'No pudimos cancelar la reserva.'))
   }
   return data
 }
