@@ -4,11 +4,13 @@ from app.models.closure import Closure
 from app.models.diner import Diner
 from app.models.dish import Dish
 from app.models.email_verification import EmailVerification
+from app.models.notification import Notification
 from app.models.opening_shift import OpeningShift
 from app.models.order import Order
 from app.models.order_confirmation import OrderConfirmation
 from app.models.order_item import OrderItem
 from app.models.password_reset import PasswordReset, PasswordResetRequest
+from app.models.refund import Refund
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.models.restaurant_access import RestaurantEmailVerification, RestaurantPasswordReset
@@ -28,6 +30,7 @@ __all__ = [
     "Order",
     "OrderConfirmation",
     "OrderItem",
+    "Notification",
     "PasswordReset",
     "PasswordResetRequest",
     "Reservation",
@@ -36,5 +39,6 @@ __all__ = [
     "RestaurantPasswordReset",
     "Review",
     "ReviewReply",
+    "Refund",
     "TableInventoryGroup",
 ]

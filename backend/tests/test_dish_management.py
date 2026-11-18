@@ -1,13 +1,19 @@
 """US-34 acceptance and management contract tests, on real PostgreSQL."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 from pathlib import Path
 from uuid import uuid4
 
 import pytest
 
 from app.services import orders
-from tests.reservations import add_bookable_restaurant, add_cart, add_order
+from tests.reservations import (
+    TOMORROW,
+    add_bookable_restaurant,
+    add_cart,
+    add_order,
+    add_reservation,
+)
 from tests.test_order import page, restaurant_headers, setup
 
 
@@ -75,6 +81,37 @@ def test_us34_s1_updates_dish_and_public_menu(client, managed):
         ["vegano"],
     )
     assert next(d for d in public(client, s) if d["id"] == dish["id"])["name"] == "Nueva"
+
+
+def test_us40_s1_registers_preparation_time(client, managed):
+    s, headers, _ = managed
+    response = edit(client, s, headers, prep_time_minutes="15")
+
+    assert response.status_code == 200
+    assert response.json()["dish"]["prep_time_minutes"] == 15
+    assert client.get(url(s), headers=headers).json()["prep_time_minutes"] == 15
+
+
+def test_us40_s2_modifies_preparation_time_for_new_order(client, managed, session):
+    s, headers, _ = managed
+    assert edit(client, s, headers, prep_time_minutes="30").status_code == 200
+    reservation = add_reservation(
+        session, s.restaurant, s.reservation.diner_id, TOMORROW, time(22), 2, "indoor"
+    )
+    order = add_order(session, reservation, [(s.provoleta, 1)])
+    session.commit()
+
+    session.refresh(order)
+    assert order.items[0].prep_time_minutes == 30
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "abc", "2147483648"])
+def test_us40_s3_rejects_invalid_preparation_time(client, managed, value):
+    s, headers, _ = managed
+    before = client.get(url(s), headers=headers).json()["prep_time_minutes"]
+
+    assert edit(client, s, headers, prep_time_minutes=value).status_code == 400
+    assert client.get(url(s), headers=headers).json()["prep_time_minutes"] == before
 
 
 @pytest.mark.parametrize(

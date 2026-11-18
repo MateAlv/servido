@@ -1,4 +1,5 @@
 from datetime import date, datetime, time
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -159,3 +160,21 @@ class RestaurantCancellationsResponse(BaseModel):
     restaurant_id: UUID
     date: date | None
     cancellations: list[RestaurantCancellationResponse]
+
+
+class RefundResponse(BaseModel):
+    status: str
+    amount: Decimal
+    method: str
+
+
+class RestaurantCancellationRequest(BaseModel):
+    request_id: UUID
+
+
+class RestaurantCancellationResult(BaseModel):
+    reservation_id: UUID
+    status: str
+    message: str
+    refund: RefundResponse | None
+    notification_created: bool
