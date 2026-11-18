@@ -53,8 +53,7 @@ describe('RestaurantReservationDinerPage (US-16)', () => {
     })
     renderWithProviders(<RestaurantReservationDinerPage />)
 
-    expect(await screen.findByText('Pedido anticipado')).toBeInTheDocument()
-    expect(screen.getByText('Ravioles × 2')).toBeInTheDocument()
+    expect(await screen.findByText('Ravioles × 2')).toBeInTheDocument()
     expect(screen.getAllByText(/24\.000/)).toHaveLength(2)
     expect(screen.queryByText(/medio de pago|cocina|llegada/i)).not.toBeInTheDocument()
   })
@@ -62,7 +61,31 @@ describe('RestaurantReservationDinerPage (US-16)', () => {
   it('US-36 S2 says when a confirmed reservation has no order', async () => {
     renderWithProviders(<RestaurantReservationDinerPage />)
 
-    expect(await screen.findByText('Esta reserva no tiene pedido anticipado.')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Esta reserva no tiene pedido anticipado confirmado.'),
+    ).toBeInTheDocument()
+  })
+
+  it('US-36 S4 treats an unconfirmed order as missing', async () => {
+    api.fetchReservationOrder.mockResolvedValue({
+      reservation_status: 'confirmed',
+      order: null,
+    })
+    renderWithProviders(<RestaurantReservationDinerPage />)
+
+    expect(
+      await screen.findByText('Esta reserva no tiene pedido anticipado confirmado.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Pedido confirmado|Ravioles ×/)).not.toBeInTheDocument()
+  })
+
+  it('keeps diner contact visible when the order request fails', async () => {
+    api.fetchReservationOrder.mockRejectedValue(new Error('No pudimos ver el pedido.'))
+    renderWithProviders(<RestaurantReservationDinerPage />)
+
+    expect(await screen.findByText('Ana Pérez')).toBeInTheDocument()
+    expect(screen.getByText('ana@example.com')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos ver el pedido.')
   })
 
   it('US-36 S3 says a cancelled reservation cancelled its order', async () => {

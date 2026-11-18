@@ -119,6 +119,7 @@ def create(
     for reservation in reservations:
         reservation.status = "cancelled"
         reservation.cancelled_at = now.astimezone(ZoneInfo("UTC"))
+        reservation.cancelled_by = "restaurant"
         session.execute(delete(Cart).where(Cart.reservation_id == reservation.id))
     session.flush()
     session.commit()

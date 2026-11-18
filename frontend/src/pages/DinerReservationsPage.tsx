@@ -61,6 +61,11 @@ export function DinerReservationsPage() {
         <p className={styles.eyebrow}>Tu cuenta</p>
         <h1>Mis reservas</h1>
         <p>Consultá los datos de tus próximas visitas.</p>
+        <div className={styles.actions}>
+          <Button variant="secondary" size="sm" to="/reservas/canceladas">
+            Canceladas
+          </Button>
+        </div>
       </header>
       {active.isPending && (
         <p className={styles.feedback} role="status">
@@ -118,6 +123,24 @@ export function DinerReservationsPage() {
                       </div>
                     </dl>
                     <div className={styles.actions}>
+                      {reservation.has_order ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          to={`/reservas/${reservation.id}/pedido?modo=lectura`}
+                        >
+                          Ver pedido
+                        </Button>
+                      ) : (
+                        <>
+                          <p className={styles.noOrder}>Sin pedido anticipado</p>
+                          {reservation.order_open && (
+                            <Button size="sm" to={`/reservas/${reservation.id}/pedido`}>
+                              Armar pedido
+                            </Button>
+                          )}
+                        </>
+                      )}
                       <Button variant="secondary" onClick={() => setConfirming(true)}>
                         Cancelar reserva
                       </Button>

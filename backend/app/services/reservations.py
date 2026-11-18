@@ -56,5 +56,6 @@ def cancel_reservation(
         raise ReservationCancellationWindowError(CANCELLATION_TOO_LATE)
     reservation.status = "cancelled"
     reservation.cancelled_at = now
+    reservation.cancelled_by = "diner"
     session.flush()
     return reservation

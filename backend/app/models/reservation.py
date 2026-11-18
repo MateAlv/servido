@@ -48,6 +48,10 @@ class Reservation(Base):
             "OR (status = 'cancelled' AND cancelled_at IS NOT NULL)",
             name="cancelled_at_matches_status",
         ),
+        CheckConstraint(
+            "cancelled_by IS NULL OR cancelled_by IN ('diner', 'restaurant')",
+            name="cancelled_by_known",
+        ),
         # No two confirmed reservations on one table at overlapping times (risk 2).
         ExcludeConstraint(
             ("restaurant_id", "="),
@@ -84,6 +88,7 @@ class Reservation(Base):
         String(20), nullable=False, default="confirmed", server_default="confirmed"
     )
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancelled_by: Mapped[str | None] = mapped_column(String(20), nullable=True)
     # Sent by the page once per review: a repeated confirmation finds the same reservation.
     request_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False, unique=True)
     created_at: Mapped[datetime] = mapped_column(

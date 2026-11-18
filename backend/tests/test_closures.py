@@ -113,6 +113,7 @@ def test_us32_s4_confirmation_cancels_affected_reservations(
     assert reservation.cancelled_at is not None
     assert sum("canceló" in message.subject for message in mail_outbox) == 1
     assert warning["detail"]["reservations"][0]["party_size"] == 2
+    assert reservation.cancelled_by == "restaurant"
 
 
 def test_us32_s5_declining_keeps_the_reservations_and_creates_nothing(

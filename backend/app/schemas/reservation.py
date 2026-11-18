@@ -91,6 +91,23 @@ class ActiveReservationsResponse(BaseModel):
     reservations: list[ReservationResponse]
 
 
+class CancelledReservationResponse(BaseModel):
+    id: UUID
+    restaurant: ReservationRestaurant
+    date: date
+    start_time: str
+    end_time: str
+    party_size: int
+    table: TableChoice
+    cancelled_by: str | None
+    cancelled_at: datetime
+    refund_status: str | None
+
+
+class CancelledReservationsResponse(BaseModel):
+    reservations: list[CancelledReservationResponse]
+
+
 class ReservationCancellationResponse(BaseModel):
     reservation: ReservationResponse
     message: str

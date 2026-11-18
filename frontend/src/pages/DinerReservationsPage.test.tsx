@@ -78,4 +78,29 @@ describe('DinerReservationsPage', () => {
     )
     expect(await screen.findByText('La reserva se canceló correctamente.')).toBeInTheDocument()
   })
+
+  it('US-47 S1 shows the order link for a reservation with an order', async () => {
+    reservationsApi.fetchActiveReservations.mockResolvedValue([
+      { ...reservation, has_order: true, order_open: false },
+    ])
+    renderWithProviders(<DinerReservationsPage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /La Esquina/ }))
+
+    expect(screen.getByRole('link', { name: 'Ver pedido' })).toHaveAttribute(
+      'href',
+      '/reservas/reservation-1/pedido?modo=lectura',
+    )
+  })
+
+  it('US-47 S4 says a reservation has no order', async () => {
+    reservationsApi.fetchActiveReservations.mockResolvedValue([
+      { ...reservation, has_order: false, order_open: false },
+    ])
+    renderWithProviders(<DinerReservationsPage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /La Esquina/ }))
+
+    expect(screen.getByText('Sin pedido anticipado')).toBeInTheDocument()
+  })
 })

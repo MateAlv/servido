@@ -107,6 +107,12 @@
   margin: 0;
 }
 
+.noOrder {
+  margin: 0 auto 0 0;
+  color: var(--color-text-muted);
+  align-self: center;
+}
+
 @media (max-width: 420px) {
   .details {
     grid-template-columns: 1fr;

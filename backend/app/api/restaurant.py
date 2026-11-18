@@ -23,8 +23,8 @@ from app.schemas.order import (
     OrderItemResponse,
     OrderPaymentResponse,
     RestaurantOrderResponse,
-    RestaurantReservationOrderResponse,
     RestaurantOrdersResponse,
+    RestaurantReservationOrderResponse,
 )
 from app.schemas.reservation import (
     DinerContact,
@@ -58,8 +58,8 @@ from app.services.opening_hours import validate_shifts
 from app.services.restaurant_orders import (
     format_local_time,
     restaurant_order,
-    restaurant_reservation_order,
     restaurant_orders,
+    restaurant_reservation_order,
 )
 from app.services.restaurant_verification import mark_verified, send_verification_mail
 from app.services.roles import RESTAURANT
@@ -314,9 +314,7 @@ def get_reservation_order(
     reservation_id: UUID, claims: TokenClaimsDep, session: SessionDep
 ) -> RestaurantReservationOrderResponse:
     restaurant = restaurant_from_claims(claims, session)
-    result = restaurant_reservation_order(
-        session, restaurant.id_restaurante, reservation_id
-    )
+    result = restaurant_reservation_order(session, restaurant.id_restaurante, reservation_id)
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -3,14 +3,18 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
+from sqlalchemy import select
 
 from app.api.deps import TokenClaimsDep, require_diner
 from app.db import SessionDep
+from app.models.order import Order
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.reservation import (
     ActiveReservationsResponse,
     AvailabilityResponse,
+    CancelledReservationResponse,
+    CancelledReservationsResponse,
     DayReservationsResponse,
     FreeGroupResponse,
     ReservationCancellationResponse,
@@ -274,6 +278,78 @@ def list_active_reservations(
             for reservation in reservations.active_reservations(session, diner_id, now)
         ]
     )
+
+
+def cancelled_reservation_response(
+    session: SessionDep, reservation: Reservation
+) -> CancelledReservationResponse:
+    starts_at = reservation.starts_at.astimezone(availability.BUENOS_AIRES)
+    ends_at = reservation.ends_at.astimezone(availability.BUENOS_AIRES)
+    restaurant = session.get(Restaurant, reservation.restaurant_id)
+    order = session.scalar(select(Order).where(Order.reservation_id == reservation.id))
+    refund_status = (
+        "pending"
+        if order is not None and order.status == "confirmed" and order.payment_status == "paid"
+        else None
+    )
+    return CancelledReservationResponse(
+        id=reservation.id,
+        restaurant=ReservationRestaurant(id=restaurant.id_restaurante, nombre=restaurant.nombre),
+        date=starts_at.date(),
+        start_time=hour_and_minute(starts_at.time()),
+        end_time=hour_and_minute(ends_at.time()),
+        party_size=reservation.party_size,
+        table=TableChoice(
+            capacity=reservation.table_capacity,
+            seating_area=reservation.seating_area,
+        ),
+        cancelled_by=reservation.cancelled_by,
+        cancelled_at=reservation.cancelled_at,
+        refund_status=refund_status,
+    )
+
+
+@router.get(
+    "/reservations/cancelled",
+    response_model=CancelledReservationsResponse,
+)
+def list_cancelled_reservations(
+    claims: TokenClaimsDep, session: SessionDep
+) -> CancelledReservationsResponse:
+    diner_id = require_diner(claims, session)
+    cancelled = list(
+        session.scalars(
+            select(Reservation)
+            .where(Reservation.diner_id == diner_id, Reservation.status == "cancelled")
+            .order_by(Reservation.cancelled_at.desc(), Reservation.id)
+        )
+    )
+    return CancelledReservationsResponse(
+        reservations=[cancelled_reservation_response(session, item) for item in cancelled]
+    )
+
+
+@router.get(
+    "/reservations/cancelled/{reservation_id}",
+    response_model=CancelledReservationResponse,
+)
+def get_cancelled_reservation(
+    reservation_id: UUID, claims: TokenClaimsDep, session: SessionDep
+) -> CancelledReservationResponse:
+    diner_id = require_diner(claims, session)
+    reservation = session.scalar(
+        select(Reservation).where(
+            Reservation.id == reservation_id,
+            Reservation.diner_id == diner_id,
+            Reservation.status == "cancelled",
+        )
+    )
+    if reservation is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No encontramos esa reserva.",
+        )
+    return cancelled_reservation_response(session, reservation)
 
 
 @router.delete(
