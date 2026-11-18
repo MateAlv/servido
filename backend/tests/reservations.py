@@ -195,6 +195,9 @@ def add_order(
         prep_start_time=reservation.starts_at,
         confirmed_at=NOW,
     )
+    if payment_status == "paid":
+        order.paid_amount = 0
+        order.paid_at = NOW
     session.add(order)
     session.flush()
     for dish, quantity in dishes:
