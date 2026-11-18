@@ -13,6 +13,8 @@ import { RestaurantReservationsPage } from './pages/RestaurantReservationsPage'
 import { RestaurantCancellationsPage } from './pages/RestaurantCancellationsPage'
 import { RestaurantReservationDinerPage } from './pages/RestaurantReservationDinerPage'
 import { DinerReservationsPage } from './pages/DinerReservationsPage'
+import { CancelledReservationsPage } from './pages/CancelledReservationsPage'
+import { CancelledReservationPage } from './pages/CancelledReservationPage'
 import { RestaurantReviewsPage } from './pages/RestaurantReviewsPage'
 import { RestaurantClosuresPage } from './pages/RestaurantClosuresPage'
 
@@ -22,6 +24,11 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <HomePage /> },
       { path: '/reservas', element: <DinerReservationsPage /> },
+      { path: '/reservas/canceladas', element: <CancelledReservationsPage /> },
+      {
+        path: '/reservas/canceladas/:reservationId',
+        element: <CancelledReservationPage />,
+      },
       { path: '/ingresar', element: <LoginPage /> },
       { path: '/registrarme', element: <RegisterPage /> },
       { path: '/suma-tu-local', element: <RestaurantRegisterPage /> },

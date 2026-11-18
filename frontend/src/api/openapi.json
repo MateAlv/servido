@@ -774,6 +774,84 @@
         }
       }
     },
+    "/api/restaurante/reservas/{reservation_id}/pedido": {
+      "get": {
+        "tags": [
+          "restaurant"
+        ],
+        "summary": "Get Reservation Order",
+        "operationId": "get_reservation_order_api_restaurante_reservas__reservation_id__pedido_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantReservationOrderResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Esta acci\u00f3n es solo para restaurantes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o no pertenece al restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/restaurante/pedidos/{order_id}": {
       "get": {
         "tags": [
@@ -2661,6 +2739,80 @@
         ]
       }
     },
+    "/api/reservations/cancelled": {
+      "get": {
+        "tags": [
+          "reservation"
+        ],
+        "summary": "List Cancelled Reservations",
+        "operationId": "list_cancelled_reservations_api_reservations_cancelled_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelledReservationsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/reservations/cancelled/{reservation_id}": {
+      "get": {
+        "tags": [
+          "reservation"
+        ],
+        "summary": "Get Cancelled Reservation",
+        "operationId": "get_cancelled_reservation_api_reservations_cancelled__reservation_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelledReservationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reservations/{reservation_id}": {
       "delete": {
         "tags": [
@@ -4208,6 +4360,95 @@
           "foto"
         ],
         "title": "Body_upload_restaurant_photo_api_restaurante_perfil_foto_post"
+      },
+      "CancelledReservationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "restaurant": {
+            "$ref": "#/components/schemas/ReservationRestaurant"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "title": "End Time"
+          },
+          "party_size": {
+            "type": "integer",
+            "title": "Party Size"
+          },
+          "table": {
+            "$ref": "#/components/schemas/TableChoice"
+          },
+          "cancelled_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelled By"
+          },
+          "cancelled_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Cancelled At"
+          },
+          "refund_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "restaurant",
+          "date",
+          "start_time",
+          "end_time",
+          "party_size",
+          "table",
+          "cancelled_by",
+          "cancelled_at",
+          "refund_status"
+        ],
+        "title": "CancelledReservationResponse"
+      },
+      "CancelledReservationsResponse": {
+        "properties": {
+          "reservations": {
+            "items": {
+              "$ref": "#/components/schemas/CancelledReservationResponse"
+            },
+            "type": "array",
+            "title": "Reservations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservations"
+        ],
+        "title": "CancelledReservationsResponse"
       },
       "CartItemResponse": {
         "properties": {
@@ -7156,6 +7397,30 @@
           "terms_accepted"
         ],
         "title": "RestaurantRegistrationRequest"
+      },
+      "RestaurantReservationOrderResponse": {
+        "properties": {
+          "reservation_status": {
+            "type": "string",
+            "title": "Reservation Status"
+          },
+          "order": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RestaurantOrderResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "reservation_status",
+          "order"
+        ],
+        "title": "RestaurantReservationOrderResponse"
       },
       "RestaurantReservationResponse": {
         "properties": {

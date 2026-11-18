@@ -207,3 +207,222 @@ def test_us25_edge_rejects_foreign_reservation(client: TestClient, session: Sess
 
     assert response.status_code == 404
     assert reservation.status == "confirmed"
+
+
+def test_us47_s1_has_order_flag_on_reservation(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    diner = diner_id(client, headers)
+    reservation = add_reservation(session, restaurant, diner, TOMORROW, time(20), 2, "indoor")
+    dish = add_dish(session, restaurant, "Ravioles", "12000.00")
+    add_order(session, reservation, [(dish, 2)])
+
+    response = client.get("/api/reservations/active", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["reservations"][0]["has_order"] is True
+
+
+def test_us47_s3_foreign_order_is_404(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    own_headers = diner_headers(client)
+    foreign_headers = diner_headers(client, email="otro@example.com")
+    foreign = add_reservation(
+        session,
+        restaurant,
+        diner_id(client, foreign_headers),
+        TOMORROW,
+        time(20),
+        2,
+        "indoor",
+    )
+
+    response = client.get(
+        f"/api/reservations/{foreign.id}/order",
+        headers=own_headers,
+    )
+
+    assert response.status_code == 404
+
+
+def test_us47_s4_reservation_without_order_says_so(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    reservation = add_reservation(
+        session,
+        restaurant,
+        diner_id(client, headers),
+        TOMORROW,
+        time(20),
+        2,
+        "indoor",
+    )
+
+    response = client.get(
+        f"/api/reservations/{reservation.id}/order",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["reservation"]["has_order"] is False
+    assert response.json()["order"] is None
+
+
+def test_us49_s1_lists_only_own_cancelled_reservations(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    own_headers = diner_headers(client)
+    own = diner_id(client, own_headers)
+    own_reservation = add_reservation(session, restaurant, own, TOMORROW, time(20), 2, "indoor")
+    foreign_headers = diner_headers(client, email="otro@example.com")
+    foreign_reservation = add_reservation(
+        session,
+        restaurant,
+        diner_id(client, foreign_headers),
+        TOMORROW,
+        time(21),
+        2,
+        "indoor",
+        table_number=2,
+    )
+    for reservation in (own_reservation, foreign_reservation):
+        reservation.status = "cancelled"
+        reservation.cancelled_at = NOW
+        reservation.cancelled_by = "diner"
+    session.flush()
+
+    response = client.get("/api/reservations/cancelled", headers=own_headers)
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()["reservations"]] == [str(own_reservation.id)]
+
+
+def test_us49_s2_detail_shows_origin(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    reservation = add_reservation(
+        session,
+        restaurant,
+        diner_id(client, headers),
+        TOMORROW,
+        time(20),
+        2,
+        "indoor",
+    )
+    reservation.status = "cancelled"
+    reservation.cancelled_at = NOW
+    reservation.cancelled_by = "diner"
+    session.flush()
+
+    response = client.get(
+        f"/api/reservations/cancelled/{reservation.id}",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["cancelled_by"] == "diner"
+    assert response.json()["refund_status"] is None
+
+
+def test_us49_s3_no_refund_block_without_payment(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    reservation = add_reservation(
+        session,
+        restaurant,
+        diner_id(client, headers),
+        TOMORROW,
+        time(20),
+        2,
+        "indoor",
+    )
+    reservation.status = "cancelled"
+    reservation.cancelled_at = NOW
+    reservation.cancelled_by = "diner"
+    session.flush()
+
+    response = client.get(
+        f"/api/reservations/cancelled/{reservation.id}",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["refund_status"] is None
+
+
+def test_us49_edge_paid_order_has_pending_refund(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    reservation = add_reservation(
+        session,
+        restaurant,
+        diner_id(client, headers),
+        TOMORROW,
+        time(20),
+        2,
+        "indoor",
+    )
+    dish = add_dish(session, restaurant, "Ravioles", "12000.00")
+    add_order(
+        session,
+        reservation,
+        [(dish, 1)],
+        payment_status="paid",
+    )
+    reservation.status = "cancelled"
+    reservation.cancelled_at = NOW
+    reservation.cancelled_by = "restaurant"
+    session.flush()
+
+    response = client.get(
+        f"/api/reservations/cancelled/{reservation.id}",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["refund_status"] == "pending"
+
+
+def test_us49_s4_foreign_reservation_is_404(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    foreign_headers = diner_headers(client, email="otro@example.com")
+    reservation = add_reservation(
+        session,
+        restaurant,
+        diner_id(client, foreign_headers),
+        TOMORROW,
+        time(20),
+        2,
+        "indoor",
+    )
+    reservation.status = "cancelled"
+    reservation.cancelled_at = NOW
+    reservation.cancelled_by = "diner"
+    session.flush()
+
+    response = client.get(
+        f"/api/reservations/cancelled/{reservation.id}",
+        headers=diner_headers(client),
+    )
+
+    assert response.status_code == 404
+
+
+def test_us49_s5_cancelled_by_diner(client: TestClient, session: Session) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    reservation = add_reservation(
+        session,
+        restaurant,
+        diner_id(client, headers),
+        TOMORROW,
+        time(20),
+        2,
+        "indoor",
+    )
+
+    response = client.delete(f"/api/reservations/{reservation.id}", headers=headers)
+
+    assert response.status_code == 200
+    assert reservation.cancelled_by == "diner"

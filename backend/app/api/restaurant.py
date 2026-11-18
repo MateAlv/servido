@@ -25,6 +25,7 @@ from app.schemas.order import (
     OrderPaymentResponse,
     RestaurantOrderResponse,
     RestaurantOrdersResponse,
+    RestaurantReservationOrderResponse,
 )
 from app.schemas.reservation import (
     DinerContact,
@@ -69,6 +70,7 @@ from app.services.restaurant_orders import (
     format_local_time,
     restaurant_order,
     restaurant_orders,
+    restaurant_reservation_order,
 )
 from app.services.restaurant_verification import mark_verified, send_verification_mail
 from app.services.roles import RESTAURANT
@@ -363,6 +365,32 @@ def get_reservation_diner(
     return ReservationDinerResponse(
         reservation_id=reservation.id,
         diner=DinerContact(id=diner.id_comensal, name=diner.nombre, email=diner.email),
+    )
+
+
+@router.get(
+    "/restaurante/reservas/{reservation_id}/pedido",
+    response_model=RestaurantReservationOrderResponse,
+    responses={
+        401: {"description": "Falta la sesión o venció."},
+        403: {"description": "Esta acción es solo para restaurantes."},
+        404: {"description": "La reserva no existe o no pertenece al restaurante."},
+    },
+)
+def get_reservation_order(
+    reservation_id: UUID, claims: TokenClaimsDep, session: SessionDep
+) -> RestaurantReservationOrderResponse:
+    restaurant = restaurant_from_claims(claims, session)
+    result = restaurant_reservation_order(session, restaurant.id_restaurante, reservation_id)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La reserva no existe.",
+        )
+    reservation, order = result
+    return RestaurantReservationOrderResponse(
+        reservation_status=reservation.status,
+        order=restaurant_order_response(order) if order else None,
     )
 
 

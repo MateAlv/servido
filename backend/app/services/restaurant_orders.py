@@ -134,5 +134,25 @@ def restaurant_order(
     return order_data(session, order, reservation)
 
 
+def restaurant_reservation_order(
+    session: Session, restaurant_id: UUID, reservation_id: UUID
+) -> tuple[Reservation, RestaurantOrderData | None] | None:
+    row = session.execute(
+        select(Reservation, Order)
+        .outerjoin(
+            Order,
+            (Order.reservation_id == Reservation.id) & (Order.status == "confirmed"),
+        )
+        .where(
+            Reservation.id == reservation_id,
+            Reservation.restaurant_id == restaurant_id,
+        )
+    ).first()
+    if row is None:
+        return None
+    reservation, order = row
+    return reservation, order_data(session, order, reservation) if order else None
+
+
 def format_local_time(value: datetime) -> str:
     return value.astimezone(availability.BUENOS_AIRES).strftime("%H:%M")

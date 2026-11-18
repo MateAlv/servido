@@ -214,6 +214,23 @@ afterEach(() => {
 })
 
 describe('OrderPage', () => {
+  it('US-47 S2 shows a confirmed order in read-only mode', async () => {
+    fetchMock.mockResolvedValue(pageData({ order: orderOf([[PROVOLETA, 2]]) }, false))
+    renderWithProviders(
+      <Routes>
+        <Route path="/reservas/:reservaId/pedido" element={<OrderPage />} />
+      </Routes>,
+      { route: '/reservas/res-1/pedido?modo=lectura' },
+    )
+
+    expect(await screen.findByText('Pedido confirmado')).toBeVisible()
+    expect(screen.getAllByText('Provoleta').length).toBeGreaterThan(0)
+    expect(screen.getByText(/2 ×/)).toBeVisible()
+    expect(screen.queryByRole('button', { name: 'Modificar platos' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Modificar medio de pago' }),
+    ).not.toBeInTheDocument()
+  })
   it('US-17 S1 adds a dish to the order list with its quantity', async () => {
     const user = await openPage()
 

@@ -8,6 +8,7 @@ export type RestaurantReservations = components['schemas']['RestaurantReservatio
 export type ReservationDiner = components['schemas']['ReservationDinerResponse']
 export type RestaurantCancellation = components['schemas']['RestaurantCancellationResponse']
 export type RestaurantCancellations = components['schemas']['RestaurantCancellationsResponse']
+export type RestaurantReservationOrder = components['schemas']['RestaurantReservationOrderResponse']
 export type RestaurantCancellationResult = components['schemas']['RestaurantCancellationResult']
 
 export async function fetchRestaurantReservations(date: string): Promise<RestaurantReservations> {
@@ -33,6 +34,23 @@ export async function fetchReservationDiner(reservationId: string): Promise<Rese
   if (response.status === 401) throw new SessionExpiredError()
   if (error || !data) {
     throw new Error(getApiErrorMessage(error, 'No pudimos cargar los datos del comensal.'))
+  }
+  return data
+}
+
+export async function fetchReservationOrder(
+  reservationId: string,
+): Promise<RestaurantReservationOrder> {
+  const { data, error, response } = await api.GET(
+    '/api/restaurante/reservas/{reservation_id}/pedido',
+    {
+      params: { path: { reservation_id: reservationId } },
+      headers: sessionHeaders(),
+    },
+  )
+  if (response.status === 401) throw new SessionExpiredError()
+  if (error || !data) {
+    throw new Error(getApiErrorMessage(error, 'No pudimos cargar el pedido anticipado.'))
   }
   return data
 }

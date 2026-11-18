@@ -8,6 +8,7 @@ import { sessionHeaders } from './session'
 export type Reservation = components['schemas']['ReservationResponse']
 export type ReservationRequest = components['schemas']['ReservationRequest']
 export type ReservationCancellation = components['schemas']['ReservationCancellationResponse']
+export type CancelledReservation = components['schemas']['CancelledReservationResponse']
 
 const CONFIRM_FAILED = 'No pudimos confirmar la reserva. Probá de nuevo.'
 
@@ -73,4 +74,29 @@ export async function cancelReservation(reservationId: string): Promise<Cancella
     }
   }
   return { ok: true, cancellation: data }
+}
+
+export async function fetchCancelledReservations(): Promise<CancelledReservation[]> {
+  const { data, error, response } = await api.GET('/api/reservations/cancelled', {
+    headers: sessionHeaders(),
+  })
+  if (response.status === 401) throw new SessionExpiredError()
+  if (error || !data) {
+    throw new Error(getApiErrorMessage(error, 'No pudimos ver tus reservas canceladas.'))
+  }
+  return data.reservations
+}
+
+export async function fetchCancelledReservation(
+  reservationId: string,
+): Promise<CancelledReservation> {
+  const { data, error, response } = await api.GET('/api/reservations/cancelled/{reservation_id}', {
+    params: { path: { reservation_id: reservationId } },
+    headers: sessionHeaders(),
+  })
+  if (response.status === 401) throw new SessionExpiredError()
+  if (error || !data) {
+    throw new Error(getApiErrorMessage(error, 'No pudimos ver la reserva cancelada.'))
+  }
+  return data
 }

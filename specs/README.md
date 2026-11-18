@@ -27,6 +27,8 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [016-bloqueo-horarios](016-bloqueo-horarios/spec.md) | Restaurante | 32 | 1 | 4 | ✅ | ✅ | ✅ | ✅ US-32 (propuestas FR-007 y de reservas parcialmente pasadas/cruzadas y reaviso pendientes de validación de la PO) |
 | [019-cuenta-comensal-google-verificacion](019-cuenta-comensal-google-verificacion/spec.md) | Comensal | 52, 51, 58 | 3 | 2 (adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-52, US-51, US-58 (falta validar con la PO; US-51 S5 se prueba con US-17 en la spec 009-pedido-anticipado) |
 | [020-tiempo-pago](020-tiempo-pago/spec.md) | Comensal | 43, 45 | 4 | 5 | ✅ | ✅ | ✅ | US-43 y US-45 implementadas; ventana de llegada y obligatoriedad de medio validadas dentro del alcance registrado; T001 sigue pendiente por acuerdos independientes. Pendientes revisión del PR y pase en navegador |
+| [021-ver-pedido-cancelacion](021-ver-pedido-cancelacion/spec.md) | Comensal | 47, 49 | — | 5 | ✅ | ✅ | ✅ | Pendiente |
+| [022-ver-pedido-restaurante](022-ver-pedido-restaurante/spec.md) | Restaurante | 36 | — | 5 | ✅ | ✅ | ✅ | En implementación |
 | [025-responder-resenas](025-responder-resenas/spec.md) | Restaurante | 42 | 1 | 5 | ✅ | ✅ | ✅ | ✅ US-42: el restaurante responde y edita desde sus reseñas, y la respuesta se ve en Opiniones con «Editada» (decisiones C1–C5 del 15/11, falta que la PO las valide) |
 | [026-validacion-recuperacion-restaurante](026-validacion-recuperacion-restaurante/spec.md) | Restaurante | 44, 46 | 3 | 5 | ✅ | ✅ | ✅ | ✅ US-44, US-46 (falta que la PO valide las propuestas de links, límites, mensaje neutro, cierre de sesiones y aviso en el panel) |
 | [027-filtros-busqueda](027-filtros-busqueda/spec.md) | Comensal | 35, 53, 59, 61 | 4 | 5 (US-53, US-59 y US-61 adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-35, US-53, US-59, US-61 (decisiones F1–F10 del 15/11, falta que la PO las valide) |
@@ -47,6 +49,8 @@ Faltan las specs del resto de las US de los Sprints 3 a 6; del Sprint 3 están U
   - US-15 quedó sin responsable. La página del pedido ya muestra el menú por categoría con nombre, descripción y precio; quien la tome debería extender ese menú en vez de armar otro.
   - US-23 (Sprint 4): «Tus próximas reservas» del inicio se parece a su «sección de reservas»; quien la tome debería extender esa lista.
   - El carrito guardado en el servidor (P1) le suma trabajo a US-17 (dos tablas y dos endpoints); el equipo estima que entra en sus 3 SP.
+  - US-47 y US-49: la vista de reserva del comensal reutiliza el pedido existente y muestra las cancelaciones sin datos de reembolso ni de quién canceló.
+  - US-36: la vista del restaurante muestra el pedido confirmado según el estado de la reserva, sin medio de pago ni horarios de cocina.
 
   Detalle en `specs/009-pedido-anticipado/research.md`. En la planilla, US-17 figura para el Integrante 4 y US-19 y US-21 para el 5; en la votación las tomó Mateo.
 - Spec 003 (US-13): falta sumar el escenario 6 a la US-13 en la planilla y exportar `backlog.md` (T033a), cargar los datos de demo en producción (T055) y hacer el pase en navegador a 360 px y con teclado (T024/T032). Las decisiones D1–D11 esperan la validación de la PO.
