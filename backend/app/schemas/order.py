@@ -19,6 +19,13 @@ class OrderPaymentResponse(BaseModel):
     total: Decimal
 
 
+class OrderDiscountResponse(BaseModel):
+    """A promotion applied to the order, frozen at confirmation (spec 028, P4)."""
+
+    name: str
+    amount: Decimal
+
+
 class RestaurantOrderResponse(BaseModel):
     id: UUID
     reservation_id: UUID
@@ -26,6 +33,8 @@ class RestaurantOrderResponse(BaseModel):
     prep_start_time: str
     prep_time_warning: bool
     items: list[OrderItemResponse]
+    subtotal: Decimal
+    discounts: list[OrderDiscountResponse]
     payment: OrderPaymentResponse
 
 

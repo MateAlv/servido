@@ -23,6 +23,12 @@ class OrderItemData:
 
 
 @dataclass(frozen=True)
+class DiscountData:
+    name: str
+    amount: Decimal
+
+
+@dataclass(frozen=True)
 class RestaurantOrderData:
     id: UUID
     reservation_id: UUID
@@ -30,6 +36,8 @@ class RestaurantOrderData:
     prep_start_at: datetime
     prep_time_warning: bool
     items: list[OrderItemData]
+    subtotal: Decimal
+    discounts: list[DiscountData]
     total: Decimal
     payment_method: str | None
     payment_status: str
@@ -84,7 +92,13 @@ def order_data(session: Session, order: Order, reservation: Reservation) -> Rest
         prep_start_at=prep_start_at,
         prep_time_warning=warning,
         items=items,
-        total=sum((item.subtotal for item in items), Decimal("0.00")),
+        # Spec 028, P4: read from the bill frozen at confirmation.
+        subtotal=order.subtotal,
+        discounts=[
+            DiscountData(name=discount.name, amount=discount.amount)
+            for discount in sorted(order.discounts, key=lambda item: item.name)
+        ],
+        total=order.total,
     )
 
 

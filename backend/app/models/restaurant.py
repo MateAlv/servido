@@ -71,6 +71,10 @@ class Restaurant(Base):
     password_changed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Spec 028, P5: whether the eligible promotions of an order are added together.
+    stack_promotions: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
 
     @property
     def tipo_cocina(self) -> str | None:

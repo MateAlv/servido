@@ -185,6 +185,7 @@ def add_order(
     payment_method: str | None = "cash",
     payment_status: str = "pending",
 ) -> Order:
+    subtotal = sum((dish.precio * quantity for dish, quantity in dishes), Decimal("0.00"))
     order = Order(
         reservation_id=reservation.id,
         restaurant_id=reservation.restaurant_id,
@@ -194,6 +195,8 @@ def add_order(
         payment_status=payment_status,
         prep_start_time=reservation.starts_at,
         confirmed_at=NOW,
+        subtotal=subtotal,
+        total=subtotal,
     )
     if payment_status == "paid":
         order.paid_amount = 0

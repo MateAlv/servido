@@ -264,6 +264,21 @@ export function RestaurantHome({ account }: { account: Account }) {
               <p>Administrá cuándo no recibís reservas</p>
             </DashboardCard>
           </Reveal>
+          <Reveal delay={210}>
+            <DashboardCard
+              title="Promociones"
+              description="Descuentos para incentivar pedidos anticipados."
+              icon={<IconStar />}
+              action={
+                <Button size="sm" to="/restaurante/promociones">
+                  Gestionar promociones
+                </Button>
+              }
+            >
+              <p>Creá promociones por fechas, días u horarios.</p>
+              <p className={styles.muted}>Los pedidos confirmados conservan su total.</p>
+            </DashboardCard>
+          </Reveal>
 
           <Reveal delay={240}>
             <DashboardCard

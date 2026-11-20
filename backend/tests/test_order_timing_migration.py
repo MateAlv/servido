@@ -32,6 +32,8 @@ def test_us43_edge_migration_preserves_legacy_arrival_and_no_fictitious_method()
             for column in ("arrival_delay", "payment_method"):
                 connection.exec_driver_sql(f'ALTER TABLE "{schema}".{table} DROP COLUMN {column}')
         connection.exec_driver_sql(f'ALTER TABLE "{schema}".pedidos DROP COLUMN payment_status')
+        for column in ("subtotal", "discount_amount", "total"):
+            connection.exec_driver_sql(f'ALTER TABLE "{schema}".pedidos DROP COLUMN {column}')
         connection.exec_driver_sql(
             f'CREATE TABLE "{schema}".alembic_version (version_num varchar(32) PRIMARY KEY)'
         )

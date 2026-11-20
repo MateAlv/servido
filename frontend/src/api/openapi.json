@@ -3343,6 +3343,376 @@
         }
       }
     },
+    "/api/restaurant/promotions": {
+      "get": {
+        "tags": [
+          "promotions"
+        ],
+        "summary": "List Promotions",
+        "operationId": "list_promotions_api_restaurant_promotions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inv\u00e1lidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo el Responsable del restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "promotions"
+        ],
+        "summary": "Create Promotion",
+        "operationId": "create_promotion_api_restaurant_promotions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inv\u00e1lidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo el Responsable del restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ese request_id es de otro restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/restaurant/promotions/policies": {
+      "put": {
+        "tags": [
+          "promotions"
+        ],
+        "summary": "Update Policy",
+        "operationId": "update_policy_api_restaurant_promotions_policies_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionPolicyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inv\u00e1lidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo el Responsable del restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/restaurant/promotions/{promotion_id}": {
+      "put": {
+        "tags": [
+          "promotions"
+        ],
+        "summary": "Update Promotion",
+        "operationId": "update_promotion_api_restaurant_promotions__promotion_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "promotion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Promotion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inv\u00e1lidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo el Responsable del restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontramos esa promoci\u00f3n.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "promotions"
+        ],
+        "summary": "Change Promotion State",
+        "operationId": "change_promotion_state_api_restaurant_promotions__promotion_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "promotion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Promotion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionStateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inv\u00e1lidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo el Responsable del restaurante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontramos esa promoci\u00f3n.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/reviews/pending": {
       "get": {
         "tags": [
@@ -4531,6 +4901,14 @@
             },
             "type": "array",
             "title": "Items"
+          },
+          "subtotal": {
+            "type": "string",
+            "title": "Subtotal"
+          },
+          "total": {
+            "type": "string",
+            "title": "Total"
           }
         },
         "type": "object",
@@ -4538,7 +4916,9 @@
           "arrival_at",
           "payment_method",
           "updated_at",
-          "items"
+          "items",
+          "subtotal",
+          "total"
         ],
         "title": "CartResponse"
       },
@@ -5548,6 +5928,25 @@
         ],
         "title": "OpeningShiftResponse"
       },
+      "OrderDiscountResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "amount"
+        ],
+        "title": "OrderDiscountResponse",
+        "description": "A promotion applied to the order, frozen at confirmation (spec 028, P4)."
+      },
       "OrderItemRequest": {
         "properties": {
           "dish_id": {
@@ -5848,6 +6247,10 @@
             "type": "array",
             "title": "Items"
           },
+          "subtotal": {
+            "type": "string",
+            "title": "Subtotal"
+          },
           "total": {
             "type": "string",
             "title": "Total"
@@ -5873,6 +6276,7 @@
           "payment_method_editable",
           "confirmed_at",
           "items",
+          "subtotal",
           "total",
           "prep_time_minutes"
         ],
@@ -6001,6 +6405,498 @@
           "status"
         ],
         "title": "PreorderedOrderSummary"
+      },
+      "PromotionCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "discount_type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ],
+            "title": "Discount Type"
+          },
+          "discount_value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Discount Value"
+          },
+          "minimum_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Amount"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "weekdays": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array",
+                "maxItems": 7,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekdays"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          },
+          "stackable": {
+            "type": "boolean",
+            "title": "Stackable",
+            "default": true
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "discount_type",
+          "discount_value",
+          "request_id"
+        ],
+        "title": "PromotionCreateRequest"
+      },
+      "PromotionListResponse": {
+        "properties": {
+          "stack_promotions": {
+            "type": "boolean",
+            "title": "Stack Promotions"
+          },
+          "promotions": {
+            "items": {
+              "$ref": "#/components/schemas/PromotionResponse"
+            },
+            "type": "array",
+            "title": "Promotions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stack_promotions",
+          "promotions"
+        ],
+        "title": "PromotionListResponse"
+      },
+      "PromotionPayload": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "discount_type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ],
+            "title": "Discount Type"
+          },
+          "discount_value": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Discount Value"
+          },
+          "minimum_amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Amount"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "weekdays": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array",
+                "maxItems": 7,
+                "minItems": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekdays"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true
+          },
+          "stackable": {
+            "type": "boolean",
+            "title": "Stackable",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "discount_type",
+          "discount_value"
+        ],
+        "title": "PromotionPayload",
+        "description": "The full data of a promotion, for create and edit (FR-001, FR-002, FR-003)."
+      },
+      "PromotionPolicyRequest": {
+        "properties": {
+          "stack_promotions": {
+            "type": "boolean",
+            "title": "Stack Promotions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "stack_promotions"
+        ],
+        "title": "PromotionPolicyRequest"
+      },
+      "PromotionPolicyResponse": {
+        "properties": {
+          "stack_promotions": {
+            "type": "boolean",
+            "title": "Stack Promotions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stack_promotions"
+        ],
+        "title": "PromotionPolicyResponse"
+      },
+      "PromotionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "discount_type": {
+            "type": "string",
+            "enum": [
+              "percentage",
+              "fixed"
+            ],
+            "title": "Discount Type"
+          },
+          "discount_value": {
+            "type": "string",
+            "title": "Discount Value"
+          },
+          "minimum_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Amount"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "weekdays": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekdays"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          },
+          "stackable": {
+            "type": "boolean",
+            "title": "Stackable"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "programmed",
+              "expired",
+              "paused"
+            ],
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "discount_type",
+          "discount_value",
+          "minimum_amount",
+          "starts_on",
+          "ends_on",
+          "weekdays",
+          "start_time",
+          "end_time",
+          "active",
+          "stackable",
+          "state"
+        ],
+        "title": "PromotionResponse"
+      },
+      "PromotionStateRequest": {
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "active"
+        ],
+        "title": "PromotionStateRequest"
       },
       "PublicDish": {
         "properties": {
@@ -7076,6 +7972,17 @@
             "type": "array",
             "title": "Items"
           },
+          "subtotal": {
+            "type": "string",
+            "title": "Subtotal"
+          },
+          "discounts": {
+            "items": {
+              "$ref": "#/components/schemas/OrderDiscountResponse"
+            },
+            "type": "array",
+            "title": "Discounts"
+          },
           "payment": {
             "$ref": "#/components/schemas/OrderPaymentResponse"
           }
@@ -7088,6 +7995,8 @@
           "prep_start_time",
           "prep_time_warning",
           "items",
+          "subtotal",
+          "discounts",
           "payment"
         ],
         "title": "RestaurantOrderResponse"

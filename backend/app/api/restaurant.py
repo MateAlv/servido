@@ -21,6 +21,7 @@ from app.models.table_inventory import TableInventoryGroup
 from app.schemas.opening_hours import OpeningHoursResponse, OpeningShiftPayload
 from app.schemas.order import (
     OpeningShiftResponse,
+    OrderDiscountResponse,
     OrderItemResponse,
     OrderPaymentResponse,
     RestaurantOrderResponse,
@@ -192,6 +193,11 @@ def restaurant_order_response(order) -> RestaurantOrderResponse:
             method=order.payment_method or "No seleccionado",
             total=order.total,
         ),
+        subtotal=order.subtotal,
+        discounts=[
+            OrderDiscountResponse(name=discount.name, amount=discount.amount)
+            for discount in order.discounts
+        ],
         items=[
             OrderItemResponse(
                 dish_name=item.dish_name,

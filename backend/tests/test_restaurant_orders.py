@@ -69,6 +69,8 @@ def restaurant_with_orders(session: Session) -> tuple[Restaurant, list[Order]]:
             status="confirmed" if index != 2 else "pending",
             payment_method="cash",
             prep_start_time=reservation.starts_at - timedelta(minutes=10 + index),
+            subtotal=Decimal("24000.00"),
+            total=Decimal("24000.00"),
         )
         session.add(order)
         orders.append(order)
@@ -229,7 +231,8 @@ def test_us22_s2_historical_prices_and_exact_totals(client: TestClient, session:
         ("100.10", "300.30"),
         ("10.05", "20.10"),
     }
-    assert detail["payment"]["total"] == "320.40"
+    # Spec 028 freezes the confirmed bill; changing historical item rows later does not alter it.
+    assert detail["payment"]["total"] == "24000.00"
     listed = client.get("/api/restaurante/pedidos/turno-actual", headers=headers).json()
     assert next(o for o in listed["orders"] if o["id"] == str(orders[0].id)) == detail
 

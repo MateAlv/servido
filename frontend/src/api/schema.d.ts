@@ -805,6 +805,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/restaurant/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Promotions */
+        get: operations["list_promotions_api_restaurant_promotions_get"];
+        put?: never;
+        /** Create Promotion */
+        post: operations["create_promotion_api_restaurant_promotions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurant/promotions/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Policy */
+        put: operations["update_policy_api_restaurant_promotions_policies_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/restaurant/promotions/{promotion_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Promotion */
+        put: operations["update_promotion_api_restaurant_promotions__promotion_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change Promotion State */
+        patch: operations["change_promotion_state_api_restaurant_promotions__promotion_id__patch"];
+        trace?: never;
+    };
     "/api/reviews/pending": {
         parameters: {
             query?: never;
@@ -1186,6 +1239,10 @@ export interface components {
             updated_at: string;
             /** Items */
             items: components["schemas"]["CartItemResponse"][];
+            /** Subtotal */
+            subtotal: string;
+            /** Total */
+            total: string;
         };
         /** CartSaveResponse */
         CartSaveResponse: {
@@ -1582,6 +1639,16 @@ export interface components {
             end_time: string;
         };
         /**
+         * OrderDiscountResponse
+         * @description A promotion applied to the order, frozen at confirmation (spec 028, P4).
+         */
+        OrderDiscountResponse: {
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
+        };
+        /**
          * OrderItemRequest
          * @description A dish of the order with the name, price and time the page showed (P9).
          */
@@ -1688,6 +1755,8 @@ export interface components {
             confirmed_at: string;
             /** Items */
             items: components["schemas"]["ConfirmedOrderItemResponse"][];
+            /** Subtotal */
+            subtotal: string;
             /** Total */
             total: string;
             /** Prep Time Minutes */
@@ -1747,6 +1816,148 @@ export interface components {
         PreorderedOrderSummary: {
             /** Status */
             status: string;
+        };
+        /** PromotionCreateRequest */
+        PromotionCreateRequest: {
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /**
+             * Discount Type
+             * @enum {string}
+             */
+            discount_type: "percentage" | "fixed";
+            /** Discount Value */
+            discount_value: number | string;
+            /** Minimum Amount */
+            minimum_amount?: number | string | null;
+            /** Starts On */
+            starts_on?: string | null;
+            /** Ends On */
+            ends_on?: string | null;
+            /** Weekdays */
+            weekdays?: number[] | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /**
+             * Stackable
+             * @default true
+             */
+            stackable: boolean;
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+        };
+        /** PromotionListResponse */
+        PromotionListResponse: {
+            /** Stack Promotions */
+            stack_promotions: boolean;
+            /** Promotions */
+            promotions: components["schemas"]["PromotionResponse"][];
+        };
+        /**
+         * PromotionPayload
+         * @description The full data of a promotion, for create and edit (FR-001, FR-002, FR-003).
+         */
+        PromotionPayload: {
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /**
+             * Discount Type
+             * @enum {string}
+             */
+            discount_type: "percentage" | "fixed";
+            /** Discount Value */
+            discount_value: number | string;
+            /** Minimum Amount */
+            minimum_amount?: number | string | null;
+            /** Starts On */
+            starts_on?: string | null;
+            /** Ends On */
+            ends_on?: string | null;
+            /** Weekdays */
+            weekdays?: number[] | null;
+            /** Start Time */
+            start_time?: string | null;
+            /** End Time */
+            end_time?: string | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+            /**
+             * Stackable
+             * @default true
+             */
+            stackable: boolean;
+        };
+        /** PromotionPolicyRequest */
+        PromotionPolicyRequest: {
+            /** Stack Promotions */
+            stack_promotions: boolean;
+        };
+        /** PromotionPolicyResponse */
+        PromotionPolicyResponse: {
+            /** Stack Promotions */
+            stack_promotions: boolean;
+        };
+        /** PromotionResponse */
+        PromotionResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string | null;
+            /**
+             * Discount Type
+             * @enum {string}
+             */
+            discount_type: "percentage" | "fixed";
+            /** Discount Value */
+            discount_value: string;
+            /** Minimum Amount */
+            minimum_amount: string | null;
+            /** Starts On */
+            starts_on: string | null;
+            /** Ends On */
+            ends_on: string | null;
+            /** Weekdays */
+            weekdays: number[] | null;
+            /** Start Time */
+            start_time: string | null;
+            /** End Time */
+            end_time: string | null;
+            /** Active */
+            active: boolean;
+            /** Stackable */
+            stackable: boolean;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "active" | "programmed" | "expired" | "paused";
+        };
+        /** PromotionStateRequest */
+        PromotionStateRequest: {
+            /** Active */
+            active: boolean;
         };
         /** PublicDish */
         PublicDish: {
@@ -2165,6 +2376,10 @@ export interface components {
             prep_time_warning: boolean;
             /** Items */
             items: components["schemas"]["OrderItemResponse"][];
+            /** Subtotal */
+            subtotal: string;
+            /** Discounts */
+            discounts: components["schemas"]["OrderDiscountResponse"][];
             payment: components["schemas"]["OrderPaymentResponse"];
         };
         /** RestaurantOrdersResponse */
@@ -4995,6 +5210,288 @@ export interface operations {
             };
             /** @description El medio ya no se puede cambiar. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_promotions_api_restaurant_promotions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionListResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo el Responsable del restaurante. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_promotion_api_restaurant_promotions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromotionCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo el Responsable del restaurante. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ese request_id es de otro restaurante. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_policy_api_restaurant_promotions_policies_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromotionPolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionPolicyResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo el Responsable del restaurante. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_promotion_api_restaurant_promotions__promotion_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                promotion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromotionPayload"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo el Responsable del restaurante. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No encontramos esa promoción. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    change_promotion_state_api_restaurant_promotions__promotion_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                promotion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromotionStateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionResponse"];
+                };
+            };
+            /** @description Datos inválidos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo el Responsable del restaurante. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No encontramos esa promoción. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -27,6 +27,8 @@ const order = {
       subtotal: '200.20',
     },
   ],
+  subtotal: '200.20',
+  discounts: [],
   payment: { status: 'pending', method: 'No seleccionado', total: '200.20' },
 }
 

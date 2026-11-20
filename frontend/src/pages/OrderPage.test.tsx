@@ -107,13 +107,31 @@ function orderOf(items: [MenuDish, number][]): NonNullable<OrderPageData['order'
       subtotal: (Number(dish.price) * quantity).toFixed(2),
     })),
     total: total.toFixed(2),
+    subtotal: total.toFixed(2),
     prep_time_minutes: times.length ? Math.max(...times) : null,
   }
 }
 
-function pageData(overrides: Partial<OrderPageData> = {}, open = true): OrderPageData {
-  const order = overrides.order ?? null
+type PageOverrides = Omit<Partial<OrderPageData>, 'cart' | 'order'> & {
+  cart?:
+    | (Omit<NonNullable<OrderPageData['cart']>, 'subtotal' | 'total'> &
+        Partial<Pick<NonNullable<OrderPageData['cart']>, 'subtotal' | 'total'>>)
+    | null
+  order?: OrderPageData['order']
+}
+
+function pageData(overrides: PageOverrides = {}, open = true): OrderPageData {
+  const { cart: overrideCart, order: overrideOrder, ...rest } = overrides
+  const order = overrideOrder ?? null
+  const cart = overrideCart
+    ? {
+        subtotal: '0.00',
+        total: '0.00',
+        ...overrideCart,
+      }
+    : null
   return {
+    ...rest,
     arrival_window: {
       starts_at: '2026-11-03T21:00:00-03:00',
       latest_at: '2026-11-03T21:30:00-03:00',
@@ -133,9 +151,8 @@ function pageData(overrides: Partial<OrderPageData> = {}, open = true): OrderPag
       order_deadline: '2026-11-03T20:15:00-03:00',
     },
     order,
-    cart: null,
-    menu: [PROVOLETA, BIFE, FLAN],
-    ...overrides,
+    cart,
+    menu: rest.menu ?? [PROVOLETA, BIFE, FLAN],
   }
 }
 

@@ -46,6 +46,12 @@ class Order(Base):
             name="payment_fields_match_status",
         ),
         CheckConstraint("status IN ('confirmed', 'pending', 'cancelled')", name="status_known"),
+        # Spec 028, P4: the bill is frozen at confirmation and the discount never makes it negative.
+        CheckConstraint("subtotal >= 0", name="subtotal_not_negative"),
+        CheckConstraint(
+            "discount_amount >= 0 AND discount_amount <= subtotal", name="discount_within_subtotal"
+        ),
+        CheckConstraint("total = subtotal - discount_amount", name="total_matches_bill"),
         UniqueConstraint("reservation_id", name="reservation_order_unique"),
     )
 
@@ -83,8 +89,19 @@ class Order(Base):
     payment_method: Mapped[str | None] = mapped_column(String(20), nullable=True)
     paid_amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Spec 028, P4: subtotal and discount frozen at confirmation.
+    subtotal: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    discount_amount: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2), nullable=False, default=Decimal("0.00"), server_default="0"
+    )
+    total: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     items: Mapped[list["OrderItem"]] = relationship(  # noqa: F821
         cascade="all, delete-orphan",
         passive_deletes=True,
         order_by="OrderItem.dish_name",
+    )
+    discounts: Mapped[list["OrderDiscount"]] = relationship(  # noqa: F821
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="OrderDiscount.name",
     )

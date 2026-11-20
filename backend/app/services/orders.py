@@ -21,7 +21,9 @@ from app.models.dish import Dish
 from app.models.order import Order
 from app.models.order_confirmation import OrderConfirmation
 from app.models.order_item import OrderItem
+from app.models.promotion import OrderDiscount
 from app.models.reservation import Reservation
+from app.services import availability
 from app.services.availability import BUENOS_AIRES
 
 ORDER_CUTOFF_MINUTES = 45
@@ -75,6 +77,8 @@ class ItemInput:
 
 @dataclass(frozen=True)
 class OrderSummary:
+    subtotal: Decimal
+    discount_total: Decimal
     total: Decimal
     prep_time_minutes: int | None
 
@@ -133,12 +137,19 @@ def subtotal(item: OrderItem | CartItem) -> Decimal:
     return item.quantity * item.unit_price
 
 
-def order_summary(items: list[OrderItem]) -> OrderSummary:
+def order_summary(
+    items: list[OrderItem] | list[ItemInput], discounts: list[Decimal] = ()
+) -> OrderSummary:
     """Total and estimate of an order: prices include taxes (P3); the estimate is the slowest
-    dish that has a time, whatever the quantities (P2)."""
+    dish that has a time, whatever the quantities (P2). The discount comes from the promotion
+    rules (spec 028)."""
     times = [item.prep_time_minutes for item in items if item.prep_time_minutes is not None]
+    subtotal = sum((item.quantity * item.unit_price for item in items), Decimal("0.00"))
+    discount_total = sum(discounts, Decimal("0.00"))
     return OrderSummary(
-        total=sum((subtotal(item) for item in items), Decimal("0.00")),
+        subtotal=subtotal,
+        discount_total=discount_total,
+        total=subtotal - discount_total,
         prep_time_minutes=max(times, default=None),
     )
 
@@ -280,6 +291,8 @@ def confirm_order(
         session.delete(order)
         session.flush()
         return reservation, None
+    subtotal_value = sum((item.quantity * item.unit_price for item in items), Decimal("0.00"))
+    discount_total = Decimal("0.00")
     if order is None:
         # Every order US-17 writes is confirmed: the cart is what is still pending (P1).
         order = Order(
@@ -290,6 +303,9 @@ def confirm_order(
             arrival_delay=delay,
             payment_method=payment_method,
             confirmed_at=now,
+            subtotal=subtotal_value,
+            discount_amount=discount_total,
+            total=subtotal_value - discount_total,
         )
         session.add(order)
         session.flush()
@@ -297,15 +313,19 @@ def confirm_order(
         # The ORM would insert the new items before deleting the old ones and trip the unique
         # (order_id, dish_id) whenever a dish stays in the order.
         session.execute(delete(OrderItem).where(OrderItem.order_id == order.id))
-        session.expire(order, ["items"])
+        session.execute(delete(OrderDiscount).where(OrderDiscount.order_id == order.id))
+        session.expire(order, ["items", "discounts"])
         order.status = "confirmed"
         order.arrival_delay = delay
         order.payment_method = payment_method
         order.prep_start_time = suggested_start(reservation, items, delay)
         order.confirmed_at = now
+        order.subtotal = subtotal_value
+        order.discount_amount = discount_total
+        order.total = subtotal_value - discount_total
     session.add_all(OrderItem(order_id=order.id, **item_values(item)) for item in items)
     session.flush()
-    session.expire(order, ["items"])
+    session.expire(order, ["items", "discounts"])
     return reservation, order
 
 
@@ -321,7 +341,6 @@ def save_cart(
 ) -> Cart | None:
     """Replaces the reservation's cart (rule 7). An empty cart only makes sense for a confirmed
     order the diner emptied; otherwise the cart is deleted and None is returned."""
-    from app.services import availability
 
     reservation = diner_reservation(session, diner_id, reservation_id, lock=True)
     now = availability.current_time()
@@ -391,7 +410,6 @@ def payment_editable(reservation: Reservation, order: Order, now: datetime) -> b
 def change_payment_method(
     session: Session, diner_id: UUID, reservation_id: UUID, method: str, now: datetime
 ) -> Reservation:
-    from app.services import availability
 
     reservation = diner_reservation(session, diner_id, reservation_id, lock=True)
     order = order_of(session, reservation.id)
@@ -407,7 +425,6 @@ def change_payment_method(
 
 
 def confirm_operation(session: Session, diner_id: UUID, reservation_id: UUID, payload):
-    from app.services import availability
 
     reservation = diner_reservation(session, diner_id, reservation_id, lock=True)
     semantic = payload.model_dump(mode="json", exclude={"operation_id"})

@@ -321,7 +321,9 @@ function OrderEditor({
     move?.()
   }, [lines])
 
-  const { totalCents, prepTimeMinutes } = orderSummary(lines)
+  const { prepTimeMinutes } = orderSummary(lines)
+  const totalCents =
+    stage === 'confirmed' && page.order ? toCents(page.order.total) : orderSummary(lines).totalCents
   const announcement = lines.length
     ? `Total ${formatCents(totalCents)}.${prepTimeMinutes ? ` Preparación: unos ${prepTimeMinutes} min.` : ''}`
     : ''

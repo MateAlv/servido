@@ -10,6 +10,7 @@ from app.api import (
     health,
     notification,
     order,
+    promotion,
     public_restaurant,
     reservation,
     restaurant,
@@ -30,6 +31,7 @@ api_router.include_router(restaurant_verification.router)
 api_router.include_router(restaurant_recovery.router)
 api_router.include_router(reservation.router)
 api_router.include_router(order.router)
+api_router.include_router(promotion.router)
 api_router.include_router(review.router)
 api_router.include_router(closure.router)
 api_router.include_router(public_restaurant.router)

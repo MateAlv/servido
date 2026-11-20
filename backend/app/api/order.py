@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Response, status
@@ -59,12 +60,17 @@ def order_response(order: Order, reservation: Reservation, now: datetime) -> Ord
             )
             for item in order.items
         ],
-        total=summary.total,
+        # The diner sees only the regular menu bill; promotions are restaurant-side for now.
+        subtotal=order.subtotal,
+        total=order.total,
         prep_time_minutes=summary.prep_time_minutes,
     )
 
 
-def cart_response(cart: Cart, reservation: Reservation) -> CartResponse:
+def cart_response(
+    session: SessionDep, cart: Cart, reservation: Reservation, restaurant: Restaurant
+) -> CartResponse:
+    subtotal = sum((orders.subtotal(item) for item in cart.items), Decimal("0.00"))
     return CartResponse(
         arrival_at=orders.arrival_time(reservation, cart),
         payment_method=cart.payment_method,
@@ -79,21 +85,22 @@ def cart_response(cart: Cart, reservation: Reservation) -> CartResponse:
             )
             for item in cart.items
         ],
+        subtotal=subtotal,
+        total=subtotal,
     )
 
 
 def order_page(session: SessionDep, reservation: Reservation, now: datetime) -> OrderPageResponse:
+    restaurant = session.get(Restaurant, reservation.restaurant_id)
     order = orders.order_of(session, reservation.id)
     cart = orders.open_cart(session, reservation, now)
     return OrderPageResponse(
         arrival_window=ArrivalWindow(
             starts_at=reservation.starts_at, latest_at=reservation.starts_at + timedelta(minutes=30)
         ),
-        reservation=reservation_response(
-            session, reservation, session.get(Restaurant, reservation.restaurant_id), now
-        ),
+        reservation=reservation_response(session, reservation, restaurant, now),
         order=order_response(order, reservation, now) if order else None,
-        cart=cart_response(cart, reservation) if cart else None,
+        cart=cart_response(session, cart, reservation, restaurant) if cart else None,
         menu=[
             OrderMenuDish(
                 id=dish.id_plato,
@@ -259,7 +266,10 @@ def put_cart(
         raise conflict(orders.MENU_CHANGED) from error
     session.commit()
     reservation = orders.diner_reservation(session, diner_id, reservation_id)
-    return CartSaveResponse(cart=cart_response(cart, reservation) if cart else None)
+    restaurant = session.get(Restaurant, reservation.restaurant_id)
+    return CartSaveResponse(
+        cart=cart_response(session, cart, reservation, restaurant) if cart else None
+    )
 
 
 @router.delete(
