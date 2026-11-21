@@ -6,7 +6,7 @@
 
 ## Summary
 
-The restaurant answers a review from its reviews page (US-24). One new table, `review_replies`, holds at most one reply per review, with its text, when it was published and when it was last edited. Two endpoints under the restaurant role create and edit it; there is no delete (C4). Only the reviews shown in the public Opiniones can be replied to (C1): the rule is the one spec 014 already uses for Opiniones (each person's latest review, if it has a comment), reused, not rewritten. The restaurant's list and the public detail carry the reply, and the UI shows it under its review with «Editada» when it changed (C3).
+The restaurant answers a review from its reviews page (US-24). One new table, `review_replies`, holds at most one reply per review, with its text, when it was published and when it was last edited. Two endpoints under the restaurant role create and edit it; there is no delete (C4). A first reply is allowed on each diner's latest reviewed visit, including rating-only and photo-only reviews. C1 reuses the selection in spec 014 and also applies when the restaurant is temporarily unbookable. Earlier visits remain editable if they already have a reply. The restaurant's list and the public detail carry the reply, and the UI shows it under its review with «Editada» when it changed (C3).
 
 ## Technical Context
 
@@ -88,8 +88,9 @@ Backend tests are in `backend/tests/test_review_replies.py`. Frontend: `ReviewsP
 | S4 — edit, «Editada» | `test_us42_s4_edited_reply_replaces_the_text_and_is_marked` | `ReviewsPage` › `US-42 S4 edits the reply and marks it`; `Detail` › `US-42 S4 marks an edited reply` |
 | S5 — blank, over 500, counter | `test_us42_s5_empty_or_too_long_reply_is_refused`, `test_us42_s5_500_characters_are_accepted` | `ReviewsPage` › `US-42 S5 counts the remaining characters and refuses an empty or long reply`, `US-42 S5 counts characters as the server does, an emoji as one`, `US-42 S5 says a reply can be edited but not emptied` |
 | S6 — give up | `test_us42_s6_review_stays_without_reply_until_one_is_published` | `ReviewsPage` › `US-42 S6 cancelling an empty reply closes it and returns the focus`, `US-42 S6 asks before discarding what was typed`, `US-42 S6 asks before leaving a draft to answer another review` |
-| S7 — not in Opiniones | `test_us42_s7_review_without_comment_cannot_be_replied`, `test_us42_s7_older_visit_of_the_same_person_cannot_be_replied` | `ReviewsPage` › `US-42 S7 offers no reply on a review that is not public` |
+| S7 — not in Opiniones | `test_us42_s7_older_visit_of_the_same_person_cannot_be_replied` | `ReviewsPage` › `US-42 S7 offers no reply on a review that is not public` |
 | S8 — another restaurant | `test_us42_s8_cannot_reply_or_edit_on_another_restaurant` | |
+| S9 — first reply without a comment | `test_us42_s9_latest_rating_only_review_can_be_replied`, `test_us57_s6_lists_latest_photo_only_review_and_hides_older_review` | `ReviewsPage` › `US-42 S9 offers a first reply for a public review without a comment` |
 
 Edge cases: `test_us42_edge_double_submit_keeps_one_reply`, `test_us42_edge_database_keeps_one_reply_per_review`, `test_us42_edge_database_refuses_blank_or_long_text`, `test_us42_edge_reply_hidden_by_a_later_visit_persists_for_the_restaurant`, `test_us42_edge_saving_the_same_text_is_not_an_edit`, `test_us42_edge_editing_a_review_without_reply_is_not_found`, `test_us42_edge_reply_cannot_be_deleted`, `test_us42_edge_the_diner_gets_no_mail`. The expired session is the 401 of S8 and, in the UI, the same sign-out the page already does.
 

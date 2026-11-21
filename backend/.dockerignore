@@ -10,3 +10,4 @@ node_modules
 .env.*
 coverage
 uploads
+review-photos

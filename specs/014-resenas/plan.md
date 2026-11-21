@@ -71,7 +71,7 @@ Backend tests are in `backend/tests/test_reviews.py`. Frontend tests: `PendingRe
 | US-50 S8 — public opinion | `test_us50_s8_opinion_is_public_with_only_its_fields` | `Detail`, `api` |
 | US-50 S9 — newer hides older | `test_us50_s9_newer_review_hides_the_previous_opinion` | |
 | US-50 S10 — late review | `test_us50_s10_late_review_of_an_old_visit_keeps_the_recent_opinion` | |
-| US-50 S11 — no comment | `test_us50_s11_review_without_comment_counts_but_is_not_listed` | `Detail` |
+| US-50 S11 — no comment | `test_us50_s11_rating_only_review_counts_and_is_listed` | `Detail` |
 | US-24 S1 — list | `test_us24_s1_lists_the_reviews_newest_published_first` | `ReviewsPage` |
 | US-24 S2, S3 — all, and both counts | `test_us24_s2_s3_sees_every_review_and_both_counts` | `ReviewsPage` (S3) |
 | US-24 S4 — read only | `test_us24_s4_restaurant_cannot_change_a_review` | `ReviewsPage` |

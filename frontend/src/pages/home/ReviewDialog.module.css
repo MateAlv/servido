@@ -74,3 +74,16 @@
   padding: 12px 26px 26px;
   background: var(--color-surface);
 }
+
+.photoSelection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.photoInput {
+  min-width: 0;
+  max-width: 100%;
+}

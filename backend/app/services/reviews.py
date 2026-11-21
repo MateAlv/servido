@@ -13,6 +13,7 @@ from app.models.diner import Diner
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.models.review import Review
+from app.services import review_photos
 
 REVIEW_WINDOW = timedelta(days=30)
 MIN_PEOPLE_FOR_PRICE_TIER = 5
@@ -150,6 +151,12 @@ def latest_reviews(
         key=lambda row: (row[1].starts_at, row[0].published_at),
         reverse=True,
     )
+
+
+def public_opinions(session: Session, restaurant_id: UUID):
+    latest = latest_reviews(session, restaurant_id)
+    photos = review_photos.by_review(session, {review.id for review, _, _ in latest})
+    return latest, photos
 
 
 def rating_summary(session: Session, restaurant_id: UUID) -> RatingSummary:

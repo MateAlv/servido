@@ -503,10 +503,7 @@ function FormsDemo() {
           visit="Visitó el martes, 3 de noviembre"
         />
       </Demo>
-      <Demo
-        title="Opiniones"
-        note="Las opiniones de un restaurante, de a 5, con la aclaración si la lista es más corta que la cantidad."
-      >
+      <Demo title="Opiniones" note="Las reseñas de las visitas más recientes, de a 5.">
         <OpinionList
           opinions={[
             {
@@ -518,7 +515,6 @@ function FormsDemo() {
               reply: { text: '¡Gracias, Ana! Te esperamos.', date: '2026-11-04', edited: false },
             },
           ]}
-          reviewCount={3}
           restaurantName="La Esquina de Palermo"
         />
       </Demo>

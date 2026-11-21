@@ -13,11 +13,11 @@ import { longDate } from '../../lib/date'
 import styles from './PendingReviews.module.css'
 import { ReviewDialog, type ReviewFormValues } from './ReviewDialog'
 
-const EMPTY_FORM: ReviewFormValues = { rating: 0, comment: '', spend: '' }
+const EMPTY_FORM: ReviewFormValues = { rating: 0, comment: '', spend: '', photos: [] }
 const LOAD_FAILED = 'No pudimos cargar tus reseñas pendientes.'
 
-function hasContent({ rating, comment, spend }: ReviewFormValues) {
-  return rating > 0 || comment.trim() !== '' || spend.trim() !== ''
+function hasContent({ rating, comment, spend, photos }: ReviewFormValues) {
+  return rating > 0 || comment.trim() !== '' || spend.trim() !== '' || photos.length > 0
 }
 
 /** «¿Cómo estuvo?» (spec 014, R7): the diner's finished reservations without a review. Hidden
@@ -27,6 +27,7 @@ export function PendingReviews({ account }: { account: Account }) {
   const [selected, setSelected] = useState<PendingReview | null>(null)
   const [open, setOpen] = useState(false)
   const [openings, setOpenings] = useState(0)
+  const activeOpening = useRef<number | null>(null)
   const [forms, setForms] = useState<Record<string, ReviewFormValues>>({})
   const [published, setPublished] = useState<PendingReview | null>(null)
   const confirmation = useRef<HTMLDivElement>(null)
@@ -43,6 +44,13 @@ export function PendingReviews({ account }: { account: Account }) {
   useEffect(() => {
     if (published) confirmation.current?.focus()
   }, [published])
+
+  useEffect(
+    () => () => {
+      activeOpening.current = null
+    },
+    [],
+  )
 
   if (pending.isError) {
     if (pending.error instanceof SessionExpiredError) return null
@@ -109,6 +117,7 @@ export function PendingReviews({ account }: { account: Account }) {
                         <Button
                           aria-label={`${action} de ${reservation.restaurant_name}, ${longDate(reservation.date)} a las ${reservation.start_time}`}
                           onClick={() => {
+                            activeOpening.current = openings + 1
                             setSelected(reservation)
                             setOpenings(openings + 1)
                             setOpen(true)
@@ -132,9 +141,22 @@ export function PendingReviews({ account }: { account: Account }) {
           reservation={selected}
           author={pending.data.author}
           values={forms[selected.reservation_id] ?? EMPTY_FORM}
-          onChange={(values) => setForms({ ...forms, [selected.reservation_id]: values })}
-          onClose={() => setOpen(false)}
+          onChange={(values) =>
+            setForms((previous) => ({ ...previous, [selected.reservation_id]: values }))
+          }
+          isCurrent={() => activeOpening.current === openings}
+          onClose={() => {
+            activeOpening.current = null
+            setOpen(false)
+          }}
           onPublished={() => {
+            if (activeOpening.current !== null && activeOpening.current !== openings) return
+            setForms((previous) => {
+              const remaining = { ...previous }
+              delete remaining[selected.reservation_id]
+              return remaining
+            })
+            activeOpening.current = null
             setPublished(selected)
             setSelected(null)
             setOpen(false)

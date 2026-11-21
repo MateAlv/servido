@@ -127,11 +127,7 @@ def get_bookable_restaurant(restaurant_id: UUID, session: SessionDep) -> PublicR
     if restaurant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=RESTAURANT_NOT_FOUND)
     dishes = menu_dishes(session, restaurant_id)
-    opinions = [
-        (review, reservation, diner)
-        for review, reservation, diner in reviews.latest_reviews(session, restaurant_id)
-        if review.comment
-    ]
+    opinions, photos = reviews.public_opinions(session, restaurant_id)
     replies = review_replies.replies_by_review(session, {review.id for review, _, _ in opinions})
     return PublicRestaurantDetail(
         **public_fields(restaurant, session),
@@ -152,6 +148,7 @@ def get_bookable_restaurant(restaurant_id: UUID, session: SessionDep) -> PublicR
                 author=reviews.author_name(diner.nombre),
                 rating=review.rating,
                 comment=review.comment,
+                photos=photos.get(review.id, []),
                 spend_per_person=review.spend_per_person,
                 visit_date=reservation.starts_at.astimezone(BUENOS_AIRES).date(),
                 reply=public_reply(replies.get(review.id)),

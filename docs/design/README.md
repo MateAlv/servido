@@ -105,7 +105,7 @@ La recuperación de la cuenta no agrega componentes: `/recuperar` (comensal) y `
 | Componente | Para qué | US |
 | --- | --- | --- |
 | `OpinionCard` | Una reseña como la lee la gente: autor, estrellas, comentario, fecha de la visita y gasto por persona. Es la misma en la revisión antes de publicar, en el detalle del restaurante y en el panel | 24, 50 |
-| `OpinionList` | Las opiniones de un restaurante, de a 5 con «Ver más opiniones», con la aclaración si son menos que la cantidad de reseñas, cada una con la respuesta del restaurante si la tiene | 27, 50, 42 |
+| `OpinionList` | Las reseñas de la visita más reciente de cada comensal, aunque solo tengan estrellas. Se muestran de a 5 con «Ver más opiniones» y cada una lleva la respuesta del restaurante si la tiene | 27, 50, 42, 57 |
 | `OpinionReply` | La respuesta del restaurante debajo de su reseña: más chica, con sangría, borde rojo de marca y fondo hundido, con quién responde y «Respondió el …», más «· Editada» si cambió. Con `collapsible` (en Opiniones) se acorta a unas tres líneas con «Leer más» / «Ver menos», como los comentarios (`ExpandableText`, interno de `review/`). Es un grupo con nombre, no una región. Va dentro de `OpinionCard`, que acepta `children` | 42 |
 
 ### Pedido (`order/`)

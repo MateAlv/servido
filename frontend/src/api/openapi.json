@@ -3783,16 +3783,6 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReviewRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "201": {
             "description": "Successful Response",
@@ -3824,6 +3814,26 @@
               }
             }
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PhotoErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "413": {
+            "description": "La solicitud supera el tama\u00f1o permitido."
+          },
           "404": {
             "description": "La reserva no existe o es de otro comensal.",
             "content": {
@@ -3843,13 +3853,33 @@
                 }
               }
             }
-          },
-          "400": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "review"
+                ],
+                "properties": {
+                  "review": {
+                    "type": "string"
+                  },
+                  "photos": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
                 }
               }
             }
@@ -3905,6 +3935,77 @@
           },
           "403": {
             "description": "No ten\u00e9s permiso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/review-photos/{photo_id}": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Get Review Photo",
+        "operationId": "get_review_photo_api_review_photos__photo_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "photo_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Photo Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontramos esa foto.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6393,6 +6494,88 @@
         ],
         "title": "PendingReviewsResponse"
       },
+      "PhotoError": {
+        "properties": {
+          "index": {
+            "type": "integer",
+            "title": "Index"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "empty_file",
+              "unsupported_format",
+              "too_large",
+              "too_many_photos",
+              "too_many_pixels"
+            ],
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "code",
+          "message"
+        ],
+        "title": "PhotoError"
+      },
+      "PhotoErrorDetail": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "photo_errors": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoError"
+            },
+            "type": "array",
+            "title": "Photo Errors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "photo_errors"
+        ],
+        "title": "PhotoErrorDetail"
+      },
+      "PhotoErrorResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/PhotoErrorDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "PhotoErrorResponse"
+      },
+      "PhotoReference": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "url"
+        ],
+        "title": "PhotoReference"
+      },
       "PreorderedOrderSummary": {
         "properties": {
           "status": {
@@ -6970,8 +7153,22 @@
             "title": "Rating"
           },
           "comment": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Comment"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoReference"
+            },
+            "type": "array",
+            "title": "Photos"
           },
           "spend_per_person": {
             "anyOf": [
@@ -7005,12 +7202,13 @@
           "author",
           "rating",
           "comment",
+          "photos",
           "spend_per_person",
           "visit_date",
           "reply"
         ],
         "title": "PublicOpinion",
-        "description": "The latest review of a person, when it has a comment (spec 014, R14)."
+        "description": "A diner's review of their most recent reviewed visit, including ratings alone (R14)."
       },
       "PublicReply": {
         "properties": {
@@ -7400,6 +7598,13 @@
       },
       "PublishedReviewResponse": {
         "properties": {
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoReference"
+            },
+            "type": "array",
+            "title": "Photos"
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -7439,6 +7644,7 @@
         },
         "type": "object",
         "required": [
+          "photos",
           "id",
           "rating",
           "comment",
@@ -8450,6 +8656,13 @@
       },
       "RestaurantReview": {
         "properties": {
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/PhotoReference"
+            },
+            "type": "array",
+            "title": "Photos"
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -8520,6 +8733,7 @@
         },
         "type": "object",
         "required": [
+          "photos",
           "id",
           "author",
           "visit_date",
@@ -8644,45 +8858,6 @@
           "edited_at"
         ],
         "title": "ReviewReplyResponse"
-      },
-      "ReviewRequest": {
-        "properties": {
-          "rating": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
-            "title": "Rating"
-          },
-          "comment": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Comment"
-          },
-          "spend_per_person": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 1000000.0,
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Spend Per Person"
-          }
-        },
-        "type": "object",
-        "required": [
-          "rating"
-        ],
-        "title": "ReviewRequest"
       },
       "SlotResponse": {
         "properties": {
@@ -8921,6 +9096,47 @@
           "token"
         ],
         "title": "VerificationRequest"
+      },
+      "ReviewRequest": {
+        "properties": {
+          "rating": {
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Rating",
+            "type": "integer"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Comment"
+          },
+          "spend_per_person": {
+            "anyOf": [
+              {
+                "maximum": 1000000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Spend Per Person"
+          }
+        },
+        "required": [
+          "rating"
+        ],
+        "title": "ReviewRequest",
+        "type": "object"
       },
       "ErrorResponse": {
         "title": "ErrorResponse",
