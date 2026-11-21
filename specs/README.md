@@ -33,6 +33,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | [026-validacion-recuperacion-restaurante](026-validacion-recuperacion-restaurante/spec.md) | Restaurante | 44, 46 | 3 | 5 | ✅ | ✅ | ✅ | ✅ US-44, US-46 (falta que la PO valide las propuestas de links, límites, mensaje neutro, cierre de sesiones y aviso en el panel) |
 | [027-filtros-busqueda](027-filtros-busqueda/spec.md) | Comensal | 35, 53, 59, 61 | 4 | 5 (US-53, US-59 y US-61 adelantadas del 6) | ✅ | ✅ | ✅ | ✅ US-35, US-53, US-59, US-61 (decisiones F1–F10 del 15/11, falta que la PO las valide) |
 | [028-editar-promociones](028-editar-promociones/spec.md) | Restaurante | 48 | 2 | 6 | ✅ | ✅ | ✅ | ✅ US-48: crea, edita, pausa y aplica promociones sobre pedidos anticipados, con totales congelados al confirmar (decisiones P1–P5 del 19/11, falta que la PO las valide) |
+| [032-pagar-pedido](032-pagar-pedido/spec.md) | Comensal | 56, 60 | 5 | 6 | ✅ | ✅ | ✅ | ✅ US-60: el pedido en efectivo queda pendiente de pago y muestra el importe a abonar en el local al comensal y al restaurante (E5, falta que la PO la valide). US-56 (cobro electrónico) pendiente |
 
 Arrastre de la spec 002-cuenta-restaurante: el HTTP 403 por rol de US-4 (escenario 3) se prueba desde el 28/10 en `backend/tests/test_auth.py::test_us4_s3_restaurant_gets_403_on_diner_endpoints`. La spec 002-elegir-restaurante muestra los restaurantes de prueba de `frontend/src/data/restaurants.fixture.ts` y, desde el 28/10, los reales que se pueden reservar (D4).
 
