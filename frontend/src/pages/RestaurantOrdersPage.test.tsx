@@ -156,3 +156,43 @@ it('US-45 edge shows the confirmed electronic preference separately from unpaid 
   expect(await screen.findByText(/Medio de pago: Electrónico/)).toBeVisible()
   expect(screen.queryByText('Pagado')).not.toBeInTheDocument()
 })
+
+describe('RestaurantOrdersPage (US-60)', () => {
+  function cashOrder(status: 'pending' | 'paid' = 'pending', method: 'cash' | 'online' = 'cash') {
+    return {
+      ...order,
+      payment: { ...order.payment, method, status, total: '200.20' },
+    }
+  }
+
+  async function openDetail(selected = cashOrder()) {
+    api.fetchCurrentShiftOrders.mockResolvedValue({
+      shift: { start_time: '08:00', end_time: '13:00' },
+      orders: [selected],
+    })
+    api.fetchRestaurantOrder.mockResolvedValue(selected)
+    const user = userEvent.setup()
+    renderWithProviders(<RestaurantOrdersPage />)
+    await user.click(await screen.findByRole('button', { name: 'Ver detalle' }))
+    return screen.findByRole('region', { name: 'Detalle del pedido' })
+  }
+
+  it('US-60 S3 shows «Abona en efectivo en el local» with the amount', async () => {
+    const detail = await openDetail()
+    expect(within(detail).getByText(/Abona en efectivo en el local/)).toHaveTextContent(
+      'Abona en efectivo en el local: $ 200,20',
+    )
+  })
+
+  it('US-60 edge keeps a cash order pending in the restaurant view', async () => {
+    const detail = await openDetail()
+    expect(within(detail).getByText('Pendiente de pago')).toBeVisible()
+    expect(within(detail).queryByText('Pagado')).not.toBeInTheDocument()
+  })
+
+  it('US-60 edge shows a paid order as paid electronically', async () => {
+    const detail = await openDetail(cashOrder('paid', 'online'))
+    expect(within(detail).getByText('Pagado electrónicamente')).toBeVisible()
+    expect(within(detail).queryByText(/Abona en efectivo en el local/)).not.toBeInTheDocument()
+  })
+})

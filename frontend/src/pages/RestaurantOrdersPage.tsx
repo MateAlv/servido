@@ -151,6 +151,12 @@ export function RestaurantOrdersPage() {
                   ? 'Electrónico'
                   : 'No seleccionado'}
             </p>
+            {selected.payment.method === 'cash' && selected.payment.status === 'pending' && (
+              <p className={styles.cashNote}>
+                Abona en efectivo en el local: {money.format(Number(selected.payment.total))}
+              </p>
+            )}
+            {selected.payment.status === 'paid' && <p>Pagado electrónicamente</p>}
             <ul className={`${styles.items} ${styles.breakdown}`} aria-label="Desglose del pedido">
               {selected.items.map((item) => (
                 <li key={`${item.dish_name}-${item.quantity}`}>
