@@ -27,7 +27,7 @@ For one restaurant:
 - **Latest review of a person**: the review of their most recent reservation, by `starts_at`, then `published_at`.
 - **`rating`**: the mean of those reviews, rounded half up to one decimal. Null without reviews.
 - **`review_count`**: how many people have one.
-- **`opinions`**: those reviews that have a comment, by most recent visit.
+- **`opinions`**: one review per diner in the latest-visit selection, including rating-only reviews, ordered by visit.
 - **`average_spend_per_person`**: for each person, the amount of their most recent review that has one. With 5 or more people, their mean rounded half up to a whole peso; otherwise null.
 - **`price_tier`**: from `average_spend_per_person` when it exists, using the limits of spec 002-elegir-restaurante (below 15,000 `$`; below 25,000 `$$`; up to 40,000 `$$$`; above `$$$$`). Otherwise `rango_precio`, which is still what the restaurant declares and edits in its profile.
 

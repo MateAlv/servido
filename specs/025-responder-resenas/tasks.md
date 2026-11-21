@@ -33,13 +33,13 @@ description: "Tasks for spec 025: the restaurant replies to reviews (US-42)"
 
 - [x] T003 [P] [US42] Backend scenarios S1–S8 and the edge cases in backend/tests/test_review_replies.py
 - [x] T004 [P] [US42] Update the exact field lists of `test_us24_s6_…` and `test_us50_s8_…` in backend/tests/test_reviews.py
-- [x] T005 [P] [US42] UI scenarios S1, S3–S7 (`US-42 S…`) in frontend/src/pages/RestaurantReviewsPage.test.tsx
+- [x] T005 [P] [US42] UI scenarios S1, S3–S7 and S9 (`US-42 S…`) in frontend/src/pages/RestaurantReviewsPage.test.tsx
 - [x] T006 [P] [US42] Public reply with «Editada» (`US-42 S2`, `US-42 S4`) in frontend/src/pages/RestaurantDetailPage.test.tsx and frontend/src/api/restaurants.test.ts
 
 ### Implementation for US-42
 
 - [x] T007 [US42] `ReplyRequest`, `ReviewReplyResponse` and the new `RestaurantReview` fields in backend/app/schemas/review.py; `PublicReply` in backend/app/schemas/public_restaurant.py
-- [x] T008 [US42] Reply, edit and the Opiniones rule (C1) in backend/app/services/review_replies.py
+- [x] T008 [US42] Reply, edit and latest-visit eligibility (C1, including rating-only reviews) in backend/app/services/review_replies.py
 - [x] T009 [US42] `POST` and `PUT /api/restaurant/reviews/{review_id}/reply`, `reply` and `can_reply` in the list, in backend/app/api/review.py
 - [x] T010 [US42] `reply` in each opinion in backend/app/api/public_restaurant.py
 - [x] T011 [US42] Regenerate the API contract and types with `make api-types` (frontend/src/api/)

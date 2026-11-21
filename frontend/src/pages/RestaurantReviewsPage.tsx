@@ -7,7 +7,7 @@ import {
   retryUnlessSessionExpired,
   SessionExpiredError,
 } from '../api/errors'
-import { fetchRestaurantReviews, type RestaurantReview } from '../api/reviews'
+import { fetchRestaurantReviews, fetchReviewPhoto, type RestaurantReview } from '../api/reviews'
 import { signOut, useAccount } from '../api/session'
 import { LogoSpinner } from '../components/brand'
 import { OpinionCard, OpinionReply } from '../components/review'
@@ -213,6 +213,8 @@ function ReviewsList() {
                 author={review.author}
                 rating={review.rating}
                 comment={review.comment}
+                photos={review.photos}
+                loadPhoto={fetchReviewPhoto}
                 spendPerPerson={review.spend_per_person}
                 visit={`Visitó el ${longDate(review.visit_date)} a las ${review.visit_time}`}
                 remark={review.counts_in_average ? undefined : OLDER_VISIT}

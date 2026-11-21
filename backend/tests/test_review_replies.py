@@ -198,20 +198,28 @@ def test_us42_s6_review_stays_without_reply_until_one_is_published(
     assert session.query(ReviewReply).count() == 0
 
 
-def test_us42_s7_review_without_comment_cannot_be_replied(
-    client: TestClient, session: Session
+@pytest.mark.parametrize("bookable", [True, False])
+def test_us42_s9_latest_rating_only_review_can_be_replied(
+    client: TestClient, session: Session, bookable: bool
 ) -> None:
     restaurant = add_bookable_restaurant(session)
     review = reviewed(client, session, restaurant, comment=None)
+    if not bookable:
+        restaurant.latitud = restaurant.longitud = None
+        session.flush()
+        assert client.get(f"/api/restaurants/{restaurant.id_restaurante}").status_code == 404
 
+    assert listed(client, restaurant, review)["can_reply"] is True
     response = client.post(
         reply_url(review), json={"text": "Gracias."}, headers=restaurant_headers(client, restaurant)
     )
 
+    assert response.status_code == 201
     assert listed(client, restaurant, review)["can_reply"] is False
-    assert response.status_code == 409
-    assert response.json()["detail"] == "Solo podés responder las reseñas que se ven en Opiniones."
-    assert session.query(ReviewReply).count() == 0
+    if bookable:
+        [opinion] = public_detail(client, restaurant)["opinions"]
+        assert (opinion["rating"], opinion["comment"], opinion["photos"]) == (4, None, [])
+        assert opinion["reply"]["text"] == "Gracias."
 
 
 def test_us42_s7_older_visit_of_the_same_person_cannot_be_replied(

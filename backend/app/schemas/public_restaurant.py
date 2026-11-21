@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+from app.schemas.review import PhotoReference
+
 
 class PublicRestaurant(BaseModel):
     """A bookable restaurant as the diner's map, list and detail show it (decision D4)."""
@@ -66,11 +68,12 @@ class PublicReply(BaseModel):
 
 
 class PublicOpinion(BaseModel):
-    """The latest review of a person, when it has a comment (spec 014, R14)."""
+    """A diner's review of their most recent reviewed visit, including ratings alone (R14)."""
 
     author: str
     rating: int
-    comment: str
+    comment: str | None
+    photos: list[PhotoReference]
     spend_per_person: int | None
     visit_date: date
     reply: PublicReply | None

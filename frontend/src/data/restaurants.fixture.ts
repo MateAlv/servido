@@ -1,3 +1,4 @@
+import type { PhotoReference } from '../api/reviews'
 import type { OccupancyLevel } from '../components/restaurant'
 import { priceTierFromAverageSpend } from '../components/restaurant/priceFilterUtils'
 import { restrictionCode } from '../lib/dietary'
@@ -25,7 +26,8 @@ export type RestaurantReview = {
   author: string
   /** 1 to 5 stars. */
   rating: number
-  comment: string
+  comment: string | null
+  photos?: PhotoReference[]
   /** ISO date of the visit. */
   date: string
   /** What the author reported spending per person (US-50), when they did. */

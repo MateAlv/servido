@@ -527,6 +527,7 @@ def test_us50_s8_opinion_is_public_with_only_its_fields(
             "spend_per_person": 25000,
             "visit_date": YESTERDAY.isoformat(),
             "reply": None,
+            "photos": [],
         }
     ]
 
@@ -542,7 +543,10 @@ def test_us50_s9_newer_review_hides_the_previous_opinion(
 
     add_review(session, finished(session, restaurant, diner), 5, comment=None)
 
-    assert public_detail(client, restaurant)["opinions"] == []
+    detail = public_detail(client, restaurant)
+    [opinion] = detail["opinions"]
+    assert (opinion["rating"], opinion["comment"], opinion["photos"]) == (5, None, [])
+    assert (detail["rating"], detail["review_count"]) == (5.0, 1)
     assert session.query(Review).count() == 2
 
 
@@ -562,7 +566,7 @@ def test_us50_s10_late_review_of_an_old_visit_keeps_the_recent_opinion(
     assert [opinion["comment"] for opinion in opinions] == ["La última."]
 
 
-def test_us50_s11_review_without_comment_counts_but_is_not_listed(
+def test_us50_s11_rating_only_review_counts_and_is_listed(
     client: TestClient, session: Session
 ) -> None:
     restaurant = add_bookable_restaurant(session)
@@ -571,7 +575,9 @@ def test_us50_s11_review_without_comment_counts_but_is_not_listed(
 
     detail = public_detail(client, restaurant)
 
-    assert (detail["rating"], detail["review_count"], detail["opinions"]) == (4.0, 1, [])
+    assert (detail["rating"], detail["review_count"]) == (4.0, 1)
+    [opinion] = detail["opinions"]
+    assert (opinion["rating"], opinion["comment"], opinion["photos"]) == (4, None, [])
 
 
 def test_us50_edge_opinions_go_from_the_most_recent_visit(
@@ -706,6 +712,7 @@ def test_us24_s6_no_contact_data_or_reservation_link(client: TestClient, session
         "published_at",
         "counts_in_average",
         "reply",
+        "photos",
         "can_reply",
     }
     for private in ("martin@example.com", "Gómez", str(reservation.id), str(diner)):

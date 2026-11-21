@@ -10,7 +10,7 @@
 
 **Tests**: requeridos. Cada escenario de aceptación tiene al menos un test automatizado (constitución, principio III).
 
-Extiende las reseñas de la spec 014-resenas: el comensal califica y comenta (US-27, US-50), el restaurante ve todas sus reseñas (US-24) y el público ve en Opiniones la última reseña con comentario de cada persona (R14). Las decisiones C1–C5 son del equipo (15/11) y falta que la PO las valide.
+Extiende las reseñas de la spec 014-resenas: el comensal califica y comenta (US-27, US-50), el restaurante ve todas sus reseñas (US-24) y el público ve en Opiniones la reseña de la visita más reciente de cada persona, aunque tenga solo estrellas (R14). Las decisiones C1–C5 son del equipo (15/11) y falta que la PO las valide.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -20,7 +20,7 @@ Como **Responsable del restaurante**, quiero escribir un comentario a las review
 
 **Valor**: El restaurante puede agradecer una buena opinión o dar su versión ante una crítica, y quien lee la reseña ve también la voz del restaurante, sin depender de canales externos.
 
-**Independent Test**: Con la cuenta del restaurante, abrir sus reseñas, elegir una que se ve en Opiniones y no tiene respuesta, escribir un texto y publicarlo; verificar en el detalle público que la respuesta aparece debajo de la reseña, identificada como del restaurante. Verificar que no se puede agregar una segunda respuesta, editar la existente y ver en público el texto nuevo con la marca «Editada». Verificar que una respuesta vacía o de más de 500 caracteres no se publica, que una reseña sin comentario no ofrece responder y que otro restaurante no puede responderla.
+**Independent Test**: Con la cuenta del restaurante, abrir sus reseñas, elegir una que se ve en Opiniones y no tiene respuesta, escribir un texto y publicarlo; verificar en el detalle público que la respuesta aparece debajo de la reseña, identificada como del restaurante. Verificar que no se puede agregar una segunda respuesta, editar la existente y ver en público el texto nuevo con la marca «Editada». Verificar que se rechazan respuestas vacías o de más de 500 caracteres y que otro restaurante no puede responder. Una reseña pública sin comentario permite iniciar una respuesta. Una reseña anterior solo permite editar una respuesta existente.
 
 **Acceptance Scenarios**:
 
@@ -30,8 +30,9 @@ Como **Responsable del restaurante**, quiero escribir un comentario a las review
 4. **Dado** que una reseña tiene respuesta, **Cuando** la edito y guardo, **Entonces** en mi lista y en Opiniones se ve solo el texto nuevo, marcado como «Editada» *(C3)*.
 5. **Dado** que estoy escribiendo o editando una respuesta, **Cuando** intento guardarla vacía, con solo espacios o con más de 500 caracteres, **Entonces** no se guarda y se me indica por qué; mientras escribo veo cuántos caracteres me quedan *(C2)*.
 6. **Dado** que estoy escribiendo una respuesta, **Cuando** desisto antes de publicarla, **Entonces** la reseña sigue sin respuesta.
-7. **Dado** que una reseña de mi restaurante no se ve en Opiniones (no tiene comentario, o la misma persona dejó otra reseña de una visita más reciente), **Cuando** la veo en mi lista, **Entonces** no se me ofrece responderla *(C1)*.
+7. **Dado** que una reseña de mi restaurante no se ve en Opiniones (la misma persona dejó otra reseña de una visita más reciente), **Cuando** la veo en mi lista, **Entonces** no se me ofrece responderla *(C1)*.
 8. **Dado** que ingresé como restaurante, **Cuando** intento responder o editar la respuesta de una reseña de otro restaurante, **Entonces** el sistema no lo permite.
+9. **Dado** que la reseña de la visita más reciente solo tiene estrellas o tiene fotos sin comentario, **Cuando** el restaurante abre su panel, **Entonces** puede publicar una primera respuesta y esta se ve junto a la reseña cuando el detalle público está disponible. Si el restaurante no está aceptando reservas, puede iniciar la respuesta desde el panel de todos modos.
 
 ---
 
@@ -48,7 +49,8 @@ Como **Responsable del restaurante**, quiero escribir un comentario a las review
 
 ## Decisiones del equipo (15/11, falta que la PO las valide)
 
-- **C1 — Qué reseñas se responden**: solo las que hoy se ven en Opiniones, es decir la última reseña de cada persona, si tiene comentario (spec 014-resenas, R14). US-42 pide que la respuesta se vea en público, y una respuesta a una reseña que no se ve tampoco se vería.
+- **C1 — Qué reseñas se responden**: se puede iniciar una respuesta a la reseña de la visita más reciente de cada comensal del local (spec 014-resenas, R14), con o sin comentario o fotos. Se conserva una respuesta por reseña. La elegibilidad se mantiene aunque el restaurante temporalmente no acepte reservas.
+- **Decisión del 21/11/2026 (US-42)**: reemplaza el requisito original de comentario escrito de C1, que US-57 había preservado para reseñas con fotos.
 - **C2 — Largo y publicación**: hasta 500 caracteres, el mismo límite que el comentario del comensal (spec 014-resenas, R1), con un contador mientras se escribe. Se publica directo, sin vista previa, porque se puede editar después (a diferencia de la reseña, que es definitiva).
 - **C3 — Marca de edición**: una respuesta editada muestra solo el texto vigente, con la fecha de la respuesta y la marca «Editada». No se guarda ni se muestra el historial. Así el restaurante no puede cambiar su versión sin que se note.
 - **C4 — Sin borrar**: US-42 permite escribir y editar, no borrar. El restaurante no puede borrar reseñas (US-24), y tampoco su respuesta.
@@ -58,13 +60,13 @@ Como **Responsable del restaurante**, quiero escribir un comentario a las review
 
 ### Functional Requirements
 
-- **FR-001** *(US-42; C1)*: El sistema MUST permitir al restaurante responder con texto las reseñas de su restaurante que se ven en Opiniones, y MUST NOT permitir responder las que no se ven.
+- **FR-001** *(US-42; C1)*: El sistema MUST permitir al restaurante iniciar una respuesta con texto a las reseñas de su local que corresponden a Opiniones, incluso si solo tienen estrellas o el restaurante no está aceptando reservas. Las reseñas de visitas anteriores solo permiten editar una respuesta existente.
 - **FR-002** *(US-42)*: El sistema MUST mostrar la respuesta en Opiniones, debajo de su reseña, identificada como respuesta del restaurante, con el nombre del restaurante y la fecha de la respuesta, a cualquier persona, con o sin cuenta.
 - **FR-003** *(US-42)*: El sistema MUST admitir como máximo una respuesta por reseña, también ante envíos repetidos, y MUST informar cuando la reseña ya tiene una.
 - **FR-004** *(US-42; C3)*: El sistema MUST permitir al restaurante editar su respuesta sin límite de tiempo; la versión editada MUST reemplazar a la anterior y mostrarse con la marca «Editada».
 - **FR-005** *(US-42; C2, C4)*: El sistema MUST NOT guardar una respuesta vacía, con solo espacios o de más de 500 caracteres, y MUST informar el motivo.
 - **FR-006** *(US-42)*: El sistema MUST permitir responder y editar solo las reseñas del restaurante que inició sesión.
-- **FR-007** *(US-24)*: La lista de reseñas del restaurante MUST mostrar la respuesta de cada reseña que la tenga, incluidas las que ya no se ven en Opiniones, y MUST ofrecer responder solo las que se ven.
+- **FR-007** *(US-24)*: La lista de reseñas del restaurante MUST mostrar la respuesta de cada reseña que la tenga, incluidas las que ya no se ven en Opiniones, y MUST ofrecer una primera respuesta solo en las reseñas elegibles según C1.
 - **FR-008** *(C4)*: El sistema MUST NOT permitir borrar una respuesta.
 
 ### Key Entities

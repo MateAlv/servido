@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Account } from '../../api/session'
@@ -66,6 +66,83 @@ describe('PendingReviews', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+  })
+
+  it('US-57 S1 selects photos and S2 previews and removes them before publication', async () => {
+    await openForm()
+    const photo = new File(['photo'], 'plato.png', { type: 'image/png' })
+    fireEvent.change(screen.getByLabelText(/Fotos de los platos/), { target: { files: [photo] } })
+    chooseStars(5)
+    review()
+    expect(await screen.findByRole('img', { name: 'Foto 1 de la reseña' })).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Volver' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar foto 1' }))
+    review()
+    expect(screen.queryByRole('img', { name: 'Foto 1 de la reseña' })).not.toBeInTheDocument()
+    expect(api.publishReview).not.toHaveBeenCalled()
+  })
+
+  it('US-57 S5 preserves valid selections and S7 requires confirmation after rejection', async () => {
+    await openForm()
+    const good = new File(['photo'], 'plato.png', { type: 'image/png' })
+    const rejected = new File(['photo'], 'otra.png', { type: 'image/png' })
+    const bad = new File(['text'], 'texto.txt', { type: 'text/plain' })
+    fireEvent.change(screen.getByLabelText(/Fotos de los platos/), {
+      target: { files: [good, rejected, bad] },
+    })
+    expect(screen.getByText(/texto.txt/)).toBeInTheDocument()
+    chooseStars(5)
+    review()
+    api.publishReview.mockResolvedValueOnce({
+      kind: 'photos',
+      message: 'Revisá las fotos.',
+      errors: [{ index: 1, message: 'Formato inválido.' }],
+    })
+    publish()
+    expect(await screen.findByText(/otra.png.*Formato inválido/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Publicar/ })).not.toBeInTheDocument()
+    review()
+    publish()
+    await waitFor(() =>
+      expect(api.publishReview).toHaveBeenLastCalledWith(
+        'reservation-1',
+        { rating: 5, comment: null, spend_per_person: null },
+        [good],
+      ),
+    )
+  })
+
+  it('US-57 S7 ignores a late rejection from a closed dialog without losing newer edits', async () => {
+    await openForm()
+    const first = new File(['photo'], 'primera.png', { type: 'image/png' })
+    const later = new File(['photo'], 'nueva.png', { type: 'image/png' })
+    const selection = () => screen.getByLabelText(/Fotos de los platos/)
+    fireEvent.change(selection(), { target: { files: [first] } })
+    chooseStars(5)
+    review()
+    let reject!: (value: unknown) => void
+    api.publishReview.mockReturnValueOnce(
+      new Promise((resolve) => {
+        reject = resolve
+      }),
+    )
+    publish()
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Seguir mi reseña/ }))
+    fireEvent.change(screen.getByLabelText(/Tu comentario/), { target: { value: 'Texto nuevo' } })
+    fireEvent.change(screen.getByLabelText(SPEND_LABEL), { target: { value: '8000' } })
+    fireEvent.change(selection(), { target: { files: [later] } })
+    await act(async () =>
+      reject({
+        kind: 'photos',
+        message: 'Revisá las fotos.',
+        errors: [{ index: 0, message: 'Inválida.' }],
+      }),
+    )
+    expect(screen.getByLabelText(/Tu comentario/)).toHaveValue('Texto nuevo')
+    expect(screen.getByLabelText(SPEND_LABEL)).toHaveValue('8000')
+    expect(screen.getByText('nueva.png')).toBeInTheDocument()
+    expect(screen.queryByText(/Inválida/)).not.toBeInTheDocument()
   })
 
   it('US-27 S1 shows the finished reservation in «¿Cómo estuvo?»', async () => {
@@ -201,12 +278,12 @@ describe('PendingReviews', () => {
     expect(api.publishReview).not.toHaveBeenCalled()
   })
 
-  it('US-50 S3 explains that a review without comment is not listed', async () => {
+  it('US-50 S3 explains that a rating-only review is public', async () => {
     await openForm()
     chooseStars(5)
     review()
 
-    expect(screen.getByText(/no aparece en Opiniones/)).toBeInTheDocument()
+    expect(screen.getByText(/Se va a ver en la página del restaurante/)).toBeInTheDocument()
   })
 
   it('US-50 S4 goes back with what was written, having published nothing', async () => {

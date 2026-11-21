@@ -84,6 +84,7 @@ function fromApi(
       author: opinion.author,
       rating: opinion.rating,
       comment: opinion.comment,
+      ...(opinion.photos?.length && { photos: opinion.photos }),
       date: opinion.visit_date,
       spendPerPerson: opinion.spend_per_person,
       reply: opinion.reply,

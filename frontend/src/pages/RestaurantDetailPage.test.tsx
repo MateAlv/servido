@@ -97,6 +97,27 @@ describe('RestaurantDetailPage (US-15)', () => {
 describe('RestaurantDetailPage (spec 014)', () => {
   const real = { ...restaurant, bookable: true }
 
+  it('US-57 S4 displays photos and S6 renders a photo-only opinion', async () => {
+    vi.mocked(fetchRestaurant).mockResolvedValue({
+      ...real,
+      reviewCount: 1,
+      reviews: [
+        {
+          author: 'Ana P.',
+          rating: 5,
+          comment: null,
+          date: '2026-11-02',
+          photos: [{ id: 'photo', url: '/api/review-photos/photo' }],
+        },
+      ],
+    })
+    renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
+    expect(await screen.findByRole('img', { name: 'Foto 1 de la reseña' })).toHaveAttribute(
+      'src',
+      '/api/review-photos/photo',
+    )
+  })
+
   it('US-27 S11 shows the average next to the count', async () => {
     vi.mocked(fetchRestaurant).mockResolvedValue({ ...real, rating: 4.5, reviewCount: 3 })
     renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
@@ -154,20 +175,6 @@ describe('RestaurantDetailPage (spec 014)', () => {
       date: '2026-11-02',
     }))
   }
-
-  it('US-50 S11 explains why the list is shorter than the count', async () => {
-    vi.mocked(fetchRestaurant).mockResolvedValue({
-      ...real,
-      rating: 4,
-      reviewCount: 7,
-      reviews: opinions(4),
-    })
-    renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
-
-    expect(
-      await screen.findByText('4 comentarios de 7 reseñas. No todos dejan comentario.'),
-    ).toBeInTheDocument()
-  })
 
   it('US-50 S8 shows 5 opinions at first and the rest on demand', async () => {
     vi.mocked(fetchRestaurant).mockResolvedValue({
@@ -260,12 +267,18 @@ describe('RestaurantDetailPage (spec 014)', () => {
     expect(reply).toHaveTextContent('Respondió el miércoles, 4 de noviembre · Editada')
   })
 
-  it('US-50 S11 counts a review without comment, with no section for it', async () => {
-    vi.mocked(fetchRestaurant).mockResolvedValue({ ...real, rating: 4, reviewCount: 1 })
+  it('US-50 S11 counts and lists a rating-only review', async () => {
+    vi.mocked(fetchRestaurant).mockResolvedValue({
+      ...real,
+      rating: 4,
+      reviewCount: 1,
+      reviews: [{ ...opinions(1)[0], comment: null }],
+    })
     renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
 
     expect(await screen.findByText('1 reseña')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Opiniones' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Opiniones' })).toBeInTheDocument()
+    expect(screen.getByRole('article', { name: /Reseña de/ })).toBeInTheDocument()
   })
 
   it('US-7 S5 shows the calculated tier with its average spend', async () => {
