@@ -161,6 +161,12 @@ export function RestaurantOrdersPage() {
                 </li>
               ))}
             </ul>
+            <p>Subtotal de la cuenta: {money.format(Number(selected.subtotal))}</p>
+            {selected.discounts.map((discount) => (
+              <p key={`${discount.name}-${discount.amount}`}>
+                Descuento · {discount.name}: −{money.format(Number(discount.amount))}
+              </p>
+            ))}
             <p>
               <strong>Total: {money.format(Number(selected.payment.total))}</strong>
             </p>

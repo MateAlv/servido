@@ -10,6 +10,7 @@ from app.models.order import Order
 from app.models.order_confirmation import OrderConfirmation
 from app.models.order_item import OrderItem
 from app.models.password_reset import PasswordReset, PasswordResetRequest
+from app.models.promotion import OrderDiscount, Promotion
 from app.models.refund import Refund
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
@@ -29,10 +30,12 @@ __all__ = [
     "OpeningShift",
     "Order",
     "OrderConfirmation",
+    "OrderDiscount",
     "OrderItem",
     "Notification",
     "PasswordReset",
     "PasswordResetRequest",
+    "Promotion",
     "Reservation",
     "Restaurant",
     "RestaurantEmailVerification",

@@ -580,6 +580,8 @@ def test_us17_edge_empty_cart_kept_only_with_an_order(client: TestClient, sessio
         "items": [],
         "arrival_at": "2026-11-03T21:00:00-03:00",
         "payment_method": "cash",
+        "subtotal": "0.00",
+        "total": "0.00",
     }
     assert page(client, s)["reservation"]["has_cart"] is True
 

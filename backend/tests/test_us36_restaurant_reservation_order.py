@@ -1,4 +1,5 @@
 from datetime import time
+from decimal import Decimal
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -83,6 +84,8 @@ def test_us36_s4_treats_an_unconfirmed_order_as_missing(
         restaurant_id=restaurant.id_restaurante,
         status="pending",
         prep_start_time=reservation.starts_at,
+        subtotal=Decimal("0.00"),
+        total=Decimal("0.00"),
     )
     session.add(order)
     session.flush()

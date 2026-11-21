@@ -17,6 +17,7 @@ import { CancelledReservationsPage } from './pages/CancelledReservationsPage'
 import { CancelledReservationPage } from './pages/CancelledReservationPage'
 import { RestaurantReviewsPage } from './pages/RestaurantReviewsPage'
 import { RestaurantClosuresPage } from './pages/RestaurantClosuresPage'
+import { PromotionsPage } from './pages/PromotionsPage'
 
 export const router = createBrowserRouter([
   {
@@ -67,6 +68,7 @@ export const router = createBrowserRouter([
       },
       { path: '/restaurante/resenas', element: <RestaurantReviewsPage /> },
       { path: '/restaurante/bloqueos', element: <RestaurantClosuresPage /> },
+      { path: '/restaurante/promociones', element: <PromotionsPage /> },
       {
         path: '/restaurante/reservas/:reservationId/comensal',
         element: <RestaurantReservationDinerPage />,

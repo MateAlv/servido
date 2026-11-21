@@ -119,6 +119,7 @@ class OrderResponse(BaseModel):
 
     confirmed_at: datetime
     items: list[ConfirmedOrderItemResponse]
+    subtotal: Decimal
     total: Decimal
     # The slowest dish with a time; None when no dish has one (P2).
     prep_time_minutes: int | None
@@ -139,6 +140,8 @@ class CartResponse(BaseModel):
 
     updated_at: datetime
     items: list[CartItemResponse]
+    subtotal: Decimal
+    total: Decimal
 
 
 class CartSaveResponse(BaseModel):

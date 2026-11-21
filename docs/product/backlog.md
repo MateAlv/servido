@@ -55,7 +55,7 @@
 | 45 | Seleccionar medio de pago | Comensal | 1 SP | 5 | — |
 | 46 | Recuperar cuenta | Restaurante | 2 SP | 5 | — |
 | 47 | Ver pedido asociado | Comensal | 1 SP | 5 | — |
-| 48 | Editar promociones | Restaurante | 2 SP | 6 | — |
+| 48 | Editar promociones | Restaurante | 2 SP | 6 | [028-editar-promociones](../../specs/028-editar-promociones/spec.md) |
 | 49 | Ver detalle de cancelación | Comensal | 1 SP | 6 | — |
 | 50 | Dejar comentarios en texto | Comensal | 2 SP | 6 | — |
 | 51 | Recibir mail de verificación | Comensal | 1 SP | 6 | — |
@@ -813,9 +813,9 @@ comensales por mesa | Comensal | 1 SP | 6 | — |
 
 - El usuario puede crear una promoción indicando su descripción, los platos o condiciones a los que aplica y su período de vigencia
 - El usuario puede modificar o dar de baja una promoción existente
-- Solo las promociones vigentes se muestran a los comensales
-- Una promoción vencida o dada de baja deja de aplicarse a nuevos pedidos
-- Los pedidos ya confirmados conservan la promoción aplicada
+- En esta etapa las promociones son administrativas del lado del restaurante; no se muestran ni se aplican al comensal
+- Una promoción vencida o dada de baja deja de estar disponible para futuras activaciones
+- Los pedidos confirmados conservan su total normal sin aplicar promociones
 
 ### US-49 — Ver detalle de cancelación
 
