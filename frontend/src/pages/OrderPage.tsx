@@ -603,6 +603,9 @@ function OrderEditor({
         confirming || cart.hasPendingOperation,
       )}
       {cart.metadata.payment_method === null && <p>Medio de pago no seleccionado</p>}
+      {cart.metadata.payment_method === 'cash' && (
+        <p className={styles.cashNote}>Abonás {formatCents(totalCents)} en efectivo en el local.</p>
+      )}
       <p className={styles.hint}>
         {cart.metadata.payment_method === null ? 'Seleccioná un medio para confirmar. ' : ''}
         Elegir pago electrónico no inicia un cobro.
@@ -663,6 +666,11 @@ function OrderEditor({
             : 'Medio de pago no seleccionado'}
       </p>
       <p>{page.order.payment_status === 'paid' ? 'Pagado' : 'Pendiente de pago'}</p>
+      {page.order.payment_method === 'cash' && page.order.payment_status === 'pending' && (
+        <p className={styles.cashNote}>
+          Abonás {formatPrice(page.order.total)} en efectivo en el local.
+        </p>
+      )}
       {!page.order.payment_method_editable && <p className={styles.hint}>{paymentRestriction}</p>}
       <p className={styles.hint}>La selección no implica que el pedido esté pagado.</p>
     </section>

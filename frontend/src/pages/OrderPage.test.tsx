@@ -1664,3 +1664,39 @@ it('US-43 edge keeps the original reservation interval visible when arrival chan
   expect(bill.getByText(/21:30/)).toBeVisible()
   expect(confirmMock).not.toHaveBeenCalled()
 })
+
+describe('spec 032 (US-60)', () => {
+  it('US-60 S2 shows the amount to pay in cash', async () => {
+    const user = await openPage(pageData(), false)
+    await add(user, 'Bife de chorizo')
+    await review(user)
+    await user.click(screen.getByRole('button', { name: 'Efectivo' }))
+    expect(screen.getByText(/en efectivo en el local/)).toHaveTextContent(
+      `Abonás ${money(18500)} en efectivo en el local.`,
+    )
+  })
+
+  it('US-60 S2 keeps the cash amount in the confirmed order', async () => {
+    await openPage(pageData({ order: orderOf([[BIFE, 1]]) }), false)
+    expect(screen.getByText(/en efectivo en el local/)).toHaveTextContent(
+      `Abonás ${money(18500)} en efectivo en el local.`,
+    )
+    expect(screen.getByText('Pendiente de pago')).toBeVisible()
+  })
+
+  it('US-60 S4 switches a pending cash order to electronic', async () => {
+    const order = orderOf([[BIFE, 1]])
+    const updated = { ...order, payment_method: 'online' as const }
+    vi.mocked(changePaymentMethod).mockResolvedValue({
+      ok: true,
+      page: pageData({ order: updated }, false),
+    })
+    const user = await openPage(pageData({ order }, false), false)
+    await user.click(screen.getByRole('button', { name: 'Modificar medio de pago' }))
+    await user.click(screen.getByRole('button', { name: 'Pago electrónico' }))
+    await user.click(screen.getByRole('button', { name: 'Guardar cambio' }))
+    await waitFor(() => expect(changePaymentMethod).toHaveBeenCalledWith('res-1', 'online'))
+    expect(screen.getByText('Pendiente de pago')).toBeVisible()
+    expect(screen.queryByText(/en efectivo en el local/)).not.toBeInTheDocument()
+  })
+})
