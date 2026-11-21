@@ -18,21 +18,21 @@
 
 ### Tests for US-60
 
-- [ ] T001 [US60] Add `backend/tests/test_us60_cash_payment.py` with `test_us60_s1_cash_confirmation_stays_pending`, `test_us60_s2_cash_order_exposes_total_to_pay`, `test_us60_s3_cash_order_stays_pending_for_both_roles`, `test_us60_s4_pending_cash_order_switches_to_online`, `test_us60_edge_cash_payment_rejections` (empty order, cancelled reservation, finished reservation, another diner's order) and `test_us60_edge_paid_order_rejects_cash_change`
-- [ ] T002 [US60] Add `US-60 S2 shows the amount to pay in cash` and `US-60 S4 switches a pending cash order to electronic` to `frontend/src/pages/OrderPage.test.tsx` (they fail until T004 and T005)
-- [ ] T003 [P] [US60] Add `US-60 S3 shows «Abona en efectivo en el local» with the amount` and `US-60 edge keeps a cash order pending in the restaurant view` to `frontend/src/pages/RestaurantOrdersPage.test.tsx` (they fail until T006)
+- [x] T001 [US60] Add `backend/tests/test_us60_cash_payment.py` with `test_us60_s1_cash_confirmation_stays_pending`, `test_us60_s2_cash_order_exposes_total_to_pay`, `test_us60_s3_cash_order_stays_pending_for_both_roles`, `test_us60_s4_pending_cash_order_switches_to_online`, `test_us60_edge_cash_payment_rejections` (empty order, cancelled reservation, finished reservation, another diner's order) and `test_us60_edge_paid_order_rejects_cash_change`
+- [x] T002 [US60] Add `US-60 S2 shows the amount to pay in cash` and `US-60 S4 switches a pending cash order to electronic` to `frontend/src/pages/OrderPage.test.tsx` (they fail until T004 and T005)
+- [x] T003 [P] [US60] Add `US-60 S3 shows «Abona en efectivo en el local» with the amount` and `US-60 edge keeps a cash order pending in the restaurant view` to `frontend/src/pages/RestaurantOrdersPage.test.tsx` (they fail until T006)
 
 ### Implementation for US-60
 
-- [ ] T004 [US60] In `frontend/src/pages/OrderPage.tsx`, show «Abonás $X en efectivo en el local.» in the review step (`draftControls`) when `cart.metadata.payment_method === 'cash'`, using `formatCents(totalCents)`
-- [ ] T005 [US60] In `frontend/src/pages/OrderPage.tsx`, show «Abonás $X en efectivo en el local.» in the confirmed step (`confirmedPayment`) when the order is `cash` and `pending`, using `formatPrice(page.order.total)`; keep «Pagado» and drop the note when `paid`
-- [ ] T006 [P] [US60] In `frontend/src/pages/RestaurantOrdersPage.tsx`, show «Abona en efectivo en el local: $X» in the order detail when `payment.method === 'cash'` and `payment.status === 'pending'`, and «Pagado electrónicamente» when `paid`
-- [ ] T007 [US60] Run `make format lint test` and fix any failure
+- [x] T004 [US60] In `frontend/src/pages/OrderPage.tsx`, show «Abonás $X en efectivo en el local.» in the review step (`draftControls`) when `cart.metadata.payment_method === 'cash'`, using `formatCents(totalCents)`
+- [x] T005 [US60] In `frontend/src/pages/OrderPage.tsx`, show «Abonás $X en efectivo en el local.» in the confirmed step (`confirmedPayment`) when the order is `cash` and `pending`, using `formatPrice(page.order.total)`; keep «Pagado» and drop the note when `paid`
+- [x] T006 [P] [US60] In `frontend/src/pages/RestaurantOrdersPage.tsx`, show «Abona en efectivo en el local: $X» in the order detail when `payment.method === 'cash'` and `payment.status === 'pending'`, and «Pagado electrónicamente» when `paid`
+- [x] T007 [US60] Run `make format lint test` and fix any failure
 
 ### Wrap-up
 
-- [ ] T008 [US60] Record spec 032 / US-60 in `specs/README.md` (index row and the Sprint 6 note)
-- [ ] T009 [US60] Follow `quickstart.md` to try the three scenarios in the running app
+- [x] T008 [US60] Record spec 032 / US-60 in `specs/README.md` (index row and the Sprint 6 note)
+- [x] T009 [US60] Follow `quickstart.md` to try the three scenarios in the running app
 
 **Checkpoint**: US-60 works end to end and its scenario tests pass.
 
