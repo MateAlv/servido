@@ -29,8 +29,8 @@ class ReplyNotFoundError(Exception):
 
 
 def shown_review_ids(session: Session, restaurant_id: UUID) -> set[UUID]:
-    """The reviews in the public Opiniones: each person's latest one, if it has a comment (R14)."""
-    return {review.id for review, _, _ in latest_reviews(session, restaurant_id) if review.comment}
+    """The latest reviewed visit per diner, including when the restaurant is unbookable."""
+    return {review.id for review, _, _ in latest_reviews(session, restaurant_id)}
 
 
 def replies_by_review(session: Session, review_ids: set[UUID]) -> dict[UUID, ReviewReply]:

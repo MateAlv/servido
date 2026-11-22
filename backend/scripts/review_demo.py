@@ -15,6 +15,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 from decimal import Decimal
+from pathlib import Path
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from sqlalchemy import delete, select
@@ -25,10 +26,12 @@ from app.models.diner import Diner
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.models.review import Review
+from app.models.review_photo import ReviewPhoto
 from app.models.review_reply import ReviewReply
 from app.services import availability
 from app.services.auth import hash_password
 from app.services.availability import BUENOS_AIRES
+from app.services.review_photos import photo_path
 
 MIN_PASSWORD_LENGTH = 12
 # Far above any real table number, so a demo reservation never overlaps a real one.
@@ -117,11 +120,15 @@ def add_reservation(
     return reservation
 
 
-def remove_demo(session: Session, restaurant: Restaurant) -> None:
+def remove_demo(session: Session, restaurant: Restaurant) -> list[Path]:
     require_demo_restaurant(restaurant)
     ids = [request_id(restaurant, key) for key in demo_keys()]
     reservations = select(Reservation.id).where(Reservation.request_id.in_(ids))
     reviews = select(Review.id).where(Review.reservation_id.in_(reservations))
+    photos = session.scalars(
+        delete(ReviewPhoto).where(ReviewPhoto.review_id.in_(reviews)).returning(ReviewPhoto)
+    )
+    paths = [photo_path(photo) for photo in photos]
     session.execute(delete(ReviewReply).where(ReviewReply.review_id.in_(reviews)))
     session.execute(delete(Review).where(Review.reservation_id.in_(reservations)))
     session.execute(delete(Reservation).where(Reservation.request_id.in_(ids)))
@@ -136,11 +143,12 @@ def remove_demo(session: Session, restaurant: Restaurant) -> None:
         if booked is None:
             session.delete(reviewer)
     session.flush()
+    return paths
 
 
-def load_demo(session: Session, restaurant: Restaurant, diner: Diner, password: str) -> None:
+def load_demo(session: Session, restaurant: Restaurant, diner: Diner, password: str) -> list[Path]:
     require_demo_restaurant(restaurant)
-    remove_demo(session, restaurant)
+    paths = remove_demo(session, restaurant)
     now = availability.current_time()
     password_hash = hash_password(password)
     reviewers: dict[str, UUID] = {}
@@ -179,6 +187,7 @@ def load_demo(session: Session, restaurant: Restaurant, diner: Diner, password: 
             session, restaurant, diner.id_comensal, f"pending-{days_ago}", offset, days_ago, 20, now
         )
     session.flush()
+    return paths
 
 
 def main() -> None:
@@ -194,23 +203,28 @@ def main() -> None:
         )
         if restaurant is None:
             sys.exit(f"No restaurant with email {args.restaurant_email}.")
+        name = restaurant.nombre
         try:
             if args.remove:
-                remove_demo(session, restaurant)
-                print(f"Removed the review demo from {restaurant.nombre}.")
-                return
-            diner = session.scalar(select(Diner).where(Diner.email == args.diner_email))
-            if diner is None:
-                sys.exit(f"No diner with email {args.diner_email}.")
-            password = os.environ.get("REVIEW_DEMO_PASSWORD", "")
-            if len(password) < MIN_PASSWORD_LENGTH:
-                sys.exit(
-                    f"Set REVIEW_DEMO_PASSWORD, with at least {MIN_PASSWORD_LENGTH} characters."
-                )
-            load_demo(session, restaurant, diner, password)
-            print(f"Loaded the review demo on {restaurant.nombre}.")
+                paths = remove_demo(session, restaurant)
+            else:
+                diner = session.scalar(select(Diner).where(Diner.email == args.diner_email))
+                if diner is None:
+                    sys.exit(f"No diner with email {args.diner_email}.")
+                password = os.environ.get("REVIEW_DEMO_PASSWORD", "")
+                if len(password) < MIN_PASSWORD_LENGTH:
+                    sys.exit(
+                        f"Set REVIEW_DEMO_PASSWORD, with at least {MIN_PASSWORD_LENGTH} characters."
+                    )
+                paths = load_demo(session, restaurant, diner, password)
         except NotADemoRestaurantError:
-            sys.exit(f"{restaurant.nombre} is not a demo restaurant: its name must say demo.")
+            sys.exit(f"{name} is not a demo restaurant: its name must say demo.")
+
+    # The paths are only safe to unlink once the transaction removing their metadata commits.
+    for path in paths:
+        path.unlink(missing_ok=True)
+    action = "Removed" if args.remove else "Loaded"
+    print(f"{action} the review demo {'from' if args.remove else 'on'} {name}.")
 
 
 if __name__ == "__main__":

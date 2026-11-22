@@ -135,8 +135,10 @@ def seed() -> None:
                 dish.foto_url = photo_url
                 dish.disponible = available
 
-        load_demo(session, restaurant, diner, DINER_PASSWORD)
+        removed_photo_paths = load_demo(session, restaurant, diner, DINER_PASSWORD)
 
+    for path in removed_photo_paths:
+        path.unlink(missing_ok=True)
     print("Seed listo.")
     print(f"Restaurante: {RESTAURANT_EMAIL} / {RESTAURANT_PASSWORD}")
     print(f"Cliente: {DINER_EMAIL} / {DINER_PASSWORD}")

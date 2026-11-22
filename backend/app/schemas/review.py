@@ -1,11 +1,33 @@
 from datetime import date, datetime
-from typing import ClassVar
+from typing import ClassVar, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
 from app.models.review import MAX_COMMENT_LENGTH, MAX_SPEND_PER_PERSON
 from app.models.review_reply import MAX_REPLY_LENGTH
+
+
+class PhotoReference(BaseModel):
+    id: UUID
+    url: str
+
+
+class PhotoError(BaseModel):
+    index: int
+    code: Literal[
+        "empty_file", "unsupported_format", "too_large", "too_many_photos", "too_many_pixels"
+    ]
+    message: str
+
+
+class PhotoErrorDetail(BaseModel):
+    message: str
+    photo_errors: list[PhotoError]
+
+
+class PhotoErrorResponse(BaseModel):
+    detail: PhotoErrorDetail
 
 
 class ReviewRequest(BaseModel):
@@ -27,6 +49,7 @@ class ReviewRequest(BaseModel):
 
 
 class PublishedReviewResponse(BaseModel):
+    photos: list[PhotoReference]
     id: UUID
     rating: int
     comment: str | None
@@ -86,6 +109,7 @@ class ReviewReplyResponse(BaseModel):
 
 
 class RestaurantReview(BaseModel):
+    photos: list[PhotoReference]
     id: UUID
     author: str
     visit_date: date

@@ -41,7 +41,7 @@ def test_us50_edge_demo_gives_the_price_tier_and_pending_reviews(
     assert detail["review_count"] == 6
     assert detail["price_tier"] == "$"
     assert detail["spend_people"] == 5
-    assert len(detail["opinions"]) == 4
+    assert len(detail["opinions"]) == 6
     assert "Esa vez la comida llegó fría." not in [item["comment"] for item in detail["opinions"]]
     assert len(client.get("/api/reviews/pending", headers=headers).json()["reservations"]) == 2
 
@@ -123,3 +123,57 @@ def test_us50_edge_demo_refuses_a_real_restaurant(client: TestClient, session: S
     with pytest.raises(NotADemoRestaurantError):
         remove_demo(session, restaurant)
     assert session.query(Review).count() == 0
+
+
+@pytest.mark.parametrize("mode", ["remove", "reload", "seed"])
+def test_us57_edge_demo_cleans_only_its_photos(client, session, tmp_path, monkeypatch, mode):
+    from contextlib import contextmanager
+
+    from app.config import settings
+    from app.models.review_photo import ReviewPhoto
+    from app.services.review_photos import photo_path
+    from scripts import review_demo, seed
+
+    monkeypatch.setattr(settings, "review_photo_dir", tmp_path)
+    restaurant, diner, _ = demo_setup(client, session)
+    load_demo(session, restaurant, diner, PASSWORD)
+    seed_review = session.query(Review).first()
+    real_reservation = add_reservation(
+        session, restaurant, diner.id_comensal, diner.fecha_registro.date(), time(13), 4, "indoor"
+    )
+    real_review = Review(reservation_id=real_reservation.id, rating=5)
+    session.add(real_review)
+    session.flush()
+    photos = [
+        ReviewPhoto(review_id=review.id, position=1, media_type="image/png")
+        for review in (seed_review, real_review)
+    ]
+    session.add_all(photos)
+    session.commit()
+    demo_path, real_path = map(photo_path, photos)
+    for path in (demo_path, real_path):
+        path.write_bytes(b"image")
+
+    @contextmanager
+    def transaction():
+        with session.begin_nested():
+            yield session
+            assert demo_path.exists()
+        session.commit()
+
+    monkeypatch.setattr(review_demo.SessionLocal, "begin", transaction)
+    if mode == "seed":
+        monkeypatch.setattr(seed, "RESTAURANT_EMAIL", restaurant.email)
+        monkeypatch.setattr(seed, "DINER_EMAIL", diner.email)
+        seed.seed()
+    else:
+        args = ["review_demo", "--restaurant-email", restaurant.email]
+        args += ["--diner-email", diner.email] if mode == "reload" else ["--remove"]
+        monkeypatch.setattr("sys.argv", args)
+        monkeypatch.setenv("REVIEW_DEMO_PASSWORD", PASSWORD)
+        review_demo.main()
+
+    assert not demo_path.exists()
+    assert real_path.exists()
+    assert session.query(ReviewPhoto).count() == 1
+    assert session.query(Review).count() == (1 if mode == "remove" else 8)

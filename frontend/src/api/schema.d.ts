@@ -909,6 +909,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/review-photos/{photo_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Review Photo */
+        get: operations["get_review_photo_api_review_photos__photo_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurant/reviews/{review_id}/reply": {
         parameters: {
             query?: never;
@@ -1812,6 +1829,39 @@ export interface components {
             /** Reservations */
             reservations: components["schemas"]["PendingReview"][];
         };
+        /** PhotoError */
+        PhotoError: {
+            /** Index */
+            index: number;
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "empty_file" | "unsupported_format" | "too_large" | "too_many_photos" | "too_many_pixels";
+            /** Message */
+            message: string;
+        };
+        /** PhotoErrorDetail */
+        PhotoErrorDetail: {
+            /** Message */
+            message: string;
+            /** Photo Errors */
+            photo_errors: components["schemas"]["PhotoError"][];
+        };
+        /** PhotoErrorResponse */
+        PhotoErrorResponse: {
+            detail: components["schemas"]["PhotoErrorDetail"];
+        };
+        /** PhotoReference */
+        PhotoReference: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Url */
+            url: string;
+        };
         /** PreorderedOrderSummary */
         PreorderedOrderSummary: {
             /** Status */
@@ -1981,7 +2031,7 @@ export interface components {
         };
         /**
          * PublicOpinion
-         * @description The latest review of a person, when it has a comment (spec 014, R14).
+         * @description A diner's review of their most recent reviewed visit, including ratings alone (R14).
          */
         PublicOpinion: {
             /** Author */
@@ -1989,7 +2039,9 @@ export interface components {
             /** Rating */
             rating: number;
             /** Comment */
-            comment: string;
+            comment: string | null;
+            /** Photos */
+            photos: components["schemas"]["PhotoReference"][];
             /** Spend Per Person */
             spend_per_person: number | null;
             /**
@@ -2112,6 +2164,8 @@ export interface components {
         };
         /** PublishedReviewResponse */
         PublishedReviewResponse: {
+            /** Photos */
+            photos: components["schemas"]["PhotoReference"][];
             /**
              * Id
              * Format: uuid
@@ -2508,6 +2562,8 @@ export interface components {
         };
         /** RestaurantReview */
         RestaurantReview: {
+            /** Photos */
+            photos: components["schemas"]["PhotoReference"][];
             /**
              * Id
              * Format: uuid
@@ -2569,15 +2625,6 @@ export interface components {
             created_at: string;
             /** Edited At */
             edited_at: string | null;
-        };
-        /** ReviewRequest */
-        ReviewRequest: {
-            /** Rating */
-            rating: number;
-            /** Comment */
-            comment?: string | null;
-            /** Spend Per Person */
-            spend_per_person?: number | null;
         };
         /** SlotResponse */
         SlotResponse: {
@@ -2686,6 +2733,21 @@ export interface components {
         VerificationRequest: {
             /** Token */
             token: string;
+        };
+        /** ReviewRequest */
+        ReviewRequest: {
+            /** Rating */
+            rating: number;
+            /**
+             * Comment
+             * @default null
+             */
+            comment: string | null;
+            /**
+             * Spend Per Person
+             * @default null
+             */
+            spend_per_person: number | null;
         };
         /** ErrorResponse */
         ErrorResponse: {
@@ -5551,6 +5613,10 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ReviewRequest"];
+                "multipart/form-data": {
+                    review: string;
+                    photos?: string[];
+                };
             };
         };
         responses: {
@@ -5563,13 +5629,13 @@ export interface operations {
                     "application/json": components["schemas"]["PublishedReviewResponse"];
                 };
             };
-            /** @description Validation Error */
+            /** @description Bad Request */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["PhotoErrorResponse"] | components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Falta la sesión o venció. */
@@ -5607,6 +5673,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
+            };
+            /** @description La solicitud supera el tamaño permitido. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -5650,6 +5723,48 @@ export interface operations {
             };
             /** @description No tenés permiso. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_review_photo_api_review_photos__photo_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                photo_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            /** @description Validation Error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description No encontramos esa foto. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

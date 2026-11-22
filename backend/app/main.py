@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api import api_router
+from app.schemas.review import ReviewRequest
 
 app = FastAPI(title="Servido! API", docs_url="/api/docs", openapi_url="/api/openapi.json")
 app.mount("/media", StaticFiles(directory="uploads", check_dir=False), name="media")
@@ -21,7 +22,9 @@ def custom_openapi() -> dict:
         version="1.0.0",
         routes=app.routes,
     )
-    schema.setdefault("components", {}).setdefault("schemas", {})["ErrorResponse"] = {
+    components = schema.setdefault("components", {}).setdefault("schemas", {})
+    components["ReviewRequest"] = ReviewRequest.model_json_schema()
+    components["ErrorResponse"] = {
         "title": "ErrorResponse",
         "type": "object",
         "properties": {
@@ -45,6 +48,16 @@ def custom_openapi() -> dict:
                 if not isinstance(response, dict):
                     continue
                 if response_status in {"400", "401", "403", "404", "409", "429", "502"}:
+                    if response_status == "400" and operation.get("operationId", "").startswith(
+                        "publish_review_"
+                    ):
+                        response["content"]["application/json"]["schema"] = {
+                            "anyOf": [
+                                {"$ref": "#/components/schemas/PhotoErrorResponse"},
+                                {"$ref": "#/components/schemas/ErrorResponse"},
+                            ]
+                        }
+                        continue
                     response["content"] = {
                         "application/json": {
                             "schema": {"$ref": "#/components/schemas/ErrorResponse"}

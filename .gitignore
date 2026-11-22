@@ -35,3 +35,4 @@ backend.hcl
 .opencode/
 # Photos uploaded while running the app or the tests
 backend/uploads/
+backend/review-photos/

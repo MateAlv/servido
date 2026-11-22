@@ -9,6 +9,10 @@ import { Button, Modal, StarRating, TextAreaField, TextField, useToast } from '.
 import { longDate } from '../../lib/date'
 import styles from './ReviewDialog.module.css'
 
+const PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const MAX_PHOTOS = 4
+const MAX_PHOTO_BYTES = 5_000_000
+
 const MAX_COMMENT_LENGTH = 500
 const MAX_SPEND = 1_000_000
 const SPEND_ERROR = 'Escribí un monto en pesos enteros, de $1 a $1.000.000.'
@@ -21,6 +25,7 @@ export type ReviewFormValues = {
   rating: number
   comment: string
   spend: string
+  photos: File[]
 }
 
 /** Whole pesos, with or without «$» and thousands dots; `undefined` when it isn't valid. */
@@ -38,6 +43,7 @@ type ReviewDialogProps = {
   author: string
   values: ReviewFormValues
   onChange: (values: ReviewFormValues) => void
+  isCurrent: () => boolean
   onClose: () => void
   onPublished: () => void
 }
@@ -49,6 +55,7 @@ export function ReviewDialog({
   author,
   values,
   onChange,
+  isCurrent,
   onClose,
   onPublished,
 }: ReviewDialogProps) {
@@ -68,7 +75,8 @@ export function ReviewDialog({
   const [outdated, setOutdated] = useState(false)
   const [attempts, setAttempts] = useState(0)
 
-  const { rating, comment, spend } = values
+  const [photoErrors, setPhotoErrors] = useState<string[]>([])
+  const { rating, comment, spend, photos } = values
   const cleanComment = comment.trim()
   const parsedSpend = parseSpend(spend)
   const commentTooLong = cleanComment.length > MAX_COMMENT_LENGTH
@@ -91,6 +99,26 @@ export function ReviewDialog({
     target?.focus()
   }, [attempts])
 
+  function addPhotos(files: File[]) {
+    const accepted = [...photos]
+    const errors = []
+    for (const file of files) {
+      let reason = ''
+      if (accepted.length >= MAX_PHOTOS) reason = 'Podés adjuntar hasta 4 fotos.'
+      else if (file.size > MAX_PHOTO_BYTES) reason = 'La foto supera los 5 MB.'
+      else if (!file.size) reason = 'El archivo está vacío.'
+      else if (file.type && !PHOTO_TYPES.has(file.type)) reason = 'Elegí una foto JPG, PNG o WebP.'
+      if (reason) errors.push(`${file.name}: ${reason}`)
+      else accepted.push(file)
+    }
+    setPhotoErrors(errors)
+    onChange({ ...values, photos: accepted })
+  }
+
+  function removePhoto(index: number) {
+    onChange({ ...values, photos: photos.filter((_, position) => position !== index) })
+  }
+
   function goToPreview() {
     const missingRating = rating === 0
     const badSpend = parsedSpend === undefined
@@ -110,11 +138,28 @@ export function ReviewDialog({
     setPublishError('')
     setPublishing(true)
     try {
-      const failure = await publishReview(reservation.reservation_id, {
+      const draft = {
         rating,
         comment: cleanComment || null,
         spend_per_person: parsedSpend ?? null,
-      })
+      }
+      const failure = await (photos.length
+        ? publishReview(reservation.reservation_id, draft, photos)
+        : publishReview(reservation.reservation_id, draft))
+      if (failure && !isCurrent()) return
+      if (failure?.kind === 'photos') {
+        const rejected = new Map(failure.errors.map(({ index, message }) => [index, message]))
+        setPhotoErrors([
+          failure.message,
+          ...photos.flatMap((photo, index) => {
+            const reason = rejected.get(index)
+            return reason ? [`${photo.name}: ${reason}`] : []
+          }),
+        ])
+        onChange({ ...values, photos: photos.filter((_, index) => !rejected.has(index)) })
+        setStep('form')
+        return
+      }
       if (failure?.kind === 'session') {
         showToast(SESSION_EXPIRED, { tone: 'error' })
         signOut(queryClient)
@@ -132,7 +177,7 @@ export function ReviewDialog({
       void queryClient.invalidateQueries({ queryKey: ['restaurants'] })
       onPublished()
     } catch (requestError) {
-      setPublishError(getRequestErrorMessage(requestError, PUBLISH_FAILED))
+      if (isCurrent()) setPublishError(getRequestErrorMessage(requestError, PUBLISH_FAILED))
     } finally {
       setPublishing(false)
     }
@@ -190,6 +235,37 @@ export function ReviewDialog({
             value={comment}
             onChange={(event) => onChange({ ...values, comment: event.target.value })}
           />
+          <div className={styles.step}>
+            <label htmlFor={`${ids}-photos`}>Fotos de los platos (opcional)</label>
+            <input
+              id={`${ids}-photos`}
+              className={styles.photoInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              aria-describedby={`${ids}-photo-hint`}
+              onChange={(event) => {
+                addPhotos(Array.from(event.target.files ?? []))
+                event.target.value = ''
+              }}
+            />
+            <p id={`${ids}-photo-hint`}>Hasta 4 fotos JPG, PNG o WebP de 5 MB cada una.</p>
+            {photos.map((photo, index) => (
+              <div className={styles.photoSelection} key={index}>
+                <span>{photo.name}</span>
+                <Button size="sm" variant="secondary" onClick={() => removePhoto(index)}>
+                  Quitar foto {index + 1}
+                </Button>
+              </div>
+            ))}
+            {photoErrors.length > 0 && (
+              <ul role="alert" className={styles.error}>
+                {photoErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            )}
+          </div>
           <TextField
             label="¿Cuánto gastaste por persona? (opcional)"
             hint="En pesos. El monto se publica en tu reseña."
@@ -213,6 +289,7 @@ export function ReviewDialog({
               rating={rating}
               comment={cleanComment || null}
               spendPerPerson={parsedSpend}
+              photos={photos}
               visit={`Visitó el ${visitDate}`}
             />
           </div>
@@ -228,17 +305,10 @@ export function ReviewDialog({
               </p>
             ) : (
               <>
-                {cleanComment ? (
-                  <p>
-                    Se va a ver en la página del restaurante
-                    {parsedSpend != null && ', con el monto que gastaste'}.
-                  </p>
-                ) : (
-                  <p>
-                    Sin comentario, tu calificación cuenta en el promedio, pero no aparece en
-                    Opiniones.
-                  </p>
-                )}
+                <p>
+                  Se va a ver en la página del restaurante
+                  {parsedSpend != null && ', con el monto que gastaste'}.
+                </p>
                 {reservation.replaces_earlier_review && (
                   <p>
                     Tu reseña anterior de este local deja de verse en público y de contar en el

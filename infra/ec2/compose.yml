@@ -43,6 +43,7 @@ services:
       APP_BASE_URL: https://servido.discordia.fyi
     volumes:
       - ${DATA_DIR:-/var/lib/servido}/uploads:/app/uploads
+      - ${DATA_DIR:-/var/lib/servido}/review-photos:/app/review-photos
     depends_on:
       db:
         condition: service_healthy

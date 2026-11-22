@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -6,6 +8,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "postgresql+psycopg://servido:servido@localhost:55432/servido"
+    review_photo_dir: Path = Path("review-photos")
     jwt_secret: str = "development-only-change-me-please-use-a-real-secret"
     # Public: it identifies the "Servido! web" OAuth client (infra/README.md). No secret is used.
     google_client_id: str = (

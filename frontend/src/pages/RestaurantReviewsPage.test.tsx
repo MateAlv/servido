@@ -6,6 +6,7 @@ import { RestaurantReviewsPage } from './RestaurantReviewsPage'
 
 const api = vi.hoisted(() => ({
   fetchRestaurantReviews: vi.fn(),
+  fetchReviewPhoto: vi.fn(),
   publishReply: vi.fn(),
   editReply: vi.fn(),
 }))
@@ -52,6 +53,27 @@ describe('RestaurantReviewsPage (US-24)', () => {
     vi.clearAllMocks()
     session.account = { data: { rol: 'restaurant' }, isPending: false }
     api.fetchRestaurantReviews.mockResolvedValue(page())
+  })
+
+  it('US-57 S4 displays photos and S8 loads an older photo without offering a reply', async () => {
+    api.fetchRestaurantReviews.mockResolvedValue(
+      page({
+        reviews: [
+          {
+            ...REVIEW,
+            comment: null,
+            can_reply: false,
+            counts_in_average: false,
+            photos: [{ id: 'older', url: '/api/review-photos/older' }],
+          },
+        ],
+      }),
+    )
+    api.fetchReviewPhoto.mockResolvedValue(new Blob(['photo']))
+    renderWithProviders(<RestaurantReviewsPage />)
+    expect(await screen.findByRole('img', { name: 'Foto 1 de la reseña' })).toBeInTheDocument()
+    expect(api.fetchReviewPhoto).toHaveBeenCalledWith('/api/review-photos/older')
+    expect(screen.queryByRole('button', { name: /Responder/ })).not.toBeInTheDocument()
   })
 
   it('US-24 S1 shows each review with its author, visit, stars, comment and spend', async () => {
@@ -328,9 +350,21 @@ describe('RestaurantReviewsPage (US-42)', () => {
     expect(screen.queryByLabelText('Tu respuesta a Ana P.')).toBeNull()
   })
 
+  it.each([{ photos: [] }, { photos: [{ id: 'photo', url: '/api/review-photos/photo' }] }])(
+    'US-42 S9 offers a first reply for a public review without a comment',
+    async ({ photos }) => {
+      api.fetchReviewPhoto.mockResolvedValue(new Blob(['photo']))
+      api.fetchRestaurantReviews.mockResolvedValue(
+        page({ reviews: [{ ...REVIEW, comment: null, photos }] }),
+      )
+      renderWithProviders(<RestaurantReviewsPage />)
+      expect(await screen.findByRole('button', { name: 'Responder' })).toBeInTheDocument()
+    },
+  )
+
   it('US-42 S7 offers no reply on a review that is not public', async () => {
     api.fetchRestaurantReviews.mockResolvedValue(
-      page({ reviews: [{ ...REVIEW, comment: null, can_reply: false }] }),
+      page({ reviews: [{ ...REVIEW, comment: null, can_reply: false, counts_in_average: false }] }),
     )
     renderWithProviders(<RestaurantReviewsPage />)
 

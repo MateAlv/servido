@@ -202,11 +202,7 @@ export function RestaurantDetailPage() {
             <Reveal delay={180}>
               <Card className={styles.reviews}>
                 <h2 className={styles.sectionTitle}>Opiniones</h2>
-                <OpinionList
-                  opinions={restaurant.reviews}
-                  restaurantName={restaurant.name}
-                  reviewCount={restaurant.reviewCount ?? restaurant.reviews.length}
-                />
+                <OpinionList opinions={restaurant.reviews} restaurantName={restaurant.name} />
               </Card>
             </Reveal>
           )}

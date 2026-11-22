@@ -82,7 +82,7 @@ All of the restaurant's reviews, the last published first, 20 at a time.
 
 Both add `rating` (one decimal, or null), `review_count`, `average_spend_per_person` (whole pesos, or null) and `spend_people` (0 when the tier isn't calculated). `price_tier` is now the calculated tier when there is one.
 
-The detail also adds `opinions`:
+The detail adds `opinions`, one review per diner based on the most recent reviewed visit. A rating-only review is included. The comment is null when omitted:
 
 ```json
 [
