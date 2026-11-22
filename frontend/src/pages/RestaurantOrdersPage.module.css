@@ -70,6 +70,14 @@
   margin: 0;
 }
 
+.cashNote {
+  background: var(--color-surface-sunken);
+  border-radius: var(--radius-field);
+  font-weight: 800;
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
 .detail {
   border-top: 1px solid var(--color-border);
   display: grid;

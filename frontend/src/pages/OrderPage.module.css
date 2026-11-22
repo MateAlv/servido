@@ -392,6 +392,14 @@
   font-weight: 700;
 }
 
+.cashNote {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-sunken);
+  font-weight: 800;
+}
+
 .billButton {
   justify-self: start;
 }
