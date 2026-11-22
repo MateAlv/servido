@@ -1258,6 +1258,10 @@ export interface components {
             items: components["schemas"]["CartItemResponse"][];
             /** Subtotal */
             subtotal: string;
+            /** Promotions */
+            promotions?: components["schemas"]["app__schemas__diner_order__OrderDiscountResponse"][] | null;
+            /** Discount */
+            discount?: string | null;
             /** Total */
             total: string;
         };
@@ -1656,16 +1660,6 @@ export interface components {
             end_time: string;
         };
         /**
-         * OrderDiscountResponse
-         * @description A promotion applied to the order, frozen at confirmation (spec 028, P4).
-         */
-        OrderDiscountResponse: {
-            /** Name */
-            name: string;
-            /** Amount */
-            amount: string;
-        };
-        /**
          * OrderItemRequest
          * @description A dish of the order with the name, price and time the page showed (P9).
          */
@@ -1774,6 +1768,10 @@ export interface components {
             items: components["schemas"]["ConfirmedOrderItemResponse"][];
             /** Subtotal */
             subtotal: string;
+            /** Promotions */
+            promotions?: components["schemas"]["app__schemas__diner_order__OrderDiscountResponse"][] | null;
+            /** Discount */
+            discount?: string | null;
             /** Total */
             total: string;
             /** Prep Time Minutes */
@@ -2051,6 +2049,29 @@ export interface components {
             visit_date: string;
             reply: components["schemas"]["PublicReply"] | null;
         };
+        /** PublicPromotion */
+        PublicPromotion: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string | null;
+            /** Discount Type */
+            discount_type: string;
+            /** Discount Value */
+            discount_value: string;
+            /** Minimum Amount */
+            minimum_amount: string | null;
+            /** Starts On */
+            starts_on: string | null;
+            /** Ends On */
+            ends_on: string | null;
+            /** Weekdays */
+            weekdays: number[] | null;
+            /** Start Time */
+            start_time: string | null;
+            /** End Time */
+            end_time: string | null;
+        };
         /**
          * PublicReply
          * @description The restaurant's reply to an opinion (spec 025, US-42): the current text only (C3).
@@ -2156,6 +2177,8 @@ export interface components {
             menu: components["schemas"]["PublicDish"][];
             /** Opinions */
             opinions: components["schemas"]["PublicOpinion"][];
+            /** Promotions */
+            promotions: components["schemas"]["PublicPromotion"][];
         };
         /** PublicRestaurantList */
         PublicRestaurantList: {
@@ -2433,7 +2456,7 @@ export interface components {
             /** Subtotal */
             subtotal: string;
             /** Discounts */
-            discounts: components["schemas"]["OrderDiscountResponse"][];
+            discounts: components["schemas"]["app__schemas__order__OrderDiscountResponse"][];
             payment: components["schemas"]["OrderPaymentResponse"];
         };
         /** RestaurantOrdersResponse */
@@ -2733,6 +2756,23 @@ export interface components {
         VerificationRequest: {
             /** Token */
             token: string;
+        };
+        /** OrderDiscountResponse */
+        app__schemas__diner_order__OrderDiscountResponse: {
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
+        };
+        /**
+         * OrderDiscountResponse
+         * @description A promotion applied to the order, frozen at confirmation (spec 028, P4).
+         */
+        app__schemas__order__OrderDiscountResponse: {
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
         };
         /** ReviewRequest */
         ReviewRequest: {

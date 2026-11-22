@@ -5007,6 +5007,31 @@
             "type": "string",
             "title": "Subtotal"
           },
+          "promotions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/app__schemas__diner_order__OrderDiscountResponse"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promotions"
+          },
+          "discount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount"
+          },
           "total": {
             "type": "string",
             "title": "Total"
@@ -6029,25 +6054,6 @@
         ],
         "title": "OpeningShiftResponse"
       },
-      "OrderDiscountResponse": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "amount": {
-            "type": "string",
-            "title": "Amount"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "amount"
-        ],
-        "title": "OrderDiscountResponse",
-        "description": "A promotion applied to the order, frozen at confirmation (spec 028, P4)."
-      },
       "OrderItemRequest": {
         "properties": {
           "dish_id": {
@@ -6351,6 +6357,31 @@
           "subtotal": {
             "type": "string",
             "title": "Subtotal"
+          },
+          "promotions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/app__schemas__diner_order__OrderDiscountResponse"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Promotions"
+          },
+          "discount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount"
           },
           "total": {
             "type": "string",
@@ -7210,6 +7241,120 @@
         "title": "PublicOpinion",
         "description": "A diner's review of their most recent reviewed visit, including ratings alone (R14)."
       },
+      "PublicPromotion": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "discount_type": {
+            "type": "string",
+            "title": "Discount Type"
+          },
+          "discount_value": {
+            "type": "string",
+            "title": "Discount Value"
+          },
+          "minimum_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum Amount"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "weekdays": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weekdays"
+          },
+          "start_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Time"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "discount_type",
+          "discount_value",
+          "minimum_amount",
+          "starts_on",
+          "ends_on",
+          "weekdays",
+          "start_time",
+          "end_time"
+        ],
+        "title": "PublicPromotion"
+      },
       "PublicReply": {
         "properties": {
           "text": {
@@ -7553,6 +7698,13 @@
             },
             "type": "array",
             "title": "Opinions"
+          },
+          "promotions": {
+            "items": {
+              "$ref": "#/components/schemas/PublicPromotion"
+            },
+            "type": "array",
+            "title": "Promotions"
           }
         },
         "type": "object",
@@ -7576,7 +7728,8 @@
           "max_party_size",
           "dish_restriction_sets",
           "menu",
-          "opinions"
+          "opinions",
+          "promotions"
         ],
         "title": "PublicRestaurantDetail"
       },
@@ -8184,7 +8337,7 @@
           },
           "discounts": {
             "items": {
-              "$ref": "#/components/schemas/OrderDiscountResponse"
+              "$ref": "#/components/schemas/app__schemas__order__OrderDiscountResponse"
             },
             "type": "array",
             "title": "Discounts"
@@ -9096,6 +9249,43 @@
           "token"
         ],
         "title": "VerificationRequest"
+      },
+      "app__schemas__diner_order__OrderDiscountResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "amount"
+        ],
+        "title": "OrderDiscountResponse"
+      },
+      "app__schemas__order__OrderDiscountResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "amount"
+        ],
+        "title": "OrderDiscountResponse",
+        "description": "A promotion applied to the order, frozen at confirmation (spec 028, P4)."
       },
       "ReviewRequest": {
         "properties": {

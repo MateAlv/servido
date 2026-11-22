@@ -21,12 +21,13 @@ from app.schemas.diner_order import (
     ConfirmationResult,
     ConfirmedOrderItemResponse,
     DraftRequest,
+    OrderDiscountResponse,
     OrderMenuDish,
     OrderPageResponse,
     OrderResponse,
     PaymentMethodRequest,
 )
-from app.services import availability, orders
+from app.services import availability, orders, promotions
 from app.services.availability import BUENOS_AIRES
 
 router = APIRouter(tags=["order"])
@@ -62,6 +63,11 @@ def order_response(order: Order, reservation: Reservation, now: datetime) -> Ord
         ],
         # The diner sees only the regular menu bill; promotions are restaurant-side for now.
         subtotal=order.subtotal,
+        promotions=[
+            OrderDiscountResponse(name=discount.name, amount=discount.amount)
+            for discount in order.discounts
+        ],
+        discount=order.discount_amount,
         total=order.total,
         prep_time_minutes=summary.prep_time_minutes,
     )
@@ -71,6 +77,10 @@ def cart_response(
     session: SessionDep, cart: Cart, reservation: Reservation, restaurant: Restaurant
 ) -> CartResponse:
     subtotal = sum((orders.subtotal(item) for item in cart.items), Decimal("0.00"))
+    applied = promotions.applied_for(
+        session, restaurant, subtotal, orders.arrival_time(reservation, cart)
+    )
+    discount = promotions.total_discount(applied)
     return CartResponse(
         arrival_at=orders.arrival_time(reservation, cart),
         payment_method=cart.payment_method,
@@ -86,7 +96,12 @@ def cart_response(
             for item in cart.items
         ],
         subtotal=subtotal,
-        total=subtotal,
+        promotions=[
+            OrderDiscountResponse(name=discount.name, amount=discount.amount)
+            for discount in applied
+        ],
+        discount=discount,
+        total=subtotal - discount,
     )
 
 

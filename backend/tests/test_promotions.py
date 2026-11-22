@@ -339,10 +339,10 @@ def test_us48_s5_refuses_invalid_edits_without_changing_the_promotion(
     assert unchanged["discount_value"] == "20.00"
 
 
-# US-48 S6 — por ahora las promociones no alteran el pedido del comensal
+# US-55 — las promociones alteran el pedido del comensal
 
 
-def test_us48_s6_does_not_apply_the_discount_to_the_diner_cart(
+def test_us55_promotion_discount_is_applied_to_the_diner_cart(
     client: TestClient, session: Session
 ) -> None:
     s = order_setup(client, session)
@@ -351,33 +351,33 @@ def test_us48_s6_does_not_apply_the_discount_to_the_diner_cart(
 
     cart = save_cart(client, s, [item_of(s.provoleta)]).json()["cart"]
     assert cart["subtotal"] == "7500.00"
-    assert "discount_total" not in cart
-    assert cart["total"] == "7500.00"
+    assert cart["discount"] == "1500.00"
+    assert cart["total"] == "6000.00"
 
     # Monto fijo por debajo del mínimo: no descuenta (7500 < 10000).
     client.post(PROMOTIONS_URL, json=fixed_payload(), headers=rh)
     cart = save_cart(client, s, [item_of(s.provoleta)]).json()["cart"]
-    assert "discount_total" not in cart
-    assert cart["total"] == "7500.00"
+    assert cart["discount"] == "1500.00"
+    assert cart["total"] == "6000.00"
 
     # Con el bife (18500 >= 10000): ambas elegibles, gana la que más ahorra (3700 > 3000).
     cart = save_cart(client, s, [item_of(s.bife)]).json()["cart"]
-    assert "discount_total" not in cart
-    assert cart["total"] == "18500.00"
+    assert cart["discount"] == "3700.00"
+    assert cart["total"] == "14800.00"
 
     # Solo la fija, por debajo del mínimo: sin descuento.
     session.execute(delete(Promotion).where(Promotion.restaurant_id == s.restaurant.id_restaurante))
     session.commit()
     client.post(PROMOTIONS_URL, json=fixed_payload(), headers=rh)
     cart = save_cart(client, s, [item_of(s.provoleta)]).json()["cart"]
-    assert "discount_total" not in cart
+    assert cart["discount"] == "0.00"
     assert cart["total"] == "7500.00"
 
 
-# US-48 S7 — el pedido confirmado no incorpora descuentos
+# US-55 — el pedido confirmado incorpora el descuento congelado
 
 
-def test_us48_s7_confirmed_order_does_not_apply_the_promotion(
+def test_us55_confirmed_order_freezes_the_promotion_discount(
     client: TestClient, session: Session
 ) -> None:
     s = order_setup(client, session)
@@ -388,13 +388,13 @@ def test_us48_s7_confirmed_order_does_not_apply_the_promotion(
     assert response.status_code == 200, response.text
     order = response.json()["order"]
     assert order["subtotal"] == "7500.00"
-    assert "discount_total" not in order
-    assert "discounts" not in order
-    assert order["total"] == "7500.00"
+    assert order["discount"] == "1500.00"
+    assert order["promotions"][0]["amount"] == "1500.00"
+    assert order["total"] == "6000.00"
 
     stored = session.scalar(select(Order).where(Order.reservation_id == s.reservation.id))
-    assert stored.discount_amount == Decimal("0.00")
-    assert stored.total == Decimal("7500.00")
+    assert stored.discount_amount == Decimal("1500.00")
+    assert stored.total == Decimal("6000.00")
 
     # El Responsable pausa la promoción después de confirmar: nada cambia.
     promotion = session.scalar(
@@ -405,11 +405,11 @@ def test_us48_s7_confirmed_order_does_not_apply_the_promotion(
 
     current = client.get(order_url(s.reservation.id), headers=s.headers).json()["order"]
     assert current["subtotal"] == "7500.00"
-    assert "discount_total" not in current
-    assert "discounts" not in current
-    assert current["total"] == "7500.00"
+    assert current["discount"] == "1500.00"
+    assert current["promotions"][0]["amount"] == "1500.00"
+    assert current["total"] == "6000.00"
     session.expire_all()
-    assert session.get(Order, stored.id).discount_amount == Decimal("0.00")
+    assert session.get(Order, stored.id).discount_amount == Decimal("1500.00")
 
 
 # Edge: las promociones pausadas o vencidas no se aplican
@@ -442,7 +442,7 @@ def test_us48_edge_paused_or_expired_promotions_do_not_apply(
 
     response = save_cart(client, s, [item_of(s.bife)])
     assert response.status_code == 200
-    assert "discount_total" not in response.json()["cart"]
+    assert response.json()["cart"]["discount"] == "0.00"
     assert response.json()["cart"]["total"] == "18500.00"
 
 
@@ -469,7 +469,7 @@ def test_us48_edge_validity_uses_buenos_aires(client: TestClient, session: Sessi
     )
 
     response = save_cart(client, s, [item_of(s.bife)])
-    assert "discount_total" not in response.json()["cart"]
+    assert response.json()["cart"]["discount"] == "0.00"
 
 
 # Edge: día de la semana y horario son condiciones AND
@@ -484,8 +484,8 @@ def test_us48_edge_weekday_and_hours_are_and_conditions(
 
     # Martes 21:00 está dentro de 20:00-23:00: se aplica.
     cart = save_cart(client, s, [item_of(s.bife)]).json()["cart"]
-    assert cart["total"] == "18500.00"
-    assert "discount_total" not in cart
+    assert cart["total"] == "14800.00"
+    assert cart["discount"] == "3700.00"
 
     # Misma promoción, reserva al mediodía: fuera del horario, no se aplica.
     lunch = add_reservation(
@@ -495,7 +495,7 @@ def test_us48_edge_weekday_and_hours_are_and_conditions(
     lunch_setup = OrderSetup(s.headers, s.restaurant, lunch, s.provoleta, s.bife)
     cart = save_cart(client, lunch_setup, [item_of(s.bife)]).json()["cart"]
     assert cart["total"] == "18500.00"
-    assert "discount_total" not in cart
+    assert cart["discount"] == "0.00"
 
 
 # Edge P5 — política de promociones simultáneas
@@ -511,8 +511,8 @@ def test_us48_edge_p5_best_saving_is_applied_by_default(
 
     # Sin apilamiento (por defecto): gana la que más ahorra (20% de 18500 = 3700 > 3000).
     cart = save_cart(client, s, [item_of(s.bife)]).json()["cart"]
-    assert "discount_total" not in cart
-    assert cart["total"] == "18500.00"
+    assert cart["discount"] == "3700.00"
+    assert cart["total"] == "14800.00"
 
 
 def test_us48_edge_p5_stacks_and_compares_the_exclusive_promotion(
@@ -527,8 +527,8 @@ def test_us48_edge_p5_stacks_and_compares_the_exclusive_promotion(
 
     # Ambas acumulables: 3700 + 3000 = 6700.
     cart = save_cart(client, s, [item_of(s.bife)]).json()["cart"]
-    assert "discount_total" not in cart
-    assert cart["total"] == "18500.00"
+    assert cart["discount"] == "6700.00"
+    assert cart["total"] == "11800.00"
 
     # La fija se vuelve no acumulable: compite 3000 (fija sola) contra 3700 (porcentual).
     promotion = session.scalar(
@@ -541,8 +541,8 @@ def test_us48_edge_p5_stacks_and_compares_the_exclusive_promotion(
     edited["stackable"] = False
     client.put(promotion_url(promotion.id), json=edited, headers=rh)
     cart = save_cart(client, s, [item_of(s.bife)]).json()["cart"]
-    assert "discount_total" not in cart
-    assert cart["total"] == "18500.00"
+    assert cart["discount"] == "3700.00"
+    assert cart["total"] == "14800.00"
 
 
 def test_us48_edge_p5_total_never_goes_below_zero(client: TestClient, session: Session) -> None:
@@ -566,8 +566,8 @@ def test_us48_edge_p5_total_never_goes_below_zero(client: TestClient, session: S
     # Subtotal 10500: 6000 + 6000 se tapa en el subtotal, total nunca negativo.
     cart = save_cart(client, s, [item_of(s.provoleta), item_of(agua)]).json()["cart"]
     assert cart["subtotal"] == "10500.00"
-    assert "discount_total" not in cart
-    assert cart["total"] == "10500.00"
+    assert cart["discount"] == "10500.00"
+    assert cart["total"] == "0.00"
 
 
 # Edge: doble envío del formulario crea una sola promoción

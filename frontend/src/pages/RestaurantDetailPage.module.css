@@ -140,6 +140,41 @@
   gap: 18px;
 }
 
+.promotions {
+  display: grid;
+  gap: 14px;
+}
+
+.promotionList {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.promotion {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--color-line);
+}
+
+.promotion:last-child {
+  border-bottom: 0;
+}
+
+.promotionBenefit {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.promotionConditions {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
 .sectionTitle {
   margin: 0;
   font: 800 24px / 1.15 var(--font-display);

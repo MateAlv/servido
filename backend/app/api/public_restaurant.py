@@ -5,12 +5,14 @@ from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 
 from app.db import SessionDep
+from app.models.promotion import Promotion
 from app.models.restaurant import Restaurant
 from app.models.review_reply import ReviewReply
 from app.schemas.public_restaurant import (
     OpenRestaurants,
     PublicDish,
     PublicOpinion,
+    PublicPromotion,
     PublicReply,
     PublicRestaurant,
     PublicRestaurantDetail,
@@ -129,6 +131,16 @@ def get_bookable_restaurant(restaurant_id: UUID, session: SessionDep) -> PublicR
     dishes = menu_dishes(session, restaurant_id)
     opinions, photos = reviews.public_opinions(session, restaurant_id)
     replies = review_replies.replies_by_review(session, {review.id for review, _, _ in opinions})
+    today = availability.current_time().astimezone(BUENOS_AIRES).date()
+    promotions = session.scalars(
+        select(Promotion)
+        .where(
+            Promotion.restaurant_id == restaurant_id,
+            Promotion.active.is_(True),
+            (Promotion.ends_on.is_(None) | (Promotion.ends_on >= today)),
+        )
+        .order_by(Promotion.created_at, Promotion.id)
+    ).all()
     return PublicRestaurantDetail(
         **public_fields(restaurant, session),
         menu=[
@@ -154,5 +166,20 @@ def get_bookable_restaurant(restaurant_id: UUID, session: SessionDep) -> PublicR
                 reply=public_reply(replies.get(review.id)),
             )
             for review, reservation, diner in opinions
+        ],
+        promotions=[
+            PublicPromotion(
+                name=promotion.name,
+                description=promotion.description,
+                discount_type=promotion.discount_type,
+                discount_value=promotion.discount_value,
+                minimum_amount=promotion.minimum_amount,
+                starts_on=promotion.starts_on,
+                ends_on=promotion.ends_on,
+                weekdays=promotion.weekdays,
+                start_time=promotion.start_time,
+                end_time=promotion.end_time,
+            )
+            for promotion in promotions
         ],
     )

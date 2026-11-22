@@ -11,6 +11,7 @@ import {
   reservationSearch,
 } from '../components/restaurant'
 import type { RestaurantPublic } from '../data/restaurants.fixture'
+import type { RestaurantPromotion } from '../data/restaurants.fixture'
 import {
   Button,
   Card,
@@ -32,6 +33,38 @@ const PRICE_FORMAT = new Intl.NumberFormat('es-AR', {
   currency: 'ARS',
   maximumFractionDigits: 0,
 })
+
+const WEEKDAYS = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+const DISCOUNT_FORMAT = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  maximumFractionDigits: 0,
+})
+
+function promotionBenefit(promotion: RestaurantPromotion): string {
+  if (promotion.discountType === 'percentage') {
+    return `${promotion.discountValue}% de descuento`
+  }
+  return `${DISCOUNT_FORMAT.format(Number(promotion.discountValue))} de descuento${
+    promotion.minimumAmount
+      ? ` en pedidos desde ${DISCOUNT_FORMAT.format(Number(promotion.minimumAmount))}`
+      : ''
+  }`
+}
+
+function promotionValidity(promotion: RestaurantPromotion): string[] {
+  const conditions: string[] = []
+  if (promotion.startsOn && promotion.endsOn) {
+    conditions.push(`del ${promotion.startsOn} al ${promotion.endsOn}`)
+  }
+  if (promotion.weekdays?.length) {
+    conditions.push(`los ${promotion.weekdays.map((day) => WEEKDAYS[day - 1]).join(', ')}`)
+  }
+  if (promotion.startTime && promotion.endTime) {
+    conditions.push(`de ${promotion.startTime.slice(0, 5)} a ${promotion.endTime.slice(0, 5)}`)
+  }
+  return conditions
+}
 
 /** Where "Volver" goes: the map or home the diner came from, with their filter; else the map. */
 function useBackTo(): string {
@@ -194,6 +227,28 @@ export function RestaurantDetailPage() {
                     </ul>
                   </section>
                 ))}
+              </Card>
+            </Reveal>
+          )}
+
+          {restaurant.promotions && restaurant.promotions.length > 0 && (
+            <Reveal delay={160}>
+              <Card className={styles.promotions}>
+                <h2 className={styles.sectionTitle}>Promociones</h2>
+                <ul className={styles.promotionList}>
+                  {restaurant.promotions.map((promotion) => (
+                    <li key={promotion.name} className={styles.promotion}>
+                      <strong>{promotion.name}</strong>
+                      <span className={styles.promotionBenefit}>{promotionBenefit(promotion)}</span>
+                      {promotion.description && <span>{promotion.description}</span>}
+                      {promotionValidity(promotion).length > 0 && (
+                        <span className={styles.promotionConditions}>
+                          {promotionValidity(promotion).join(' · ')}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               </Card>
             </Reveal>
           )}

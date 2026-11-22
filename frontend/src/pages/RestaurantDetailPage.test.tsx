@@ -44,6 +44,7 @@ const restaurant = {
     },
   ],
   reviews: [],
+  promotions: [],
   photo: null,
   bookable: false,
 }
@@ -59,6 +60,33 @@ describe('RestaurantDetailPage (US-15)', () => {
     expect(await screen.findByText('Empanada')).toBeInTheDocument()
     expect(screen.getByText('De carne.')).toBeInTheDocument()
     expect(screen.getByText(/2\.500/)).toBeInTheDocument()
+  })
+
+  describe('RestaurantDetailPage (US-55)', () => {
+    it('US-55 S1 shows active promotions and conditions', async () => {
+      vi.mocked(fetchRestaurant).mockResolvedValue({
+        ...restaurant,
+        promotions: [
+          {
+            name: 'Martes al mediodía',
+            description: 'Para disfrutar el menú del día',
+            discountType: 'percentage',
+            discountValue: '20.00',
+            minimumAmount: null,
+            startsOn: '2026-11-01',
+            endsOn: '2026-12-31',
+            weekdays: [2],
+            startTime: '12:00:00',
+            endTime: '15:00:00',
+          },
+        ],
+      })
+      renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
+
+      expect(await screen.findByText('Martes al mediodía')).toBeInTheDocument()
+      expect(screen.getByText('20.00% de descuento')).toBeInTheDocument()
+      expect(screen.getByText(/los martes/)).toBeInTheDocument()
+    })
   })
 
   it('US-15 S2 renders only dishes returned as available by the API', async () => {

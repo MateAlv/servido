@@ -36,6 +36,19 @@ export type RestaurantReview = {
   reply?: OpinionReplyData | null
 }
 
+export type RestaurantPromotion = {
+  name: string
+  description: string | null
+  discountType: 'percentage' | 'fixed'
+  discountValue: string
+  minimumAmount: string | null
+  startsOn: string | null
+  endsOn: string | null
+  weekdays: number[] | null
+  startTime: string | null
+  endTime: string | null
+}
+
 export type OpinionReplyData = {
   text: string
   /** ISO date the reply was published. */
@@ -63,6 +76,7 @@ export type RestaurantPublic = {
   menu: MenuSection[]
   /** Opinions of past diners shown in the detail (US-9, US-50): mock for the test restaurants. */
   reviews: RestaurantReview[]
+  promotions?: RestaurantPromotion[]
   /** Average and count from the API (spec 014, R12); the test restaurants derive them. */
   rating?: number | null
   reviewCount?: number
