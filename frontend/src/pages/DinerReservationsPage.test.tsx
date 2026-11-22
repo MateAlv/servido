@@ -13,7 +13,7 @@ vi.mock('../api/reservations', () => reservationsApi)
 
 const reservation = {
   id: 'reservation-1',
-  restaurant: { id: 'restaurant-1', nombre: 'La Esquina' },
+  restaurant: { id: 'restaurant-1', nombre: 'La Esquina', address: 'Calle 123, Palermo' },
   date: '2026-11-03',
   start_time: '20:00',
   end_time: '21:30',
@@ -46,6 +46,17 @@ describe('DinerReservationsPage', () => {
     expect(screen.getByText('Mesa para 4 · Terraza')).toBeInTheDocument()
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(screen.getAllByText(/martes, 3 de noviembre/)).toHaveLength(2)
+  })
+
+  it('US-54 S3 shows confirmed reservation details', async () => {
+    renderWithProviders(<DinerReservationsPage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: /La Esquina/ }))
+
+    expect(screen.getByText('Confirmada')).toBeInTheDocument()
+    expect(screen.getByText('Calle 123, Palermo')).toBeInTheDocument()
+    expect(screen.getByText('Código de reserva')).toBeInTheDocument()
+    expect(screen.getByText('reservation-1')).toBeInTheDocument()
   })
 
   it('US-23 S4 reports no active reservations', async () => {

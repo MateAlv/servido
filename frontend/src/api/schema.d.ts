@@ -2316,6 +2316,8 @@ export interface components {
             id: string;
             /** Nombre */
             nombre: string;
+            /** Address */
+            address?: string | null;
         };
         /** RestaurantCancellationRequest */
         RestaurantCancellationRequest: {

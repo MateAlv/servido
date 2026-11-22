@@ -1,3 +1,4 @@
+import logging
 from datetime import date, datetime, time, timedelta
 from typing import Annotated
 from uuid import UUID
@@ -7,6 +8,7 @@ from sqlalchemy import select
 
 from app.api.deps import TokenClaimsDep, require_diner
 from app.db import SessionDep
+from app.models.diner import Diner
 from app.models.order import Order
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
@@ -27,7 +29,9 @@ from app.schemas.reservation import (
     UpcomingReservationsResponse,
 )
 from app.schemas.table_inventory import MAX_TABLE_CAPACITY
-from app.services import availability, orders, reservations
+from app.services import availability, mail, orders, reservations
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["reservation"])
 
@@ -135,7 +139,9 @@ def reservation_response(
     order_open = orders.order_open(session, reservation, now)
     return ReservationResponse(
         id=reservation.id,
-        restaurant=ReservationRestaurant(id=restaurant.id_restaurante, nombre=restaurant.nombre),
+        restaurant=ReservationRestaurant(
+            id=restaurant.id_restaurante, nombre=restaurant.nombre, address=restaurant.direccion
+        ),
         date=starts_at.date(),
         start_time=hour_and_minute(starts_at.time()),
         end_time=hour_and_minute(ends_at.time()),
@@ -168,7 +174,7 @@ def confirm_reservation(
     payload: ReservationRequest, claims: TokenClaimsDep, session: SessionDep, response: Response
 ) -> ReservationResponse:
     diner_id = require_diner(claims, session)
-    existing_restaurant(session, payload.restaurant_id)
+    restaurant = existing_restaurant(session, payload.restaurant_id)
     choice = availability.ReservationChoice(
         restaurant_id=payload.restaurant_id,
         day=payload.date,
@@ -191,6 +197,24 @@ def confirm_reservation(
     session.commit()
     if not created:
         response.status_code = status.HTTP_200_OK
+    else:
+        diner = session.get(Diner, diner_id)
+        try:
+            mail.send_mail(
+                mail.reservation_confirmation_mail(
+                    to=diner.email,
+                    restaurant_name=restaurant.nombre,
+                    restaurant_address=restaurant.direccion,
+                    starts_at=reservation.starts_at.astimezone(availability.BUENOS_AIRES),
+                    ends_at=reservation.ends_at.astimezone(availability.BUENOS_AIRES),
+                    party_size=reservation.party_size,
+                    table_capacity=reservation.table_capacity,
+                    seating_area=reservation.seating_area,
+                    reservation_id=str(reservation.id),
+                )
+            )
+        except mail.MailError:
+            logger.exception("Could not notify diner about reservation %s", reservation.id)
     # A repeated request answers with its own reservation, whatever this payload says.
     return reservation_response(
         session,

@@ -110,6 +110,10 @@ export function DinerReservationsPage() {
                         <dd>{reservation.restaurant.nombre}</dd>
                       </div>
                       <div>
+                        <dt>Dirección</dt>
+                        <dd>{reservation.restaurant.address ?? 'Dirección no informada'}</dd>
+                      </div>
+                      <div>
                         <dt>Fecha y hora</dt>
                         <dd>{reservationWhen(reservation)}</dd>
                       </div>
@@ -120,6 +124,10 @@ export function DinerReservationsPage() {
                       <div>
                         <dt>Comensales</dt>
                         <dd>{reservation.party_size}</dd>
+                      </div>
+                      <div>
+                        <dt>Código de reserva</dt>
+                        <dd>{reservation.id}</dd>
                       </div>
                     </dl>
                     <div className={styles.actions}>

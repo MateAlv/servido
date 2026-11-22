@@ -27,6 +27,10 @@ export function ConfirmedStep({ reservation }: { reservation: Reservation }) {
           <dd>{reservation.restaurant.nombre}</dd>
         </div>
         <div>
+          <dt>Dirección</dt>
+          <dd>{reservation.restaurant.address ?? 'Dirección no informada'}</dd>
+        </div>
+        <div>
           <dt>Fecha</dt>
           <dd>{longDate(reservation.date)}</dd>
         </div>
@@ -43,6 +47,10 @@ export function ConfirmedStep({ reservation }: { reservation: Reservation }) {
         <div>
           <dt>Mesa</dt>
           <dd>{tableLabel(reservation.table)}</dd>
+        </div>
+        <div>
+          <dt>Código de reserva</dt>
+          <dd>{reservation.id}</dd>
         </div>
       </dl>
       {reservation.order_open ? (

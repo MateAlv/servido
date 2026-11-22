@@ -7925,6 +7925,17 @@
           "nombre": {
             "type": "string",
             "title": "Nombre"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
           }
         },
         "type": "object",
