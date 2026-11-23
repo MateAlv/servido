@@ -93,7 +93,13 @@
   pointer-events: none;
 }
 
+/* Mercado Pago pads its form with 1.5× and 1× the formPadding variable (--space-4, see
+ * lib/mercadopago.ts); undo the sides so the fields line up with the title. It also sets width
+ * and max-width inline on this box, so only !important lets the box grow. */
 .brick[data-state='ready'] {
+  width: calc(100% + 2 * var(--space-4)) !important;
+  max-width: none !important;
+  margin: calc(-1 * var(--space-3)) calc(-1 * var(--space-4)) calc(-1.5 * var(--space-4));
   animation: rise var(--duration-slow) var(--ease-out) both;
 }
 

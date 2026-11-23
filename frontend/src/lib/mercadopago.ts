@@ -100,7 +100,8 @@ function brickStyle(): { theme: 'default' | 'dark'; customVariables: Record<stri
       borderRadiusLarge: token('--radius-card') || '26px',
       inputBorderWidth: '2px',
       inputFocusedBorderWidth: '2px',
-      formPadding: '0px',
+      // Mercado Pago also spaces its rows with it: 0 glued the email to the pay button.
+      formPadding: token('--space-4') || '16px',
       fontWeightSemiBold: '800',
     },
   }

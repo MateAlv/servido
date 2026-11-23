@@ -183,7 +183,7 @@ function OrderEditor({
   const [paymentSelection, setPaymentSelection] = useState<PaymentMethod | null>(null)
   const [paymentError, setPaymentError] = useState('')
   const [payOpen, setPayOpen] = useState(false)
-  // Mounted only while open, so each payment starts fresh and its text is not on the page.
+  // Mounted from «Pagar» until the payment ends or is cancelled: stepping away keeps what was typed.
   const [payMounted, setPayMounted] = useState(false)
   const [billOpen, setBillOpen] = useState(false)
   const [billPrints, setBillPrints] = useState(0)
@@ -839,7 +839,9 @@ function OrderEditor({
     <PaymentDialog
       open={payOpen}
       onClose={() => setPayOpen(false)}
-      onClosed={() => setPayMounted(false)}
+      onClosed={(discarded) => {
+        if (discarded) setPayMounted(false)
+      }}
       reservationId={reservationId}
       order={page.order}
       bill={{

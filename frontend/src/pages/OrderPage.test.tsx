@@ -1947,6 +1947,29 @@ describe('Electronic payment (spec 032, US-56)', () => {
     ).toBeVisible()
   })
 
+  it('US-56 edge keeps the card form when the diner steps away, and drops it on Cancelar', async () => {
+    const { user, dialog } = await startPayment()
+    await within(dialog).findByRole('button', { name: 'Pagar con la tarjeta de prueba' })
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cerrar' }))
+    await waitFor(() => expect(dialog).not.toHaveAttribute('open'))
+    await user.click(screen.getByRole('button', { name: /^Pagar \$\s18\.500$/ }))
+
+    await waitFor(() => expect(dialog).toHaveAttribute('open'))
+    expect(
+      within(dialog).getByRole('button', { name: 'Pagar con la tarjeta de prueba' }),
+    ).toBeVisible()
+    expect(mountCardPayment).toHaveBeenCalledTimes(1)
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }))
+    await waitFor(() => expect(dialog).not.toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: /^Pagar \$\s18\.500$/ }))
+
+    const fresh = await screen.findByRole('dialog', { name: 'Pagar el pedido' })
+    await within(fresh).findByRole('button', { name: 'Pagar con la tarjeta de prueba' })
+    expect(mountCardPayment).toHaveBeenCalledTimes(2)
+  })
+
   it('US-56 edge hides the test cards with production credentials', async () => {
     vi.mocked(fetchPaymentConfig).mockResolvedValue('APP_USR-public-key')
     const { dialog } = await startPayment()
