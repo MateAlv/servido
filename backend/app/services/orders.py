@@ -23,7 +23,8 @@ from app.models.order_confirmation import OrderConfirmation
 from app.models.order_item import OrderItem
 from app.models.promotion import OrderDiscount
 from app.models.reservation import Reservation
-from app.services import availability
+from app.models.restaurant import Restaurant
+from app.services import availability, promotions
 from app.services.availability import BUENOS_AIRES
 
 ORDER_CUTOFF_MINUTES = 45
@@ -292,7 +293,16 @@ def confirm_order(
         session.flush()
         return reservation, None
     subtotal_value = sum((item.quantity * item.unit_price for item in items), Decimal("0.00"))
-    discount_total = Decimal("0.00")
+    restaurant = session.get(Restaurant, reservation.restaurant_id)
+    if restaurant is None:
+        raise OrderConflictError("No encontramos ese restaurante.")
+    applied_discounts = promotions.applied_for(
+        session,
+        restaurant,
+        subtotal_value,
+        (reservation.starts_at + delay).astimezone(BUENOS_AIRES),
+    )
+    discount_total = promotions.total_discount(applied_discounts)
     if order is None:
         # Every order US-17 writes is confirmed: the cart is what is still pending (P1).
         order = Order(
@@ -324,6 +334,15 @@ def confirm_order(
         order.discount_amount = discount_total
         order.total = subtotal_value - discount_total
     session.add_all(OrderItem(order_id=order.id, **item_values(item)) for item in items)
+    session.add_all(
+        OrderDiscount(
+            order_id=order.id,
+            promotion_id=discount.promotion_id,
+            name=discount.name,
+            amount=discount.amount,
+        )
+        for discount in applied_discounts
+    )
     session.flush()
     session.expire(order, ["items", "discounts"])
     return reservation, order

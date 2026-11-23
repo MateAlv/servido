@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.dish import Dish
+from app.models.promotion import Promotion
 from tests.reservations import add_bookable_restaurant
 
 
@@ -56,6 +57,69 @@ def test_us9_edge_detail_includes_the_menu(client: TestClient, session: Session)
     assert dish["category"] == "plato_principal"
     assert dish["price"] == "18500.00"
     assert dish["dietary_restrictions"] == ["sin_tacc"]
+
+
+def test_us55_s1_public_detail_shows_current_promotions(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    session.add(
+        Promotion(
+            restaurant_id=restaurant.id_restaurante,
+            name="Martes al mediodía",
+            description="Para disfrutar el menú del día",
+            discount_type="percentage",
+            discount_value=Decimal("20.00"),
+            starts_on=datetime(2026, 11, 1).date(),
+            ends_on=datetime(2026, 12, 31).date(),
+            weekdays=[2],
+            start_time=datetime.strptime("12:00", "%H:%M").time(),
+            end_time=datetime.strptime("15:00", "%H:%M").time(),
+            request_id=uuid4(),
+        )
+    )
+    session.flush()
+
+    promotions = client.get(f"/api/restaurants/{restaurant.id_restaurante}").json()["promotions"]
+
+    assert len(promotions) == 1
+    assert promotions[0]["name"] == "Martes al mediodía"
+    assert promotions[0]["discount_value"] == "20.00"
+    assert promotions[0]["weekdays"] == [2]
+
+
+def test_us55_s2_public_detail_hides_paused_and_expired_promotions(
+    client: TestClient, session: Session
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    session.add_all(
+        [
+            Promotion(
+                restaurant_id=restaurant.id_restaurante,
+                name="Pausada",
+                discount_type="fixed",
+                discount_value=Decimal("1000.00"),
+                minimum_amount=Decimal("2000.00"),
+                starts_on=datetime(2026, 11, 1).date(),
+                ends_on=datetime(2026, 12, 31).date(),
+                active=False,
+                request_id=uuid4(),
+            ),
+            Promotion(
+                restaurant_id=restaurant.id_restaurante,
+                name="Vencida",
+                discount_type="fixed",
+                discount_value=Decimal("1000.00"),
+                minimum_amount=Decimal("2000.00"),
+                starts_on=datetime(2026, 10, 1).date(),
+                ends_on=datetime(2026, 10, 31).date(),
+                request_id=uuid4(),
+            ),
+        ]
+    )
+    session.flush()
+
+    assert client.get(f"/api/restaurants/{restaurant.id_restaurante}").json()["promotions"] == []
 
 
 def test_us9_edge_price_tier_is_null_unless_it_is_a_known_tier(

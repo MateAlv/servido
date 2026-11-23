@@ -291,6 +291,11 @@ export function useOrderCart({
     return result
   }, [enqueue, reservationId, remember, initialMetadata])
 
+  const flush = useCallback(() => {
+    window.clearTimeout(timer.current)
+    return enqueue(() => writeLatest())
+  }, [enqueue, writeLatest])
+
   // Leaving the page sends what is pending; closing the tab too, with `keepalive`.
   useEffect(() => {
     const flush = () => {
@@ -330,6 +335,7 @@ export function useOrderCart({
     metadata,
     setMetadata,
     resetMetadata,
+    flush,
     metadataChanged,
     hasPendingOperation: pending !== null,
   }

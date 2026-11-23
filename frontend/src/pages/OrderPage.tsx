@@ -167,6 +167,8 @@ function OrderEditor({
   const [info, setInfo] = useState('')
   const [removed, setRemoved] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [reviewing, setReviewing] = useState(false)
+  const reviewingRef = useRef(false)
   const [removing, setRemoving] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [paymentSelection, setPaymentSelection] = useState<PaymentMethod | null>(null)
@@ -203,6 +205,14 @@ function OrderEditor({
   const refreshLists = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['reservations'] })
   }, [queryClient])
+  const refreshSavedPage = useCallback(() => {
+    void fetchOrder(reservationId)
+      .then(setPage)
+      .catch((failure) => {
+        if (failure instanceof SessionExpiredError) signOut(queryClient)
+        else setError('No pudimos actualizar el resumen de tu pedido.')
+      })
+  }, [queryClient, reservationId])
 
   const initialMetadata = useMemo(
     () => ({
@@ -232,7 +242,10 @@ function OrderEditor({
     initialLines: initial.lines,
     confirmedLines,
     onSaveFailure: (failure) => reload.current(failure),
-    onSettled: refreshLists,
+    onSettled: () => {
+      refreshLists()
+      if (stage === 'review' && !reviewingRef.current) refreshSavedPage()
+    },
   })
   const { lines, setLines, resetLines } = cart
   useEffect(() => {
@@ -322,8 +335,20 @@ function OrderEditor({
   }, [lines])
 
   const { prepTimeMinutes } = orderSummary(lines)
+  const unconfirmed = unconfirmedNow()
+  const serverCartSummary =
+    stage !== 'confirmed' && page.cart && (stage === 'review' || !unconfirmed)
+      ? {
+          subtotalCents: toCents(page.cart.subtotal),
+          discountCents: toCents(page.cart.discount ?? '0'),
+          promotions: page.cart.promotions ?? [],
+          totalCents: toCents(page.cart.total),
+        }
+      : null
   const totalCents =
-    stage === 'confirmed' && page.order ? toCents(page.order.total) : orderSummary(lines).totalCents
+    stage === 'confirmed' && page.order
+      ? toCents(page.order.total)
+      : (serverCartSummary?.totalCents ?? orderSummary(lines).totalCents)
   const announcement = lines.length
     ? `Total ${formatCents(totalCents)}.${prepTimeMinutes ? ` Preparación: unos ${prepTimeMinutes} min.` : ''}`
     : ''
@@ -356,7 +381,6 @@ function OrderEditor({
 
   const reservation = page.reservation
   const deadline = timeInBuenosAires(reservation.order_deadline)
-  const unconfirmed = unconfirmedNow()
 
   function clearMessages() {
     setChanges([])
@@ -432,6 +456,7 @@ function OrderEditor({
       else await handleFailure(result)
       return
     }
+
     resetLines(withoutDeletedDishes(confirmedLines ?? []).lines)
     if (page.order) {
       setPage((current) => ({
@@ -446,12 +471,41 @@ function OrderEditor({
     )
   }
 
+  async function review() {
+    if (lines.length > 0 && arrivalError) {
+      arrivalFieldRef.current?.focus()
+      return
+    }
+    setStage('review')
+    reviewingRef.current = true
+    setReviewing(true)
+    const saved = await cart.flush()
+    if (saved && !saved.ok) {
+      if (saved.kind === 'failed') setError(saved.message)
+      else await handleFailure(saved)
+      reviewingRef.current = false
+      setReviewing(false)
+      return
+    }
+    try {
+      setPage(await fetchOrder(reservationId))
+    } catch (failure) {
+      if (failure instanceof SessionExpiredError) signOut(queryClient)
+      else setError('No pudimos actualizar el resumen de tu pedido.')
+    } finally {
+      reviewingRef.current = false
+      setReviewing(false)
+    }
+  }
+
   const reservationLine = `${longDate(reservation.date)} · ${reservation.start_time}–${reservation.end_time} · ${
     reservation.party_size === 1 ? '1 persona' : `${reservation.party_size} personas`
   }`
   // The bill of what the page shows: the order being built, or the closed order.
   const receipt: {
     lines: ReceiptLine[]
+    subtotal: number
+    promotions: { name: string; amountCents: number }[]
     total: number
     estimate: number | null
     confirmed: boolean
@@ -464,6 +518,14 @@ function OrderEditor({
             unitPriceCents: toCents(line.unitPrice),
             subtotalCents: subtotalCents(line),
           })),
+          subtotal:
+            serverCartSummary?.subtotalCents ??
+            lines.reduce((subtotal, line) => subtotal + subtotalCents(line), 0),
+          promotions:
+            serverCartSummary?.promotions.map((promotion) => ({
+              name: promotion.name,
+              amountCents: toCents(promotion.amount),
+            })) ?? [],
           total: totalCents,
           estimate: prepTimeMinutes,
           confirmed: !unconfirmed,
@@ -475,6 +537,11 @@ function OrderEditor({
               quantity: item.quantity,
               unitPriceCents: toCents(item.unit_price),
               subtotalCents: toCents(item.subtotal),
+            })),
+            subtotal: toCents(page.order.subtotal),
+            promotions: (page.order.promotions ?? []).map((promotion) => ({
+              name: promotion.name,
+              amountCents: toCents(promotion.amount),
             })),
             total: toCents(page.order.total),
             estimate: page.order.prep_time_minutes,
@@ -504,6 +571,8 @@ function OrderEditor({
         restaurant={reservation.restaurant.nombre}
         reservation={reservationLine}
         lines={receipt.lines}
+        subtotalCents={receipt.subtotal}
+        promotions={receipt.promotions}
         totalCents={receipt.total}
         prepTimeMinutes={receipt.estimate}
         arrival={timeInBuenosAires(
@@ -1133,8 +1202,9 @@ function OrderEditor({
             )}
             {stage === 'build' && (
               <Button
-                disabled={confirming || cart.hasPendingOperation}
-                onClick={() => setStage('review')}
+                loading={reviewing}
+                disabled={confirming || reviewing || cart.hasPendingOperation}
+                onClick={() => void review()}
               >
                 Continuar
               </Button>

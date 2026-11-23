@@ -14,6 +14,8 @@ type ReceiptProps = {
   reservation: string
   lines: ReceiptLine[]
   totalCents: number
+  subtotalCents?: number
+  promotions?: { name: string; amountCents: number }[]
   /** The order's estimate (US-19); null hides it. */
   prepTimeMinutes: number | null
   arrival: string
@@ -26,6 +28,8 @@ export function Receipt({
   reservation,
   lines,
   totalCents,
+  subtotalCents = 0,
+  promotions = [],
   prepTimeMinutes,
   arrival,
   confirmed,
@@ -59,6 +63,20 @@ export function Receipt({
           ))}
         </tbody>
         <tfoot>
+          <tr>
+            <th scope="row" colSpan={3}>
+              Subtotal
+            </th>
+            <td>{formatCents(subtotalCents)}</td>
+          </tr>
+          {promotions.map((promotion) => (
+            <tr key={promotion.name}>
+              <th scope="row" colSpan={3}>
+                {promotion.name}
+              </th>
+              <td>-{formatCents(promotion.amountCents)}</td>
+            </tr>
+          ))}
           <tr>
             <th scope="row" colSpan={3}>
               Total

@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.dish import Dish
 from app.models.order import Order
+from app.models.promotion import Promotion
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.services import orders
@@ -74,10 +75,10 @@ def cart_url(reservation_id) -> str:
     return f"/api/reservations/{reservation_id}/cart"
 
 
-def request_body(s: Setup, items: list[dict], *, cart=False):
+def request_body(s: Setup, items: list[dict], *, cart=False, arrival_at=None):
     body = {
         "items": items,
-        "arrival_at": s.reservation.starts_at.isoformat(),
+        "arrival_at": (arrival_at or s.reservation.starts_at).isoformat(),
         "payment_method": "cash",
     }
     if not cart:
@@ -85,18 +86,18 @@ def request_body(s: Setup, items: list[dict], *, cart=False):
     return body
 
 
-def confirm(client: TestClient, s: Setup, items: list[dict], reservation_id=None):
+def confirm(client: TestClient, s: Setup, items: list[dict], reservation_id=None, arrival_at=None):
     return client.put(
         order_url(reservation_id or s.reservation.id),
-        json=request_body(s, items),
+        json=request_body(s, items, arrival_at=arrival_at),
         headers=s.headers,
     )
 
 
-def save(client: TestClient, s: Setup, items: list[dict], reservation_id=None):
+def save(client: TestClient, s: Setup, items: list[dict], reservation_id=None, arrival_at=None):
     return client.put(
         cart_url(reservation_id or s.reservation.id),
-        json=request_body(s, items, cart=True),
+        json=request_body(s, items, cart=True, arrival_at=arrival_at),
         headers=s.headers,
     )
 
@@ -118,6 +119,98 @@ def restaurant_headers(client: TestClient, restaurant: Restaurant) -> dict[str, 
 def stored_order(session: Session, s: Setup) -> Order | None:
     session.expire_all()
     return orders.order_of(session, s.reservation.id)
+
+
+def add_promotion(session: Session, restaurant: Restaurant, **values) -> Promotion:
+    promotion = Promotion(
+        restaurant_id=restaurant.id_restaurante,
+        name=values.pop("name", "Descuento de prueba"),
+        discount_type=values.pop("discount_type", "fixed"),
+        discount_value=values.pop("discount_value", Decimal("3000.00")),
+        minimum_amount=values.pop("minimum_amount", Decimal("7000.00")),
+        starts_on=values.pop("starts_on", TODAY),
+        ends_on=values.pop("ends_on", TODAY + timedelta(days=30)),
+        request_id=uuid4(),
+        **values,
+    )
+    session.add(promotion)
+    session.flush()
+    return promotion
+
+
+def test_us55_s3_order_summary_applies_eligible_promotion(
+    client: TestClient, session: Session
+) -> None:
+    s = setup(client, session)
+    promotion = add_promotion(session, s.restaurant)
+    session.commit()
+
+    response = confirm(client, s, [item_of(s.provoleta)])
+
+    assert response.status_code == 200
+    body = response.json()["order"]
+    assert body["subtotal"] == "7500.00"
+    assert body["discount"] == "3000.00"
+    assert body["total"] == "4500.00"
+    assert body["promotions"] == [{"name": promotion.name, "amount": "3000.00"}]
+    assert stored_order(session, s).discounts[0].amount == Decimal("3000.00")
+
+
+def test_us55_s4_order_summary_omits_ineligible_promotion(
+    client: TestClient, session: Session
+) -> None:
+    s = setup(client, session)
+    add_promotion(session, s.restaurant, minimum_amount=Decimal("10000.00"))
+    session.commit()
+
+    response = confirm(client, s, [item_of(s.provoleta)])
+
+    assert response.status_code == 200
+    body = response.json()["order"]
+    assert body["discount"] == "0.00"
+    assert body["promotions"] == []
+    assert body["total"] == body["subtotal"] == "7500.00"
+
+
+def test_us55_s5_recalculates_promotion_for_cart_changes(
+    client: TestClient, session: Session
+) -> None:
+    s = setup(client, session)
+    add_promotion(
+        session,
+        s.restaurant,
+        start_time=time(20),
+        end_time=time(21),
+    )
+    session.commit()
+
+    eligible = save(client, s, [item_of(s.provoleta)])
+    assert eligible.status_code == 200
+    assert eligible.json()["cart"]["discount"] == "3000.00"
+
+    outside_window = save(
+        client,
+        s,
+        [item_of(s.provoleta)],
+        arrival_at=s.reservation.starts_at.replace(minute=30),
+    )
+    assert outside_window.status_code == 200
+    assert outside_window.json()["cart"]["promotions"] == []
+    assert outside_window.json()["cart"]["discount"] == "0.00"
+
+    confirmed = confirm(
+        client,
+        s,
+        [item_of(s.provoleta)],
+        arrival_at=s.reservation.starts_at.replace(minute=30),
+    )
+    assert confirmed.status_code == 200
+    assert confirmed.json()["order"]["discount"] == "0.00"
+    order = stored_order(session, s)
+    assert order is not None
+    assert order.discounts == []
+    assert order.discount_amount == Decimal("0.00")
+    assert isinstance(order, Order)
 
 
 # US-17 — Crear pedido
@@ -581,6 +674,8 @@ def test_us17_edge_empty_cart_kept_only_with_an_order(client: TestClient, sessio
         "arrival_at": "2026-11-03T21:00:00-03:00",
         "payment_method": "cash",
         "subtotal": "0.00",
+        "promotions": [],
+        "discount": "0.00",
         "total": "0.00",
     }
     assert page(client, s)["reservation"]["has_cart"] is True

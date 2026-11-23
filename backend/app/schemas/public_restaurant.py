@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 from decimal import Decimal
 from uuid import UUID
 
@@ -59,6 +59,19 @@ class PublicDish(BaseModel):
     dietary_restrictions: list[str]
 
 
+class PublicPromotion(BaseModel):
+    name: str
+    description: str | None
+    discount_type: str
+    discount_value: Decimal
+    minimum_amount: Decimal | None
+    starts_on: date | None
+    ends_on: date | None
+    weekdays: list[int] | None
+    start_time: time | None
+    end_time: time | None
+
+
 class PublicReply(BaseModel):
     """The restaurant's reply to an opinion (spec 025, US-42): the current text only (C3)."""
 
@@ -82,3 +95,4 @@ class PublicOpinion(BaseModel):
 class PublicRestaurantDetail(PublicRestaurant):
     menu: list[PublicDish]
     opinions: list[PublicOpinion]
+    promotions: list[PublicPromotion]

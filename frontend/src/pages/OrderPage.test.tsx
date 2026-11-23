@@ -187,7 +187,7 @@ async function openPage(data = pageData(), selectPayment = true) {
         screen.getByRole('button', { name: /Modificar platos|Continuar editando platos/ }),
       )
     await review(user)
-    const cash = screen.getByRole('button', { name: 'Efectivo' })
+    const cash = await screen.findByRole('button', { name: 'Efectivo' })
     if (cash.getAttribute('aria-pressed') !== 'true') await user.click(cash)
     await user.click(screen.getByRole('button', { name: 'Volver a editar platos' }))
   }
@@ -420,7 +420,7 @@ describe('OrderPage', () => {
     confirmMock.mockResolvedValue({ ok: false, kind: 'conflict' })
     const user = await openPage()
     await add(user, 'Provoleta')
-    fetchMock.mockResolvedValue(pageData({}, false))
+    fetchMock.mockResolvedValueOnce(pageData()).mockResolvedValueOnce(pageData({}, false))
 
     await review(user)
 
@@ -531,6 +531,66 @@ describe('OrderPage', () => {
     expect(within(orderRow('Bife de chorizo')).getByRole('status')).toHaveTextContent('2')
     expect(screen.getByText('Sin confirmar: el restaurante todavía no lo ve')).toBeVisible()
     expect(saveMock).not.toHaveBeenCalled()
+  })
+
+  it('US-55 S3 shows the subtotal, promotion discount, and backend total', async () => {
+    await openPage(
+      pageData({
+        order: {
+          ...orderOf([[PROVOLETA, 1]]),
+          subtotal: '7500.00',
+          promotions: [{ name: '20% los martes', amount: '1500.00' }],
+          discount: '1500.00',
+          total: '6000.00',
+        },
+      }),
+      false,
+    )
+
+    const receipt = screen.getByText('Subtotal').closest('table') as HTMLTableElement
+    expect(within(receipt).getByText('Subtotal')).toBeInTheDocument()
+    expect(within(receipt).getByText('20% los martes')).toBeInTheDocument()
+    expect(within(receipt).getByText('-$ 1.500')).toBeInTheDocument()
+    expect(within(receipt).getByText('$ 6.000')).toBeInTheDocument()
+  })
+
+  it('US-55 S3 shows the promotion in the review before confirmation', async () => {
+    const savedCart = pageData({
+      cart: {
+        arrival_at: '2026-11-03T21:00:00-03:00',
+        payment_method: null,
+        updated_at: '2026-11-03T12:00:00-03:00',
+        items: [
+          {
+            dish_id: 'd-1',
+            quantity: 1,
+            name: 'Provoleta',
+            unit_price: '7500.00',
+            prep_time_minutes: 10,
+          },
+        ],
+      },
+    })
+    const preview = pageData({
+      cart: {
+        ...savedCart.cart!,
+        subtotal: '7500.00',
+        promotions: [{ name: '20% los martes', amount: '1500.00' }],
+        discount: '1500.00',
+        total: '6000.00',
+      },
+    })
+    fetchMock.mockResolvedValueOnce(savedCart).mockResolvedValueOnce(preview)
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByRole('heading', { level: 1, name: 'La Esquina de Palermo' })
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await screen.findByRole('button', { name: 'Efectivo' })
+
+    expect(screen.getByText('Total del pedido').nextSibling).toHaveTextContent(money(6000))
+    await user.click(screen.getByRole('button', { name: 'Ver detalle de la cuenta' }))
+    expect(await screen.findByText('20% los martes')).toBeInTheDocument()
+    expect(screen.getByText('-$ 1.500')).toBeInTheDocument()
   })
 
   it('US-17 edge saves the cart after each change', async () => {
@@ -684,7 +744,7 @@ describe('OrderPage', () => {
     await user.click(screen.getByRole('link', { name: 'Volver al pedido' }))
 
     expect(await screen.findByRole('group', { name: 'Cantidad de Provoleta' })).toBeVisible()
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
   it('US-17 edge keeps the latest dishes when a confirmation finds the menu changed', async () => {
@@ -697,7 +757,7 @@ describe('OrderPage', () => {
     await review(user)
 
     await user.click(screen.getByRole('button', { name: 'Confirmar pedido' }))
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4))
     // The diner returns to editing while the menu is reloading.
     await user.click(screen.getByRole('button', { name: 'Volver a editar platos' }))
     await add(user, 'Flan')
@@ -1032,7 +1092,9 @@ it('US-34 edge explains the last dish disappearing during confirmation and keeps
   const original = orderOf([[PROVOLETA, 2]])
   const user = await openPage(pageData({ order: original }))
   await add(user, 'Flan')
-  fetchMock.mockResolvedValue(pageData({ order: original, menu: [] }, false))
+  fetchMock
+    .mockResolvedValueOnce(pageData({ order: original }))
+    .mockResolvedValueOnce(pageData({ order: original, menu: [] }, false))
   await review(user)
   await user.click(screen.getByRole('button', { name: 'Confirmar cambios' }))
   expect(await screen.findByText(/Flan ya no está en el menú/)).toBeInTheDocument()

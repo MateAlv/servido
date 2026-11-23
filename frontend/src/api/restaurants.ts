@@ -9,6 +9,7 @@ import {
   type MenuSection,
   type RestaurantPriceTier,
   type RestaurantPublic,
+  type RestaurantPromotion,
 } from '../data/restaurants.fixture'
 import { restrictionLabel } from '../lib/dietary'
 import { api } from './client'
@@ -61,6 +62,7 @@ function fromApi(
   restaurant: BookableRestaurant,
   menu: MenuSection[] = [],
   opinions: BookableRestaurantDetail['opinions'] = [],
+  promotions: BookableRestaurantDetail['promotions'] = [],
 ): RestaurantPublic {
   const photo = restaurant.photo_url
   return {
@@ -88,6 +90,18 @@ function fromApi(
       date: opinion.visit_date,
       spendPerPerson: opinion.spend_per_person,
       reply: opinion.reply,
+    })),
+    promotions: promotions.map((promotion): RestaurantPromotion => ({
+      name: promotion.name,
+      description: promotion.description,
+      discountType: promotion.discount_type as RestaurantPromotion['discountType'],
+      discountValue: promotion.discount_value,
+      minimumAmount: promotion.minimum_amount,
+      startsOn: promotion.starts_on,
+      endsOn: promotion.ends_on,
+      weekdays: promotion.weekdays,
+      startTime: promotion.start_time,
+      endTime: promotion.end_time,
     })),
     rating: restaurant.rating,
     reviewCount: restaurant.review_count,
@@ -125,7 +139,7 @@ export async function fetchRestaurant(id: string): Promise<RestaurantPublic | un
   const { data } = await api.GET('/api/restaurants/{restaurant_id}', {
     params: { path: { restaurant_id: id } },
   })
-  return data ? fromApi(data, menuSections(data.menu), data.opinions) : undefined
+  return data ? fromApi(data, menuSections(data.menu), data.opinions, data.promotions) : undefined
 }
 
 const OPEN_FAILED = 'No pudimos consultar los horarios de los restaurantes.'
