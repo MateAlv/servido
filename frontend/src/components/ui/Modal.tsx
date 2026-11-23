@@ -24,6 +24,9 @@ export function Modal({ open, onClose, title, children, footer, onClosed }: Moda
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const onClosedRef = useRef(onClosed)
+  // A press that starts inside (selecting text, dragging a field) and ends on the backdrop makes
+  // the browser report a click on the dialog itself; that is not a click outside.
+  const pressedInside = useRef(false)
 
   useEffect(() => {
     onClosedRef.current = onClosed
@@ -77,8 +80,12 @@ export function Modal({ open, onClose, title, children, footer, onClosed }: Moda
       onKeyDown={(event) => {
         if (event.key === 'Escape') onClose()
       }}
+      onMouseDown={(event) => {
+        pressedInside.current = event.target !== event.currentTarget
+      }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
+        if (event.target === event.currentTarget && !pressedInside.current) onClose()
+        pressedInside.current = false
       }}
     >
       <div className={styles.inner}>
