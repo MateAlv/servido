@@ -31,6 +31,8 @@ type PaymentDialogProps = {
   order: ConfirmedOrder
   /** The bill as the order page prints it; an approved payment turns it into the receipt. */
   bill: Omit<ComponentProps<typeof Receipt>, 'payment'>
+  /** The account's email: the receipt mail goes there, not to the email typed in the card form. */
+  receiptEmail: string
   onPage: (page: OrderPage) => void
   onSessionExpired: () => void
   /** The order changed elsewhere (already paid, a payment in review, the reservation ended). */
@@ -51,6 +53,7 @@ export function PaymentDialog({
   reservationId,
   order,
   bill,
+  receiptEmail,
   onPage,
   onSessionExpired,
   onConflict,
@@ -67,7 +70,6 @@ export function PaymentDialog({
   const [failure, setFailure] = useState<Failure | null>(null)
   const [failures, setFailures] = useState(0)
   const [payment, setPayment] = useState<OrderPayment | null>(null)
-  const [payer, setPayer] = useState('')
   const resultTitle = useRef<HTMLHeadingElement>(null)
 
   // The result replaces the form, which may have been scrolled down: start it from the stamp.
@@ -102,7 +104,6 @@ export function PaymentDialog({
       onPage(page)
       if (answer.status === 'rejected') fail({ kind: 'rejected', message: answer.message })
       setPayment(answer)
-      setPayer(card.payer.email)
       setView(answer.status === 'approved' ? 'approved' : 'review')
     } catch (error) {
       if (error instanceof SessionExpiredError) return onSessionExpired()
@@ -291,7 +292,7 @@ export function PaymentDialog({
               }}
             />
           </div>
-          {payer && <p className={styles.copy}>Te mandamos una copia a {payer}</p>}
+          <p className={styles.copy}>Te mandamos el comprobante a {receiptEmail}</p>
         </div>
       )}
 
