@@ -53,7 +53,7 @@ vi.mock('../lib/mercadopago', () => ({
             payment_method_id: 'visa',
             issuer_id: '310',
             payer: {
-              email: 'ana@example.com',
+              email: 'comprador@example.com',
               identification: { type: 'DNI', number: '12345678' },
             },
           })
@@ -1875,7 +1875,8 @@ describe('Electronic payment (spec 032, US-56)', () => {
     expect(within(dialog).getByText('Comprobante de pago · Servido!')).toBeVisible()
     expect(within(dialog).getByText('N° 1001')).toBeVisible()
     expect(within(dialog).getByText('Visa terminada en 3704')).toBeVisible()
-    expect(within(dialog).getByText('Te mandamos una copia a ana@example.com')).toBeVisible()
+    expect(within(dialog).getByText(`Te mandamos el comprobante a ${DINER.email}`)).toBeVisible()
+    expect(within(dialog).queryByText(/comprador@example.com/)).not.toBeInTheDocument()
 
     await user.click(within(dialog).getByRole('button', { name: 'Listo' }))
 

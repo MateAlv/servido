@@ -853,6 +853,7 @@ function OrderEditor({
         arrival: timeInBuenosAires(page.order.arrival_at),
         confirmed: true,
       }}
+      receiptEmail={account.email}
       onPage={(next) => {
         setPage(next)
         refreshLists()
