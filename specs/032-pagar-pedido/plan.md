@@ -2,9 +2,9 @@
 
 **Feature**: `specs/032-pagar-pedido` | **Date**: 2026-11-21 | **Spec**: [spec.md](spec.md) | **US**: US-60 | **Sprint**: 6
 
-**Input**: Feature specification from `/specs/032-pagar-pedido/spec.md` (US-60 section; US-56 is out of scope, see below)
+**Input**: Feature specification from `/specs/032-pagar-pedido/spec.md`. The sections below plan US-60 (21/11); [US-56](#us-56--electronic-payment-added-2026-11-23) is planned at the end (23/11).
 
-**Note**: Project template (overrides Spec Kit's default). Written in English; `spec.md` stays in Spanish. This plan covers **only US-60** («Pagar con efectivo»). US-56 (electronic checkout, simulated card/wallet, receipt by mail) stays in the spec and is not planned or built here.
+**Note**: Project template (overrides Spec Kit's default). Written in English; `spec.md` stays in Spanish. The first part covers US-60 («Pagar con efectivo»). US-56 («Pagar electrónicamente») was added on 23/11 with Mercado Pago's test environment instead of the simulated checkout (spec, E1 changed); see its own section at the end.
 
 ## Summary
 
@@ -113,3 +113,79 @@ New tests in `backend/tests/test_us60_cash_payment.py` prove the US-60 scenarios
 ## Complexity Tracking
 
 No violations.
+
+---
+
+## US-56 — Electronic payment (added 2026-11-23)
+
+**US**: US-56 (3 SP) · **Decisions**: E1 (changed 23/11), E2–E4, E6–E8 of the spec · **ADR**: [0010](../../docs/decisions/0010-mercado-pago-test-payments.md)
+
+### Summary
+
+The diner pays a confirmed, unpaid order from its page with «Pagar $X». A modal shows the bill (order, promotions, total with the reservation's deposit included, E2) and Mercado Pago's Card Payment Brick. The brick tokenizes the card in Mercado Pago's iframes; the page sends the token to `POST /api/reservations/{id}/order/payments`, and the API charges `order.total` through Mercado Pago's `POST /v1/payments` with the test credentials. An approved payment marks the order `paid` (method `online`, `paid_amount`, `paid_at`), stores Mercado Pago's operation number, card brand and last four digits, and mails the receipt (E3). A rejected one keeps the order pending and the form unlocks for a retry. A payment in review blocks another one and is asked about again whenever the diner opens the order (E8, no webhooks). Once paid, the order is frozen (E6). Every cancellation of a paid order (the diner's, US-25; the restaurant's, US-38; a closure) returns the payment through Mercado Pago before it completes (E7), replacing the simulated refund of spec 023 for real payments.
+
+### Technical context
+
+- **Storage**: new table `payments` (migration `payments_20261123`), see [data-model.md](data-model.md#us-56-payments).
+- **New dependencies**: none in `pyproject.toml` or `package.json`. The backend calls Mercado Pago's REST API with `urllib` (`app/services/mercadopago.py`); the frontend loads Mercado Pago's JS SDK from `https://sdk.mercadopago.com/js/v2`, as Mercado Pago requires for the card fields (`src/lib/mercadopago.ts`).
+- **Configuration**: `MERCADOPAGO_ACCESS_TOKEN` and `MERCADOPAGO_PUBLIC_KEY` (test credentials of the team's Mercado Pago Developers application). Locally they come from the git-ignored `.env` at the repository root through `docker-compose.yml`; in production from the optional SSM parameters `/servido-prod/mercadopago-access-token` and `/servido-prod/mercadopago-public-key` (`infra/ec2/deploy.sh`). Without them `GET /api/payments/config` returns `public_key: null` and the modal says electronic payment is not available.
+- **Tests never reach Mercado Pago**: `tests/conftest.py` blanks the credentials and `tests/mercadopago_fake.py` stands in for the API, with the card token choosing the answer.
+
+### Constitution check
+
+| Principle | Gate | Pass |
+| --- | --- | --- |
+| I. Backlog-bound scope | US-56 only: pay, receipt, no double charge, refunds that real payments need. No wallet, installments, webhooks or production credentials | [x] |
+| II. Spec before code | E1 changed with the team on 23/11 and recorded in the spec and `specs/README.md`; E6–E8 added. All pending PO validation | [x] |
+| III. Every scenario tested | S1–S5 and the edge cases map to the tests below; the partial unique index `payments_one_live_per_order` enforces E4 in the database | [x] |
+| IV. Humans own AI output | One service per concern (`mercadopago.py` talks HTTP, `payments.py` holds the rules); tried end to end against Mercado Pago's test environment | [x] |
+| V. Simple, cheap, conventional | Free test environment, no SDK dependency, no background work: the in-review check runs on page load | [x] |
+
+### Acceptance scenario → test map
+
+| Scenario | Tests |
+| --- | --- |
+| US-56 S1 — start the card payment | `backend/tests/test_us56_electronic_payment.py::test_us56_s1_pending_online_order_can_start_the_card_payment` · `OrderPage.test.tsx` › `US-56 S1 opens Mercado Pago's card form for a pending electronic order` |
+| US-56 S2 — total with the deposit before paying | `test_us56_s2_charges_the_order_total_with_the_deposit_included` · `US-56 S2 shows the total with the promotions and the deposit before paying` |
+| US-56 S3 — approved, receipt | `test_us56_s3_approved_payment_marks_the_order_paid_with_a_receipt` · `US-56 S3 tells the payment was approved and shows its receipt` |
+| US-56 S4 — rejected, retry | `test_us56_s4_rejected_payment_keeps_the_order_pending_and_allows_a_retry` · `US-56 S4 tells a rejected payment and keeps the form to retry` |
+| US-56 S5 — no second charge, frozen order | `test_us56_s5_paid_order_is_not_charged_again_nor_changed` · `test_us56_s5_paid_order_has_one_approved_payment_in_the_database` · `US-56 S5 offers no new payment nor changes for a paid order` |
+| Edges — cash order paid electronically (FR-009), in review (E8), Mercado Pago down or not configured, refused card data, card number never accepted (FR-014), cancelled and foreign reservations | `test_us56_edge_*` in the same module · `US-56 edge shows a payment in review…`, `US-56 edge says when electronic payment is not available` |
+| Edges — refunds through Mercado Pago (E7): diner, restaurant, closure, failure keeps the reservation | `test_us56_edge_diner_cancellation_returns_the_payment`, `…_failed_refund_keeps_the_diner_reservation`, `…_restaurant_cancellation_returns_the_payment`, `…_closure_returns_the_payment_or_is_not_saved` · `CancelledReservationPage.test.tsx` › `US-56 edge says the payment was returned once the refund completed` |
+
+### Project structure
+
+```text
+backend/
+├── app/config.py                         # + mercadopago_* settings
+├── app/models/payment.py                 # new: Payment
+├── app/services/mercadopago.py           # new: charge, fetch, refund over HTTP
+├── app/services/payments.py              # new: pay_order, settle (E8), receipt mail
+├── app/services/refunds.py               # refunds an approved payment through Mercado Pago
+├── app/services/{reservations,closures}.py  # refund before cancelling a paid order
+├── app/services/orders.py                # a paid order is frozen (E6)
+├── app/services/mail.py                  # + payment_receipt_mail
+├── app/api/order.py                      # + GET /payments/config, POST …/order/payments
+├── app/api/reservation.py                # 502 when the diner's refund fails; refund_status
+├── migrations/versions/2026_11_23_1700-add_payments.py
+└── tests/{test_us56_electronic_payment.py, mercadopago_fake.py, conftest.py}
+frontend/src/
+├── lib/mercadopago.ts                    # new: loads the SDK, mounts the brick
+├── components/order/CardPaymentForm.tsx  # new: the brick with loading and error states
+├── api/orders.ts                         # + fetchPaymentConfig, payOrder
+├── pages/OrderPage.tsx                   # payment block: method, «Pagar $X», paid card row
+├── pages/order/PaymentDialog.tsx         # bill ticket, card form, processing, rejected,
+│                                         # approved (stamp + receipt), in review
+├── components/order/Receipt.tsx          # + payment: the bill becomes the receipt
+├── components/reservation/ConfirmationStamp.tsx  # + warn tone and clock for «En revisión»
+└── pages/CancelledReservationPage.tsx    # «Te devolvimos el pago»
+```
+
+### Design notes
+
+- **Checkout API with the Card Payment Brick, not Checkout Pro**: Checkout Pro redirects to Mercado Pago and needs public return URLs and a test buyer account; the brick stays inside the order page and works on localhost ([research.md](research.md#us-56-decisions)).
+- **The payer email is typed in the brick**: Mercado Pago refuses addresses such as the demo diner's `cliente@servido.local`, so the brick asks for it instead of prefilling the account's.
+- **The brick waits on a promise**: the page rejects it when the payment did not go through, which is what unlocks the brick for another try.
+- **One brick per container**: React mounts effects twice in development, so a new mount waits for the previous one to finish.
+- **Look (design canvas «Pago del pedido», 23/11)**: the bill is printed on the same cream paper as the order's receipt, with the deposit note; the outcome is stamped with `ConfirmationStamp` («Pagado» with sparkles, «En revisión» in amber with a clock); the approved payment prints `Receipt` as the receipt; a rejection shakes the bill, shows why and says nothing was charged, with a way to switch to cash. Mercado Pago's form takes the theme's colors, radii and dark mode through its `customVariables`, and its own title is hidden for ours. Every animation uses the motion tokens and stops with reduced motion.
+- **The dialog mounts only while open**, so each payment starts fresh and a closed dialog leaves no text on the page.

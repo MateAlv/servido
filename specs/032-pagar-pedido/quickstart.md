@@ -42,3 +42,19 @@ make lint test
 ```
 
 Expected: every US-60 scenario is green and the existing US-45 / US-22 tests still pass.
+
+## US-56 — pay electronically (Mercado Pago test environment)
+
+1. Put the test credentials of the Mercado Pago application in `.env` at the repository root (git-ignored), then `make up-local`:
+
+   ```text
+   MERCADOPAGO_PUBLIC_KEY=TEST-…
+   MERCADOPAGO_ACCESS_TOKEN=TEST-…
+   ```
+
+2. Sign in as the demo diner, open a confirmed reservation whose order uses «Pago electrónico» and press «Pagar $X». The modal shows the total with «Incluye la seña de tu reserva» and Mercado Pago's form.
+3. Open «Tarjetas de prueba» in the dialog (only with test credentials) and pay with one of them: Visa `4509 9535 6623 3704`, expiry `11/30`, code `123`, DNI `12345678`, any valid email that is not the Mercado Pago account's (for example `comprador@example.com`).
+   - Holder `OTHE`: «Mercado Pago rechazó el pago…»; the order stays «Pendiente de pago» and «Pagar» works again.
+   - Holder `APRO`: the order shows «Pagado» with the operation number, the card and the date; dishes and method can no longer change, and the receipt is printed in the API log (console mail).
+   - Holder `CONT`: «Tu pago está en revisión»; reopening the order asks Mercado Pago again.
+4. Cancel the reservation from «Mis reservas»: the payment shows as refunded in Mercado Pago and the cancelled reservation reads «Te devolvimos el pago».

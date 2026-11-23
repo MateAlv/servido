@@ -61,3 +61,21 @@ both sides see how much must be paid at the restaurant.
 ## Open questions
 
 None that block the work. E5 is applied as written; E1–E4 belong to US-56, out of scope here.
+
+## US-56 decisions
+
+### R6 — Mercado Pago's Checkout API with the Card Payment Brick
+
+- **Decision**: the order page embeds Mercado Pago's Card Payment Brick and the API charges the token with `POST /v1/payments`, using the test credentials of the team's application (Checkout API, Payments API).
+- **Rationale**: the card fields live in Mercado Pago's iframes, so Servido! never handles card data; it works on localhost; the test environment is free and the test cards decide the result by the cardholder name (`APRO`, `OTHE`, `CONT`).
+- **Alternatives considered**: the simulated checkout first proposed in E1 (no real integration to show); Checkout Pro (redirects, needs public return URLs and a test buyer account); Mercado Pago's Python SDK and `@mercadopago/sdk-react` (dependencies for three HTTP calls and one script tag).
+
+### R7 — No webhooks: ask again on page load
+
+- **Decision**: a payment in review is asked about with `GET /v1/payments/{id}` whenever the diner opens the order.
+- **Rationale**: no background work (AGENTS.md) and no public URL locally. With test cards, review only happens on purpose (`CONT`).
+
+### R8 — Refunds of real payments through Mercado Pago
+
+- **Decision**: `refunds.refund_order` returns an approved payment with `POST /v1/payments/{id}/refunds` (idempotency key per order). Paid orders without a payment row (demo data and the US-38 tests) keep the simulated refund.
+- **Rationale**: a cancelled reservation must give the money back (US-25 FR-011 of spec 013, US-38); a simulated refund would leave the test payment charged.

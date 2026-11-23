@@ -56,3 +56,30 @@ US. US-60 never writes `paid`.
 - `RestaurantOrderResponse` (restaurant): `payment.method`, `payment.status`, `payment.total`.
 
 Both already carry the fields US-60 displays, so `openapi.json` and `schema.d.ts` do not change.
+
+## US-56: payments
+
+New table `payments` (migration `payments_20261123`): one row per electronic payment attempt that Mercado Pago answered.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | UUID | Primary key |
+| `order_id` | UUID → `pedidos.id` | `ON DELETE CASCADE`: a removed unpaid order takes its rejected attempts |
+| `request_id` | UUID, unique | The diner's attempt; a repeated request returns the same payment and Mercado Pago gets it as `X-Idempotency-Key` |
+| `provider_payment_id` | `String(32)`, unique | Mercado Pago's operation number, shown in the receipt |
+| `amount` | `Numeric(10,2)`, `> 0` | `pedidos.total` at the time of the charge (deposit included, E2) |
+| `status` | `approved` \| `rejected` \| `in_process` | Mercado Pago's `pending`/`authorized` count as `in_process` |
+| `status_detail` | `String(64)` | Mercado Pago's reason, mapped to a Spanish message |
+| `card_brand`, `card_last_four` | nullable | The only card data kept (FR-014) |
+| `created_at`, `approved_at` | timestamptz | `approved_at` is set exactly when `status = 'approved'` |
+
+Invariants:
+
+- `payments_one_live_per_order`: partial unique index on `order_id` where `status IN ('approved', 'in_process')`. An order is charged at most once and not again while a payment is in review (E4, E8).
+- `ck_payments_approved_at_matches_status` and `ck_payments_amount_positive`.
+
+Transitions:
+
+- `POST …/order/payments` → Mercado Pago answers `approved` (the order becomes `paid`, `payment_method = 'online'`, `paid_amount`, `paid_at`), `rejected` (the order stays `pending`) or `in_process`.
+- `in_process` → `approved` or `rejected` when the diner opens the order (`GET …/order`) and Mercado Pago has decided.
+- A cancellation of a `paid` order refunds the approved payment through Mercado Pago and writes the existing `refunds` row (`completed`, or `failed` and the reservation is not cancelled).
