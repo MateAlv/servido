@@ -2888,6 +2888,16 @@
               }
             }
           },
+          "502": {
+            "description": "Mercado Pago no devolvi\u00f3 el pago; la reserva sigue activa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "400": {
             "description": "Validation Error",
             "content": {
@@ -3339,6 +3349,129 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/payments/config": {
+      "get": {
+        "tags": [
+          "order"
+        ],
+        "summary": "Get Payment Config",
+        "operationId": "get_payment_config_api_payments_config_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations/{reservation_id}/order/payments": {
+      "post": {
+        "tags": [
+          "order"
+        ],
+        "summary": "Post Payment",
+        "description": "Charges the order through Mercado Pago (spec 032, US-56). A rejected card is still a\ncreated payment: the result says why, and the order stays pending.",
+        "operationId": "post_payment_api_reservations__reservation_id__order_payments_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reservation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reservation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Mercado Pago no acept\u00f3 los datos del pago.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Falta la sesi\u00f3n o venci\u00f3.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Solo para comensales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "La reserva no existe o es de otro comensal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "El pedido ya est\u00e1 pagado, tiene un pago en revisi\u00f3n o no se paga.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "El pago electr\u00f3nico no est\u00e1 disponible."
           }
         }
       }
@@ -4888,6 +5021,17 @@
               }
             ],
             "title": "Refund Status"
+          },
+          "refund_amount": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refund Amount"
           }
         },
         "type": "object",
@@ -6342,6 +6486,16 @@
             "type": "boolean",
             "title": "Payment Method Editable"
           },
+          "payment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PaymentReceiptResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "confirmed_at": {
             "type": "string",
             "format": "date-time",
@@ -6435,6 +6589,73 @@
         ],
         "title": "PasswordResetRequest"
       },
+      "Payer": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Email"
+          },
+          "identification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PayerIdentification"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "Payer"
+      },
+      "PayerIdentification": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Type"
+          },
+          "number": {
+            "type": "string",
+            "maxLength": 30,
+            "minLength": 1,
+            "title": "Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "number"
+        ],
+        "title": "PayerIdentification"
+      },
+      "PaymentConfigResponse": {
+        "properties": {
+          "public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "public_key"
+        ],
+        "title": "PaymentConfigResponse"
+      },
       "PaymentMethodRequest": {
         "properties": {
           "payment_method": {
@@ -6452,6 +6673,145 @@
           "payment_method"
         ],
         "title": "PaymentMethodRequest"
+      },
+      "PaymentReceiptResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "rejected",
+              "in_process"
+            ],
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "operation_number": {
+            "type": "string",
+            "title": "Operation Number"
+          },
+          "amount": {
+            "type": "string",
+            "title": "Amount"
+          },
+          "card_brand": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Brand"
+          },
+          "card_last_four": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card Last Four"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message",
+          "operation_number",
+          "amount",
+          "card_brand",
+          "card_last_four",
+          "created_at",
+          "approved_at"
+        ],
+        "title": "PaymentReceiptResponse",
+        "description": "The latest electronic payment of the order: the receipt once approved (E3)."
+      },
+      "PaymentRequest": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Request Id"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Token"
+          },
+          "payment_method_id": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Payment Method Id"
+          },
+          "issuer_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issuer Id"
+          },
+          "payer": {
+            "$ref": "#/components/schemas/Payer"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "request_id",
+          "token",
+          "payment_method_id",
+          "payer"
+        ],
+        "title": "PaymentRequest",
+        "description": "What Mercado Pago's card form gives after tokenizing the card (spec 032, US-56): never the\ncard number or its security code (FR-014)."
+      },
+      "PaymentResult": {
+        "properties": {
+          "payment": {
+            "$ref": "#/components/schemas/PaymentReceiptResponse"
+          },
+          "page": {
+            "$ref": "#/components/schemas/OrderPageResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "payment",
+          "page"
+        ],
+        "title": "PaymentResult"
       },
       "PendingReview": {
         "properties": {

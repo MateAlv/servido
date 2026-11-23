@@ -33,6 +33,11 @@ main() {
       if smtp_password="$(parameter smtp-password 2> /dev/null)"; then
         printf 'MAIL_BACKEND=smtp\nSMTP_PASSWORD=%s\n' "$smtp_password"
       fi
+      # Optional: Mercado Pago's test credentials turn on electronic payment (spec 032).
+      if mp_token="$(parameter mercadopago-access-token 2> /dev/null)" &&
+        mp_key="$(parameter mercadopago-public-key 2> /dev/null)"; then
+        printf 'MERCADOPAGO_ACCESS_TOKEN=%s\nMERCADOPAGO_PUBLIC_KEY=%s\n' "$mp_token" "$mp_key"
+      fi
     } > infra/ec2/.env
   )
 

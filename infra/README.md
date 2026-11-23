@@ -135,6 +135,22 @@ To go back to SES, delete the parameter (`aws ssm delete-parameter --name /servi
 
 If a mail can't be sent, registration still succeeds and the API logs `Could not send the verification mail`; the diner can press "Reenviar mail de verificación".
 
+### Mercado Pago (spec 032)
+
+Electronic payment uses the **test** credentials of the team's application in Mercado Pago Developers (ADR 0010). `deploy.sh` turns it on when both SSM parameters exist; without them the order page says electronic payment is not available.
+
+1. In Mercado Pago Developers, open the application → Pruebas → Credenciales de prueba.
+2. Store each value without pasting it anywhere else:
+   ```bash
+   read -rs MP_TOKEN && AWS_PROFILE=servido aws ssm put-parameter --region us-east-1 \
+     --name /servido-prod/mercadopago-access-token --type SecureString --value "$MP_TOKEN" && unset MP_TOKEN
+   read -rs MP_KEY && AWS_PROFILE=servido aws ssm put-parameter --region us-east-1 \
+     --name /servido-prod/mercadopago-public-key --type SecureString --value "$MP_KEY" && unset MP_KEY
+   ```
+3. Redeploy (Actions → Deploy → Run workflow).
+
+Locally, put the same two values in `.env` at the repository root (`MERCADOPAGO_ACCESS_TOKEN=…`, `MERCADOPAGO_PUBLIC_KEY=…`); git ignores it and `docker-compose.yml` passes them to the API.
+
 ## Accounts outside AWS
 
 The team account **servido.gdsi@gmail.com** owns everything that is not in AWS. The password is shared inside the team, never in the repository.

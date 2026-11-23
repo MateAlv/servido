@@ -20,6 +20,9 @@ services:
     command: sh -c "sh scripts/migrate.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     environment:
       DATABASE_URL: postgresql+psycopg://servido:servido@db:5432/servido
+      # Mercado Pago test credentials from the git-ignored .env next to this file (spec 032).
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      MERCADOPAGO_PUBLIC_KEY: ${MERCADOPAGO_PUBLIC_KEY:-}
     ports:
       - "8000:8000"
     volumes:

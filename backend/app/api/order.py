@@ -7,9 +7,11 @@ from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import TokenClaimsDep, require_diner
 from app.api.reservation import reservation_response
+from app.config import settings
 from app.db import SessionDep
 from app.models.cart import Cart
 from app.models.order import Order
+from app.models.payment import Payment
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.diner_order import (
@@ -25,9 +27,13 @@ from app.schemas.diner_order import (
     OrderMenuDish,
     OrderPageResponse,
     OrderResponse,
+    PaymentConfigResponse,
     PaymentMethodRequest,
+    PaymentReceiptResponse,
+    PaymentRequest,
+    PaymentResult,
 )
-from app.services import availability, orders, promotions
+from app.services import availability, mercadopago, orders, payments, promotions
 from app.services.availability import BUENOS_AIRES
 
 router = APIRouter(tags=["order"])
@@ -41,14 +47,32 @@ SESSION_AND_ROLE = {
 }
 
 
-def order_response(order: Order, reservation: Reservation, now: datetime) -> OrderResponse:
+def payment_response(payment: Payment) -> PaymentReceiptResponse:
+    return PaymentReceiptResponse(
+        status=payment.status,
+        message=payments.message(payment),
+        operation_number=payment.provider_payment_id,
+        amount=payment.amount,
+        card_brand=payments.brand_name(payment),
+        card_last_four=payment.card_last_four,
+        created_at=payment.created_at.astimezone(BUENOS_AIRES),
+        approved_at=payment.approved_at.astimezone(BUENOS_AIRES) if payment.approved_at else None,
+    )
+
+
+def order_response(
+    order: Order, reservation: Reservation, now: datetime, payment: Payment | None = None
+) -> OrderResponse:
     summary = orders.order_summary(order.items)
     return OrderResponse(
         arrival_at=orders.arrival_time(reservation, order),
         prep_start_time=orders.prep_start_time(reservation, order),
         payment_method=order.payment_method,
         payment_status=order.payment_status,
-        payment_method_editable=orders.payment_editable(reservation, order, now),
+        # A payment in review fixes the method too (spec 032, E8).
+        payment_method_editable=orders.payment_editable(reservation, order, now)
+        and not (payment and payment.status == "in_process"),
+        payment=payment_response(payment) if payment else None,
         confirmed_at=order.confirmed_at.astimezone(BUENOS_AIRES),
         items=[
             ConfirmedOrderItemResponse(
@@ -114,7 +138,9 @@ def order_page(session: SessionDep, reservation: Reservation, now: datetime) -> 
             starts_at=reservation.starts_at, latest_at=reservation.starts_at + timedelta(minutes=30)
         ),
         reservation=reservation_response(session, reservation, restaurant, now),
-        order=order_response(order, reservation, now) if order else None,
+        order=order_response(order, reservation, now, payments.live(session, order.id))
+        if order
+        else None,
         cart=cart_response(session, cart, reservation, restaurant) if cart else None,
         menu=[
             OrderMenuDish(
@@ -166,7 +192,11 @@ def get_order(
         reservation = orders.diner_reservation(session, diner_id, reservation_id)
     except orders.ReservationNotFoundError as error:
         raise not_found() from error
-    return order_page(session, reservation, availability.current_time())
+    now = availability.current_time()
+    if payments.settle_in_review(session, reservation, now):
+        session.commit()
+        payments.send_receipt(session, reservation)
+    return order_page(session, reservation, now)
 
 
 @router.put(
@@ -340,3 +370,70 @@ def put_payment_method(
         raise conflict(str(error)) from error
     session.commit()
     return order_page(session, reservation, availability.current_time())
+
+
+PAYMENT_UNAVAILABLE = (
+    "El pago electrónico no está disponible en este momento. Probá más tarde o pagá en efectivo."
+)
+
+
+@router.get("/payments/config", response_model=PaymentConfigResponse)
+def get_payment_config() -> PaymentConfigResponse:
+    return PaymentConfigResponse(
+        public_key=settings.mercadopago_public_key if mercadopago.enabled() else None
+    )
+
+
+@router.post(
+    "/reservations/{reservation_id}/order/payments",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PaymentResult,
+    responses={
+        400: {"description": "Mercado Pago no aceptó los datos del pago."},
+        **SESSION_AND_ROLE,
+        **NOT_FOUND,
+        409: {"description": "El pedido ya está pagado, tiene un pago en revisión o no se paga."},
+        503: {"description": "El pago electrónico no está disponible."},
+    },
+)
+def post_payment(
+    reservation_id: UUID, payload: PaymentRequest, claims: TokenClaimsDep, session: SessionDep
+) -> PaymentResult:
+    """Charges the order through Mercado Pago (spec 032, US-56). A rejected card is still a
+    created payment: the result says why, and the order stays pending."""
+    diner_id = require_diner(claims, session)
+    if not mercadopago.enabled():
+        raise HTTPException(status_code=503, detail=PAYMENT_UNAVAILABLE)
+    now = availability.current_time()
+    card = payments.CardPayment(
+        token=payload.token,
+        payment_method_id=payload.payment_method_id,
+        issuer_id=payload.issuer_id,
+        payer=payload.payer.model_dump(exclude_none=True),
+        request_id=payload.request_id,
+    )
+    try:
+        reservation, payment, created = payments.pay_order(
+            session, diner_id, reservation_id, card, now
+        )
+    except orders.ReservationNotFoundError as error:
+        raise not_found() from error
+    except payments.PaymentConflictError as error:
+        # A payment in review may have just been settled: keep that.
+        session.commit()
+        raise conflict(str(error)) from error
+    except mercadopago.CardDataError as error:
+        session.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Mercado Pago no aceptó los datos del pago. Revisalos y probá de nuevo.",
+        ) from error
+    except mercadopago.MercadoPagoError as error:
+        session.rollback()
+        raise HTTPException(status_code=503, detail=PAYMENT_UNAVAILABLE) from error
+    session.commit()
+    if created:
+        payments.send_receipt(session, reservation)
+    return PaymentResult(
+        payment=payment_response(payment), page=order_page(session, reservation, now)
+    )

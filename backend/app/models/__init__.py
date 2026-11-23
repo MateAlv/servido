@@ -10,6 +10,7 @@ from app.models.order import Order
 from app.models.order_confirmation import OrderConfirmation
 from app.models.order_item import OrderItem
 from app.models.password_reset import PasswordReset, PasswordResetRequest
+from app.models.payment import Payment
 from app.models.promotion import OrderDiscount, Promotion
 from app.models.refund import Refund
 from app.models.reservation import Reservation
@@ -35,6 +36,7 @@ __all__ = [
     "OrderItem",
     "Notification",
     "PasswordReset",
+    "Payment",
     "PasswordResetRequest",
     "Promotion",
     "Reservation",

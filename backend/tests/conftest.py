@@ -25,6 +25,13 @@ def migrated_database() -> None:
 
 
 @pytest.fixture(autouse=True)
+def no_mercadopago(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Tests never reach the real Mercado Pago; the payment tests use tests/mercadopago_fake.py."""
+    monkeypatch.setattr(settings, "mercadopago_access_token", "")
+    monkeypatch.setattr(settings, "mercadopago_public_key", "")
+
+
+@pytest.fixture(autouse=True)
 def mail_outbox(monkeypatch: pytest.MonkeyPatch) -> Iterator[list[mail.Mail]]:
     """Every test keeps its mails in memory instead of sending them."""
     monkeypatch.setattr(settings, "mail_backend", "memory")

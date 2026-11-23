@@ -9,13 +9,19 @@ from sqlalchemy.orm import Session
 from app.models.cart import Cart
 from app.models.closure import Closure
 from app.models.diner import Diner
+from app.models.order import Order
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.closure import AffectedReservation, ClosureRequest
-from app.services import mail
+from app.services import mail, refunds
 
 logger = logging.getLogger(__name__)
 BUENOS_AIRES = ZoneInfo("America/Argentina/Buenos_Aires")
+# Spec 032 (E7): a closure that cancels a paid order returns the payment first.
+REFUND_FAILED = (
+    "No pudimos guardar el bloqueo: Mercado Pago no devolvió el pago de una reserva. "
+    "Volvé a intentarlo."
+)
 
 
 class ClosureValidationError(ValueError):
@@ -117,6 +123,13 @@ def create(
     )
     session.add(closure)
     for reservation in reservations:
+        order = session.scalar(select(Order).where(Order.reservation_id == reservation.id))
+        if order is not None and order.payment_status == "paid":
+            try:
+                refunds.refund_order(session, order, now)
+            except refunds.RefundFailedError as error:
+                session.rollback()
+                raise ClosureValidationError(REFUND_FAILED) from error
         reservation.status = "cancelled"
         reservation.cancelled_at = now.astimezone(ZoneInfo("UTC"))
         reservation.cancelled_by = "restaurant"

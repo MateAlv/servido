@@ -21,6 +21,7 @@ from app.models.dish import Dish
 from app.models.order import Order
 from app.models.order_confirmation import OrderConfirmation
 from app.models.order_item import OrderItem
+from app.models.payment import Payment
 from app.models.promotion import OrderDiscount
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
@@ -35,6 +36,13 @@ ORDER_CLOSED = "Ya no se puede cambiar el pedido de esta reserva."
 EMAIL_NOT_VERIFIED = "Verificá tu email para confirmar tu pedido."
 NOTHING_TO_CONFIRM = "Agregá al menos un plato para confirmar tu pedido."
 MENU_CHANGED = "El menú cambió. Revisá tu pedido antes de confirmarlo."
+PAID_ORDER_FROZEN = (
+    "Ya pagaste el pedido: no se pueden cambiar los platos, la hora de llegada ni el medio de pago."
+)
+PAYMENT_IN_REVIEW_FROZEN = (
+    "Tu pago está en revisión: los platos, la hora de llegada y el medio de pago quedan fijos "
+    "hasta que Mercado Pago responda."
+)
 
 
 class InvalidArrivalError(Exception):
@@ -126,12 +134,26 @@ def order_deadline(reservation: Reservation) -> datetime:
 
 
 def order_open(session: Session, reservation: Reservation, now: datetime) -> bool:
-    """Whether the order can be created or changed (P6, P12, P14)."""
+    """Whether the order can be created or changed (P6, P12, P14). A paid order is frozen
+    (spec 032, E6)."""
     return (
         reservation.status == "confirmed"
         and now < order_deadline(reservation)
         and has_menu(session, reservation.restaurant_id)
+        and order_frozen_reason(session, order_of(session, reservation.id)) is None
     )
+
+
+def order_frozen_reason(session: Session, order: Order | None) -> str | None:
+    """Why a charged order can no longer change (spec 032, E6 and E8), or None."""
+    if order is None:
+        return None
+    if order.payment_status == "paid":
+        return PAID_ORDER_FROZEN
+    in_review = session.scalar(
+        select(Payment.id).where(Payment.order_id == order.id, Payment.status == "in_process")
+    )
+    return PAYMENT_IN_REVIEW_FROZEN if in_review is not None else None
 
 
 def subtotal(item: OrderItem | CartItem) -> Decimal:
@@ -278,15 +300,9 @@ def confirm_order(
     delay = validate_arrival(reservation, arrival_at, now)
     if items and payment_method is None:
         raise InvalidArrivalError("Seleccioná un medio de pago para confirmar tu pedido.")
-    if (
-        items
-        and order
-        and order.payment_status == "paid"
-        and order.payment_method != payment_method
-    ):
-        raise OrderConflictError(
-            "Ya se registró el pago de este pedido. No podés cambiar el medio."
-        )
+    frozen = order_frozen_reason(session, order)
+    if frozen:
+        raise OrderConflictError(frozen)
     session.execute(delete(Cart).where(Cart.reservation_id == reservation.id))
     if not items:
         session.delete(order)
@@ -433,6 +449,8 @@ def change_payment_method(
     reservation = diner_reservation(session, diner_id, reservation_id, lock=True)
     order = order_of(session, reservation.id)
     now = availability.current_time()
+    if order is not None and (frozen := order_frozen_reason(session, order)):
+        raise OrderConflictError(frozen)
     if order is None or not payment_editable(reservation, order, now):
         raise OrderConflictError(
             "No podés cambiar el medio: el pedido ya está pagado, "

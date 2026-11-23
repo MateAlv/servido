@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     # Local mode (`make up-local`): diners who sign up with a password start verified, so the
     # team can try the app on localhost without opening a mail.
     auto_verify_emails: bool = False
+    # Test credentials of the team's Mercado Pago application (spec 032, E1). Without the access
+    # token the electronic payment answers that it is not available.
+    mercadopago_access_token: str = ""
+    mercadopago_public_key: str = ""
+    mercadopago_api_url: str = "https://api.mercadopago.com"
 
     @model_validator(mode="after")
     def local_mode_never_sends_mail(self) -> "Settings":

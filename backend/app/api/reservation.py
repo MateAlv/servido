@@ -10,6 +10,7 @@ from app.api.deps import TokenClaimsDep, require_diner
 from app.db import SessionDep
 from app.models.diner import Diner
 from app.models.order import Order
+from app.models.refund import Refund
 from app.models.reservation import RESERVATION_MINUTES, Reservation
 from app.models.restaurant import Restaurant
 from app.schemas.reservation import (
@@ -29,7 +30,7 @@ from app.schemas.reservation import (
     UpcomingReservationsResponse,
 )
 from app.schemas.table_inventory import MAX_TABLE_CAPACITY
-from app.services import availability, mail, orders, reservations
+from app.services import availability, mail, orders, refunds, reservations
 
 logger = logging.getLogger(__name__)
 
@@ -311,8 +312,11 @@ def cancelled_reservation_response(
     ends_at = reservation.ends_at.astimezone(availability.BUENOS_AIRES)
     restaurant = session.get(Restaurant, reservation.restaurant_id)
     order = session.scalar(select(Order).where(Order.reservation_id == reservation.id))
+    refund = session.scalar(select(Refund).where(Refund.order_id == order.id)) if order else None
     refund_status = (
-        "pending"
+        refund.status
+        if refund is not None
+        else "pending"
         if order is not None and order.status == "confirmed" and order.payment_status == "paid"
         else None
     )
@@ -330,6 +334,7 @@ def cancelled_reservation_response(
         cancelled_by=reservation.cancelled_by,
         cancelled_at=reservation.cancelled_at,
         refund_status=refund_status,
+        refund_amount=refund.amount if refund and refund.status == "completed" else None,
     )
 
 
@@ -384,6 +389,7 @@ def get_cancelled_reservation(
         403: {"description": "Solo para comensales."},
         404: {"description": "La reserva no existe o es de otro comensal."},
         409: {"description": "La reserva ya está cancelada o no se puede cancelar."},
+        502: {"description": "Mercado Pago no devolvió el pago; la reserva sigue activa."},
     },
 )
 def cancel_diner_reservation(
@@ -406,6 +412,12 @@ def cancel_diner_reservation(
     except reservations.ReservationCancellationWindowError as error:
         session.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+    except refunds.RefundFailedError as error:
+        session.commit()
+        raise HTTPException(
+            status_code=502,
+            detail="No pudimos devolver tu pago. Tu reserva sigue activa. Volvé a intentarlo.",
+        ) from error
     session.commit()
     return ReservationCancellationResponse(
         reservation=reservation_response(

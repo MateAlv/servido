@@ -2,8 +2,10 @@ import logging
 import smtplib
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from email.message import EmailMessage
 from email.utils import formataddr
+from html import escape
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -74,6 +76,37 @@ def reservation_confirmation_mail(
         subject=f"Confirmación de tu reserva en {restaurant_name}",
         text=text,
         html=f"<p>{text}</p>",
+    )
+
+
+def payment_receipt_mail(
+    to: str,
+    restaurant_name: str,
+    reservation_start: datetime,
+    items: list[tuple[str, int, Decimal]],
+    discount: Decimal,
+    total: Decimal,
+    operation_number: str,
+    card: str,
+    paid_at: datetime,
+) -> Mail:
+    """The receipt of an approved electronic payment (spec 032, E3)."""
+    lines = [f"{quantity} × {name}: ${subtotal:.2f}" for name, quantity, subtotal in items]
+    if discount:
+        lines.append(f"Descuento: -${discount:.2f}")
+    lines.append(f"Total pagado (incluye la seña de tu reserva): ${total:.2f}")
+    header = (
+        f"Pagaste tu pedido en {restaurant_name} para la reserva del "
+        f"{reservation_start:%d/%m/%Y} a las {reservation_start:%H:%M}."
+    )
+    footer = f"Operación de Mercado Pago N° {operation_number} · {card} · {paid_at:%d/%m/%Y %H:%M}."
+    text = "\n".join([header, "", *lines, "", footer])
+    items_html = "".join(f"<li>{escape(line)}</li>" for line in lines)
+    return Mail(
+        to=to,
+        subject=f"Comprobante de pago de tu pedido en {restaurant_name}",
+        text=text,
+        html=f"<p>{escape(header)}</p><ul>{items_html}</ul><p>{escape(footer)}</p>",
     )
 
 

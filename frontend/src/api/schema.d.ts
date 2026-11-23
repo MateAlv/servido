@@ -805,6 +805,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Payment Config */
+        get: operations["get_payment_config_api_payments_config_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reservations/{reservation_id}/order/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Payment
+         * @description Charges the order through Mercado Pago (spec 032, US-56). A rejected card is still a
+         *     created payment: the result says why, and the order stays pending.
+         */
+        post: operations["post_payment_api_reservations__reservation_id__order_payments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/restaurant/promotions": {
         parameters: {
             query?: never;
@@ -1221,6 +1259,8 @@ export interface components {
             cancelled_at: string;
             /** Refund Status */
             refund_status: string | null;
+            /** Refund Amount */
+            refund_amount?: string | null;
         };
         /** CancelledReservationsResponse */
         CancelledReservationsResponse: {
@@ -1759,6 +1799,7 @@ export interface components {
             payment_status: "pending" | "paid";
             /** Payment Method Editable */
             payment_method_editable: boolean;
+            payment?: components["schemas"]["PaymentReceiptResponse"] | null;
             /**
              * Confirmed At
              * Format: date-time
@@ -1784,6 +1825,24 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** Payer */
+        Payer: {
+            /** Email */
+            email: string;
+            identification?: components["schemas"]["PayerIdentification"] | null;
+        };
+        /** PayerIdentification */
+        PayerIdentification: {
+            /** Type */
+            type: string;
+            /** Number */
+            number: string;
+        };
+        /** PaymentConfigResponse */
+        PaymentConfigResponse: {
+            /** Public Key */
+            public_key: string | null;
+        };
         /** PaymentMethodRequest */
         PaymentMethodRequest: {
             /**
@@ -1791,6 +1850,58 @@ export interface components {
              * @enum {string}
              */
             payment_method: "cash" | "online";
+        };
+        /**
+         * PaymentReceiptResponse
+         * @description The latest electronic payment of the order: the receipt once approved (E3).
+         */
+        PaymentReceiptResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approved" | "rejected" | "in_process";
+            /** Message */
+            message: string;
+            /** Operation Number */
+            operation_number: string;
+            /** Amount */
+            amount: string;
+            /** Card Brand */
+            card_brand: string | null;
+            /** Card Last Four */
+            card_last_four: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Approved At */
+            approved_at: string | null;
+        };
+        /**
+         * PaymentRequest
+         * @description What Mercado Pago's card form gives after tokenizing the card (spec 032, US-56): never the
+         *     card number or its security code (FR-014).
+         */
+        PaymentRequest: {
+            /**
+             * Request Id
+             * Format: uuid
+             */
+            request_id: string;
+            /** Token */
+            token: string;
+            /** Payment Method Id */
+            payment_method_id: string;
+            /** Issuer Id */
+            issuer_id?: string | null;
+            payer: components["schemas"]["Payer"];
+        };
+        /** PaymentResult */
+        PaymentResult: {
+            payment: components["schemas"]["PaymentReceiptResponse"];
+            page: components["schemas"]["OrderPageResponse"];
         };
         /** PendingReview */
         PendingReview: {
@@ -4994,6 +5105,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description Mercado Pago no devolvió el pago; la reserva sigue activa. */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
     get_order_api_reservations__reservation_id__order_get: {
@@ -5320,6 +5440,104 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
+            };
+        };
+    };
+    get_payment_config_api_payments_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentConfigResponse"];
+                };
+            };
+        };
+    };
+    post_payment_api_reservations__reservation_id__order_payments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reservation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentResult"];
+                };
+            };
+            /** @description Mercado Pago no aceptó los datos del pago. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Falta la sesión o venció. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Solo para comensales. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description La reserva no existe o es de otro comensal. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description El pedido ya está pagado, tiene un pago en revisión o no se paga. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description El pago electrónico no está disponible. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
