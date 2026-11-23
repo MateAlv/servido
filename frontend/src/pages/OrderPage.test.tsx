@@ -9,12 +9,15 @@ import {
   discardCart,
   changePaymentMethod,
   fetchOrder,
+  fetchPaymentConfig,
+  payOrder,
   ReservationNotFoundError,
   saveCart,
   type MenuDish,
   type OrderPage as OrderPageData,
 } from '../api/orders'
 import { signOut, useAccount } from '../api/session'
+import { mountCardPayment } from '../lib/mercadopago'
 import { formatCents } from '../lib/orderSummary'
 import { renderWithProviders } from '../test/renderWithProviders'
 import { OrderPage } from './OrderPage'
@@ -28,8 +31,40 @@ vi.mock('../api/orders', async (importOriginal) => {
     saveCart: vi.fn(),
     discardCart: vi.fn(),
     changePaymentMethod: vi.fn(),
+    payOrder: vi.fn(),
+    fetchPaymentConfig: vi.fn(),
   }
 })
+
+// Mercado Pago's card form: a button that hands back a tokenized test card.
+vi.mock('../lib/mercadopago', () => ({
+  mountCardPayment: vi.fn(
+    async (
+      containerId: string,
+      options: { onReady: () => void; onSubmit: (card: unknown) => Promise<void> },
+    ) => {
+      const button = document.createElement('button')
+      button.type = 'button'
+      button.textContent = 'Pagar con la tarjeta de prueba'
+      button.addEventListener('click', () => {
+        options
+          .onSubmit({
+            token: 'card-token',
+            payment_method_id: 'visa',
+            issuer_id: '310',
+            payer: {
+              email: 'ana@example.com',
+              identification: { type: 'DNI', number: '12345678' },
+            },
+          })
+          .catch(() => {})
+      })
+      document.getElementById(containerId)?.append(button)
+      options.onReady()
+      return { unmount: () => button.remove() }
+    },
+  ),
+}))
 
 vi.mock('../api/session', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/session')>()
@@ -1760,5 +1795,203 @@ describe('spec 032 (US-60)', () => {
     await waitFor(() => expect(changePaymentMethod).toHaveBeenCalledWith('res-1', 'online'))
     expect(screen.getByText('Pendiente de pago')).toBeVisible()
     expect(screen.queryByText(/en efectivo en el local/)).not.toBeInTheDocument()
+  })
+})
+
+describe('Electronic payment (spec 032, US-56)', () => {
+  const RECEIPT = {
+    status: 'approved' as const,
+    message: 'Pago aprobado.',
+    operation_number: '1001',
+    amount: '18500.00',
+    card_brand: 'Visa',
+    card_last_four: '3704',
+    created_at: '2026-11-03T12:05:00-03:00',
+    approved_at: '2026-11-03T12:05:00-03:00',
+  }
+
+  function onlineOrder(overrides: Partial<NonNullable<OrderPageData['order']>> = {}) {
+    return { ...orderOf([[BIFE, 1]]), payment_method: 'online' as const, ...overrides }
+  }
+
+  function paidOrder() {
+    return onlineOrder({
+      payment_status: 'paid',
+      payment_method_editable: false,
+      payment: RECEIPT,
+    })
+  }
+
+  beforeEach(() => {
+    vi.mocked(fetchPaymentConfig).mockResolvedValue('TEST-public-key')
+  })
+
+  async function startPayment(order = onlineOrder()) {
+    const user = await openPage(pageData({ order }), false)
+    await user.click(screen.getByRole('button', { name: /^Pagar \$\s18\.500$/ }))
+    const dialog = await screen.findByRole('dialog', { name: 'Pagar el pedido' })
+    return { user, dialog }
+  }
+
+  it("US-56 S1 opens Mercado Pago's card form for a pending electronic order", async () => {
+    const { dialog } = await startPayment()
+
+    expect(
+      await within(dialog).findByRole('button', { name: 'Pagar con la tarjeta de prueba' }),
+    ).toBeVisible()
+    expect(vi.mocked(mountCardPayment)).toHaveBeenCalledWith(
+      expect.stringMatching(/^card-payment-/),
+      expect.objectContaining({ publicKey: 'TEST-public-key', amount: 18500 }),
+    )
+  })
+
+  it('US-56 S2 shows the total with the promotions and the deposit before paying', async () => {
+    const order = onlineOrder({ subtotal: '20000.00', discount: '1500.00', total: '18500.00' })
+    const { dialog } = await startPayment(order)
+
+    expect(within(dialog).getByText('Promociones')).toBeVisible()
+    expect(within(dialog).getByText('Total a pagar').closest('p')).toHaveTextContent(money(18500))
+    expect(within(dialog).getByText(/Incluye la seña de tu reserva/)).toBeVisible()
+    expect(within(dialog).getByText(/Modo de prueba · no se cobra dinero real/)).toBeVisible()
+  })
+
+  it('US-56 S3 tells the payment was approved and shows its receipt', async () => {
+    vi.mocked(payOrder).mockResolvedValue({
+      ok: true,
+      result: { payment: RECEIPT, page: pageData({ order: paidOrder() }, false) },
+    })
+    const { user, dialog } = await startPayment()
+
+    await user.click(
+      await within(dialog).findByRole('button', { name: 'Pagar con la tarjeta de prueba' }),
+    )
+
+    expect(await within(dialog).findByText('¡Listo! Pagaste tu pedido')).toBeVisible()
+    expect(payOrder).toHaveBeenCalledWith(
+      'res-1',
+      expect.objectContaining({ token: 'card-token' }),
+      expect.any(String),
+    )
+    expect(within(dialog).getByText('Comprobante de pago · Servido!')).toBeVisible()
+    expect(within(dialog).getByText('N° 1001')).toBeVisible()
+    expect(within(dialog).getByText('Visa terminada en 3704')).toBeVisible()
+    expect(within(dialog).getByText('Te mandamos una copia a ana@example.com')).toBeVisible()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Listo' }))
+
+    await waitFor(() => expect(dialog).not.toHaveAttribute('open'))
+    const payment = screen.getByRole('region', { name: 'Medio de pago' })
+    expect(within(payment).getByText('Pagado')).toBeVisible()
+    expect(within(payment).getByText('Visa terminada en 3704')).toBeVisible()
+    expect(within(payment).getByText(/Mercado Pago N° 1001/)).toBeVisible()
+  })
+
+  it('US-56 S4 tells a rejected payment and keeps the form to retry', async () => {
+    vi.mocked(payOrder).mockResolvedValue({
+      ok: true,
+      result: {
+        payment: {
+          ...RECEIPT,
+          status: 'rejected',
+          message: 'La tarjeta no tiene fondos suficientes.',
+          approved_at: null,
+        },
+        page: pageData({ order: onlineOrder() }),
+      },
+    })
+    const { user, dialog } = await startPayment()
+
+    await user.click(
+      await within(dialog).findByRole('button', { name: 'Pagar con la tarjeta de prueba' }),
+    )
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+      'La tarjeta no tiene fondos suficientes.',
+    )
+    expect(
+      within(dialog).getByRole('button', { name: 'Pagar con la tarjeta de prueba' }),
+    ).toBeVisible()
+    expect(screen.getByText('Pendiente de pago')).toBeInTheDocument()
+  })
+
+  it('US-56 S5 offers no new payment nor changes for a paid order', async () => {
+    const user = await openPage(pageData({ order: paidOrder() }, false), false)
+
+    expect(screen.getByText('Pagado')).toBeVisible()
+    expect(screen.getByText(/Ya pagaste el pedido: no se pueden cambiar los platos/)).toBeVisible()
+    expect(screen.getByText(/Mercado Pago N° 1001 · 03\/11\/2026 12:05/)).toBeVisible()
+    expect(screen.queryByRole('button', { name: /^Pagar/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Modificar platos' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Modificar medio de pago' }),
+    ).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Ver comprobante' }))
+
+    const receipt = await screen.findByRole('dialog', { name: 'Comprobante de pago' })
+    expect(within(receipt).getByText('Total pagado')).toBeVisible()
+    expect(within(receipt).getByText('N° 1001')).toBeVisible()
+  })
+
+  it('US-56 edge lists the test cards only with test credentials', async () => {
+    const { user, dialog } = await startPayment()
+
+    await user.click(within(dialog).getByText('Tarjetas de prueba'))
+
+    expect(within(dialog).getByText('4509 9535 6623 3704')).toBeVisible()
+    expect(within(dialog).getByText('APRO')).toBeVisible()
+    expect(within(dialog).getByText('CONT')).toBeVisible()
+    expect(
+      within(dialog).getByRole('button', { name: 'Copiar Visa crédito 4509 9535 6623 3704' }),
+    ).toBeVisible()
+  })
+
+  it('US-56 edge hides the test cards with production credentials', async () => {
+    vi.mocked(fetchPaymentConfig).mockResolvedValue('APP_USR-public-key')
+    const { dialog } = await startPayment()
+
+    expect(
+      await within(dialog).findByRole('button', { name: 'Pagar con la tarjeta de prueba' }),
+    ).toBeVisible()
+    expect(within(dialog).queryByText('Tarjetas de prueba')).not.toBeInTheDocument()
+    expect(within(dialog).queryByText(/Modo de prueba/)).not.toBeInTheDocument()
+  })
+
+  it('US-56 edge shows a payment in review and freezes the order', async () => {
+    const order = onlineOrder({
+      payment: {
+        ...RECEIPT,
+        status: 'in_process',
+        message: 'Tu pago está en revisión. Abrí el pedido más tarde para ver si se aprobó.',
+        approved_at: null,
+      },
+    })
+    await openPage(pageData({ order: { ...order, payment_method_editable: false } }, false), false)
+
+    expect(screen.getByText(/Tu pago está en revisión: los platos/)).toBeVisible()
+    expect(screen.getByText('En revisión')).toBeVisible()
+    expect(screen.queryByRole('button', { name: /^Pagar/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Modificar platos' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Modificar medio de pago' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('US-56 edge says when electronic payment is not available and offers cash', async () => {
+    vi.mocked(fetchPaymentConfig).mockResolvedValue(null)
+    const { user, dialog } = await startPayment()
+
+    expect(
+      await within(dialog).findByText('El pago electrónico no está disponible ahora'),
+    ).toBeVisible()
+    expect(mountCardPayment).not.toHaveBeenCalled()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Pagar en efectivo en el local' }))
+
+    const method = await screen.findByRole('dialog', { name: 'Modificar medio de pago' })
+    expect(within(method).getByRole('button', { name: 'Efectivo' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 })

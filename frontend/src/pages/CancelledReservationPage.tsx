@@ -7,6 +7,7 @@ import { retryUnlessSessionExpired, SessionExpiredError } from '../api/errors'
 import { signOut } from '../api/session'
 import { Button, Card } from '../components/ui'
 import { longDate, timeInBuenosAires } from '../lib/date'
+import { formatPrice } from '../lib/orderSummary'
 import { tableLabel } from '../lib/seating'
 import styles from './CancelledReservationPage.module.css'
 
@@ -62,10 +63,27 @@ export function CancelledReservationPage() {
               <dd>{timeInBuenosAires(reservation.cancelled_at)}</dd>
             </div>
           </dl>
-          {reservation.refund_status && (
-            <p className={styles.refund} role="status">
-              Reembolso pendiente
-            </p>
+          {reservation.refund_status === 'completed' ? (
+            <div className={styles.refunded} role="status">
+              <svg className={styles.refundArt} viewBox="0 0 120 72" aria-hidden="true">
+                <path pathLength={1} d="M104 46c0-18-16-30-44-30S16 28 16 40" />
+                <path pathLength={1} className={styles.refundHead} d="M8 32l8 9 9-8" />
+              </svg>
+              <span className={styles.coin} aria-hidden="true">
+                $
+              </span>
+              <strong className={styles.refundTitle}>Te devolvimos el pago</strong>
+              <span>
+                {reservation.refund_amount ? `${formatPrice(reservation.refund_amount)} ` : ''}
+                por Mercado Pago. Puede tardar unos días en verse en el resumen de tu tarjeta.
+              </span>
+            </div>
+          ) : (
+            reservation.refund_status && (
+              <p className={styles.refund} role="status">
+                Reembolso pendiente
+              </p>
+            )
           )}
         </Card>
       )}

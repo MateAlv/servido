@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 
@@ -12,6 +13,7 @@ import {
 } from '../components/brand'
 import {
   AddToOrderButton,
+  CardPaymentForm,
   DietaryBadges,
   DishDetails,
   LiveIndicator,
@@ -68,6 +70,7 @@ import {
   TimeWheel,
   useToast,
 } from '../components/ui'
+import { fetchPaymentConfig } from '../api/orders'
 import { RESTAURANTS_FIXTURE } from '../data/restaurants.fixture'
 import { cx } from '../lib/cx'
 import styles from './DesignSystemPage.module.css'
@@ -664,6 +667,12 @@ function OrderDemo() {
         />
       </Demo>
       <Demo
+        title="Pago con tarjeta"
+        note="El formulario de Mercado Pago que se abre con «Pagar» en el pedido (US-56). Necesita las credenciales de prueba; en el catálogo no cobra."
+      >
+        <CardPaymentDemo />
+      </Demo>
+      <Demo
         title="Tiempo de preparación"
         note="Anillo que se completa mientras la cocina prepara (US-19)."
       >
@@ -682,6 +691,29 @@ function OrderDemo() {
         />
       </Demo>
     </>
+  )
+}
+
+function CardPaymentDemo() {
+  const config = useQuery({ queryKey: ['payment-config'], queryFn: fetchPaymentConfig })
+  const [submitted, setSubmitted] = useState(false)
+  if (config.isPending) return <p>Preparando el formulario…</p>
+  if (!config.data)
+    return <p>Sin credenciales de prueba de Mercado Pago, el formulario no se muestra.</p>
+  return (
+    <div className={styles.stack}>
+      <CardPaymentForm
+        publicKey={config.data}
+        amount={18500}
+        onSubmit={async () => {
+          setSubmitted(true)
+          throw new Error('El catálogo no cobra.')
+        }}
+      />
+      {submitted && (
+        <p role="status">Mercado Pago devolvió el token. En el catálogo no se cobra.</p>
+      )}
+    </div>
   )
 }
 

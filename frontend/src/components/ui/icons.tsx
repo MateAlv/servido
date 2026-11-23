@@ -221,3 +221,31 @@ export function IconLogout(props: IconProps) {
     </Icon>
   )
 }
+
+export function IconCard(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="2.5" y="5" width="19" height="14" rx="2.5" />
+      <path d="M2.5 10h19M6.5 15h4" />
+    </Icon>
+  )
+}
+
+export function IconCash(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="2.5" y="6" width="19" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.6" />
+      <path d="M6 9.5v.01M18 14.5v.01" />
+    </Icon>
+  )
+}
+
+export function IconLock(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
+      <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+    </Icon>
+  )
+}

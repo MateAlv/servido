@@ -1,0 +1,133 @@
+.form {
+  position: relative;
+  display: grid;
+  gap: var(--space-3);
+  /* The card form fills the dialog on a 360 px phone. */
+  min-width: 0;
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.title {
+  margin: 0;
+  font: 800 var(--text-lg) var(--font-display);
+}
+
+.brands {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.brands span {
+  padding: 2px 6px;
+  border: 1.5px solid var(--color-line);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.loading {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.loadingText {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.failed {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-4);
+  border-radius: 20px;
+  background: var(--color-error-bg);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: center;
+  animation: rise var(--duration-slow) var(--ease-out) both;
+}
+
+.failedIcon {
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: var(--color-error);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: wobble 700ms var(--ease-out) 200ms both;
+}
+
+.failedTitle {
+  font: 800 var(--text-lg) / 1.2 var(--font-display);
+}
+
+/* Mercado Pago draws inside this box; while it loads it stays laid out but unseen, so its
+ * frames can measure themselves. */
+.brick[data-state='loading'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.brick[data-state='ready'] {
+  animation: rise var(--duration-slow) var(--ease-out) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes wobble {
+  0%,
+  100% {
+    transform: none;
+  }
+
+  30% {
+    transform: rotate(-10deg);
+  }
+
+  60% {
+    transform: rotate(7deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .failed,
+  .failedIcon,
+  .brick[data-state='ready'] {
+    animation: none;
+  }
+}

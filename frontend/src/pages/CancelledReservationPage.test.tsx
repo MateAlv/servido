@@ -62,4 +62,17 @@ describe('CancelledReservationPage (US-49)', () => {
     expect(await screen.findByText('Cancelada por el restaurante')).toBeInTheDocument()
     expect(screen.getByText('Reembolso pendiente')).toBeInTheDocument()
   })
+
+  it('US-56 edge says the payment was returned once the refund completed', async () => {
+    reservationsApi.fetchCancelledReservation.mockResolvedValue({
+      ...baseReservation,
+      refund_status: 'completed',
+      refund_amount: '8280.00',
+    })
+    renderDetail()
+
+    expect(await screen.findByText('Te devolvimos el pago')).toBeInTheDocument()
+    expect(screen.getByText(/por Mercado Pago/)).toHaveTextContent('8.280')
+    expect(screen.queryByText('Reembolso pendiente')).not.toBeInTheDocument()
+  })
 })

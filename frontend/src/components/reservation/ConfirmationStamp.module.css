@@ -20,6 +20,10 @@
   --stamp-color: var(--color-primary);
 }
 
+.warn {
+  --stamp-color: var(--color-warn);
+}
+
 .ring {
   position: absolute;
   inset: -6px;

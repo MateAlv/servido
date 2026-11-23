@@ -6,6 +6,7 @@ import { retryUnlessSessionExpired, SessionExpiredError } from '../api/errors'
 import {
   fetchOrder,
   changePaymentMethod,
+  paymentCard,
   type PaymentMethod,
   ReservationNotFoundError,
   SAVE_FAILED_MESSAGE,
@@ -33,9 +34,16 @@ import {
   StatusPill,
   Chip,
 } from '../components/ui'
-import { IconCloche, IconClock, IconEye } from '../components/ui/icons'
+import {
+  IconCard,
+  IconCash,
+  IconCloche,
+  IconClock,
+  IconEye,
+  IconLock,
+} from '../components/ui/icons'
 import { cx } from '../lib/cx'
-import { longDate, timeInBuenosAires } from '../lib/date'
+import { dateTimeInBuenosAires, longDate, timeInBuenosAires } from '../lib/date'
 import { formatCents, formatPrice, orderSummary, subtotalCents, toCents } from '../lib/orderSummary'
 import {
   lineOf,
@@ -47,6 +55,7 @@ import {
 import { hasUnconfirmedChanges, useOrderCart } from '../lib/useOrderCart'
 import fieldStyles from '../components/ui/TextField.module.css'
 import styles from './OrderPage.module.css'
+import { PaymentDialog } from './order/PaymentDialog'
 
 const MAX_UNITS = 20
 const ANNOUNCE_DELAY_MS = 600
@@ -173,6 +182,9 @@ function OrderEditor({
   const [paymentOpen, setPaymentOpen] = useState(false)
   const [paymentSelection, setPaymentSelection] = useState<PaymentMethod | null>(null)
   const [paymentError, setPaymentError] = useState('')
+  const [payOpen, setPayOpen] = useState(false)
+  // Mounted only while open, so each payment starts fresh and its text is not on the page.
+  const [payMounted, setPayMounted] = useState(false)
   const [billOpen, setBillOpen] = useState(false)
   const [billPrints, setBillPrints] = useState(0)
   // The dish shown up close, by id.
@@ -559,13 +571,18 @@ function OrderEditor({
         setBillOpen(true)
       }}
     >
-      Ver detalle de la cuenta
+      {page.order?.payment_status === 'paid' ? 'Ver comprobante' : 'Ver detalle de la cuenta'}
     </Button>
   )
   // Outside «Tu pedido», so the closed dialog doesn't repeat its text there. The key prints the
   // receipt again every time it opens.
+  const billPayment = page.order?.payment?.status === 'approved' ? page.order.payment : null
   const billModal = receipt && (
-    <Modal open={billOpen} onClose={() => setBillOpen(false)} title="Detalle de la cuenta">
+    <Modal
+      open={billOpen}
+      onClose={() => setBillOpen(false)}
+      title={billPayment ? 'Comprobante de pago' : 'Detalle de la cuenta'}
+    >
       <Receipt
         key={billPrints}
         restaurant={reservation.restaurant.nombre}
@@ -581,6 +598,15 @@ function OrderEditor({
             : page.order!.arrival_at,
         )}
         confirmed={receipt.confirmed}
+        payment={
+          billPayment
+            ? {
+                operationNumber: billPayment.operation_number,
+                card: paymentCard(billPayment),
+                paidAt: dateTimeInBuenosAires(billPayment.approved_at ?? billPayment.created_at),
+              }
+            : undefined
+        }
       />
     </Modal>
   )
@@ -677,16 +703,18 @@ function OrderEditor({
       )}
       <p className={styles.hint}>
         {cart.metadata.payment_method === null ? 'Seleccioná un medio para confirmar. ' : ''}
-        Elegir pago electrónico no inicia un cobro.
+        Elegir pago electrónico no inicia un cobro: pagás con tarjeta después de confirmar.
       </p>
     </Card>
   )
   const paymentRestriction =
     page.order?.payment_status === 'paid'
       ? 'El pedido ya está pagado. No se puede cambiar el medio de pago.'
-      : page.reservation.status === 'cancelled'
-        ? 'La reserva está cancelada. No se puede cambiar el medio de pago.'
-        : 'El medio de pago solo se puede cambiar antes de que finalice la reserva y mientras el pedido siga vigente e impago.'
+      : page.order?.payment?.status === 'in_process'
+        ? 'Tu pago está en revisión. No se puede cambiar el medio de pago.'
+        : page.reservation.status === 'cancelled'
+          ? 'La reserva está cancelada. No se puede cambiar el medio de pago.'
+          : 'El medio de pago solo se puede cambiar antes de que finalice la reserva y mientras el pedido siga vigente e impago.'
 
   async function savePayment() {
     if (!page.order?.payment_method_editable || paymentSelection === null || confirming) return
@@ -722,27 +750,127 @@ function OrderEditor({
     }
   }
 
+  const canPay =
+    !readOnly &&
+    page.order?.payment_method === 'online' &&
+    page.order.payment_status === 'pending' &&
+    page.order.payment_method_editable &&
+    page.order.payment?.status !== 'in_process' &&
+    toCents(page.order.total) > 0
+
+  const paymentReceipt = page.order?.payment
+  const paid = page.order?.payment_status === 'paid'
+  const inReview = paymentReceipt?.status === 'in_process'
   const confirmedPayment = page.order && (
     <section className={styles.paymentSummary} aria-labelledby="confirmed-payment-title">
-      <h3 id="confirmed-payment-title" className={styles.paymentTitle}>
-        Medio de pago
-      </h3>
-      <p>
-        {page.order.payment_method === 'cash'
-          ? 'Efectivo'
-          : page.order.payment_method === 'online'
-            ? 'Pago electrónico'
-            : 'Medio de pago no seleccionado'}
-      </p>
-      <p>{page.order.payment_status === 'paid' ? 'Pagado' : 'Pendiente de pago'}</p>
+      <div className={styles.paymentHead}>
+        <h3 id="confirmed-payment-title" className={styles.paymentTitle}>
+          Medio de pago
+        </h3>
+        <StatusPill tone={paid ? 'ok' : 'warn'}>
+          {paid ? 'Pagado' : inReview ? 'En revisión' : 'Pendiente de pago'}
+        </StatusPill>
+      </div>
+      {paid && paymentReceipt?.status === 'approved' ? (
+        <div className={styles.paidRow}>
+          <span className={styles.cardChip} aria-hidden="true">
+            {paymentReceipt.card_brand?.split(' ')[0]}
+          </span>
+          <span className={styles.paidText}>
+            <strong>{paymentCard(paymentReceipt)}</strong>
+            <span>
+              Mercado Pago N° {paymentReceipt.operation_number} ·{' '}
+              {dateTimeInBuenosAires(paymentReceipt.approved_at ?? paymentReceipt.created_at)}
+            </span>
+          </span>
+          <strong className={styles.paidAmount}>{formatPrice(paymentReceipt.amount)}</strong>
+        </div>
+      ) : (
+        <div className={styles.methodRow}>
+          <span className={styles.methodIcon} aria-hidden="true">
+            {page.order.payment_method === 'cash' ? <IconCash /> : <IconCard />}
+          </span>
+          <div className={styles.paidText}>
+            <p className={styles.methodName}>
+              {page.order.payment_method === 'cash'
+                ? 'Efectivo'
+                : page.order.payment_method === 'online'
+                  ? 'Pago electrónico'
+                  : 'Medio de pago no seleccionado'}
+            </p>
+            {page.order.payment_method === 'online' && (
+              <span>Tarjeta de crédito o débito, por Mercado Pago</span>
+            )}
+          </div>
+        </div>
+      )}
+      {inReview && (
+        <p className={styles.cashNote} role="status">
+          {paymentReceipt.message}
+        </p>
+      )}
       {page.order.payment_method === 'cash' && page.order.payment_status === 'pending' && (
         <p className={styles.cashNote}>
           Abonás {formatPrice(page.order.total)} en efectivo en el local.
         </p>
       )}
+      {canPay && (
+        <>
+          <Button
+            className={styles.payButton}
+            disabled={confirming || cart.hasPendingOperation}
+            onClick={() => {
+              setInfo('')
+              setPayMounted(true)
+              setPayOpen(true)
+            }}
+          >
+            <IconLock />
+            Pagar {formatPrice(page.order.total)}
+          </Button>
+          <p className={styles.payHint}>Incluye la seña de tu reserva</p>
+        </>
+      )}
       {!page.order.payment_method_editable && <p className={styles.hint}>{paymentRestriction}</p>}
-      <p className={styles.hint}>La selección no implica que el pedido esté pagado.</p>
+      {page.order.payment_status === 'pending' && !canPay && !inReview && (
+        <p className={styles.hint}>La selección no implica que el pedido esté pagado.</p>
+      )}
     </section>
+  )
+  const payDialog = payMounted && page.order && receipt && (
+    <PaymentDialog
+      open={payOpen}
+      onClose={() => setPayOpen(false)}
+      onClosed={() => setPayMounted(false)}
+      reservationId={reservationId}
+      order={page.order}
+      bill={{
+        restaurant: reservation.restaurant.nombre,
+        reservation: reservationLine,
+        lines: receipt.lines,
+        subtotalCents: receipt.subtotal,
+        promotions: receipt.promotions,
+        totalCents: receipt.total,
+        prepTimeMinutes: receipt.estimate,
+        arrival: timeInBuenosAires(page.order.arrival_at),
+        confirmed: true,
+      }}
+      onPage={(next) => {
+        setPage(next)
+        refreshLists()
+      }}
+      onSessionExpired={() => signOut(queryClient)}
+      onConflict={(message) => {
+        setPayOpen(false)
+        setInfo(message)
+      }}
+      onPayInCash={() => {
+        setPayOpen(false)
+        setPaymentSelection('cash')
+        setPaymentError('')
+        setPaymentOpen(true)
+      }}
+    />
   )
   const paymentModal = (
     <Modal
@@ -847,6 +975,10 @@ function OrderEditor({
             <p ref={closedRef} tabIndex={-1} className={styles.notice} role="status">
               {reservation.order_open ? (
                 <>Pedido confirmado. Podés cambiar los platos hasta las {deadline}.</>
+              ) : page.order.payment_status === 'paid' ? (
+                'Ya pagaste el pedido: no se pueden cambiar los platos ni la hora de llegada.'
+              ) : page.order.payment?.status === 'in_process' ? (
+                'Tu pago está en revisión: los platos y la hora de llegada quedan fijos hasta que Mercado Pago responda.'
               ) : page.menu.length === 0 ? (
                 'Tu pedido confirmado conserva sus datos.'
               ) : (
@@ -896,6 +1028,7 @@ function OrderEditor({
         <div className={styles.actions}>
           {reservation.order_open && !readOnly && (
             <Button
+              variant={canPay ? 'secondary' : 'primary'}
               onClick={() => {
                 setConfirmedBanner(false)
                 setStage('build')
@@ -925,6 +1058,7 @@ function OrderEditor({
         </div>
         {billModal}
         {paymentModal}
+        {payDialog}
       </main>
     )
   }

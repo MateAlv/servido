@@ -20,6 +20,8 @@ type ReceiptProps = {
   prepTimeMinutes: number | null
   arrival: string
   confirmed: boolean
+  /** An approved payment turns the bill into its receipt (spec 032, US-56). */
+  payment?: { operationNumber: string; card: string; paidAt: string }
 }
 
 /** The bill of an order (US-21), printed like a restaurant receipt. */
@@ -33,13 +35,16 @@ export function Receipt({
   prepTimeMinutes,
   arrival,
   confirmed,
+  payment,
 }: ReceiptProps) {
   return (
     <div className={styles.receipt} data-entrance="">
       <header className={styles.header}>
         <p className={styles.restaurant}>{restaurant}</p>
         <p className={styles.meta}>{reservation}</p>
-        <p className={styles.kind}>Pedido anticipado · Servido!</p>
+        <p className={styles.kind}>
+          {payment ? 'Comprobante de pago · Servido!' : 'Pedido anticipado · Servido!'}
+        </p>
       </header>
 
       <table className={styles.items}>
@@ -79,14 +84,33 @@ export function Receipt({
           ))}
           <tr>
             <th scope="row" colSpan={3}>
-              Total
+              {payment ? 'Total pagado' : 'Total'}
             </th>
             <td>{formatCents(totalCents)}</td>
           </tr>
         </tfoot>
       </table>
 
-      <p className={styles.taxes}>Impuestos incluidos</p>
+      <p className={styles.taxes}>
+        {payment ? 'Incluye la seña · Impuestos incluidos' : 'Impuestos incluidos'}
+      </p>
+
+      {payment && (
+        <dl className={styles.payment}>
+          <div>
+            <dt>Operación Mercado Pago</dt>
+            <dd>N° {payment.operationNumber}</dd>
+          </div>
+          <div>
+            <dt>Tarjeta</dt>
+            <dd>{payment.card}</dd>
+          </div>
+          <div>
+            <dt>Fecha</dt>
+            <dd>{payment.paidAt}</dd>
+          </div>
+        </dl>
+      )}
 
       <footer className={styles.footer}>
         {prepTimeMinutes !== null && (
@@ -95,7 +119,11 @@ export function Receipt({
           </p>
         )}
         <p className={styles.status}>
-          {confirmed ? '● Pedido confirmado' : '▲ Sin confirmar: el restaurante todavía no lo ve'}
+          {payment
+            ? '● Pagado'
+            : confirmed
+              ? '● Pedido confirmado'
+              : '▲ Sin confirmar: el restaurante todavía no lo ve'}
         </p>
         <p className={styles.thanks}>¡Gracias! Te esperamos.</p>
       </footer>
