@@ -5105,7 +5105,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Mercado Pago no devolvió el pago; la reserva sigue activa. */
+            /** @description No se pudo devolver el pago; la reserva sigue activa. */
             502: {
                 headers: {
                     [name: string]: unknown;
@@ -5487,7 +5487,7 @@ export interface operations {
                     "application/json": components["schemas"]["PaymentResult"];
                 };
             };
-            /** @description Mercado Pago no aceptó los datos del pago. */
+            /** @description No se aceptaron los datos del pago. */
             400: {
                 headers: {
                     [name: string]: unknown;

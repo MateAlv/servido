@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 BUENOS_AIRES = ZoneInfo("America/Argentina/Buenos_Aires")
 # Spec 032 (E7): a closure that cancels a paid order returns the payment first.
 REFUND_FAILED = (
-    "No pudimos guardar el bloqueo: Mercado Pago no devolvió el pago de una reserva. "
-    "Volvé a intentarlo."
+    "No pudimos guardar el bloqueo: no se pudo devolver el pago de una reserva. Volvé a intentarlo."
 )
 
 

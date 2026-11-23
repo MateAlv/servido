@@ -2889,7 +2889,7 @@
             }
           },
           "502": {
-            "description": "Mercado Pago no devolvi\u00f3 el pago; la reserva sigue activa.",
+            "description": "No se pudo devolver el pago; la reserva sigue activa.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3421,7 +3421,7 @@
             }
           },
           "400": {
-            "description": "Mercado Pago no acept\u00f3 los datos del pago.",
+            "description": "No se aceptaron los datos del pago.",
             "content": {
               "application/json": {
                 "schema": {

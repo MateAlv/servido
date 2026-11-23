@@ -711,7 +711,9 @@ function CardPaymentDemo() {
         }}
       />
       {submitted && (
-        <p role="status">Mercado Pago devolvió el token. En el catálogo no se cobra.</p>
+        <p role="status">
+          El formulario devolvió la tarjeta tokenizada. En el catálogo no se cobra.
+        </p>
       )}
     </div>
   )

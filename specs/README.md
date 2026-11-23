@@ -158,6 +158,7 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 15/11 | 027-filtros-busqueda | F4 cambia a pedido del equipo: el día solo filtra (cualquier horario en el que ese día se pueda empezar una reserva) y la hora o el rango lo acotan. Con el día solo, la reserva empieza con el día y las personas, sin hora. Falta que la PO lo valide |
 | 15/11 | 027-filtros-busqueda | F4, F7 y F8 cambian a pedido del equipo: la hora y los extremos del rango se eligen cada 30 minutos con una rueda o un reloj, «hasta» sigue a «desde» + 1 h 30 mientras no se elige, y el navegador recuerda los últimos filtros para cuando se vuelve sin filtros en la dirección (un enlace con filtros manda). Falta que la PO lo valide |
 | 23/11 | 032-pagar-pedido | US-56: E1 cambia a pedido del equipo, de checkout simulado a Mercado Pago en su entorno de prueba (formulario de tarjeta embebido, crédito o débito en un pago, sin billetera). Se suman E6 (un pedido pagado no cambia platos, llegada ni medio), E7 (toda cancelación de un pedido pagado devuelve el total por Mercado Pago y, si falla, la reserva no se cancela; cumple el FR-011 de la 013) y E8 (un pago en revisión se vuelve a consultar al abrir el pedido, sin webhooks). Falta que la PO lo valide |
+| 23/11 | 032-pagar-pedido | US-56: la pantalla no nombra a Mercado Pago (en Argentina se entiende como un medio de pago aparte); habla de pago con tarjeta, procesando, rechazado, en revisión y número de operación. Falta que la PO lo valide |
 
 ## Notas de formato
 

@@ -389,7 +389,7 @@ def get_payment_config() -> PaymentConfigResponse:
     status_code=status.HTTP_201_CREATED,
     response_model=PaymentResult,
     responses={
-        400: {"description": "Mercado Pago no aceptó los datos del pago."},
+        400: {"description": "No se aceptaron los datos del pago."},
         **SESSION_AND_ROLE,
         **NOT_FOUND,
         409: {"description": "El pedido ya está pagado, tiene un pago en revisión o no se paga."},
@@ -426,7 +426,7 @@ def post_payment(
         session.rollback()
         raise HTTPException(
             status_code=400,
-            detail="Mercado Pago no aceptó los datos del pago. Revisalos y probá de nuevo.",
+            detail="No se aceptaron los datos del pago. Revisalos y probá de nuevo.",
         ) from error
     except mercadopago.MercadoPagoError as error:
         session.rollback()

@@ -72,7 +72,7 @@ describe('CancelledReservationPage (US-49)', () => {
     renderDetail()
 
     expect(await screen.findByText('Te devolvimos el pago')).toBeInTheDocument()
-    expect(screen.getByText(/por Mercado Pago/)).toHaveTextContent('8.280')
+    expect(screen.getByText(/a tu tarjeta/)).toHaveTextContent('8.280')
     expect(screen.queryByText('Reembolso pendiente')).not.toBeInTheDocument()
   })
 })

@@ -76,7 +76,7 @@ export function CardPaymentForm({ publicKey, amount, onSubmit }: CardPaymentForm
       {state === 'loading' && (
         <div className={styles.loading}>
           <p className={styles.loadingText} role="status">
-            <Spinner /> Cargando el formulario de Mercado Pago…
+            <Spinner /> Cargando el formulario de pago…
           </p>
           <Skeleton height={48} radius={14} />
           <span className={styles.pair}>
@@ -93,9 +93,7 @@ export function CardPaymentForm({ publicKey, amount, onSubmit }: CardPaymentForm
           <svg className={styles.failedIcon} viewBox="0 0 24 24" aria-hidden="true">
             <path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M12 19.5v.5M3 3l18 18" />
           </svg>
-          <strong className={styles.failedTitle}>
-            No pudimos cargar el formulario de Mercado Pago
-          </strong>
+          <strong className={styles.failedTitle}>No pudimos cargar el formulario de pago</strong>
           <span>Revisá tu conexión y volvé a intentar. No se cobró nada.</span>
           <Button onClick={retry}>Reintentar</Button>
         </div>

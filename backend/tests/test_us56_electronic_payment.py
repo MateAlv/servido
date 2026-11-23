@@ -388,7 +388,7 @@ def test_us56_edge_closure_returns_the_payment_or_is_not_saved(client, session, 
     failed = client.post("/api/restaurante/bloqueos", json=body, headers=headers)
 
     assert failed.status_code == 409
-    assert "devolvió el pago" in failed.json()["detail"]
+    assert "devolver el pago" in failed.json()["detail"]
     session.expire_all()
     assert session.get(Reservation, s.reservation.id).status == "confirmed"
 

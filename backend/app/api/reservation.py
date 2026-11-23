@@ -389,7 +389,7 @@ def get_cancelled_reservation(
         403: {"description": "Solo para comensales."},
         404: {"description": "La reserva no existe o es de otro comensal."},
         409: {"description": "La reserva ya está cancelada o no se puede cancelar."},
-        502: {"description": "Mercado Pago no devolvió el pago; la reserva sigue activa."},
+        502: {"description": "No se pudo devolver el pago; la reserva sigue activa."},
     },
 )
 def cancel_diner_reservation(

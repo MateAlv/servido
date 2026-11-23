@@ -779,7 +779,7 @@ function OrderEditor({
           <span className={styles.paidText}>
             <strong>{paymentCard(paymentReceipt)}</strong>
             <span>
-              Mercado Pago N° {paymentReceipt.operation_number} ·{' '}
+              Operación N° {paymentReceipt.operation_number} ·{' '}
               {dateTimeInBuenosAires(paymentReceipt.approved_at ?? paymentReceipt.created_at)}
             </span>
           </span>
@@ -798,9 +798,7 @@ function OrderEditor({
                   ? 'Pago electrónico'
                   : 'Medio de pago no seleccionado'}
             </p>
-            {page.order.payment_method === 'online' && (
-              <span>Tarjeta de crédito o débito, por Mercado Pago</span>
-            )}
+            {page.order.payment_method === 'online' && <span>Tarjeta de crédito o débito</span>}
           </div>
         </div>
       )}
@@ -978,7 +976,7 @@ function OrderEditor({
               ) : page.order.payment_status === 'paid' ? (
                 'Ya pagaste el pedido: no se pueden cambiar los platos ni la hora de llegada.'
               ) : page.order.payment?.status === 'in_process' ? (
-                'Tu pago está en revisión: los platos y la hora de llegada quedan fijos hasta que Mercado Pago responda.'
+                'Tu pago está en revisión: los platos y la hora de llegada quedan fijos hasta que se confirme el pago.'
               ) : page.menu.length === 0 ? (
                 'Tu pedido confirmado conserva sus datos.'
               ) : (

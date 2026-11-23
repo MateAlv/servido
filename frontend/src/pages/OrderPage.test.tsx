@@ -1883,7 +1883,7 @@ describe('Electronic payment (spec 032, US-56)', () => {
     const payment = screen.getByRole('region', { name: 'Medio de pago' })
     expect(within(payment).getByText('Pagado')).toBeVisible()
     expect(within(payment).getByText('Visa terminada en 3704')).toBeVisible()
-    expect(within(payment).getByText(/Mercado Pago N° 1001/)).toBeVisible()
+    expect(within(payment).getByText(/Operación N° 1001/)).toBeVisible()
   })
 
   it('US-56 S4 tells a rejected payment and keeps the form to retry', async () => {
@@ -1919,7 +1919,7 @@ describe('Electronic payment (spec 032, US-56)', () => {
 
     expect(screen.getByText('Pagado')).toBeVisible()
     expect(screen.getByText(/Ya pagaste el pedido: no se pueden cambiar los platos/)).toBeVisible()
-    expect(screen.getByText(/Mercado Pago N° 1001 · 03\/11\/2026 12:05/)).toBeVisible()
+    expect(screen.getByText(/Operación N° 1001 · 03\/11\/2026 12:05/)).toBeVisible()
     expect(screen.queryByRole('button', { name: /^Pagar/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Modificar platos' })).not.toBeInTheDocument()
     expect(

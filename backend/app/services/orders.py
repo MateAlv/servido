@@ -41,7 +41,7 @@ PAID_ORDER_FROZEN = (
 )
 PAYMENT_IN_REVIEW_FROZEN = (
     "Tu pago está en revisión: los platos, la hora de llegada y el medio de pago quedan fijos "
-    "hasta que Mercado Pago responda."
+    "hasta que se confirme el pago."
 )
 
 

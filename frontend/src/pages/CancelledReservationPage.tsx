@@ -74,8 +74,8 @@ export function CancelledReservationPage() {
               </span>
               <strong className={styles.refundTitle}>Te devolvimos el pago</strong>
               <span>
-                {reservation.refund_amount ? `${formatPrice(reservation.refund_amount)} ` : ''}
-                por Mercado Pago. Puede tardar unos días en verse en el resumen de tu tarjeta.
+                {reservation.refund_amount ? `${formatPrice(reservation.refund_amount)} ` : ''}a tu
+                tarjeta. Puede tardar unos días en verse en el resumen.
               </span>
             </div>
           ) : (

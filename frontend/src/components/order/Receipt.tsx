@@ -98,7 +98,7 @@ export function Receipt({
       {payment && (
         <dl className={styles.payment}>
           <div>
-            <dt>Operación Mercado Pago</dt>
+            <dt>Operación</dt>
             <dd>N° {payment.operationNumber}</dd>
           </div>
           <div>

@@ -99,7 +99,7 @@ def payment_receipt_mail(
         f"Pagaste tu pedido en {restaurant_name} para la reserva del "
         f"{reservation_start:%d/%m/%Y} a las {reservation_start:%H:%M}."
     )
-    footer = f"Operación de Mercado Pago N° {operation_number} · {card} · {paid_at:%d/%m/%Y %H:%M}."
+    footer = f"Operación N° {operation_number} · {card} · {paid_at:%d/%m/%Y %H:%M}."
     text = "\n".join([header, "", *lines, "", footer])
     items_html = "".join(f"<li>{escape(line)}</li>" for line in lines)
     return Mail(

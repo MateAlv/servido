@@ -185,7 +185,7 @@ export function PaymentDialog({
           {paying && (
             <div className={styles.processing} role="status">
               <strong className={styles.dots}>
-                Confirmando con Mercado Pago<span>.</span>
+                Confirmando el pago<span>.</span>
                 <span>.</span>
                 <span>.</span>
               </strong>
@@ -205,7 +205,7 @@ export function PaymentDialog({
               <div className={styles.rejectedText}>
                 <strong>
                   {failure.kind === 'rejected'
-                    ? 'Mercado Pago rechazó el pago'
+                    ? 'No se aprobó el pago'
                     : 'No pudimos procesar el pago'}
                 </strong>
                 <span>{failure.message}</span>
@@ -266,7 +266,7 @@ export function PaymentDialog({
               <path d="M9 12l2 2 4-4" />
             </svg>
             <span>
-              Pagás en Mercado Pago: Servido! nunca ve los datos de tu tarjeta.{' '}
+              Pago seguro: Servido! nunca ve ni guarda los datos de tu tarjeta.{' '}
               {testMode && (
                 <span className={styles.testMode}>Modo de prueba · no se cobra dinero real</span>
               )}
@@ -299,7 +299,7 @@ export function PaymentDialog({
         <div className={styles.result}>
           <ConfirmationStamp label="En revisión" tone="warn" icon="clock" />
           <h3 ref={resultTitle} tabIndex={-1} className={styles.resultTitle}>
-            Mercado Pago está revisando tu pago
+            Tu pago está en revisión
           </h3>
           <p className={styles.reviewText}>
             Tu pedido sigue confirmado. No pagues de nuevo: si se rechaza, vas a poder pagar otra
@@ -307,7 +307,7 @@ export function PaymentDialog({
           </p>
           <ol className={styles.steps}>
             <li className={styles.stepDone}>Enviaste el pago de {formatPrice(order.total)}</li>
-            <li className={styles.stepNow}>Mercado Pago lo revisa</li>
+            <li className={styles.stepNow}>Se está revisando</li>
             <li>Al abrir tu pedido, ves si se aprobó</li>
           </ol>
         </div>
