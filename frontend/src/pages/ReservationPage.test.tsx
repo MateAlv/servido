@@ -541,6 +541,28 @@ describe('ReservationPage (US-13)', () => {
     expect(screen.getByText(longDate(DATE))).toBeInTheDocument()
   })
 
+  it('US-54 S2 shows the complete confirmation receipt', async () => {
+    confirmMock.mockResolvedValue({
+      ok: true,
+      reservation: reservation({
+        restaurant: {
+          id: RESTAURANT_ID,
+          nombre: 'La Esquina de Palermo',
+          address: 'Honduras 4800, Palermo',
+        },
+      }),
+    })
+    const user = await openReview()
+
+    await user.click(screen.getByRole('button', { name: 'Confirmar reserva' }))
+
+    expect(await screen.findByText('Reserva confirmada')).toBeInTheDocument()
+    expect(screen.getByText('Honduras 4800, Palermo')).toBeInTheDocument()
+    expect(screen.getByText('Código de reserva')).toBeInTheDocument()
+    expect(screen.getByText('res-1')).toBeInTheDocument()
+    expect(screen.getByText('Mesa para 2 · Adentro')).toBeInTheDocument()
+  })
+
   it('US-17 edge offers to build the order after confirming the reservation', async () => {
     confirmMock.mockResolvedValue({
       ok: true,

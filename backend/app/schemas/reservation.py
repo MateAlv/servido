@@ -59,6 +59,7 @@ class ReservationRequest(BaseModel):
 class ReservationRestaurant(BaseModel):
     id: UUID
     nombre: str
+    address: str | None = None
 
 
 class ReservationResponse(BaseModel):

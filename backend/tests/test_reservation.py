@@ -19,7 +19,7 @@ from app.models.opening_shift import OpeningShift
 from app.models.reservation import Reservation
 from app.models.restaurant import Restaurant
 from app.models.table_inventory import TableInventoryGroup
-from app.services import availability
+from app.services import availability, mail
 from tests.reservations import (
     BUENOS_AIRES,
     NOW,
@@ -343,6 +343,7 @@ def test_us13_s5_confirmation_creates_a_confirmed_reservation(
     assert body["restaurant"] == {
         "id": str(restaurant.id_restaurante),
         "nombre": "La Esquina de Palermo",
+        "address": None,
     }
     assert (body["date"], body["start_time"], body["end_time"]) == (
         TOMORROW.isoformat(),
@@ -357,6 +358,135 @@ def test_us13_s5_confirmation_creates_a_confirmed_reservation(
     assert (
         offered(slots(client, headers, restaurant.id_restaurante, party_size=3))["20:00"] is False
     )
+
+
+def test_us54_s1_confirmation_sends_email_details(
+    client: TestClient, session: Session, mail_outbox: list[mail.Mail]
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(4, 1, "terrace")])
+    restaurant.direccion = "Honduras 4800, Palermo"
+    session.flush()
+    headers = diner_headers(client)
+    mail_outbox.clear()
+
+    response = confirm(
+        client, headers, restaurant.id_restaurante, party_size=3, table=(4, "terrace")
+    )
+
+    assert response.status_code == 201
+    reservation_id = response.json()["id"]
+    assert len(mail_outbox) == 1
+    confirmation = mail_outbox[0]
+    assert confirmation.to == "martin@example.com"
+    for detail in (
+        "La Esquina de Palermo",
+        "Honduras 4800, Palermo",
+        TOMORROW.strftime("%d/%m/%Y"),
+        "20:00",
+        "3",
+        "Mesa para 4 · Terraza",
+        reservation_id,
+    ):
+        assert detail in confirmation.text
+
+
+def test_us54_s3_confirmed_reservation_is_active(
+    client: TestClient, session: Session, mail_outbox: list[mail.Mail]
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    mail_outbox.clear()
+
+    confirmed = confirm(client, headers, restaurant.id_restaurante)
+    active = client.get("/api/reservations/active", headers=headers)
+
+    assert confirmed.status_code == 201
+    assert active.status_code == 200
+    item = active.json()["reservations"][0]
+    assert item["id"] == confirmed.json()["id"]
+    assert item["status"] == "confirmed"
+    assert item["restaurant"]["nombre"] == "La Esquina de Palermo"
+    assert item["party_size"] == 2
+    assert len(mail_outbox) == 1
+
+
+def test_us54_s4_rejected_confirmation_sends_no_email(
+    client: TestClient, session: Session, mail_outbox: list[mail.Mail]
+) -> None:
+    restaurant = add_bookable_restaurant(session, groups=[(2, 1, "indoor")])
+    headers = diner_headers(client)
+    assert confirm(client, headers, restaurant.id_restaurante).status_code == 201
+    mail_outbox.clear()
+
+    response = confirm(client, headers, restaurant.id_restaurante, start="20:30")
+
+    assert response.status_code == 409
+    assert mail_outbox == []
+    assert len(day_reservations(client, headers).json()["reservations"]) == 1
+
+
+def test_us54_edge_duplicate_confirmation_is_idempotent(
+    client: TestClient, session: Session, mail_outbox: list[mail.Mail]
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    mail_outbox.clear()
+    request_id = uuid4()
+
+    first = confirm(client, headers, restaurant.id_restaurante, request_id=request_id)
+    second = confirm(client, headers, restaurant.id_restaurante, request_id=request_id)
+
+    assert first.status_code == 201
+    assert second.status_code == 200
+    assert first.json()["id"] == second.json()["id"]
+    assert len(mail_outbox) == 1
+    assert len(day_reservations(client, headers).json()["reservations"]) == 1
+
+
+def test_us54_edge_mail_failure_keeps_reservation_confirmed(
+    client: TestClient,
+    session: Session,
+    mail_outbox: list[mail.Mail],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    mail_outbox.clear()
+
+    def fail(_message: mail.Mail) -> None:
+        raise mail.MailError("SMTP unavailable")
+
+    monkeypatch.setattr(mail, "send_mail", fail)
+    response = confirm(client, headers, restaurant.id_restaurante)
+
+    assert response.status_code == 201
+    assert response.json()["status"] == "confirmed"
+    assert (
+        client.get("/api/reservations/active", headers=headers).json()["reservations"][0]["status"]
+        == "confirmed"
+    )
+
+
+def test_us54_edge_email_uses_buenos_aires_time(
+    client: TestClient,
+    session: Session,
+    mail_outbox: list[mail.Mail],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    restaurant = add_bookable_restaurant(session)
+    headers = diner_headers(client)
+    mail_outbox.clear()
+    monkeypatch.setattr(
+        availability,
+        "current_time",
+        lambda: datetime(2026, 11, 2, 9, 0, tzinfo=BUENOS_AIRES),
+    )
+
+    response = confirm(client, headers, restaurant.id_restaurante, start="20:00")
+
+    assert response.status_code == 201
+    assert "03/11/2026" in mail_outbox[0].text
+    assert "20:00" in mail_outbox[0].text
 
 
 def test_us13_s6_lists_the_diner_reservations_of_the_day(

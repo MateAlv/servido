@@ -1,6 +1,7 @@
 import logging
 import smtplib
 from dataclasses import dataclass
+from datetime import datetime
 from email.message import EmailMessage
 from email.utils import formataddr
 
@@ -37,6 +38,40 @@ def restaurant_cancellation_mail(
     return Mail(
         to=to,
         subject=f"Se canceló tu reserva en {restaurant_name}",
+        text=text,
+        html=f"<p>{text}</p>",
+    )
+
+
+def reservation_confirmation_mail(
+    to: str,
+    restaurant_name: str,
+    restaurant_address: str | None,
+    starts_at: datetime,
+    ends_at: datetime,
+    party_size: int,
+    table_capacity: int,
+    seating_area: str,
+    reservation_id: str,
+) -> Mail:
+    address = restaurant_address or "Dirección no informada"
+    seating_area_label = {
+        "indoor": "Adentro",
+        "outdoor": "Afuera",
+        "terrace": "Terraza",
+    }.get(seating_area, seating_area)
+    text = (
+        f"Tu reserva en {restaurant_name} está confirmada. "
+        f"Dirección: {address}. "
+        f"Fecha: {starts_at:%d/%m/%Y}. "
+        f"Horario: {starts_at:%H:%M} a {ends_at:%H:%M}. "
+        f"Personas: {party_size}. "
+        f"Mesa para {table_capacity} · {seating_area_label}. "
+        f"Código de reserva: {reservation_id}."
+    )
+    return Mail(
+        to=to,
+        subject=f"Confirmación de tu reserva en {restaurant_name}",
         text=text,
         html=f"<p>{text}</p>",
     )
