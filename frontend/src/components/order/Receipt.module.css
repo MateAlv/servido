@@ -105,6 +105,31 @@
   text-transform: uppercase;
 }
 
+.payment {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 2px dashed var(--color-ink);
+  font-size: var(--text-sm);
+}
+
+.payment div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
+}
+
+.payment dt {
+  font-weight: 700;
+}
+
+.payment dd {
+  margin: 0;
+  font-weight: 800;
+}
+
 .footer {
   display: grid;
   gap: var(--space-2);

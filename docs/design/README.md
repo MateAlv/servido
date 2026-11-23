@@ -117,7 +117,8 @@ La recuperación de la cuenta no agrega componentes: `/recuperar` (comensal) y `
 | `PrepTimer` | Anillo de tiempo de preparación que se completa y termina en "¡Listo!" | 19, 20, 40 |
 | `DietaryBadges` | Restricciones que declara el restaurante (vegano, vegetariano, sin TACC), cada una con ícono y color propios. `inline` la arma con `span` para usarla dentro de un botón | 15, 17 |
 | `DishDetails` | Un plato de cerca para un Modal: foto que se asienta al abrirse (o la campana si no hay), categoría, precio, tiempo de preparación, descripción y restricciones | 17, 19 |
-| `Receipt` | La cuenta de un pedido como un ticket de papel crema con borde dentado, en los dos temas: platos, cantidades, precios, total con impuestos incluidos, tiempo estimado y estado. Sale «impresa» al abrirse; con movimiento reducido aparece directo | 21 |
+| `Receipt` | La cuenta de un pedido como un ticket de papel crema con borde dentado, en los dos temas: platos, cantidades, precios, total con impuestos incluidos, tiempo estimado y estado. Sale «impresa» al abrirse; con movimiento reducido aparece directo Con `payment` (número de operación, tarjeta y fecha) es el comprobante de un pago aprobado: «Total pagado», «Incluye la seña» y «● Pagado» | 21, 56 |
+| `CardPaymentForm` | El formulario de tarjeta de Mercado Pago (Card Payment Brick) embebido, con el título y las marcas aceptadas de Servido!: los campos viven en los iframes de Mercado Pago, que devuelven un token. Toma los colores, bordes y tema claro u oscuro de los tokens. Mientras carga muestra un esqueleto que titila; si no carga, un aviso con «Reintentar». Solo se ve con las credenciales de prueba configuradas | 56 |
 | `Steam` | Vapor que sube: algo se está cocinando | 19, 20 |
 | `LiveIndicator` | Píldora "En vivo" que late | 5, 20 |
 
@@ -127,7 +128,7 @@ La recuperación de la cuenta no agrega componentes: `/recuperar` (comensal) y `
 | --- | --- | --- |
 | `Ticket`, `TicketDivider` | Resumen de una reserva con forma de ticket; se "imprime" al aparecer | 13, 23, 54 |
 | `Timeline` | Recorrido de la reserva: reservaste → la cocina empieza → llegás. El paso en curso late | 19, 43 |
-| `ConfirmationStamp` | Sello de confirmación con destellos | 13, 54, 56 |
+| `ConfirmationStamp` | Sello que golpea la página con destellos: reserva confirmada o pago aprobado («Pagado»). `tone="warn"` con `icon="clock"` es un pago en revisión, sin destellos | 13, 54, 56 |
 
 La revisión y la confirmación de la reserva (US-13, `pages/reservation/`) todavía no usan `Ticket` ni `ConfirmationStamp`: muestran los datos en una lista de dos columnas (`.summary`) que es estilo propio de la página `/reservar`, no un componente del catálogo. Si otra pantalla necesita ese resumen, se convierte en componente.
 

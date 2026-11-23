@@ -144,3 +144,50 @@ export async function changePaymentMethod(
     return { ok: false, ...failure(response.status, error, 'No pudimos guardar el medio de pago.') }
   return { ok: true, page: data }
 }
+
+export type OrderPayment = components['schemas']['PaymentReceiptResponse']
+export type PaymentResult = components['schemas']['PaymentResult']
+/** What Mercado Pago's card form gives once it tokenized the card (spec 032, US-56). */
+export type CardFormData = Omit<components['schemas']['PaymentRequest'], 'request_id'>
+export type PaymentFailure =
+  | { kind: 'session' }
+  /** The order changed: already paid, a payment in review, or the reservation ended. */
+  | { kind: 'conflict'; message: string }
+  | { kind: 'failed'; message: string }
+
+const PAYMENT_FAILED = 'No pudimos procesar el pago. Probá de nuevo.'
+
+/** «Visa terminada en 3704». */
+export function paymentCard(payment: OrderPayment): string {
+  return payment.card_last_four
+    ? `${payment.card_brand} terminada en ${payment.card_last_four}`
+    : (payment.card_brand ?? 'Tarjeta')
+}
+
+/** `GET /api/payments/config`: Mercado Pago's public key, or null when payment is off. */
+export async function fetchPaymentConfig(): Promise<string | null> {
+  const { data, error } = await api.GET('/api/payments/config')
+  if (error || !data) throw new Error('No pudimos cargar el pago electrónico.')
+  return data.public_key ?? null
+}
+
+/** `POST /api/reservations/{id}/order/payments`: charges the order through Mercado Pago. */
+export async function payOrder(
+  reservationId: string,
+  card: CardFormData,
+  requestId: string,
+): Promise<{ ok: true; result: PaymentResult } | ({ ok: false } & PaymentFailure)> {
+  const { data, error, response } = await api.POST(
+    '/api/reservations/{reservation_id}/order/payments',
+    {
+      params: { path: { reservation_id: reservationId } },
+      body: { ...card, request_id: requestId },
+      headers: sessionHeaders(),
+    },
+  )
+  if (data) return { ok: true, result: data }
+  if (response.status === 401) return { ok: false, kind: 'session' }
+  const message = getApiErrorMessage(error, PAYMENT_FAILED)
+  if (response.status === 409) return { ok: false, kind: 'conflict', message }
+  return { ok: false, kind: 'failed', message }
+}

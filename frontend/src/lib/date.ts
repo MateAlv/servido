@@ -44,6 +44,12 @@ export function timeInBuenosAires(isoDateTime: string): string {
   return BA_TIME_FORMAT.format(new Date(isoDateTime))
 }
 
+/** «23/11/2026 16:57» in Buenos Aires, e.g. when a payment was approved. */
+export function dateTimeInBuenosAires(isoDateTime: string): string {
+  const [year, month, day] = dateInBuenosAires(isoDateTime).split('-')
+  return `${day}/${month}/${year} ${timeInBuenosAires(isoDateTime)}`
+}
+
 /** The current `HH:MM` in Buenos Aires. */
 export function currentTimeInBuenosAires(): string {
   return BA_TIME_FORMAT.format(new Date())

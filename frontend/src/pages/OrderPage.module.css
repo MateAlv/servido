@@ -511,7 +511,7 @@
 
 .paymentSummary {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-3);
   padding-top: var(--space-4);
   border-top: 1px solid var(--color-line);
 }
@@ -521,7 +521,123 @@
   margin: 0;
 }
 
+.paymentHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
 .paymentTitle {
+  font: 800 var(--text-lg) var(--font-display);
+}
+
+.methodRow,
+.paidRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.methodIcon {
+  display: grid;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: var(--radius-field);
+  background: var(--color-surface-sunken);
+  font-size: 22px;
+}
+
+.paidText {
+  display: grid;
+  flex-grow: 1;
+  gap: 2px;
+  min-width: 0;
   font-size: var(--text-sm);
+}
+
+.methodName {
   font-weight: 800;
+}
+
+.paidText span {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.cardChip {
+  display: grid;
+  flex-shrink: 0;
+  width: 52px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: var(--color-surface-sunken);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.paidAmount {
+  font: 800 var(--text-xl) var(--font-display);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.paidRow {
+  animation: settle var(--duration-slow) var(--ease-spring) both;
+}
+
+.payButton {
+  width: 100%;
+  min-height: 56px;
+  font: 800 var(--text-lg) var(--font-display);
+  animation: invite 1600ms var(--ease-out) 700ms 2;
+}
+
+.payHint {
+  margin-top: calc(-1 * var(--space-1));
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-align: center;
+}
+
+@keyframes invite {
+  from {
+    box-shadow:
+      var(--shadow-press),
+      0 0 0 0 var(--color-primary-soft);
+  }
+
+  to {
+    box-shadow:
+      var(--shadow-press),
+      0 0 0 16px transparent;
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paidRow,
+  .payButton {
+    animation: none;
+  }
 }

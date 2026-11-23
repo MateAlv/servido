@@ -44,3 +44,85 @@
   margin: 0;
   font-weight: 800;
 }
+
+.refunded {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-4);
+  border-radius: 20px;
+  background: var(--color-ok-bg);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: center;
+}
+
+.refundArt {
+  width: 120px;
+  height: 72px;
+  fill: none;
+  stroke: var(--color-ok);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.refundArt path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 700ms var(--ease-out) 300ms forwards;
+}
+
+.refundArt .refundHead {
+  animation-delay: 900ms;
+}
+
+.coin {
+  position: absolute;
+  top: calc(var(--space-5) + 38px);
+  left: calc(50% - 60px);
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 3px solid var(--color-ink);
+  border-radius: var(--radius-pill);
+  background: var(--color-star);
+  color: var(--color-ink);
+  font: 800 var(--text-base) var(--font-display);
+  animation: coin 900ms var(--ease-spring) 200ms both;
+}
+
+.refundTitle {
+  font: 800 var(--text-xl) / 1.15 var(--font-display);
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes coin {
+  from {
+    opacity: 0;
+    transform: translateX(26px) scale(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refundArt path,
+  .coin {
+    animation: none;
+  }
+
+  .refundArt path {
+    stroke-dashoffset: 0;
+  }
+}

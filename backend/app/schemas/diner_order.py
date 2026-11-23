@@ -90,6 +90,41 @@ class PaymentMethodRequest(BaseModel):
     payment_method: Literal["cash", "online"]
 
 
+class PayerIdentification(BaseModel):
+    type: str = Field(min_length=1, max_length=20)
+    number: str = Field(min_length=1, max_length=30)
+
+
+class Payer(BaseModel):
+    email: str = Field(min_length=3, max_length=254)
+    identification: PayerIdentification | None = None
+
+
+class PaymentRequest(BaseModel):
+    """What Mercado Pago's card form gives after tokenizing the card (spec 032, US-56): never the
+    card number or its security code (FR-014)."""
+
+    model_config = ConfigDict(extra="forbid")
+    request_id: UUID
+    token: str = Field(min_length=1, max_length=200)
+    payment_method_id: str = Field(min_length=1, max_length=40)
+    issuer_id: str | None = Field(default=None, max_length=40)
+    payer: Payer
+
+
+class PaymentReceiptResponse(BaseModel):
+    """The latest electronic payment of the order: the receipt once approved (E3)."""
+
+    status: Literal["approved", "rejected", "in_process"]
+    message: str
+    operation_number: str
+    amount: Decimal
+    card_brand: str | None
+    card_last_four: str | None
+    created_at: datetime
+    approved_at: datetime | None
+
+
 class ConfirmationResult(BaseModel):
     operation_id: UUID
     replayed: bool
@@ -121,6 +156,7 @@ class OrderResponse(BaseModel):
     payment_method: Literal["cash", "online"] | None
     payment_status: Literal["pending", "paid"]
     payment_method_editable: bool
+    payment: PaymentReceiptResponse | None = None
 
     confirmed_at: datetime
     items: list[ConfirmedOrderItemResponse]
@@ -177,3 +213,13 @@ class OrderPageResponse(BaseModel):
     order: OrderResponse | None
     cart: CartResponse | None
     menu: list[OrderMenuDish]
+
+
+class PaymentResult(BaseModel):
+    payment: PaymentReceiptResponse
+    page: OrderPageResponse
+
+
+class PaymentConfigResponse(BaseModel):
+    # Public by design: Mercado Pago's card form needs it in the browser. None turns payment off.
+    public_key: str | None

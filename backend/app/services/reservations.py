@@ -4,7 +4,9 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.order import Order
 from app.models.reservation import Reservation
+from app.services import refunds
 
 CANCELLATION_WINDOW = timedelta(minutes=45)
 ALREADY_CANCELLED = "La reserva ya estaba cancelada."
@@ -54,6 +56,10 @@ def cancel_reservation(
         raise ReservationCancellationWindowError(RESERVATION_PASSED)
     if reservation.starts_at - now < CANCELLATION_WINDOW:
         raise ReservationCancellationWindowError(CANCELLATION_TOO_LATE)
+    # US-25 and spec 032 (E7): the cancellation only completes once the payment is returned.
+    order = session.scalar(select(Order).where(Order.reservation_id == reservation.id))
+    if order is not None and order.payment_status == "paid":
+        refunds.refund_order(session, order, now)
     reservation.status = "cancelled"
     reservation.cancelled_at = now
     reservation.cancelled_by = "diner"

@@ -1,4 +1,5 @@
 export { AddToOrderButton } from './AddToOrderButton'
+export { CardPaymentForm } from './CardPaymentForm'
 export { DietaryBadges } from './DietaryBadges'
 export { DishDetails, type DishDetailsDish } from './DishDetails'
 export { LiveIndicator } from './LiveIndicator'

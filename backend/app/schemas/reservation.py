@@ -104,6 +104,8 @@ class CancelledReservationResponse(BaseModel):
     cancelled_by: str | None
     cancelled_at: datetime
     refund_status: str | None
+    # What was returned once the refund completed (spec 032, E7).
+    refund_amount: Decimal | None = None
 
 
 class CancelledReservationsResponse(BaseModel):
