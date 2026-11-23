@@ -1,6 +1,8 @@
 .dialog {
   width: min(100% - 32px, 480px);
   max-height: min(92vh, 760px);
+  /* The content scrolls, not the dialog: a click on the dialog itself is then always outside. */
+  overflow: hidden;
   padding: 0;
   border: 0;
   border-radius: 28px;
@@ -15,6 +17,8 @@
 }
 
 .dialog[open] {
+  display: flex;
+  flex-direction: column;
   animation: rise var(--duration-slow) var(--ease-spring);
 }
 
@@ -33,6 +37,8 @@
 .inner {
   display: grid;
   gap: var(--space-4);
+  min-height: 0;
+  overflow-y: auto;
   padding: 26px;
 }
 

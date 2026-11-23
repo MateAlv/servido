@@ -79,6 +79,46 @@ def reservation_confirmation_mail(
     )
 
 
+def pesos(amount: Decimal) -> str:
+    """«$ 37.000» or «$ 37.000,50», as Argentina writes money."""
+    whole, cents = f"{amount:,.2f}".replace(",", " ").split(".")
+    text = whole.replace(" ", ".") + ("" if cents == "00" else f",{cents}")
+    return f"$ {text}"
+
+
+INK = "#3b1f18"
+MUTED = "#6b4a40"
+CREAM = "#fdf9ee"
+LINE = "#eadfca"
+SUNKEN = "#f4ecdc"
+PRIMARY = "#d2441c"
+
+
+def branded_html(title: str, preheader: str, body: str) -> str:
+    """A mail in Servido!'s colors with its logo; tables and inline styles, as mail clients need."""
+    logo = escape(f"{settings.app_base_url}/servido-logo.png")
+    return (
+        f'<div style="display:none;max-height:0;overflow:hidden">{escape(preheader)}</div>'
+        f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+        f'style="background:{SUNKEN};padding:24px 12px;font-family:Nunito,Arial,sans-serif;'
+        f'color:{INK}"><tr><td align="center">'
+        f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+        f'style="max-width:520px;background:{CREAM};border-radius:20px;'
+        f'border:1px solid {LINE}">'
+        f'<tr><td align="center" style="padding:28px 28px 8px">'
+        f'<img src="{logo}" width="96" height="96" alt="Servido!" '
+        f'style="display:block;border:0;width:96px;height:96px"></td></tr>'
+        f'<tr><td style="padding:8px 28px 4px;text-align:center">'
+        f'<h1 style="margin:0;font-size:24px;line-height:1.2;color:{INK}">{escape(title)}</h1>'
+        f"</td></tr>"
+        f'<tr><td style="padding:12px 28px 28px">{body}</td></tr>'
+        f"</table>"
+        f'<p style="margin:16px 0 0;font-size:12px;color:{MUTED}">'
+        f"Servido! · Reservá. Pedí. Disfrutá.</p>"
+        f"</td></tr></table>"
+    )
+
+
 def payment_receipt_mail(
     to: str,
     restaurant_name: str,
@@ -89,24 +129,71 @@ def payment_receipt_mail(
     operation_number: str,
     card: str,
     paid_at: datetime,
+    order_url: str,
+    test_mode: bool,
 ) -> Mail:
     """The receipt of an approved electronic payment (spec 032, E3)."""
-    lines = [f"{quantity} × {name}: ${subtotal:.2f}" for name, quantity, subtotal in items]
+    when = f"{reservation_start:%d/%m/%Y} a las {reservation_start:%H:%M}"
+    rows = [(f"{quantity} × {name}", pesos(subtotal)) for name, quantity, subtotal in items]
     if discount:
-        lines.append(f"Descuento: -${discount:.2f}")
-    lines.append(f"Total pagado (incluye la seña de tu reserva): ${total:.2f}")
-    header = (
-        f"Pagaste tu pedido en {restaurant_name} para la reserva del "
-        f"{reservation_start:%d/%m/%Y} a las {reservation_start:%H:%M}."
+        rows.append(("Descuento", f"−{pesos(discount)}"))
+    test_note = "Modo de prueba: no se cobró dinero real." if test_mode else ""
+    text = "\n".join(
+        [
+            f"Pagaste tu pedido en {restaurant_name} para la reserva del {when}.",
+            "",
+            *[f"{label}: {amount}" for label, amount in rows],
+            f"Total pagado (incluye la seña de tu reserva): {pesos(total)}",
+            "",
+            f"Operación N° {operation_number} · {card} · {paid_at:%d/%m/%Y %H:%M}.",
+            f"Ver tu pedido: {order_url}",
+            *([test_note] if test_note else []),
+        ]
     )
-    footer = f"Operación N° {operation_number} · {card} · {paid_at:%d/%m/%Y %H:%M}."
-    text = "\n".join([header, "", *lines, "", footer])
-    items_html = "".join(f"<li>{escape(line)}</li>" for line in lines)
+    cell = f"padding:6px 0;border-bottom:1px dashed {LINE};font-size:15px"
+    rows_html = "".join(
+        f'<tr><td style="{cell}">{escape(label)}</td>'
+        f'<td align="right" style="{cell};white-space:nowrap">{escape(amount)}</td></tr>'
+        for label, amount in rows
+    )
+    detail = f"padding:3px 0;font-size:13px;color:{MUTED}"
+    body = (
+        f'<p style="margin:0 0 16px;text-align:center;font-size:15px;color:{MUTED}">'
+        f"{escape(restaurant_name)} · reserva del {escape(when)}</p>"
+        f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+        f'style="background:#ffffff;border-radius:12px;padding:14px 16px">'
+        f"{rows_html}"
+        f'<tr><td style="padding:10px 0 0;font-size:17px;font-weight:800">Total pagado</td>'
+        f'<td align="right" style="padding:10px 0 0;font-size:22px;font-weight:800">'
+        f"{escape(pesos(total))}</td></tr>"
+        f'<tr><td colspan="2" style="padding:2px 0 0;font-size:12px;color:{MUTED}">'
+        f"Incluye la seña de tu reserva · Impuestos incluidos</td></tr></table>"
+        f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+        f'style="margin-top:14px">'
+        f'<tr><td style="{detail}">Operación</td><td align="right" style="{detail}">'
+        f"N° {escape(operation_number)}</td></tr>"
+        f'<tr><td style="{detail}">Tarjeta</td><td align="right" style="{detail}">'
+        f"{escape(card)}</td></tr>"
+        f'<tr><td style="{detail}">Fecha</td><td align="right" style="{detail}">'
+        f"{paid_at:%d/%m/%Y %H:%M}</td></tr></table>"
+        f'<p style="margin:22px 0 0;text-align:center">'
+        f'<a href="{escape(order_url)}" style="display:inline-block;background:{PRIMARY};'
+        f"color:#ffffff;text-decoration:none;font-weight:800;padding:12px 24px;"
+        f'border-radius:999px">Ver mi pedido</a></p>'
+        + (
+            f'<p style="margin:18px 0 0;text-align:center;font-size:12px;color:{MUTED}">'
+            f"{escape(test_note)}</p>"
+            if test_note
+            else ""
+        )
+    )
     return Mail(
         to=to,
         subject=f"Comprobante de pago de tu pedido en {restaurant_name}",
         text=text,
-        html=f"<p>{escape(header)}</p><ul>{items_html}</ul><p>{escape(footer)}</p>",
+        html=branded_html(
+            "¡Pagaste tu pedido!", f"Pagaste {pesos(total)} en {restaurant_name}", body
+        ),
     )
 
 

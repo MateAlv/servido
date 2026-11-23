@@ -115,7 +115,10 @@ def test_us56_s3_approved_payment_marks_the_order_paid_with_a_receipt(
     assert receipt.to == "martin@example.com"
     assert "1001" in receipt.text
     assert "Visa terminada en 3704" in receipt.text
-    assert "$37000.00" in receipt.text
+    assert "$ 37.000" in receipt.text
+    assert "https://servido.test/servido-logo.png" in receipt.html
+    assert f"https://servido.test/reservas/{s.reservation.id}/pedido" in receipt.html
+    assert "Modo de prueba: no se cobró dinero real." in receipt.text
     restaurant_view = client.get(
         f"/api/restaurante/pedidos/{stored_order.id}",
         headers=restaurant_headers(client, s.restaurant),

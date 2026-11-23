@@ -25,8 +25,10 @@ import { TestCards } from './TestCards'
 type PaymentDialogProps = {
   open: boolean
   onClose: () => void
-  /** After the closing animation: the page unmounts the dialog then. */
-  onClosed?: () => void
+  /** After the closing animation. `discarded` is false when the diner only stepped away (clicking
+   * outside, Esc or the X) from an unfinished payment: the page keeps the dialog, and what was typed
+   * in the card form, for when it opens again. */
+  onClosed?: (discarded: boolean) => void
   reservationId: string
   order: ConfirmedOrder
   /** The bill as the order page prints it; an approved payment turns it into the receipt. */
@@ -71,6 +73,7 @@ export function PaymentDialog({
   const [failures, setFailures] = useState(0)
   const [payment, setPayment] = useState<OrderPayment | null>(null)
   const resultTitle = useRef<HTMLHeadingElement>(null)
+  const discard = useRef(false)
 
   // The result replaces the form, which may have been scrolled down: start it from the stamp.
   useEffect(() => {
@@ -126,7 +129,14 @@ export function PaymentDialog({
 
   const footer =
     view === 'pay' ? (
-      <Button variant="secondary" disabled={paying} onClick={onClose}>
+      <Button
+        variant="secondary"
+        disabled={paying}
+        onClick={() => {
+          discard.current = true
+          onClose()
+        }}
+      >
         Cancelar
       </Button>
     ) : (
@@ -141,7 +151,10 @@ export function PaymentDialog({
       }}
       title={title}
       footer={<div className={styles.footer}>{footer}</div>}
-      onClosed={onClosed}
+      onClosed={() => {
+        onClosed?.(discard.current || view !== 'pay')
+        discard.current = false
+      }}
     >
       {view === 'pay' && (
         <div className={styles.pay}>

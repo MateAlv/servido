@@ -18,6 +18,24 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledOnce()
   })
 
+  it('closes on a click on the backdrop but not after a press that started inside', () => {
+    const onClose = vi.fn()
+    render(
+      <Modal open onClose={onClose} title="Pagar el pedido">
+        <p>Tarjeta de crédito o débito</p>
+      </Modal>,
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Pagar el pedido' })
+
+    fireEvent.mouseDown(screen.getByText('Tarjeta de crédito o débito'))
+    fireEvent.click(dialog)
+    expect(onClose).not.toHaveBeenCalled()
+
+    fireEvent.mouseDown(dialog)
+    fireEvent.click(dialog)
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
   it('says when it finished closing, so the page can take the focus back', () => {
     const onClosed = vi.fn()
     const { rerender } = render(

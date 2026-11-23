@@ -9,6 +9,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.models.diner import Diner
 from app.models.order import Order
 from app.models.payment import Payment
@@ -94,6 +95,8 @@ def receipt_mail(session: Session, reservation: Reservation, order: Order, payme
         operation_number=payment.provider_payment_id,
         card=card_label(payment),
         paid_at=payment.approved_at.astimezone(BUENOS_AIRES),
+        order_url=f"{settings.app_base_url}/reservas/{reservation.id}/pedido",
+        test_mode=settings.mercadopago_access_token.startswith("TEST-"),
     )
 
 
