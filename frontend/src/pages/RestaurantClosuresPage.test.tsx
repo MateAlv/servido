@@ -121,7 +121,14 @@ describe('RestaurantClosuresPage (US-32)', () => {
     ])
     renderWithProviders(<RestaurantClosuresPage />)
     expect(await screen.findByText('2026-11-10')).toBeInTheDocument()
+    expect(screen.queryByText('No tenés bloqueos de hoy en adelante.')).not.toBeInTheDocument()
     await userEvent.setup().click(screen.getByRole('button', { name: 'Quitar' }))
     expect(api.deleteClosure).toHaveBeenCalledWith('c1')
+  })
+
+  it('US-32 S7 says so when there are no current closures', async () => {
+    renderWithProviders(<RestaurantClosuresPage />)
+
+    expect(await screen.findByText('No tenés bloqueos de hoy en adelante.')).toBeInTheDocument()
   })
 })

@@ -6,6 +6,7 @@ import {
   type RestaurantOrder,
   type RestaurantOrders,
 } from '../api/restaurantOrders'
+import { reservationCode } from '../api/reservations'
 import { Button, Card, IconArrowLeft, StatusPill } from '../components/ui'
 import styles from './RestaurantOrdersPage.module.css'
 
@@ -38,6 +39,7 @@ function OrderCard({
         <div>
           <p className={styles.eyebrow}>Llegada</p>
           <h3>{order.arrival_time}</h3>
+          <p className={styles.eyebrow}>Reserva {reservationCode(order.reservation_id)}</p>
         </div>
         <Button variant="secondary" size="sm" onClick={onSelect}>
           {isSelected ? 'Ocultar detalle' : 'Ver detalle'}

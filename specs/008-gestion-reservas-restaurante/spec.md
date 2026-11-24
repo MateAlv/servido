@@ -21,7 +21,7 @@ Como **Responsable del restaurante**, quiero ver la agenda de reservas de mi res
 **Acceptance Scenarios**:
 
 1. **Dado** que existen reservas para distintas fechas y turnos, **Cuando** consulto el calendario, **Entonces** puedo visualizar las reservas agrupadas por día y turno.  
-2. **Dado** que consulto las reservas de un turno, **Cuando** se muestra el listado, **Entonces** cada reserva indica su horario, mesa, cantidad de comensales y estado.  
+2. **Dado** que consulto las reservas de un turno, **Cuando** se muestra el listado, **Entonces** cada reserva indica su horario, mesa, cantidad de comensales, estado y código (el código corto que ve el comensal, spec 030; agregado el 24/11 a pedido del equipo).  
 3. **Dado** que existen varias reservas para un mismo turno, **Cuando** consulto el listado, **Entonces** aparecen ordenadas cronológicamente por horario.  
 4. **Dado** que estoy consultando una fecha, **Cuando** selecciono otra fecha, **Entonces** el calendario muestra las reservas correspondientes a la nueva selección.  
 5. **Dado** que se registra una nueva reserva, **Cuando** consulto la agenda actualizada, **Entonces** la nueva reserva aparece en la fecha y turno correspondientes.  

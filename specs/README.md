@@ -161,6 +161,9 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 23/11 | 032-pagar-pedido | US-56: la pantalla no nombra a Mercado Pago (en Argentina se entiende como un medio de pago aparte); habla de pago con tarjeta, procesando, rechazado, en revisión y número de operación. Falta que la PO lo valide |
 | 24/11 | 021-ver-pedido-detalle-comenal | US-47: el pedido abierto desde «Mis reservas» es la misma vista que desde el inicio, con sus acciones de modificar y pagar mientras el pedido las permita (antes se abría en solo lectura). Pedido del equipo al probar |
 | 24/11 | 030-detalle-confirmacion | US-54: el identificador de la reserva se muestra como un código corto de 8 caracteres, igual en pantalla y en el correo, en lugar del identificador interno completo. Pedido del equipo al probar |
+| 24/11 | 008-gestion-reservas-restaurante, 010-pedidos-pagos-restaurantes | US-14 y US-20: el restaurante ve el mismo código corto de la reserva que el comensal, en el calendario de reservas y en cada pedido del turno (la US-20 pide mostrar la reserva asociada). Pedido del equipo al probar |
+| 24/11 | 008-gestion-reservas-restaurante | US-14: corrección. Los turnos del calendario se muestran en horas y minutos («Turno de 12:00 a 15:00») y una reserva que empieza a la hora de apertura queda en su turno en lugar de «Otros horarios». Encontrado por el equipo al probar |
+| 24/11 | 016-bloqueo-horarios | US-32: sin bloqueos de hoy en adelante, la sección «Bloqueos vigentes» lo dice en lugar de quedar vacía. Pedido del equipo al probar |
 
 ## Notas de formato
 
