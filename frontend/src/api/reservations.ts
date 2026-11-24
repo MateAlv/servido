@@ -12,6 +12,11 @@ export type CancelledReservation = components['schemas']['CancelledReservationRe
 
 const CONFIRM_FAILED = 'No pudimos confirmar la reserva. Probá de nuevo.'
 
+/** The short code the diner reads (US-54), the same one the confirmation mail shows. */
+export function reservationCode(reservationId: string): string {
+  return reservationId.slice(0, 8).toUpperCase()
+}
+
 export type ConfirmResult =
   { ok: true; reservation: Reservation } | { ok: false; status: number; message: string }
 

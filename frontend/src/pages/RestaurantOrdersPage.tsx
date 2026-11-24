@@ -36,7 +36,7 @@ function OrderCard({
     <Card className={styles.order}>
       <div className={styles.orderHeader}>
         <div>
-          <p className={styles.eyebrow}>Reserva {order.reservation_id}</p>
+          <p className={styles.eyebrow}>Llegada</p>
           <h3>{order.arrival_time}</h3>
         </div>
         <Button variant="secondary" size="sm" onClick={onSelect}>
@@ -139,9 +139,7 @@ export function RestaurantOrdersPage() {
         {selected && (
           <section className={styles.detail} aria-labelledby="order-detail-title">
             <h2 id="order-detail-title">Detalle del pedido</h2>
-            <p>
-              Reserva {selected.reservation_id} para las {selected.arrival_time}
-            </p>
+            <p>Llegan a las {selected.arrival_time}</p>
             {paymentState(selected)}
             <p>
               Medio de pago:{' '}

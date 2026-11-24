@@ -31,6 +31,15 @@ describe('RestaurantClosuresPage (US-32)', () => {
     return user
   }
 
+  it('goes back to the restaurant panel', async () => {
+    renderWithProviders(<RestaurantClosuresPage />)
+
+    expect(await screen.findByRole('link', { name: 'Volver al panel' })).toHaveAttribute(
+      'href',
+      '/',
+    )
+  })
+
   it('US-32 S3 shows the affected reservations before applying', async () => {
     const { ClosureWarningError } = await import('../api/closures')
     api.createClosure.mockRejectedValueOnce(

@@ -45,6 +45,11 @@ def restaurant_cancellation_mail(
     )
 
 
+def reservation_code(reservation_id: str) -> str:
+    """The short code the diner reads (US-54), the same one the confirmation screen shows."""
+    return reservation_id[:8].upper()
+
+
 def reservation_confirmation_mail(
     to: str,
     restaurant_name: str,
@@ -69,7 +74,7 @@ def reservation_confirmation_mail(
         f"Horario: {starts_at:%H:%M} a {ends_at:%H:%M}. "
         f"Personas: {party_size}. "
         f"Mesa para {table_capacity} · {seating_area_label}. "
-        f"Código de reserva: {reservation_id}."
+        f"Código de reserva: {reservation_code(reservation_id)}."
     )
     return Mail(
         to=to,

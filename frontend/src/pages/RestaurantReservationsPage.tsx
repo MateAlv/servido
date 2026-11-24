@@ -11,8 +11,6 @@ import { longDate, todayInBuenosAires } from '../lib/date'
 import { tableLabel } from '../lib/seating'
 import styles from './RestaurantReservationsPage.module.css'
 
-const DAY_NAMES = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
-
 function shiftLabel(shift: OpeningShift) {
   return `${shift.start_time} a ${shift.end_time}`
 }
@@ -120,8 +118,6 @@ export function RestaurantReservationsPage() {
     return groups.filter((group) => group.reservations.length > 0)
   }, [date, reservations, shifts])
 
-  const dayIndex = new Date(`${date}T12:00:00-03:00`).getDay()
-  const dayName = DAY_NAMES[(dayIndex + 6) % 7]
   const cancel = async (reservation: RestaurantReservation) => {
     setCancelling(reservation.id)
     try {
@@ -170,9 +166,7 @@ export function RestaurantReservationsPage() {
             Día siguiente
           </Button>
         </div>
-        <h2>
-          {dayName}, {longDate(date)}
-        </h2>
+        <h2>{longDate(date)}</h2>
         {loading && <p role="status">Cargando reservas…</p>}
         {!loading && error && <p role="alert">{error}</p>}
         {!loading && !error && groupedReservations.length === 0 && (
