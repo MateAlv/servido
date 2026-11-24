@@ -57,7 +57,8 @@ vi.mock('../api/restaurants', async () => {
   }
 })
 
-vi.mock('../api/reservations', () => ({
+vi.mock('../api/reservations', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/reservations')>()),
   confirmReservation: vi.fn(),
   fetchDayReservations: vi.fn(),
 }))
@@ -545,6 +546,7 @@ describe('ReservationPage (US-13)', () => {
     confirmMock.mockResolvedValue({
       ok: true,
       reservation: reservation({
+        id: '3f9a1c2b-7d4e-4f10-9a2b-5c6d7e8f9a0b',
         restaurant: {
           id: RESTAURANT_ID,
           nombre: 'La Esquina de Palermo',
@@ -559,7 +561,8 @@ describe('ReservationPage (US-13)', () => {
     expect(await screen.findByText('Reserva confirmada')).toBeInTheDocument()
     expect(screen.getByText('Honduras 4800, Palermo')).toBeInTheDocument()
     expect(screen.getByText('Código de reserva')).toBeInTheDocument()
-    expect(screen.getByText('res-1')).toBeInTheDocument()
+    expect(screen.getByText('3F9A1C2B')).toBeInTheDocument()
+    expect(screen.queryByText('3f9a1c2b-7d4e-4f10-9a2b-5c6d7e8f9a0b')).not.toBeInTheDocument()
     expect(screen.getByText('Mesa para 2 · Adentro')).toBeInTheDocument()
   })
 

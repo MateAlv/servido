@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-import type { Reservation } from '../../api/reservations'
+import { reservationCode, type Reservation } from '../../api/reservations'
 import { Button, Card, StatusPill } from '../../components/ui'
 import { longDate, timeInBuenosAires } from '../../lib/date'
 import { tableLabel } from '../../lib/seating'
@@ -50,7 +50,7 @@ export function ConfirmedStep({ reservation }: { reservation: Reservation }) {
         </div>
         <div>
           <dt>Código de reserva</dt>
-          <dd>{reservation.id}</dd>
+          <dd>{reservationCode(reservation.id)}</dd>
         </div>
       </dl>
       {reservation.order_open ? (

@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { cancelReservation, fetchActiveReservations, type Reservation } from '../api/reservations'
+import {
+  cancelReservation,
+  fetchActiveReservations,
+  reservationCode,
+  type Reservation,
+} from '../api/reservations'
 import { retryUnlessSessionExpired, SessionExpiredError } from '../api/errors'
 import { signOut } from '../api/session'
 import { Button, Card, Modal, StatusPill, useToast } from '../components/ui'
@@ -127,7 +132,7 @@ export function DinerReservationsPage() {
                       </div>
                       <div>
                         <dt>Código de reserva</dt>
-                        <dd>{reservation.id}</dd>
+                        <dd>{reservationCode(reservation.id)}</dd>
                       </div>
                     </dl>
                     <div className={styles.actions}>

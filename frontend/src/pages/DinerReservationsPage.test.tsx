@@ -9,7 +9,10 @@ const reservationsApi = vi.hoisted(() => ({
   cancelReservation: vi.fn(),
 }))
 
-vi.mock('../api/reservations', () => reservationsApi)
+vi.mock('../api/reservations', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../api/reservations')>()),
+  ...reservationsApi,
+}))
 
 const reservation = {
   id: 'reservation-1',
@@ -49,6 +52,9 @@ describe('DinerReservationsPage', () => {
   })
 
   it('US-54 S3 shows confirmed reservation details', async () => {
+    reservationsApi.fetchActiveReservations.mockResolvedValue([
+      { ...reservation, id: '3f9a1c2b-7d4e-4f10-9a2b-5c6d7e8f9a0b' },
+    ])
     renderWithProviders(<DinerReservationsPage />)
 
     fireEvent.click(await screen.findByRole('button', { name: /La Esquina/ }))
@@ -56,7 +62,8 @@ describe('DinerReservationsPage', () => {
     expect(screen.getByText('Confirmada')).toBeInTheDocument()
     expect(screen.getByText('Calle 123, Palermo')).toBeInTheDocument()
     expect(screen.getByText('Código de reserva')).toBeInTheDocument()
-    expect(screen.getByText('reservation-1')).toBeInTheDocument()
+    expect(screen.getByText('3F9A1C2B')).toBeInTheDocument()
+    expect(screen.queryByText('3f9a1c2b-7d4e-4f10-9a2b-5c6d7e8f9a0b')).not.toBeInTheDocument()
   })
 
   it('US-23 S4 reports no active reservations', async () => {

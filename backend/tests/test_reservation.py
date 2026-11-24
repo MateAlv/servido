@@ -385,9 +385,10 @@ def test_us54_s1_confirmation_sends_email_details(
         "20:00",
         "3",
         "Mesa para 4 · Terraza",
-        reservation_id,
+        f"Código de reserva: {reservation_id[:8].upper()}.",
     ):
         assert detail in confirmation.text
+    assert reservation_id not in confirmation.text
 
 
 def test_us54_s3_confirmed_reservation_is_active(
