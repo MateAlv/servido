@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Button, Card, Modal, TextField } from '../components/ui'
+import { Button, Card, IconArrowLeft, Modal, TextField } from '../components/ui'
 import {
   ClosureWarningError,
   createClosure,
@@ -49,6 +49,9 @@ export function RestaurantClosuresPage() {
   }
   return (
     <main className={styles.page}>
+      <Button variant="ghost" size="sm" to="/" icon={<IconArrowLeft />}>
+        Volver al panel
+      </Button>
       <h1>Bloqueos de horario</h1>
       <p>Elegí una fecha o una franja que no quieras recibir reservas.</p>
       <Card>
