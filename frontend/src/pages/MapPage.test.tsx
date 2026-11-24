@@ -78,6 +78,17 @@ describe('MapPage (US-5)', () => {
     expect(screen.getByTitle('Terraza del Río')).toBeInTheDocument()
   })
 
+  it('US-5 S1 draws the diner position in front of the restaurant pins', async () => {
+    renderWithProviders(<MapPage />)
+    await screen.findByText('Tu ubicación')
+
+    const dot = document.querySelector('.leaflet-diner-pane path')
+    expect(dot).not.toBeNull()
+    // Leaflet stacks the restaurant pins in its marker pane, at z-index 600.
+    const pane = dot?.closest('.leaflet-pane') as HTMLElement
+    expect(Number(pane.style.zIndex)).toBeGreaterThan(600)
+  })
+
   it('US-5 S2 shows the occupancy level of a restaurant when its marker is clicked', async () => {
     renderWithProviders(<MapPage />)
 
