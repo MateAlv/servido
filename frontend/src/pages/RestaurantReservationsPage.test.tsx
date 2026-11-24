@@ -63,6 +63,18 @@ describe('RestaurantReservationsPage (US-14)', () => {
     )
   })
 
+  it('US-14 S4 names the selected day once', async () => {
+    renderWithProviders(<RestaurantReservationsPage />)
+
+    fireEvent.change(await screen.findByLabelText('Fecha de reservas'), {
+      target: { value: '2026-11-23' },
+    })
+
+    expect(
+      await screen.findByRole('heading', { name: 'lunes, 23 de noviembre' }),
+    ).toBeInTheDocument()
+  })
+
   it('US-38 S2 reports cancellation and refund success', async () => {
     renderWithProviders(<RestaurantReservationsPage />)
 
