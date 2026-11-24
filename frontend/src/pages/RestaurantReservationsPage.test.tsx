@@ -43,13 +43,31 @@ describe('RestaurantReservationsPage (US-14)', () => {
     ])
   })
 
-  it('US-14 S2 shows time, table, party size and status', async () => {
+  it('US-14 S2 shows time, table, party size, status and the reservation code', async () => {
     renderWithProviders(<RestaurantReservationsPage />)
 
     expect(await screen.findByText('20:00 a 21:30')).toBeInTheDocument()
+    expect(screen.getByText('RESERVAT')).toBeInTheDocument()
     expect(screen.getByText('Mesa para 4 · Terraza')).toBeInTheDocument()
     expect(screen.getByText('3')).toBeInTheDocument()
     expect(screen.getByText('Confirmada')).toBeInTheDocument()
+  })
+
+  it('US-14 S1 groups a reservation that starts with the shift under that shift', async () => {
+    configurationApi.getHours.mockResolvedValue(
+      [1, 2, 3, 4, 5, 6, 7].map((day) => ({
+        day_of_week: day,
+        start_time: '20:00:00',
+        end_time: '23:30:00',
+        active: true,
+      })),
+    )
+    renderWithProviders(<RestaurantReservationsPage />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Turno de 20:00 a 23:30' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Otros horarios' })).not.toBeInTheDocument()
   })
 
   it('US-14 S4 changes the selected date', async () => {

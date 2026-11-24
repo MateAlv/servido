@@ -6,13 +6,18 @@ import {
   type RestaurantReservation,
 } from '../api/restaurantReservations'
 import { configurationApi, type OpeningShift } from '../api/restaurantConfiguration'
+import { reservationCode } from '../api/reservations'
 import { Button, Card, IconArrowLeft, Modal, StatusPill, useToast } from '../components/ui'
 import { longDate, todayInBuenosAires } from '../lib/date'
 import { tableLabel } from '../lib/seating'
 import styles from './RestaurantReservationsPage.module.css'
 
+function hourMinute(value: string) {
+  return value.slice(0, 5)
+}
+
 function shiftLabel(shift: OpeningShift) {
-  return `${shift.start_time} a ${shift.end_time}`
+  return `${hourMinute(shift.start_time)} a ${hourMinute(shift.end_time)}`
 }
 
 function previousDate(value: string, days: number) {
@@ -24,7 +29,8 @@ function previousDate(value: string, days: number) {
 function reservationShift(reservation: RestaurantReservation, shifts: OpeningShift[]) {
   return shifts.find(
     (shift) =>
-      reservation.start_time >= shift.start_time && reservation.start_time < shift.end_time,
+      reservation.start_time >= hourMinute(shift.start_time) &&
+      reservation.start_time < hourMinute(shift.end_time),
   )
 }
 
@@ -52,6 +58,10 @@ function reservationCard(
         <div>
           <dt>Personas</dt>
           <dd>{reservation.party_size}</dd>
+        </div>
+        <div>
+          <dt>Código</dt>
+          <dd>{reservationCode(reservation.id)}</dd>
         </div>
       </dl>
       {!cancelled && (
