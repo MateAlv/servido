@@ -136,26 +136,17 @@ export function OrderPage() {
       </main>
     )
   }
-  return (
-    <OrderEditor
-      reservationId={reservaId}
-      initialPage={order.data}
-      account={account}
-      readOnly={new URLSearchParams(location.search).get('modo') === 'lectura'}
-    />
-  )
+  return <OrderEditor reservationId={reservaId} initialPage={order.data} account={account} />
 }
 
 function OrderEditor({
   reservationId,
   initialPage,
   account,
-  readOnly,
 }: {
   reservationId: string
   initialPage: OrderPageData
   account: Account
-  readOnly: boolean
 }) {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(initialPage)
@@ -751,7 +742,6 @@ function OrderEditor({
   }
 
   const canPay =
-    !readOnly &&
     page.order?.payment_method === 'online' &&
     page.order.payment_status === 'pending' &&
     page.order.payment_method_editable &&
@@ -1027,7 +1017,7 @@ function OrderEditor({
           </p>
         )}
         <div className={styles.actions}>
-          {reservation.order_open && !readOnly && (
+          {reservation.order_open && (
             <Button
               variant={canPay ? 'secondary' : 'primary'}
               onClick={() => {
@@ -1039,7 +1029,7 @@ function OrderEditor({
               Modificar platos
             </Button>
           )}
-          {page.order?.payment_method_editable && !readOnly && (
+          {page.order?.payment_method_editable && (
             <Button
               variant="secondary"
               disabled={confirming || cart.hasPendingOperation}

@@ -34,7 +34,7 @@ Como **Comensal**, quiero ver el detalle de una reserva cancelada, para entender
 * **Cancelaciones sin pago previo**: Si la reserva se canceló pero el comensal no había pagado anticipadamente, el detalle de cancelación (US-49) no debe mostrar información de reembolso ni estados confusos, solo confirmar que fue cancelada.
 * **Alcance de la información**: El backlog pide mostrar los platos y sus cantidades. Esta spec asume que se muestran esos datos base; falta definir por PO si se añaden precios y total aquí o en otra vista.
 * **Reserva cancelada mientras se mira**: Si la reserva se cancela (por ejemplo, desde otra pestaña o por el restaurante), al actualizar deja de figurar entre las activas y se muestra su detalle de cancelación correspondiente a la US-49.
-* **Privacidad y Solo Lectura**: El comensal solo ve los pedidos de sus propias reservas. Esta spec es estrictamente de consulta.
+* **Privacidad y Solo Lectura**: El comensal solo ve los pedidos de sus propias reservas. Esta spec es estrictamente de consulta: no agrega acciones nuevas. El pedido que se abre desde el detalle de la reserva es la misma vista que desde el inicio, así que conserva «Modificar platos», «Modificar medio de pago» y «Pagar» mientras el pedido los permita (24/11, prueba del equipo).
 
 ## **Requirements *(mandatory)***
 

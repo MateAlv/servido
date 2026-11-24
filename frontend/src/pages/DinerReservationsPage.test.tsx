@@ -66,6 +66,15 @@ describe('DinerReservationsPage', () => {
     expect(screen.queryByText('3f9a1c2b-7d4e-4f10-9a2b-5c6d7e8f9a0b')).not.toBeInTheDocument()
   })
 
+  it('goes back to the home page', async () => {
+    renderWithProviders(<DinerReservationsPage />)
+
+    expect(await screen.findByRole('link', { name: 'Volver al inicio' })).toHaveAttribute(
+      'href',
+      '/',
+    )
+  })
+
   it('US-23 S4 reports no active reservations', async () => {
     reservationsApi.fetchActiveReservations.mockResolvedValue([])
     renderWithProviders(<DinerReservationsPage />)
@@ -107,7 +116,7 @@ describe('DinerReservationsPage', () => {
 
     expect(screen.getByRole('link', { name: 'Ver pedido' })).toHaveAttribute(
       'href',
-      '/reservas/reservation-1/pedido?modo=lectura',
+      '/reservas/reservation-1/pedido',
     )
   })
 

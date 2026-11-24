@@ -9,7 +9,7 @@ import {
 } from '../api/reservations'
 import { retryUnlessSessionExpired, SessionExpiredError } from '../api/errors'
 import { signOut } from '../api/session'
-import { Button, Card, Modal, StatusPill, useToast } from '../components/ui'
+import { Button, Card, IconArrowLeft, Modal, StatusPill, useToast } from '../components/ui'
 import { longDate } from '../lib/date'
 import { tableLabel } from '../lib/seating'
 import styles from './DinerReservationsPage.module.css'
@@ -62,6 +62,9 @@ export function DinerReservationsPage() {
 
   return (
     <main className={styles.page}>
+      <Button variant="ghost" size="sm" to="/" icon={<IconArrowLeft />}>
+        Volver al inicio
+      </Button>
       <header className={styles.header}>
         <p className={styles.eyebrow}>Tu cuenta</p>
         <h1>Mis reservas</h1>
@@ -140,7 +143,7 @@ export function DinerReservationsPage() {
                         <Button
                           variant="secondary"
                           size="sm"
-                          to={`/reservas/${reservation.id}/pedido?modo=lectura`}
+                          to={`/reservas/${reservation.id}/pedido`}
                         >
                           Ver pedido
                         </Button>
