@@ -70,7 +70,7 @@ Como **Responsable del restaurante**, quiero ver el estado de pago de cada pedid
 ### **Functional Requirements**
 
 * **FR-001** *(US-20)*: El sistema MUST permitir al responsable consultar los pedidos anticipados confirmados correspondientes al turno actual de su restaurante.  
-* **FR-002** *(US-20)*: Cada pedido MUST mostrar la reserva asociada, la hora de llegada, los platos y sus cantidades.  
+* **FR-002** *(US-20)*: Cada pedido MUST mostrar la reserva asociada, la hora de llegada, los platos y sus cantidades. La reserva se identifica con su código corto, el mismo que ve el comensal (spec 030), nunca con el identificador interno (24/11, prueba del equipo).  
 * **FR-003** *(US-20)*: El sistema MUST mostrar únicamente pedidos confirmados y MUST excluir los asociados a reservas canceladas.  
 * **FR-004** *(US-20)*: El sistema MUST permitir consultar el detalle de un pedido, incluyendo platos y cantidades.  
 * **FR-005** *(US-20)*: Los pedidos MUST ordenarse por hora de llegada confirmada, desde la más próxima hasta la más lejana.  

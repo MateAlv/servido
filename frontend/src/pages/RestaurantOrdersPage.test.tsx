@@ -47,6 +47,7 @@ describe('RestaurantOrdersPage (US-20)', () => {
     expect(await screen.findByText('10:00')).toBeInTheDocument()
     expect(screen.getByText('Llegada')).toBeInTheDocument()
     expect(screen.queryByText(/reservation-1/)).not.toBeInTheDocument()
+    expect(screen.getByText('Reserva RESERVAT')).toBeInTheDocument()
     expect(screen.getByText('Ravioles')).toBeInTheDocument()
     expect(screen.getByText('×2')).toBeInTheDocument()
   })
