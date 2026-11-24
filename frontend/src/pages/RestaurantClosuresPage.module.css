@@ -11,13 +11,22 @@
   display: grid;
   gap: 0.35rem;
 }
-.form input {
-  padding: 0.65rem;
-}
 .check {
   display: flex !important;
   align-items: center;
   gap: 0.5rem;
+}
+.current {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+.current h2 {
+  margin: 0;
+}
+.empty {
+  margin: 0;
+  color: var(--color-text-muted);
 }
 .row {
   display: flex;

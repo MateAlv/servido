@@ -37,6 +37,7 @@ Como **Responsable del restaurante**, quiero bloquear fechas u horarios puntuale
 - **Quitar un bloqueo**: no restaura las reservas ya canceladas.
 - **Bloqueos que se superponen**: se permiten; un horario queda bloqueado si lo cubre al menos uno.
 - **Bloqueo de fechas pasadas**: no se permite.
+- **Sin bloqueos vigentes** *(24/11, prueba del equipo)*: la sección de bloqueos vigentes indica que no hay bloqueos de hoy en adelante en lugar de quedar vacía.
 - **Franja parcialmente pasada** *(propuesta del equipo; falta que la PO la valide)*: si se bloquea una franja de hoy cuyo inicio ya pasó, se rechaza; para cerrar el resto del día se bloquea desde la hora actual en adelante o el día completo.
 - **Bloqueo fuera de turno o en día sin atención** (US-8): se permite, no tiene efecto práctico; se informa que no hay horarios afectados.
 - **Reservas que cruzan el borde de la franja** *(propuesta del equipo; falta que la PO la valide)*: una reserva se considera afectada si su horario se superpone con la franja bloqueada, aunque empiece antes o termine después.

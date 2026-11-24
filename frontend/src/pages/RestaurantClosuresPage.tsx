@@ -56,10 +56,12 @@ export function RestaurantClosuresPage() {
       <p>Elegí una fecha o una franja que no quieras recibir reservas.</p>
       <Card>
         <div className={styles.form}>
-          <label>
-            Fecha
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </label>
+          <TextField
+            label="Fecha"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
           <label className={styles.check}>
             <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />{' '}
             Todo el día
@@ -84,8 +86,11 @@ export function RestaurantClosuresPage() {
           <Button onClick={() => void submit()}>Bloquear horario</Button>
         </div>
       </Card>
-      <section>
+      <section className={styles.current}>
         <h2>Bloqueos vigentes</h2>
+        {closures.data?.length === 0 && (
+          <p className={styles.empty}>No tenés bloqueos de hoy en adelante.</p>
+        )}
         {closures.data?.map((item) => (
           <Card key={item.id}>
             <div className={styles.row}>
