@@ -1,11 +1,9 @@
 /**
  * Restaurants for the diner's map, list and detail: the bookable restaurants stored in the
- * database (`GET /api/restaurants`, decision D4 of 28/10 in spec 003) next to the test
- * restaurants of spec 002-elegir-restaurante. Only the real ones can be booked.
+ * database (`GET /api/restaurants`, decision D4 of 28/10 in spec 003). The test restaurants of
+ * spec 002-elegir-restaurante stopped showing on 24/11.
  */
 import {
-  RESTAURANTS_FIXTURE,
-  testRestaurant,
   type MenuSection,
   type RestaurantPriceTier,
   type RestaurantPublic,
@@ -113,29 +111,17 @@ function fromApi(
   }
 }
 
-/**
- * Real restaurants first, then the test ones. If the API can't be reached, the map still shows
- * the test restaurants. The map queries it again on a timer to refresh occupancy (US-5, S5).
- */
+const RESTAURANTS_FAILED = 'No pudimos cargar los restaurantes.'
+
+/** The map queries it again on a timer to refresh occupancy (US-5, S5). */
 export async function fetchRestaurants(): Promise<RestaurantPublic[]> {
-  try {
-    const { data } = await api.GET('/api/restaurants')
-    const real = data?.restaurants.map((restaurant) => fromApi(restaurant)) ?? []
-    // A real restaurant replaces the test one with its name: never two with the same name.
-    const realNames = new Set(real.map((restaurant) => restaurant.name.toLocaleLowerCase('es')))
-    const tests = RESTAURANTS_FIXTURE.filter(
-      (restaurant) => !realNames.has(restaurant.name.toLocaleLowerCase('es')),
-    )
-    return [...real, ...tests]
-  } catch {
-    return RESTAURANTS_FIXTURE
-  }
+  const { data, error } = await api.GET('/api/restaurants')
+  if (error || !data) throw new Error(getApiErrorMessage(error, RESTAURANTS_FAILED))
+  return data.restaurants.map((restaurant) => fromApi(restaurant))
 }
 
-/** One restaurant, real or test; `undefined` when it doesn't exist or can't be booked. */
+/** One bookable restaurant; `undefined` when it doesn't exist or can't be booked. */
 export async function fetchRestaurant(id: string): Promise<RestaurantPublic | undefined> {
-  const test = testRestaurant(id)
-  if (test) return test
   const { data } = await api.GET('/api/restaurants/{restaurant_id}', {
     params: { path: { restaurant_id: id } },
   })

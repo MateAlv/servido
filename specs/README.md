@@ -13,7 +13,7 @@ El flujo completo está en [AGENTS.md](../AGENTS.md#spec-driven-workflow).
 | Spec | Rol | US | SP | Sprint | spec | plan | tasks | Implementado |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | [001-acceso-comensal](001-acceso-comensal/spec.md) | Comensal | 1, 3 | 4 | 1 | ✅ | ✅ | ✅ | ✅ US-1, US-3 |
-| [002-elegir-restaurante](002-elegir-restaurante/spec.md) | Comensal | 5, 7, 9, 33 | 13 | 1 (US-33 adelantada del 4) | ✅ | ✅ | ✅ | ✅ US-5, US-7, US-9, US-33 (restaurantes de prueba y, desde el 28/10, los reales que se pueden reservar) |
+| [002-elegir-restaurante](002-elegir-restaurante/spec.md) | Comensal | 5, 7, 9, 33 | 13 | 1 (US-33 adelantada del 4) | ✅ | ✅ | ✅ | ✅ US-5, US-7, US-9, US-33 (restaurantes de prueba y, desde el 28/10, los reales que se pueden reservar; desde el 24/11, solo los reales) |
 | [002-cuenta-restaurante](002-cuenta-restaurante/spec.md) | Restaurante | 2, 4, 28 | 5 | 1 (US-28 adelantada del 4 al 2) | ✅ | ✅ (solo Google) | ✅ (solo Google) | ✅ US-2, US-4 (S3 probado desde el 28/10), US-28 |
 | [003-reservar-mesa](003-reservar-mesa/spec.md) | Comensal | 11, 13 | 5 | 2 (US-11) y 3 (US-13) | ✅ | ✅ | ✅ | ✅ US-11 y US-13, con backend real (decisiones D1–D11 del 28/10, falta que la PO las valide) |
 | [004-local-horarios-mesas](004-local-horarios-mesas/spec.md) | Restaurante | 6, 8, 10 | 6 | 2 | ✅ | ✅ | ✅ | ✅ US-6, US-8, US-10 (el tipo de mesa de los grupos, decidido el 28/10, entra con la US-13) |
@@ -113,7 +113,7 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 19/10 | 001, 002-cuenta-restaurante | Reemplaza la del 18/10 sobre contraseñas: de 8 a 128 caracteres, con al menos una letra y un número, cualquier otro carácter permitido y distinta del email |
 | 21/10 | 001 | El registro del comensal también pide su nombre (para saludarlo y para que el restaurante sepa quién reservó) |
 | 21/10 | 001, 002-cuenta-restaurante | La API de acceso conserva los nombres en español (`/api/comensales`, `/api/restaurantes`, `nombre`, `id_comensal`…), como excepción al glosario de `AGENTS.md`. Lo nuevo sigue el glosario en inglés |
-| 21/10 | 002-elegir-restaurante | Restaurantes de prueba con menú y precios cargados en el frontend (`frontend/src/data/restaurants.fixture.ts`) para la demo del Sprint 1, hasta que exista el endpoint de restaurantes (spec 004) |
+| 21/10 | 002-elegir-restaurante | *(Reemplazada el 24/11.)* Restaurantes de prueba con menú y precios cargados en el frontend (`frontend/src/data/restaurants.fixture.ts`) para la demo del Sprint 1, hasta que exista el endpoint de restaurantes (spec 004) |
 | 21/10 | 002-elegir-restaurante | Reemplaza la del 18/10 sobre el filtro de precio: el precio de cada restaurante de prueba es un gasto promedio por persona simulado (como si viniera de la base); la categoría $–$$$$ se calcula con los límites de la spec. Cuando existan reseñas con gasto (US-50), el promedio saldrá de ellas |
 | 21/10 | 002-elegir-restaurante | US-9 suma el criterio del backlog que faltaba en la spec: el detalle muestra fotos y opiniones (de prueba hasta US-24) |
 | 21/10 | 002-cuenta-restaurante | Registro con Google pasa a US-28 (Sprint 4). El 403 por rol de US-4 se prueba cuando haya endpoints exclusivos de cada rol (Sprint 2) |
@@ -164,6 +164,8 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 24/11 | 008-gestion-reservas-restaurante, 010-pedidos-pagos-restaurantes | US-14 y US-20: el restaurante ve el mismo código corto de la reserva que el comensal, en el calendario de reservas y en cada pedido del turno (la US-20 pide mostrar la reserva asociada). Pedido del equipo al probar |
 | 24/11 | 008-gestion-reservas-restaurante | US-14: corrección. Los turnos del calendario se muestran en horas y minutos («Turno de 12:00 a 15:00») y una reserva que empieza a la hora de apertura queda en su turno en lugar de «Otros horarios». Encontrado por el equipo al probar |
 | 24/11 | 016-bloqueo-horarios | US-32: sin bloqueos de hoy en adelante, la sección «Bloqueos vigentes» lo dice en lugar de quedar vacía. Pedido del equipo al probar |
+| 24/11 | 002-elegir-restaurante | Reemplaza la del 21/10: el mapa, el listado y el detalle muestran solo los restaurantes reales que se pueden reservar; los 7 de prueba dejan de aparecer. La concurrencia (US-5 S2 y S5) solo la tenían los de prueba, así que hoy ningún restaurante la muestra. Pedido del equipo antes de la entrega final |
+| 24/11 | 002-elegir-restaurante | US-5: el punto de «Tu ubicación» queda delante de los marcadores de los restaurantes, que antes lo tapaban. Pedido del equipo al probar |
 
 ## Notas de formato
 

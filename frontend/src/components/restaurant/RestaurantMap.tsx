@@ -7,6 +7,7 @@ import {
   CircleMarker,
   MapContainer,
   Marker,
+  Pane,
   Popup,
   TileLayer,
   Tooltip,
@@ -89,21 +90,25 @@ export function RestaurantMap({
       <FocusSelected lat={selectedPoint?.lat} lng={selectedPoint?.lng} />
 
       {isValidPoint(diner) && (
-        <CircleMarker
-          center={[diner.lat, diner.lng]}
-          radius={8}
-          pathOptions={{
-            color: 'var(--color-surface)',
-            weight: 3,
-            fillColor: 'var(--color-primary)',
-            fillOpacity: 1,
-          }}
-        >
-          {/* Below the dot: restaurant pins grow upwards from their own point. */}
-          <Tooltip permanent direction="bottom" offset={[0, 8]}>
-            Tu ubicación
-          </Tooltip>
-        </CircleMarker>
+        // Leaflet stacks the restaurant pins at z-index 600, tooltips at 650 and popups at 700:
+        // the diner's dot goes over every pin and under the cards.
+        <Pane name="dinerPane" style={{ zIndex: 640 }}>
+          <CircleMarker
+            center={[diner.lat, diner.lng]}
+            radius={8}
+            pathOptions={{
+              color: 'var(--color-surface)',
+              weight: 3,
+              fillColor: 'var(--color-primary)',
+              fillOpacity: 1,
+            }}
+          >
+            {/* Below the dot: restaurant pins grow upwards from their own point. */}
+            <Tooltip permanent direction="bottom" offset={[0, 8]}>
+              Tu ubicación
+            </Tooltip>
+          </CircleMarker>
+        </Pane>
       )}
 
       {restaurants.map((restaurant, index) => {
