@@ -29,7 +29,7 @@ Cómo está armada la plataforma, cómo viaja una solicitud de punta a punta y c
 
 - Primero llega la app. JavaScript y estilos llevan un hash en el nombre y nunca cambian, así que CloudFront los guarda cerca del comensal. `index.html` y las imágenes de `frontend/public/` (logo y fotos de restaurantes) se piden siempre a la instancia, para que un deploy se vea enseguida.
 - Después la app habla con `/api/…`: por ejemplo, al ingresar manda email y contraseña y recibe un token JWT que guarda para los pedidos siguientes. Esas respuestas nunca se cachean: nginx las pasa a la API, que consulta la base, y siempre reflejan lo último.
-- Por ahora el mapa, el listado y el detalle de restaurantes leen datos de prueba incluidos en la app (`frontend/src/data/restaurants.fixture.ts`): la API de restaurantes llega con las US del Sprint 2 en adelante. Hoy la API tiene registro e ingreso de comensales y restaurantes, `GET /api/me` y `/api/health`.
+- El mapa, el listado y el detalle de restaurantes leen los restaurantes que se pueden reservar de `GET /api/restaurants`. Los restaurantes de prueba del Sprint 1 dejaron de mostrarse el 24/11.
 - La API valida el pedido; si algo está mal responde 400 con el detalle en español, como piden las specs.
 
 ## 3. Vista lógica

@@ -12,8 +12,12 @@ import { RestaurantDetailPage } from './RestaurantDetailPage'
 
 vi.mock('../api/restaurants', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/restaurants')>()
-  const { RESTAURANTS_FIXTURE } = await import('../data/restaurants.fixture')
-  return { ...actual, fetchRestaurants: vi.fn(async () => RESTAURANTS_FIXTURE) }
+  const { RESTAURANTS_FIXTURE, testRestaurant } = await import('../data/restaurants.fixture')
+  return {
+    ...actual,
+    fetchRestaurants: vi.fn(async () => RESTAURANTS_FIXTURE),
+    fetchRestaurant: vi.fn(async (id: string) => testRestaurant(id)),
+  }
 })
 
 const DINER = { lat: -34.59, lng: -58.43 }

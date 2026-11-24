@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { averageRating, RESTAURANTS_FIXTURE, reviewCountLabel } from '../data/restaurants.fixture'
+import { averageRating, reviewCountLabel } from '../data/restaurants.fixture'
 import { api } from './client'
 import { fetchRestaurant, fetchRestaurants } from './restaurants'
 
@@ -23,11 +23,12 @@ const REAL = {
 }
 
 describe('restaurants (decision D4 of spec 003)', () => {
-  it('lists the bookable restaurants first, next to the test ones', async () => {
+  it('lists only the bookable restaurants, without the test ones', async () => {
     get.mockResolvedValue({ data: { restaurants: [REAL] }, error: undefined } as never)
 
     const restaurants = await fetchRestaurants()
 
+    expect(restaurants).toHaveLength(1)
     expect(restaurants[0]).toMatchObject({
       id: REAL.id,
       name: 'Parrilla Real',
@@ -36,29 +37,12 @@ describe('restaurants (decision D4 of spec 003)', () => {
       reviews: [],
       bookable: true,
     })
-    expect(restaurants.slice(1)).toEqual(RESTAURANTS_FIXTURE)
-    expect(RESTAURANTS_FIXTURE.every((restaurant) => !restaurant.bookable)).toBe(true)
   })
 
-  it('replaces the test restaurant that has the same name as a real one', async () => {
-    get.mockResolvedValue({
-      data: { restaurants: [{ ...REAL, name: 'La Esquina de Palermo' }] },
-      error: undefined,
-    } as never)
+  it('fails when the API answers with an error, so the map can offer to retry', async () => {
+    get.mockResolvedValue({ data: undefined, error: { detail: 'boom' } } as never)
 
-    const restaurants = await fetchRestaurants()
-
-    const named = restaurants.filter((restaurant) => restaurant.name === 'La Esquina de Palermo')
-    expect(named).toHaveLength(1)
-    expect(named[0].bookable).toBe(true)
-  })
-
-  it('keeps the test restaurants when the API cannot be reached', async () => {
-    get.mockImplementation(async () => {
-      throw new TypeError('offline')
-    })
-
-    expect(await fetchRestaurants()).toEqual(RESTAURANTS_FIXTURE)
+    await expect(fetchRestaurants()).rejects.toThrow()
   })
 
   it('groups the menu of a real restaurant by category', async () => {
@@ -185,10 +169,10 @@ describe('restaurants (decision D4 of spec 003)', () => {
     expect(restaurant?.menu[2].dishes[0].photo).toBe('/flan.jpg')
   })
 
-  it('answers a test restaurant without calling the API', async () => {
-    get.mockClear()
-    expect(await fetchRestaurant('r-la-esquina')).toMatchObject({ bookable: false })
-    expect(get).not.toHaveBeenCalled()
+  it('does not answer the old test restaurants anymore', async () => {
+    get.mockResolvedValue({ data: undefined, error: { detail: 'No encontrado' } } as never)
+
+    expect(await fetchRestaurant('r-la-esquina')).toBeUndefined()
   })
 
   it('US-27 S11 keeps the average and the count; US-7 S5 the calculated tier', async () => {
