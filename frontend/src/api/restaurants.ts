@@ -71,7 +71,7 @@ function fromApi(
     averageSpendPerPerson: restaurant.average_spend_per_person,
     spendPeople: restaurant.spend_people,
     priceTier: (restaurant.price_tier as RestaurantPriceTier | null) ?? null,
-    dietaryRestrictions: restaurant.dietary_restrictions,
+    dietaryRestrictions: restaurant.dietary_restrictions.map(restrictionLabel),
     location: {
       lat: restaurant.lat,
       lng: restaurant.lng,

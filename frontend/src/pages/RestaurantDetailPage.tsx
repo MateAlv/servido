@@ -40,10 +40,14 @@ const DISCOUNT_FORMAT = new Intl.NumberFormat('es-AR', {
   currency: 'ARS',
   maximumFractionDigits: 0,
 })
+const PERCENT_FORMAT = new Intl.NumberFormat('es-AR', {
+  style: 'percent',
+  maximumFractionDigits: 2,
+})
 
 function promotionBenefit(promotion: RestaurantPromotion): string {
   if (promotion.discountType === 'percentage') {
-    return `${promotion.discountValue}% de descuento`
+    return `${PERCENT_FORMAT.format(Number(promotion.discountValue) / 100)} de descuento`
   }
   return `${DISCOUNT_FORMAT.format(Number(promotion.discountValue))} de descuento${
     promotion.minimumAmount

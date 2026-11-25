@@ -166,6 +166,7 @@ Decisiones que tomó el equipo y ya están incorporadas en cada spec. Las que di
 | 24/11 | 016-bloqueo-horarios | US-32: sin bloqueos de hoy en adelante, la sección «Bloqueos vigentes» lo dice en lugar de quedar vacía. Pedido del equipo al probar |
 | 24/11 | 002-elegir-restaurante | Reemplaza la del 21/10: el mapa, el listado y el detalle muestran solo los restaurantes reales que se pueden reservar; los 7 de prueba dejan de aparecer. La concurrencia (US-5 S2 y S5) solo la tenían los de prueba, así que hoy ningún restaurante la muestra. Pedido del equipo antes de la entrega final |
 | 24/11 | 002-elegir-restaurante | US-5: el punto de «Tu ubicación» queda delante de los marcadores de los restaurantes, que antes lo tapaban. Pedido del equipo al probar |
+| 24/11 | 002-elegir-restaurante | US-5: con el mapa más alejado que el zoom inicial, los marcadores muestran solo su punta, sin el nombre (salvo el seleccionado), porque los nombres se tapaban entre sí. El subtítulo del mapa deja de mencionar la concurrencia, el detalle muestra las restricciones declaradas con su nombre («Sin TACC») y el descuento como porcentaje («15 %»). Pedido del equipo al revisar el mapa con los datos de la demo |
 
 ## Notas de formato
 
