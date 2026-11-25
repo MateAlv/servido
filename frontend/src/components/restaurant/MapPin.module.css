@@ -54,6 +54,17 @@
   animation: ripple 1.6s var(--ease-out) infinite;
 }
 
+.compact {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+}
+
+.still {
+  animation: none;
+}
+
 .name {
   overflow: hidden;
   max-width: 140px;

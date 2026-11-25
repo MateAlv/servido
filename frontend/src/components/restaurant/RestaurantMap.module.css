@@ -128,9 +128,10 @@
   font-weight: 700;
 }
 
-.popupMeta > span + span::before {
+/* The dot ends the previous item, so a wrapped line never starts with it. */
+.popupMeta > span:not(:last-child)::after {
   content: '·';
-  margin-right: 6px;
+  margin-left: 6px;
 }
 
 .stars {

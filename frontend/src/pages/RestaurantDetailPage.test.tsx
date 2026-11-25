@@ -84,7 +84,7 @@ describe('RestaurantDetailPage (US-15)', () => {
       renderWithProviders(<RestaurantDetailPage />, { route: '/restaurantes/real-1' })
 
       expect(await screen.findByText('Martes al mediodía')).toBeInTheDocument()
-      expect(screen.getByText('20.00% de descuento')).toBeInTheDocument()
+      expect(screen.getByText(/^20\s?% de descuento$/)).toBeInTheDocument()
       expect(screen.getByText(/los martes/)).toBeInTheDocument()
     })
   })

@@ -39,6 +39,17 @@ describe('restaurants (decision D4 of spec 003)', () => {
     })
   })
 
+  it("names the restaurant's declared restrictions as the diner reads them", async () => {
+    get.mockResolvedValue({
+      data: { restaurants: [{ ...REAL, dietary_restrictions: ['sin_tacc', 'vegano'] }] },
+      error: undefined,
+    } as never)
+
+    const [restaurant] = await fetchRestaurants()
+
+    expect(restaurant.dietaryRestrictions).toEqual(['Sin TACC', 'Vegano'])
+  })
+
   it('fails when the API answers with an error, so the map can offer to retry', async () => {
     get.mockResolvedValue({ data: undefined, error: { detail: 'boom' } } as never)
 

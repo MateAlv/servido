@@ -14,6 +14,10 @@ type MapPinProps = {
    * its look, and the marker carries the name.
    */
   interactive?: boolean
+  /** Only the bubble's point, without the name: for zoom levels where names would pile up. */
+  compact?: boolean
+  /** False after the first render of the map, so pins don't drop again on every zoom. */
+  animated?: boolean
 }
 
 /**
@@ -27,15 +31,21 @@ export function MapPin({
   index = 0,
   onClick,
   interactive = true,
+  compact = false,
+  animated = true,
 }: MapPinProps) {
+  const className = cx(
+    styles.pin,
+    selected && styles.selected,
+    compact && styles.compact,
+    !animated && styles.still,
+  )
+  const label = compact ? null : <span className={styles.name}>{name}</span>
+
   if (!interactive) {
     return (
-      <span
-        className={cx(styles.pin, selected && styles.selected)}
-        style={cssVars({ '--i': index })}
-        aria-hidden="true"
-      >
-        <span className={styles.name}>{name}</span>
+      <span className={className} style={cssVars({ '--i': index })} aria-hidden="true">
+        {label}
       </span>
     )
   }
@@ -43,12 +53,13 @@ export function MapPin({
   return (
     <button
       type="button"
-      className={cx(styles.pin, selected && styles.selected)}
+      className={className}
       style={cssVars({ '--i': index })}
+      aria-label={compact ? name : undefined}
       aria-pressed={selected}
       onClick={onClick}
     >
-      <span className={styles.name}>{name}</span>
+      {label}
     </button>
   )
 }

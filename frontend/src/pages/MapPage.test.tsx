@@ -78,6 +78,26 @@ describe('MapPage (US-5)', () => {
     expect(screen.getByTitle('Terraza del Río')).toBeInTheDocument()
   })
 
+  it('US-5 S1 shrinks the pins to their point when zoomed out, so names never pile up', async () => {
+    renderWithProviders(<MapPage />)
+    const pin = await screen.findByTitle('La Esquina de Palermo')
+    expect(pin).toHaveTextContent('La Esquina de Palermo')
+
+    fireEvent.click(document.querySelector('.leaflet-control-zoom-out') as HTMLElement)
+
+    await waitFor(() =>
+      expect(screen.getByTitle('La Esquina de Palermo')).not.toHaveTextContent(
+        'La Esquina de Palermo',
+      ),
+    )
+
+    fireEvent.click(document.querySelector('.leaflet-control-zoom-in') as HTMLElement)
+
+    await waitFor(() =>
+      expect(screen.getByTitle('La Esquina de Palermo')).toHaveTextContent('La Esquina de Palermo'),
+    )
+  })
+
   it('US-5 S1 draws the diner position in front of the restaurant pins', async () => {
     renderWithProviders(<MapPage />)
     await screen.findByText('Tu ubicación')
