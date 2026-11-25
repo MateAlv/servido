@@ -1,7 +1,7 @@
 import 'leaflet/dist/leaflet.css'
 
 import { divIcon } from 'leaflet'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
   CircleMarker,
@@ -12,6 +12,7 @@ import {
   TileLayer,
   Tooltip,
   useMap,
+  useMapEvents,
 } from 'react-leaflet'
 
 import {
@@ -27,6 +28,9 @@ import { OccupancyMeter } from './OccupancyMeter'
 import styles from './RestaurantMap.module.css'
 
 const DEFAULT_CENTER: GeoPoint = { lat: -34.6037, lng: -58.3816 } // Buenos Aires
+const INITIAL_ZOOM = 13
+// Further out, the name bubbles cover each other: pins shrink to their point.
+const NAMES_MIN_ZOOM = 13
 const POPUP_WIDTH = 280
 // The popup and its pan padding (56 px left for the zoom buttons, 16 px right) must fit in the
 // map, which on a phone is the screen minus the page gutters and the map border.
@@ -64,6 +68,11 @@ function FocusSelected({ lat, lng }: { lat?: number; lng?: number }) {
   return null
 }
 
+function TrackZoom({ onZoom }: { onZoom: (zoom: number) => void }) {
+  useMapEvents({ zoomend: (event) => onZoom(event.target.getZoom()) })
+  return null
+}
+
 export function RestaurantMap({
   restaurants,
   diner,
@@ -74,14 +83,16 @@ export function RestaurantMap({
 }: RestaurantMapProps) {
   const selectedPoint = restaurants.find((restaurant) => restaurant.id === selectedId)?.location
   const center = useMemo(() => (isValidPoint(diner) ? diner : DEFAULT_CENTER), [diner])
+  const [zoom, setZoom] = useState<number | null>(null)
 
   return (
     <MapContainer
       center={[center.lat, center.lng]}
-      zoom={13}
+      zoom={INITIAL_ZOOM}
       className={styles.map}
       scrollWheelZoom
     >
+      <TrackZoom onZoom={setZoom} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -118,7 +129,14 @@ export function RestaurantMap({
         const icon = divIcon({
           className: styles.pinWrapper,
           html: renderToStaticMarkup(
-            <MapPin name={restaurant.name} selected={selected} index={index} interactive={false} />,
+            <MapPin
+              name={restaurant.name}
+              selected={selected}
+              index={index}
+              interactive={false}
+              compact={zoom !== null && zoom < NAMES_MIN_ZOOM && !selected}
+              animated={zoom === null}
+            />,
           ),
           iconSize: [0, 0],
           popupAnchor: [0, -36],

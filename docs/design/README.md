@@ -136,7 +136,7 @@ La revisión y la confirmación de la reserva (US-13, `pages/reservation/`) toda
 
 | Componente | Para qué | US |
 | --- | --- | --- |
-| `MapPin` | Marcador del mapa: un globo con el nombre del restaurante, centrado. La concurrencia no va en el marcador sino en la tarjeta que se abre al tocarlo, y solo si hay datos. Caen uno tras otro y el seleccionado late. Con Leaflet va dentro de un `divIcon` con `interactive={false}`, porque el marcador ya es el botón | 5 |
+| `MapPin` | Marcador del mapa: un globo con el nombre del restaurante, centrado. La concurrencia no va en el marcador sino en la tarjeta que se abre al tocarlo, y solo si hay datos. Caen uno tras otro y el seleccionado late. Con Leaflet va dentro de un `divIcon` con `interactive={false}`, porque el marcador ya es el botón. Con el mapa más alejado que el zoom inicial queda solo la punta del globo, sin nombre (`compact`), salvo el seleccionado, para que los nombres no se tapen | 5 |
 | `RestaurantMap` | Mapa Leaflet + OpenStreetMap con la posición del comensal, los marcadores y el popup de cada restaurante: una tarjeta con foto, precio, calificación, concurrencia, barrio, dirección, distancia y el botón al detalle | 5 |
 | `OccupancyMeter` | Concurrencia baja / media / alta, como barras de señal. Si un restaurante no tiene datos de concurrencia, no se muestra (no decimos «sin datos») | 5, 33 |
 | `PriceFilter` | Chips de precio (`$` … `$$$$`) y "Quitar filtro de precio"; avisa cuando no hay coincidencias | 7 |
